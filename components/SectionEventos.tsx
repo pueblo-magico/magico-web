@@ -1,22 +1,11 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { ChevronLeft, ChevronRight, Calendar, ArrowRight, Tag } from 'lucide-react';
+import { Calendar, ArrowRight, Tag } from 'lucide-react';
+import { HorizontalCardRail } from './HorizontalCardRail';
 
 export const SectionEventos: React.FC = () => {
   const { t } = useLanguage();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const mainEvents = t.events.cards.filter((card: any) => card.showInMainEvents !== false);
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      const scrollAmount = container.clientWidth * 0.8;
-      container.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
 
   return (
     <section id="eventos" className="py-24 bg-white">
@@ -29,29 +18,11 @@ export const SectionEventos: React.FC = () => {
             {t.events.title}
           </h2>
         </div>
-        <div className="relative">
-          <button
-            onClick={() => scroll('left')}
-            className="md:hidden absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-2 rounded-full shadow-lg text-brand border border-brand/10 -ml-2"
-            aria-label={t.ui.prev}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 p-2 rounded-full shadow-lg text-brand border border-brand/10 -mr-2"
-            aria-label={t.ui.next}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-          <div 
-            ref={scrollContainerRef}
-            className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 pb-8 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0"
-          >
+        <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-3">
           {mainEvents.map((card: any, index: number) => (
             <div
               key={index}
-              className="min-w-[85vw] md:min-w-0 snap-center bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-brand/5 flex flex-col h-full group"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-brand/5 flex flex-col h-full group"
             >
               {/* Imagen con Overlay de Fecha */}
               <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
@@ -114,8 +85,7 @@ export const SectionEventos: React.FC = () => {
               </div>
             </div>
           ))}
-          </div>
-        </div>
+        </HorizontalCardRail>
       </div>
     </section>
   );

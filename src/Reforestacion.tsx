@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { Header } from '../components/Header';
+import { HorizontalCardRail } from '../components/HorizontalCardRail';
 import { Footer } from '../components/Footer';
 import { useLanguage } from '../contexts/LanguageContext';
 import { REFORESTATION_CONTRIBUTION, SITE_URL, WA_MAGICO, WA_VOLUNTEERS } from './data/config';
@@ -524,7 +525,7 @@ const Reforestacion: React.FC = () => {
                 <p className="text-lg font-light leading-relaxed text-gray-600">{content.volunteering.scheduleDescription}</p>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-2" gapClassName="gap-6">
                 {reforestationEvents.map((event: any, index: number) => (
                   <article key={`${event.date}-${event.title}`} data-reveal data-delay={String(index + 1)} className="flex h-full flex-col overflow-hidden rounded-2xl border border-brand/10 bg-white shadow-[0_12px_35px_rgba(0,83,51,0.08)]">
                     <div className="relative aspect-[16/9] overflow-hidden bg-brand/5">
@@ -551,7 +552,7 @@ const Reforestacion: React.FC = () => {
                     </div>
                   </article>
                 ))}
-              </div>
+              </HorizontalCardRail>
             </div>
           </div>
         </section>

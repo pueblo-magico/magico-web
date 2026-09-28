@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import { HorizontalCardRail } from '../components/HorizontalCardRail';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SITE_URL } from './data/config';
 import { ROUTES } from './routes';
@@ -337,7 +338,7 @@ const Voluntariado: React.FC = () => {
               <p className="text-white/70 text-lg font-light leading-relaxed">{content.reviews.description}</p>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-2 lg:grid-cols-4" gapClassName="gap-5">
               {volunteerReviews.map((review: any, index: number) => (
                 <article key={`${review.name}-${index}`} data-reveal className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-sm">
                   {review.video ? (
@@ -359,7 +360,7 @@ const Voluntariado: React.FC = () => {
                   </div>
                 </article>
               ))}
-            </div>
+            </HorizontalCardRail>
           </div>
         </section>
 
@@ -396,9 +397,9 @@ const Voluntariado: React.FC = () => {
             </div>
 
             {volunteerEvents.length > 0 ? (
-              <div className={`grid gap-5 ${volunteerEvents.length === 1 ? 'max-w-md mx-auto' : 'sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'}`}>
+              <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName={volunteerEvents.length === 1 ? 'md:grid-cols-1' : 'md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'} gapClassName="gap-5" className={volunteerEvents.length === 1 ? 'mx-auto max-w-md' : ''}>
                 {volunteerEvents.map((event: any) => (
-                  <article key={`${event.date}-${event.title}`} data-reveal className="overflow-hidden rounded-2xl border border-white/15 bg-white text-dark shadow-xl">
+                  <article key={`${event.date}-${event.title}`} data-reveal className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/15 bg-white text-dark shadow-xl">
                     <div className="relative aspect-[4/3] overflow-hidden bg-brand/10">
                       <img src={event.image} alt={event.title} className="h-full w-full object-cover" loading="lazy" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
@@ -409,10 +410,10 @@ const Voluntariado: React.FC = () => {
                         {content.calendar.volunteerBadge}
                       </div>
                     </div>
-                    <div className="p-5">
+                    <div className="flex flex-1 flex-col p-5">
                       <h3 className="font-serif text-2xl leading-tight text-brand mb-2">{event.title}</h3>
                       <p className="text-sm text-dark/65 font-light leading-relaxed mb-5">{event.desc}</p>
-                      <div className="flex flex-col items-stretch gap-3 sm:items-start">
+                      <div className="mt-auto flex flex-col items-stretch gap-3 pt-1 sm:items-start">
                         <a href={getEventApplicationLink(event.title)} target="_blank" rel="noopener noreferrer" className="btn-gold !inline-flex !px-5 !py-3 items-center gap-2 justify-center text-[11px]">
                           <MessageCircle size={16} aria-hidden="true" />{content.calendar.applyCta}
                         </a>
@@ -425,7 +426,7 @@ const Voluntariado: React.FC = () => {
                     </div>
                   </article>
                 ))}
-              </div>
+              </HorizontalCardRail>
             ) : (
               <div data-reveal className="max-w-3xl mx-auto rounded-2xl border border-white/15 bg-white/5 p-8 text-center">
                 <p className="text-white/70 mb-6">{content.calendar.empty}</p>

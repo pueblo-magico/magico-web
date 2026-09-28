@@ -1,4 +1,5 @@
 import React from 'react';
+import { HorizontalCardRail } from '../../components/HorizontalCardRail';
 
 const VueloDelCondorTestimonios: React.FC = () => {
   return (
@@ -15,7 +16,7 @@ const VueloDelCondorTestimonios: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <HorizontalCardRail previousLabel="Testimonio anterior" nextLabel="Testimonio siguiente" desktopGridClassName="md:grid-cols-3 lg:grid-cols-5" mobileItemClassName="w-[72vw]" gapClassName="gap-4">
             {[
               "xyNHRu_6_FA",
               "XkX8N6mrwdE",
@@ -39,7 +40,7 @@ const VueloDelCondorTestimonios: React.FC = () => {
                 />
               </div>
             ))}
-          </div>
+          </HorizontalCardRail>
         </div>
 
       </div>

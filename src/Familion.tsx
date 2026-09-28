@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import { HorizontalCardRail } from '../components/HorizontalCardRail';
 import { CampfireIcon, SunIcon, MoonIcon, UsersThreeIcon, LeafIcon, ForkKnifeIcon, StarIcon } from '@phosphor-icons/react';
 
 import FamilionHero from './components/FamilionHero';
@@ -277,9 +278,9 @@ const FamilionContent: React.FC = () => {
             {t.familion.testimonials.title}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
+          <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-2" gapClassName="gap-8 md:gap-10">
             {t.familion.testimonials.items.map((testi: any, i: number) => (
-              <div key={i} data-reveal data-delay={String(i)} className="p-8 md:p-10 bg-white rounded-2xl card-hover border border-brand-green/10">
+              <div key={i} data-reveal data-delay={String(i)} className="h-full p-8 md:p-10 bg-white rounded-2xl card-hover border border-brand-green/10">
                 <div className="testimonial-quote mb-6">
                   <p className="text-gray-700 italic text-sm md:text-base leading-relaxed">
                     {testi.text}
@@ -294,7 +295,7 @@ const FamilionContent: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </HorizontalCardRail>
 
           <div className="mt-16 md:mt-24">
             <h3 className="text-2xl md:text-3xl serif-title brand-green text-center mb-8 md:mb-10">{t.familion.testimonials.subtitle}</h3>

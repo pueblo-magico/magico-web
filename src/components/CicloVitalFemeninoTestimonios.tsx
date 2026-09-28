@@ -1,4 +1,5 @@
 import React from 'react';
+import { HorizontalCardRail } from '../../components/HorizontalCardRail';
 
 const TESTIMONIOS = [
   {
@@ -41,11 +42,11 @@ const CicloVitalFemeninoTestimonios: React.FC = () => {
           </a>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <HorizontalCardRail previousLabel="Testimonio anterior" nextLabel="Testimonio siguiente" desktopGridClassName="md:grid-cols-3" gapClassName="gap-6">
           {TESTIMONIOS.map((t, i) => (
             <div
               key={t.name}
-              className="bg-white rounded-2xl p-6 md:p-7"
+              className="h-full bg-white rounded-2xl p-6 md:p-7"
               style={{ boxShadow: '0 12px 40px rgba(0,83,51,0.06)' }}
               data-reveal
               data-delay={String(i + 1)}
@@ -60,7 +61,7 @@ const CicloVitalFemeninoTestimonios: React.FC = () => {
               </div>
             </div>
           ))}
-        </div>
+        </HorizontalCardRail>
       </div>
     </section>
   );
