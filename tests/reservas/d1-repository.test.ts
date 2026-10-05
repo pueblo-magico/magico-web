@@ -129,8 +129,22 @@ test('el repositorio del panel encapsula consultas y normaliza la conversión', 
   const calls: { query: string; values: unknown[] }[] = [];
   const responses = [
     { results: [{ id: 1, nombre: 'Refugio', tipo: 'refugio', capacidad_total: 15 }] },
-    { results: [{ id: 10, estado: 'confirmada' }] },
-    { results: [{ id: 9, estado: 'cancelada' }] },
+    { results: [{
+      id: 10,
+      estado: 'confirmada',
+      excepcion_capacidad_id: 4,
+      excepcion_capacidad_autorizada: 8,
+      excepcion_motivo: 'Grupo familiar',
+      excepcion_plan_camas: 'Cama adicional',
+      excepcion_fecha_desde: null,
+      excepcion_fecha_hasta: null,
+      excepcion_estado: 'aprobada',
+      excepcion_solicitada_por: 'editor@test',
+      excepcion_decidida_por: 'admin@test',
+      excepcion_solicitada_at: 'antes',
+      excepcion_decidida_at: 'después',
+    }] },
+    { results: [{ id: 9, estado: 'cancelada', excepcion_capacidad_id: null }] },
     { results: [{ id: 8, cliente_nombre: 'Ana' }] },
     { total: '4', confirmadas: '3' },
   ];
@@ -163,7 +177,9 @@ test('el repositorio del panel encapsula consultas y normaliza la conversión', 
 
   assert.equal(alojamientos[0].nombre, 'Refugio');
   assert.equal(operativas[0].estado, 'confirmada');
+  assert.equal(operativas[0].excepcion_capacidad?.capacidad_autorizada, 8);
   assert.equal(historial[0].estado, 'cancelada');
+  assert.equal(historial[0].excepcion_capacidad, null);
   assert.equal(pendientes[0].cliente_nombre, 'Ana');
   assert.deepEqual(conversion, { total: 4, confirmadas: 3 });
   assert.deepEqual(calls[3].values, ['-3 days']);

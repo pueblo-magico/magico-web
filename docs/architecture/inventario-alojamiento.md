@@ -58,3 +58,22 @@ cutover. Las claves nuevas sí usan foreign keys nativas.
 1/2/3 hacia Domo 1, Domo 2 y Refugio. El backfill cubre las estadías existentes
 y triggers mantienen el mapeo para altas y cambios realizados por los
 adaptadores legacy.
+
+## Excepciones de capacidad
+
+La capacidad comercial de cada domo permanece en siete y su máximo operativo
+en diez. `excepciones_capacidad` registra una autorización puntual vinculada a
+la estadía, nunca un cambio temporal sobre `espacios`.
+
+Cada solicitud exige capacidad, motivo y plan de camas. Puede abarcar toda la
+estadía o un rango nocturno interno. Su ciclo es `solicitada` → `aprobada` o
+`rechazada`; una aprobación puede pasar a `revocada`. Las solicitudes y cada
+decisión generan tanto un evento de reserva como una entrada de auditoría
+administrativa.
+
+El flujo público conserva el máximo de siete. Para llevar una reserva
+administrativa a 8–10 personas se solicita y aprueba primero la excepción; los
+triggers rechazan cualquier actualización sin esa aprobación y todo valor por
+encima de diez. Los editores pueden solicitar y solamente el permiso
+`reservas.capacidad.autorizar`, asignado hoy a `super_admin`, puede aprobar,
+rechazar o revocar.

@@ -51,6 +51,19 @@ type Reserva = {
   canal_origen: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  excepcion_capacidad?: {
+    id: number;
+    capacidad_autorizada: number;
+    motivo: string;
+    plan_camas: string;
+    fecha_desde: string | null;
+    fecha_hasta: string | null;
+    estado: 'solicitada' | 'aprobada' | 'rechazada' | 'revocada';
+    solicitada_por: string;
+    decidida_por: string | null;
+    solicitada_at: string;
+    decidida_at: string | null;
+  } | null;
 };
 
 type Consulta = {
@@ -234,9 +247,10 @@ const ModalReserva: React.FC<{
   reserva: Reserva | null;
   alojamientos: Alojamiento[];
   soloLectura?: boolean;
+  rol?: Rol;
   onClose: () => void;
   onGuardado: () => void;
-}> = ({ modo, reserva, alojamientos, soloLectura, onClose, onGuardado }) => {
+}> = ({ modo, reserva, alojamientos, soloLectura, rol, onClose, onGuardado }) => {
   const [form, setForm] = useState<FormReserva>(() => ({
     cliente_nombre: reserva?.cliente_nombre || '',
     cliente_telefono: reserva?.cliente_telefono || '',
@@ -258,6 +272,11 @@ const ModalReserva: React.FC<{
   const [aviso, setAviso] = useState('');
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [excepcion, setExcepcion] = useState(reserva?.excepcion_capacidad || null);
+  const [capacidadExcepcional, setCapacidadExcepcional] = useState('8');
+  const [motivoExcepcion, setMotivoExcepcion] = useState('');
+  const [planCamas, setPlanCamas] = useState('');
+  const [gestionandoCapacidad, setGestionandoCapacidad] = useState(false);
 
   const setCampo = (campo: keyof FormReserva, valor: string) => setForm(f => ({ ...f, [campo]: valor }));
 
@@ -364,6 +383,36 @@ const ModalReserva: React.FC<{
     } catch {
       setCancelando(false);
       setError('No se pudo cancelar. Probá de nuevo.');
+    }
+  };
+
+  const gestionarCapacidad = async (accion: 'solicitar' | 'aprobar' | 'rechazar' | 'revocar') => {
+    if (!reserva) return;
+    setGestionandoCapacidad(true);
+    setError('');
+    try {
+      const body = accion === 'solicitar'
+        ? {
+            accion,
+            reserva_id: reserva.id,
+            capacidad_autorizada: Number(capacidadExcepcional),
+            motivo: motivoExcepcion.trim(),
+            plan_camas: planCamas.trim(),
+          }
+        : { accion, excepcion_id: excepcion?.id };
+      const res = await fetch('/api/admin/excepciones-capacidad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo gestionar la capacidad.');
+      setExcepcion(data.excepcion);
+      onGuardado();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo gestionar la capacidad.');
+    } finally {
+      setGestionandoCapacidad(false);
     }
   };
 
@@ -479,6 +528,51 @@ const ModalReserva: React.FC<{
           </a>
         )}
       </fieldset>
+
+      {modo === 'editar' && reserva?.alojamiento_tipo === 'domo' && (
+        <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3" aria-label="Capacidad excepcional">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">Capacidad excepcional</p>
+          {excepcion ? (
+            <div className="mt-2 space-y-1 text-xs text-amber-900">
+              <p><strong>{excepcion.capacidad_autorizada} personas</strong> · {excepcion.estado}</p>
+              <p>Motivo: {excepcion.motivo}</p>
+              <p>Plan de camas: {excepcion.plan_camas}</p>
+              <p className="text-amber-700">Solicitada por {excepcion.solicitada_por}</p>
+              {rol === 'super_admin' && excepcion.estado === 'solicitada' && (
+                <div className="flex gap-2 pt-2">
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('aprobar')} className={`text-xs font-semibold rounded-lg bg-brand px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Aprobar</button>
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('rechazar')} className={`text-xs font-semibold rounded-lg border border-red-300 px-3 py-2 text-red-700 disabled:opacity-60 ${FOCUS_RING}`}>Rechazar</button>
+                </div>
+              )}
+              {rol === 'super_admin' && excepcion.estado === 'aprobada' && (
+                <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('revocar')} className={`mt-2 text-xs font-semibold text-red-700 hover:underline disabled:opacity-60 ${FOCUS_RING}`}>Revocar excepción</button>
+              )}
+              {!soloLectura && (excepcion.estado === 'rechazada' || excepcion.estado === 'revocada') && (
+                <div className="mt-3 grid gap-2 border-t border-amber-200 pt-3">
+                  <p className="text-xs font-semibold text-amber-800">Nueva solicitud</p>
+                  <div className="grid grid-cols-[7rem_1fr] gap-2">
+                    <input aria-label="Nueva capacidad solicitada" type="number" min={8} max={10} className={inputCls} value={capacidadExcepcional} onChange={e => setCapacidadExcepcional(e.target.value)} />
+                    <input aria-label="Nuevo motivo de la excepción" className={inputCls} placeholder="Motivo obligatorio" value={motivoExcepcion} onChange={e => setMotivoExcepcion(e.target.value)} />
+                  </div>
+                  <textarea aria-label="Nuevo plan de camas" className={inputCls} rows={2} placeholder="Plan de camas obligatorio" value={planCamas} onChange={e => setPlanCamas(e.target.value)} />
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('solicitar')} className={`justify-self-start text-xs font-semibold rounded-lg bg-amber-700 px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Solicitar nueva excepción</button>
+                </div>
+              )}
+            </div>
+          ) : !soloLectura ? (
+            <div className="mt-2 grid gap-2">
+              <div className="grid grid-cols-[7rem_1fr] gap-2">
+                <input aria-label="Capacidad solicitada" type="number" min={8} max={10} className={inputCls} value={capacidadExcepcional} onChange={e => setCapacidadExcepcional(e.target.value)} />
+                <input aria-label="Motivo de la excepción" className={inputCls} placeholder="Motivo obligatorio" value={motivoExcepcion} onChange={e => setMotivoExcepcion(e.target.value)} />
+              </div>
+              <textarea aria-label="Plan de camas" className={inputCls} rows={2} placeholder="Plan de camas obligatorio" value={planCamas} onChange={e => setPlanCamas(e.target.value)} />
+              <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('solicitar')} className={`justify-self-start text-xs font-semibold rounded-lg bg-amber-700 px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Solicitar excepción</button>
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-amber-700">No hay una excepción registrada.</p>
+          )}
+        </section>
+      )}
 
       {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
       {aviso && !error && <p className="text-xs text-amber-600 mb-3" role="alert">{aviso}</p>}
@@ -1242,6 +1336,10 @@ const ACCION_LABEL: Record<string, string> = {
   cambiar_rol: 'Cambió rol',
   desactivar_usuario: 'Desactivó usuario',
   reactivar_usuario: 'Reactivó usuario',
+  solicitar_excepcion_capacidad: 'Solicitó una excepción de capacidad',
+  aprobar_excepcion_capacidad: 'Aprobó una excepción de capacidad',
+  rechazar_excepcion_capacidad: 'Rechazó una excepción de capacidad',
+  revocar_excepcion_capacidad: 'Revocó una excepción de capacidad',
 };
 
 const fmtFechaHora = (iso: string) => {
@@ -1797,6 +1895,7 @@ const PanelReservas: React.FC = () => {
           reserva={modalReserva.reserva}
           alojamientos={alojamientos}
           soloLectura={!puedeEditar}
+          rol={auth.rol}
           onClose={() => setModalReserva(null)}
           onGuardado={handleGuardado}
         />

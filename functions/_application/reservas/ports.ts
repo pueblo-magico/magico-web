@@ -15,6 +15,27 @@ import type {
   ModalidadEspacio,
   UnidadAsignable,
 } from '../../_domain/reservas/accommodationInventory.ts';
+import type {
+  ContextoCapacidadReserva,
+  EstadoExcepcionCapacidad,
+  ExcepcionCapacidad,
+  SolicitudExcepcionCapacidadValidada,
+} from '../../_domain/reservas/capacityExceptions.ts';
+
+export interface RepositorioExcepcionesCapacidad {
+  obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
+  obtenerPorId(excepcionId: number): Promise<ExcepcionCapacidad | null>;
+  crearSolicitud(
+    solicitud: SolicitudExcepcionCapacidadValidada,
+    actorEmail: string
+  ): Promise<ExcepcionCapacidad>;
+  cambiarEstado(
+    excepcionId: number,
+    estadoActual: EstadoExcepcionCapacidad,
+    estadoNuevo: EstadoExcepcionCapacidad,
+    actorEmail: string
+  ): Promise<ExcepcionCapacidad | null>;
+}
 
 export interface RepositorioInventarioAlojamiento {
   listarEspaciosReservables(
