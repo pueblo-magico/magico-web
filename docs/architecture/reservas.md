@@ -43,6 +43,8 @@ Las interfaces HTTP de reservas usan `jsonReserva` y `respuestaErrorReserva`. Lo
 
 La integración de ManyChat usa `iniciarReservaManyChat`, el mismo caso de uso de cotización, un repositorio D1 para la reserva pendiente y un adaptador de Mercado Pago. El handler conserva autenticación, validación y traducción del resultado externo, sin SQL ni llamadas directas al proveedor de pagos.
 
+El webhook de Mercado Pago conserva la validación HMAC en la interfaz HTTP y delega la consulta del pago, la transición de reserva y la notificación de ManyChat a puertos separados mediante `procesarPagoMercadoPago`. La firma, reintentos e idempotencia integral se endurecen en WRESERV-13.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.

@@ -111,3 +111,31 @@ export interface ProveedorCheckoutReserva {
     checkoutUrl: string | null;
   }>;
 }
+
+export type PagoExternoReserva = {
+  id: string;
+  estado: string;
+  referenciaExterna: unknown;
+};
+
+export type ReservaConfirmadaParaNotificar = {
+  manyChatUserId: string | null;
+  fechaCheckin: string;
+  fechaCheckout: string;
+};
+
+export interface ProveedorPagosReserva {
+  obtenerPago(pagoId: string): Promise<PagoExternoReserva | null>;
+}
+
+export interface RepositorioEstadoPagoReserva {
+  confirmar(
+    reservaId: number,
+    pagoId: string
+  ): Promise<ReservaConfirmadaParaNotificar | null>;
+  cancelarPendiente(reservaId: number, pagoId: string): Promise<void>;
+}
+
+export interface NotificadorReservaConfirmada {
+  notificar(reserva: ReservaConfirmadaParaNotificar): Promise<void>;
+}
