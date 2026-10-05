@@ -11,7 +11,8 @@
 // ejemplo, que la reserva de Airbnb que está cargando YA existe en la
 // realidad, aunque nuestra grilla la marque "libre").
 
-import { requireRole } from '../../_lib/authGuard';
+import { requirePermission } from '../../_lib/authGuard';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../../_interfaces/http/requestSecurity.ts';
 import { crearReservaManual } from '../../_application/reservas/crearReservaManual.ts';
 import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
 import { D1RepositorioCreacionReserva } from '../../_infrastructure/d1/D1RepositorioCreacionReserva.ts';
@@ -20,14 +21,14 @@ import { jsonReserva as json, respuestaErrorReserva } from '../../_interfaces/ht
 const TIPOS_ESTADIA_VALIDOS = ['huesped', 'staff', 'voluntario', 'residente'];
 
 export async function onRequestPost({ request, env }: any) {
-  const auth = await requireRole(request, env, ['super_admin', 'editor']);
+  const auth = await requirePermission(request, env, 'reservas.crear');
   if (auth instanceof Response) return auth;
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const {

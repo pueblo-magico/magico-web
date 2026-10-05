@@ -33,15 +33,13 @@ export async function editarReserva(
   if (!actualizada) return { ok: false, codigo: 'RESERVA_NO_ENCONTRADA' };
 
   const accion = solicitud.cambios.estado === 'cancelada' ? 'cancelar_reserva' : 'editar_reserva';
-  const detalle = Object.entries(solicitud.cambios)
-    .map(([campo, valor]) => `${campo}=${valor}`)
-    .join(', ');
-
-  await auditoria.registrar(
-    solicitud.actorEmail,
+  await auditoria.registrar({
+    email: solicitud.actorEmail,
     accion,
-    `Reserva #${solicitud.reservaId}: ${detalle}`
-  );
+    entidadTipo: 'reserva',
+    entidadId: solicitud.reservaId,
+    metadata: { campos: Object.keys(solicitud.cambios).sort() },
+  });
 
   return { ok: true, reservaId: actualizada.id };
 }

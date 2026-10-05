@@ -73,7 +73,15 @@ export interface RepositorioAsignacionesReserva {
 }
 
 export interface RegistroAuditoriaReservas {
-  registrar(email: string, accion: string, detalle?: string): Promise<void>;
+  registrar(entrada: {
+    email: string;
+    accion: string;
+    entidadTipo?: string;
+    entidadId?: string | number;
+    motivo?: string;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<void>;
 }
 
 export type ReservaManualNueva = {
@@ -175,4 +183,32 @@ export interface RepositorioEstadoPagoReserva {
 
 export interface NotificadorReservaConfirmada {
   notificar(reserva: ReservaConfirmadaParaNotificar): Promise<void>;
+}
+
+export type DatosPersonalesReserva = {
+  id: number;
+  codigo: string | null;
+  cliente_nombre: string;
+  cliente_telefono: string | null;
+  cliente_email: string | null;
+  manychat_user_id: string | null;
+  fecha_checkin: string;
+  fecha_checkout: string;
+  cantidad_personas: number;
+  estado: string;
+  canal_origen: string | null;
+  created_at: string;
+  updated_at: string | null;
+};
+
+export interface RepositorioDatosPersonalesReserva {
+  obtener(reservaId: number): Promise<DatosPersonalesReserva | null>;
+  anonimizar(reservaId: number): Promise<void>;
+  registrarSolicitud(entrada: {
+    reservaId: number;
+    tipo: 'exportacion' | 'anonimizacion';
+    actorEmail: string;
+    motivo: string;
+    correlationId: string;
+  }): Promise<void>;
 }

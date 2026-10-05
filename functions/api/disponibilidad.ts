@@ -8,6 +8,7 @@
 
 import { consultarCalendarioDisponibilidad } from '../_application/reservas/consultarCalendarioDisponibilidad.ts';
 import { D1RepositorioCalendarioDisponibilidad } from '../_infrastructure/d1/D1RepositorioCalendarioDisponibilidad.ts';
+import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
 
 const ALLOWED_ORIGINS = ['https://experienciamagico.com'];
 const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -35,6 +36,8 @@ export async function onRequestOptions({ request }: any) {
 }
 
 export async function onRequestGet({ request, env }: any) {
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.disponibilidad', 60, 60));
+  if (limitada) return limitada;
   const headers = corsHeaders(request);
   const url = new URL(request.url);
   const desde = url.searchParams.get('desde') || '';

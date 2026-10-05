@@ -16,7 +16,7 @@
 // histórico. También devuelve el listado completo de alojamientos, para que
 // el frontend pueda dibujar las filas de la grilla aunque un día esté vacío.
 
-import { requireAuth } from '../../_lib/authGuard';
+import { requirePermission } from '../../_lib/authGuard';
 import { consultarPanelReservas } from '../../_application/reservas/consultarPanelReservas.ts';
 import { D1RepositorioPanelReservas } from '../../_infrastructure/d1/D1RepositorioPanelReservas.ts';
 
@@ -28,7 +28,7 @@ function json(body: unknown, status = 200) {
 }
 
 export async function onRequestGet({ request, env }: any) {
-  const auth = await requireAuth(request, env);
+  const auth = await requirePermission(request, env, 'reservas.leer');
   if (auth instanceof Response) return auth;
 
   const url = new URL(request.url);

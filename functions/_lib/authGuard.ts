@@ -14,7 +14,7 @@
 //   const auth = await requireRole(request, env, ['super_admin', 'editor']);
 //   if (auth instanceof Response) return auth;
 
-import { readCookie, verifySessionToken, COOKIE_NAME } from './session';
+import { readCookie, verifySessionToken, COOKIE_NAME, CSRF_COOKIE_NAME } from './session.ts';
 import {
   rolTienePermiso,
   type PermisoAdmin,
@@ -30,11 +30,25 @@ function json(body: unknown, status: number) {
 }
 
 export async function requireAuth(request: Request, env: any): Promise<Auth | Response> {
+  if (typeof env.SESSION_SECRET !== 'string' || env.SESSION_SECRET.length < 32) {
+    return json({ error: 'Autenticación no disponible.' }, 503);
+  }
   const token = readCookie(request, COOKIE_NAME);
   if (!token) return json({ error: 'No autenticado.' }, 401);
 
   const session = await verifySessionToken(token, env.SESSION_SECRET);
   if (!session) return json({ error: 'Sesión inválida o vencida.' }, 401);
+
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method.toUpperCase())) {
+    const header = request.headers.get('X-CSRF-Token');
+    const cookie = readCookie(request, CSRF_COOKIE_NAME);
+    if (!header || !cookie || header.length !== session.csrf.length || cookie !== session.csrf) {
+      return json({ error: 'Solicitud inválida.' }, 403);
+    }
+    let diferencia = 0;
+    for (let i = 0; i < header.length; i++) diferencia |= header.charCodeAt(i) ^ session.csrf.charCodeAt(i);
+    if (diferencia !== 0) return json({ error: 'Solicitud inválida.' }, 403);
+  }
 
   const usuario: any = await env.DB
     .prepare(`SELECT email, rol, activo FROM usuarios_admin WHERE LOWER(email) = ?`)

@@ -4,21 +4,22 @@
 // Protegido por sesión propia, roles super_admin/editor — ver
 // functions/_lib/authGuard.ts y nota en functions/api/admin/reservas.ts.
 
-import { requireRole } from '../../_lib/authGuard';
+import { requirePermission } from '../../_lib/authGuard';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../../_interfaces/http/requestSecurity.ts';
 import { asignarUnidadReserva } from '../../_application/reservas/asignarUnidadReserva.ts';
 import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
 import { D1RepositorioAsignacionesReserva } from '../../_infrastructure/d1/D1RepositorioAsignacionesReserva.ts';
 import { jsonReserva as json } from '../../_interfaces/http/reservasHttp.ts';
 
 export async function onRequestPost({ request, env }: any) {
-  const auth = await requireRole(request, env, ['super_admin', 'editor']);
+  const auth = await requirePermission(request, env, 'reservas.asignar');
   if (auth instanceof Response) return auth;
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const { reserva_id, unidad_asignada } = body || {};

@@ -12,7 +12,8 @@
 // del schema (schema.sql) — si el UPDATE las viola, D1 tira el error y acá
 // simplemente lo devolvemos legible, en vez de duplicar esa lógica.
 
-import { requireRole } from '../../_lib/authGuard';
+import { requireAuth, tienePermiso } from '../../_lib/authGuard';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../../_interfaces/http/requestSecurity.ts';
 import {
   CAMPOS_EDITABLES_RESERVA,
   editarReserva,
@@ -23,17 +24,22 @@ import { D1RepositorioEdicionReserva } from '../../_infrastructure/d1/D1Reposito
 import { jsonReserva as json, respuestaErrorReserva } from '../../_interfaces/http/reservasHttp.ts';
 
 export async function onRequestPost({ request, env }: any) {
-  const auth = await requireRole(request, env, ['super_admin', 'editor']);
+  const auth = await requireAuth(request, env);
   if (auth instanceof Response) return auth;
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const { reserva_id, ...resto } = body || {};
+  const permiso = resto.estado === 'cancelada' ? 'reservas.cancelar' : 'reservas.editar';
+  if (!tienePermiso(auth, permiso)) return json({ error: 'No tenés permiso para esta acción.' }, 403);
+  if (('monto_total' in resto || 'monto_sena' in resto) && !tienePermiso(auth, 'reservas.pagos.gestionar')) {
+    return json({ error: 'No tenés permiso para modificar importes.' }, 403);
+  }
   const id = Number(reserva_id);
   if (!Number.isInteger(id) || id < 1) {
     return json({ error: 'reserva_id debe ser un entero válido.' }, 400);

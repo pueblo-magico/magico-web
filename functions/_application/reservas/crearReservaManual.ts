@@ -26,11 +26,13 @@ export async function crearReservaManual(
   );
   const creada = await repository.crearManual(reserva);
 
-  await auditoria.registrar(
-    actorEmail,
-    'crear_reserva',
-    `Reserva #${creada.id} — ${reserva.clienteNombre}`
-  );
+  await auditoria.registrar({
+    email: actorEmail,
+    accion: 'crear_reserva',
+    entidadTipo: 'reserva',
+    entidadId: creada.id,
+    metadata: { canal: reserva.canalOrigen },
+  });
 
   return {
     reservaId: creada.id,

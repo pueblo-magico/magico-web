@@ -13,24 +13,26 @@ import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1Repositorio
 import { D1RepositorioReservasManyChat } from '../_infrastructure/d1/D1RepositorioReservasManyChat.ts';
 import { MercadoPagoCheckoutReservas } from '../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonReserva as json } from '../_interfaces/http/reservasHttp.ts';
-import {
-  autenticarSolicitudManyChat,
-  obtenerOrigenSolicitudManyChat,
-} from '../_interfaces/http/manychatAuth.ts';
+import { obtenerOrigenSolicitudManyChat } from '../_interfaces/http/manychatAuth.ts';
+import { autenticarServicio } from '../_interfaces/http/serviceAuth.ts';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../_interfaces/http/requestSecurity.ts';
+import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
 
 export async function onRequestPost({ request, env }: any) {
-  if (!autenticarSolicitudManyChat(
-    request.headers.get('X-ManyChat-Secret'),
-    env.MANYCHAT_INBOUND_SECRET
-  )) {
+  const secreto = request.headers.get('X-ManyChat-Secret') ||
+    request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '') || null;
+  if (!autenticarServicio('manychat', secreto, env, 'reservas:crear')) {
     return json({ error: 'No autorizado.' }, 401);
   }
 
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'integracion.manychat', 30, 60, `manychat:${secreto}`));
+  if (limitada) return limitada;
+
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const { fecha_entrada, fecha_salida, cantidad_personas, alojamiento_seleccionado, user_id } = body || {};

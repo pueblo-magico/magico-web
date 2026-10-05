@@ -32,9 +32,7 @@ test('asigna una unidad normalizada y registra la auditoría', async () => {
 
   assert.deepEqual(asignaciones, [[12, 'Domo 2']]);
   assert.deepEqual(auditorias, [[
-    'admin@magico.test',
-    'asignar_unidad',
-    'Reserva #12 → Domo 2',
+    { email: 'admin@magico.test', accion: 'asignar_unidad', entidadTipo: 'reserva', entidadId: 12, metadata: { asignada: true } },
   ]]);
   assert.deepEqual(resultado, { ok: true, reservaId: 12, unidadAsignada: 'Domo 2' });
 });
@@ -73,11 +71,11 @@ test('los adaptadores D1 encapsulan asignación y auditoría', async () => {
   };
 
   const asignacion = await new D1RepositorioAsignacionesReserva(db).asignarUnidad(4, '');
-  await new D1RegistroAuditoriaReservas(db).registrar('a@b.test', 'asignar_unidad');
+  await new D1RegistroAuditoriaReservas(db).registrar({ email: 'a@b.test', accion: 'asignar_unidad' });
 
   assert.deepEqual(asignacion, { id: 4, unidad_asignada: null });
   assert.deepEqual(calls[0].values, ['', 4]);
-  assert.deepEqual(calls[1].values, ['a@b.test', 'asignar_unidad', null]);
+  assert.deepEqual(calls[1].values, ['a@b.test', 'asignar_unidad', null, null, null, null, null]);
 });
 
 test('el adaptador de asignación devuelve null si no hay reserva', async () => {

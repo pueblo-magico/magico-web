@@ -33,9 +33,7 @@ test('edita parcialmente una reserva y audita los cambios', async () => {
 
   assert.deepEqual(actualizaciones, [[7, { cliente_nombre: 'Ana', monto_sena: 20_000 }]]);
   assert.deepEqual(auditorias, [[
-    'admin@magico.test',
-    'editar_reserva',
-    'Reserva #7: cliente_nombre=Ana, monto_sena=20000',
+    { email: 'admin@magico.test', accion: 'editar_reserva', entidadTipo: 'reserva', entidadId: 7, metadata: { campos: ['cliente_nombre', 'monto_sena'] } },
   ]]);
   assert.deepEqual(resultado, { ok: true, reservaId: 7 });
 });
@@ -48,7 +46,7 @@ test('distingue la cancelación en la auditoría', async () => {
     { async registrar(...valores) { auditorias.push(valores); } }
   );
 
-  assert.equal(auditorias[0][1], 'cancelar_reserva');
+  assert.equal((auditorias[0][0] as any).accion, 'cancelar_reserva');
 });
 
 test('no audita si la reserva no existe', async () => {
