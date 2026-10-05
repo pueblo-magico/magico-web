@@ -82,3 +82,32 @@ export type CambiosReserva = Partial<Record<CampoEditableReserva, unknown>>;
 export interface RepositorioEdicionReserva {
   actualizarParcial(reservaId: number, cambios: CambiosReserva): Promise<{ id: number } | null>;
 }
+
+export type ReservaPendienteManyChat = {
+  clienteNombre: string;
+  alojamientoId: number;
+  fechaCheckin: string;
+  fechaCheckout: string;
+  cantidadPersonas: number;
+  montoTotal: number;
+  montoSena: number;
+  manyChatUserId: string;
+};
+
+export interface RepositorioReservasManyChat {
+  crearPendiente(reserva: ReservaPendienteManyChat): Promise<{ id: number | undefined }>;
+  guardarPreferenciaPago(reservaId: number, preferenciaId: string): Promise<void>;
+}
+
+export type SolicitudPreferenciaPago = {
+  reservaId: number;
+  tipoAlojamiento: 'domo' | 'refugio';
+  montoSena: number;
+};
+
+export interface ProveedorCheckoutReserva {
+  crearPreferencia(solicitud: SolicitudPreferenciaPago): Promise<{
+    preferenciaId: string;
+    checkoutUrl: string | null;
+  }>;
+}

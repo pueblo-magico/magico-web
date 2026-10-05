@@ -41,6 +41,8 @@ La edición parcial usa `editarReserva` y `D1RepositorioEdicionReserva`. El adap
 
 Las interfaces HTTP de reservas usan `jsonReserva` y `respuestaErrorReserva`. Los errores tipados conservan código y estado estables; las excepciones desconocidas reciben un mensaje público genérico y no exponen texto de D1 al cliente.
 
+La integración de ManyChat usa `iniciarReservaManyChat`, el mismo caso de uso de cotización, un repositorio D1 para la reserva pendiente y un adaptador de Mercado Pago. El handler conserva autenticación, validación y traducción del resultado externo, sin SQL ni llamadas directas al proveedor de pagos.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.
