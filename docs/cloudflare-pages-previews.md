@@ -42,6 +42,9 @@ Configure también valores exclusivos de preview para `SESSION_SECRET` (mínimo
 producción. `RATE_LIMIT_SALT` es recomendable; si falta, el runtime usa
 `SESSION_SECRET` y finalmente un namespace fijo de la aplicación para hashear
 los buckets sin almacenar IPs en claro ni dejar indisponible la API pública.
+El workflow hace un smoke test y exige que `/api/admin/me` responda `401` sin
+cookie. Un `503` indica que `SESSION_SECRET` falta o no alcanza la longitud
+mínima; en ese caso la preview no se considera válida.
 
 Do not configure the production `MANYCHAT_API_KEY` in preview. When
 `MANYCHAT_API_KEY` or `MANYCHAT_CONFIRMATION_FLOW_NS` is absent, payment state
