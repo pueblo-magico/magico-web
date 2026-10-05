@@ -62,3 +62,23 @@ export interface RepositorioCreacionReserva {
   ): Promise<number>;
   crearManual(reserva: ReservaManualNueva): Promise<{ id: number | undefined }>;
 }
+
+export type CampoEditableReserva =
+  | 'cliente_nombre'
+  | 'cliente_telefono'
+  | 'cliente_email'
+  | 'alojamiento_id'
+  | 'fecha_checkin'
+  | 'fecha_checkout'
+  | 'cantidad_personas'
+  | 'monto_total'
+  | 'monto_sena'
+  | 'estado'
+  | 'canal_origen'
+  | 'unidad_asignada';
+
+export type CambiosReserva = Partial<Record<CampoEditableReserva, unknown>>;
+
+export interface RepositorioEdicionReserva {
+  actualizarParcial(reservaId: number, cambios: CambiosReserva): Promise<{ id: number } | null>;
+}

@@ -37,6 +37,8 @@ La asignación manual de unidades usa `asignarUnidadReserva` con puertos separad
 
 La creación manual usa `crearReservaManual` y `D1RepositorioCreacionReserva`. El control de solapamiento sigue siendo informativo —se crea la reserva aunque exista conflicto— para mantener el comportamiento operativo actual hasta que un ticket funcional cambie esa política.
 
+La edición parcial usa `editarReserva` y `D1RepositorioEdicionReserva`. El adaptador vuelve a validar la lista cerrada de columnas antes de construir el `UPDATE`; los valores permanecen parametrizados y la cancelación conserva una acción de auditoría diferenciada.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.
