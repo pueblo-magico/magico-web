@@ -33,6 +33,8 @@ La disponibilidad pública de `/api/disponibilidad` usa `consultarCalendarioDisp
 
 El dashboard principal de `/api/admin/reservas` usa `consultarPanelReservas`. Las consultas legacy están encapsuladas en `D1RepositorioPanelReservas` y las métricas son una función pura. El cálculo de “hoy” continúa en UTC para preservar comportamiento; WRESERV-17 es responsable del cambio de zona horaria.
 
+La asignación manual de unidades usa `asignarUnidadReserva` con puertos separados para persistencia y auditoría. El handler conserva autenticación, validación HTTP y serialización, pero no ejecuta SQL.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.

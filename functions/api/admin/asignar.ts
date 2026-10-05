@@ -5,7 +5,9 @@
 // functions/_lib/authGuard.ts y nota en functions/api/admin/reservas.ts.
 
 import { requireRole } from '../../_lib/authGuard';
-import { registrarAuditoria } from '../../_lib/auditoria';
+import { asignarUnidadReserva } from '../../_application/reservas/asignarUnidadReserva.ts';
+import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
+import { D1RepositorioAsignacionesReserva } from '../../_infrastructure/d1/D1RepositorioAsignacionesReserva.ts';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body, null, 2), {
@@ -35,17 +37,19 @@ export async function onRequestPost({ request, env }: any) {
     return json({ error: 'unidad_asignada debe ser un texto.' }, 400);
   }
 
-  const db = env.DB;
-  const row: any = await db
-    .prepare(`UPDATE reservas SET unidad_asignada = ? WHERE id = ? RETURNING id, unidad_asignada`)
-    .bind(unidad_asignada.trim(), id)
-    .first();
+  const resultado = await asignarUnidadReserva(
+    { reservaId: id, unidadAsignada: unidad_asignada, actorEmail: auth.email },
+    new D1RepositorioAsignacionesReserva(env.DB),
+    new D1RegistroAuditoriaReservas(env.DB)
+  );
 
-  if (!row) {
+  if (!resultado.ok) {
     return json({ error: `No existe la reserva #${id}.` }, 404);
   }
 
-  await registrarAuditoria(db, auth.email, 'asignar_unidad', `Reserva #${id} → ${row.unidad_asignada || '(sin asignar)'}`);
-
-  return json({ ok: true, reserva_id: row.id, unidad_asignada: row.unidad_asignada });
+  return json({
+    ok: true,
+    reserva_id: resultado.reservaId,
+    unidad_asignada: resultado.unidadAsignada,
+  });
 }

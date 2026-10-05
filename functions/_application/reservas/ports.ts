@@ -25,3 +25,16 @@ export interface RepositorioPanelReservas {
   listarPendientesViejas(umbralDias: number): Promise<PendienteVieja[]>;
   obtenerConversionManyChat(): Promise<ConversionManyChat>;
 }
+
+export type AsignacionUnidadGuardada = {
+  id: number;
+  unidad_asignada: string | null;
+};
+
+export interface RepositorioAsignacionesReserva {
+  asignarUnidad(reservaId: number, unidadAsignada: string): Promise<AsignacionUnidadGuardada | null>;
+}
+
+export interface RegistroAuditoriaReservas {
+  registrar(email: string, accion: string, detalle?: string): Promise<void>;
+}
