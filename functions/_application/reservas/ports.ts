@@ -38,3 +38,27 @@ export interface RepositorioAsignacionesReserva {
 export interface RegistroAuditoriaReservas {
   registrar(email: string, accion: string, detalle?: string): Promise<void>;
 }
+
+export type ReservaManualNueva = {
+  clienteNombre: string;
+  clienteTelefono: string | null;
+  clienteEmail: string | null;
+  alojamientoId: number;
+  fechaCheckin: string;
+  fechaCheckout: string;
+  cantidadPersonas: number;
+  montoTotal: number;
+  montoSena: number | null;
+  estado: string;
+  canalOrigen: string;
+  tipoEstadia: string;
+};
+
+export interface RepositorioCreacionReserva {
+  contarSolapamientos(
+    alojamientoId: number,
+    fechaCheckin: string,
+    fechaCheckout: string
+  ): Promise<number>;
+  crearManual(reserva: ReservaManualNueva): Promise<{ id: number | undefined }>;
+}

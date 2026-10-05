@@ -35,6 +35,8 @@ El dashboard principal de `/api/admin/reservas` usa `consultarPanelReservas`. La
 
 La asignación manual de unidades usa `asignarUnidadReserva` con puertos separados para persistencia y auditoría. El handler conserva autenticación, validación HTTP y serialización, pero no ejecuta SQL.
 
+La creación manual usa `crearReservaManual` y `D1RepositorioCreacionReserva`. El control de solapamiento sigue siendo informativo —se crea la reserva aunque exista conflicto— para mantener el comportamiento operativo actual hasta que un ticket funcional cambie esa política.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.
