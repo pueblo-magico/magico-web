@@ -2,8 +2,6 @@ name: Cloudflare Pages PR Preview
 
 on:
   pull_request:
-    branches:
-      - main
     types: [opened, synchronize, reopened]
 
 concurrency:
@@ -36,11 +34,22 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
 
+      - name: Test reservations with coverage
+        run: npm run test:reservas:coverage
+
       - name: Build
         run: npm run build
 
       # GitHub intentionally withholds repository secrets from forked pull
       # requests. Those PRs still run the complete build above, but cannot deploy.
+      - name: Apply preview D1 migrations
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply DB --remote --env preview
+
       - name: Deploy Cloudflare Pages preview
         id: deploy
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -69,6 +78,8 @@ jobs:
               '### Cloudflare Pages preview',
               '',
               `Preview: ${previewUrl}`,
+              '',
+              'Database: shared preview D1 `magico-ensueno-db-preview`.',
               '',
               `Updated from commit \`${context.sha.slice(0, 7)}\`.`,
             ].join('\n');
