@@ -3,30 +3,26 @@
 // el link de pago de Mercado Pago por el monto de la seña.
 //
 // Requiere estas variables de entorno en Cloudflare Pages:
-//   MANYCHAT_API_KEY   — secreto compartido con ManyChat (valida X-ManyChat-Secret
-//                         Y se usa como Bearer token al llamar la API de ManyChat
-//                         desde webhook-mp.ts). Si en tu cuenta de ManyChat el
-//                         secreto del External Request y el API key "real" son
-//                         valores distintos, separalos en dos env vars.
-//   MP_ACCESS_TOKEN     — access token de Mercado Pago (Producción o Test) para
-//                         crear la Preferencia de pago.
+//   MANYCHAT_INBOUND_SECRET — secreto propio que valida X-ManyChat-Secret.
+//                             No es el API key de la cuenta de ManyChat.
+//   MP_ACCESS_TOKEN          — access token de Mercado Pago (Producción o Test)
+//                              para crear la Preferencia de pago.
 
-import { calcularPrecio, chequearDisponibilidad, mensajePrivacidad, nochesEntre } from '../_lib/cotizador';
-
-// Keep the Pages Function independent from the Vite client configuration.
-// Importing src/data/config here makes Wrangler evaluate import.meta.env while
-// bundling the server-side Function, where Vite's import.meta.env is unavailable.
-const SITE_URL = 'https://experienciamagico.com';
-
-function json(body: unknown, status: number) {
-  return new Response(JSON.stringify(body, null, 2), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+import { iniciarReservaManyChat } from '../_application/reservas/iniciarReservaManyChat.ts';
+import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
+import { D1RepositorioReservasManyChat } from '../_infrastructure/d1/D1RepositorioReservasManyChat.ts';
+import { MercadoPagoCheckoutReservas } from '../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
+import { jsonReserva as json } from '../_interfaces/http/reservasHttp.ts';
+import {
+  autenticarSolicitudManyChat,
+  obtenerOrigenSolicitudManyChat,
+} from '../_interfaces/http/manychatAuth.ts';
 
 export async function onRequestPost({ request, env }: any) {
-  if (request.headers.get('X-ManyChat-Secret') !== env.MANYCHAT_API_KEY) {
+  if (!autenticarSolicitudManyChat(
+    request.headers.get('X-ManyChat-Secret'),
+    env.MANYCHAT_INBOUND_SECRET
+  )) {
     return json({ error: 'No autorizado.' }, 401);
   }
 
@@ -53,103 +49,46 @@ export async function onRequestPost({ request, env }: any) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400);
   }
 
-  const noches = nochesEntre(fecha_entrada, fecha_salida);
-  if (noches === null) {
-    return json({ error: 'Fechas inválidas: fecha_salida debe ser posterior a fecha_entrada.' }, 400);
+  const resultado = await iniciarReservaManyChat({
+    tipo: alojamiento_seleccionado,
+    personas,
+    fechaEntrada: fecha_entrada,
+    fechaSalida: fecha_salida,
+    userId: String(user_id),
+  },
+  new D1RepositorioDisponibilidad(env.DB),
+  new D1RepositorioReservasManyChat(env.DB),
+  new MercadoPagoCheckoutReservas(env.MP_ACCESS_TOKEN, obtenerOrigenSolicitudManyChat(request.url)));
+
+  if (resultado.estado === 'error_validacion') {
+    return json({ error: resultado.mensaje }, 400);
   }
-
-  const precio = calcularPrecio(alojamiento_seleccionado, personas, noches);
-  if ('error' in precio) {
-    return json({ error: precio.error }, 400);
-  }
-
-  const db = env.DB;
-  const disponibilidad = await chequearDisponibilidad(db, alojamiento_seleccionado, personas, fecha_entrada, fecha_salida);
-
-  if (disponibilidad.estado === 'ocupado' || disponibilidad.alojamiento_id === null) {
+  if (resultado.estado === 'ocupado') {
     return json(
       { estado: 'ocupado', mensaje: 'No hay disponibilidad para esas fechas. ¿Querés que te proponga otras opciones?' },
       200
     );
   }
-
-  const senaPorcentaje = precio.subtotal <= 100000 ? 0.5 : 0.3;
-  const montoSena = Math.round(precio.subtotal * senaPorcentaje);
-
-  // NOTA: el schema exige cliente_nombre y ManyChat solo nos manda el user_id.
-  // Guardamos un placeholder identificable — reemplazalo cuando tengas el
-  // nombre real (ej. si lo pedís en un paso previo del flow y lo mandás acá).
-  const clienteNombrePlaceholder = `ManyChat #${user_id}`;
-
-  const inserted: any = await db
-    .prepare(
-      `INSERT INTO reservas
-        (cliente_nombre, alojamiento_id, fecha_checkin, fecha_checkout, cantidad_personas, monto_total, monto_sena, estado, manychat_user_id, canal_origen)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, 'ManyChat')
-       RETURNING id`
-    )
-    .bind(clienteNombrePlaceholder, disponibilidad.alojamiento_id, fecha_entrada, fecha_salida, personas, precio.subtotal, montoSena, String(user_id))
-    .first();
-
-  const reservaId = inserted?.id;
-  if (!reservaId) {
+  if (resultado.estado === 'error_creacion') {
     return json({ error: 'No se pudo crear la reserva.' }, 500);
   }
-
-  let checkoutUrl: string | null = null;
-  try {
-    const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [
-          {
-            title: `Seña — ${alojamiento_seleccionado === 'domo' ? 'Domo' : 'Refugio Compartido'}, Pueblo Mágico`,
-            quantity: 1,
-            unit_price: montoSena,
-            currency_id: 'ARS',
-          },
-        ],
-        external_reference: String(reservaId),
-        notification_url: `${SITE_URL}/api/webhook-mp`,
-        back_urls: {
-          success: `${SITE_URL}/reserva-confirmada`,
-          pending: `${SITE_URL}/reserva-pendiente`,
-          failure: `${SITE_URL}/reserva-fallida`,
-        },
-        auto_return: 'approved',
-      }),
-    });
-
-    const mpData: any = await mpRes.json();
-    if (!mpRes.ok || !mpData.id) {
-      throw new Error(mpData?.message || `Mercado Pago respondió ${mpRes.status}`);
-    }
-
-    checkoutUrl = mpData.init_point;
-    await db.prepare(`UPDATE reservas SET mp_preference_id = ? WHERE id = ?`).bind(mpData.id, reservaId).run();
-  } catch (err: any) {
-    // La reserva 'pendiente' ya existe en D1 aunque falle Mercado Pago — queda
-    // sujeta a limpieza manual o a un cron futuro que libere pendientes viejas
-    // sin mp_preference_id. No la borramos acá para no perder el registro.
+  if (resultado.estado === 'error_pago') {
     return json(
-      { estado: 'error_pago', reserva_id: reservaId, error: `No se pudo generar el link de pago: ${err.message}` },
+      { estado: 'error_pago', reserva_id: resultado.reservaId, error: 'No se pudo generar el link de pago.' },
       502
     );
   }
 
+  const cotizacion = resultado.cotizacion;
   return json(
     {
       estado: 'pendiente_pago',
-      reserva_id: reservaId,
-      checkout_url: checkoutUrl,
-      subtotal: precio.subtotal,
-      monto_sena: montoSena,
-      saldo_checkin: precio.subtotal - montoSena,
-      mensaje_privacidad: mensajePrivacidad(alojamiento_seleccionado, personas),
+      reserva_id: resultado.reservaId,
+      checkout_url: resultado.checkoutUrl,
+      subtotal: cotizacion.desglose.subtotal,
+      monto_sena: cotizacion.sena.monto,
+      saldo_checkin: cotizacion.saldoCheckin,
+      mensaje_privacidad: cotizacion.mensajePrivacidad,
     },
     200
   );

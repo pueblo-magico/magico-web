@@ -2,7 +2,7 @@
 // Recibe una fecha_entrada/fecha_salida + tipo_alojamiento y devuelve disponibilidad,
 // desglose de precio, seña y saldo. No crea la reserva — es solo el "cotizador".
 
-import { calcularPrecio, chequearDisponibilidad, mensajePrivacidad, nochesEntre } from '../_lib/cotizador';
+import { cotizarEstadia } from '../_lib/cotizador';
 
 const ALLOWED_ORIGINS = [
   'https://experienciamagico.com',
@@ -58,35 +58,28 @@ export async function onRequestPost({ request, env }: any) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400, headers);
   }
 
-  const noches = nochesEntre(fecha_entrada, fecha_salida);
-  if (noches === null) {
-    return json({ error: 'Fechas inválidas: fecha_salida debe ser posterior a fecha_entrada.' }, 400, headers);
+  const resultado = await cotizarEstadia(env.DB, {
+    tipo: tipo_alojamiento,
+    personas,
+    fechaEntrada: fecha_entrada,
+    fechaSalida: fecha_salida,
+  });
+  if (resultado.ok === false) {
+    return json({ error: resultado.error.mensaje }, 400, headers);
   }
 
-  const precio = calcularPrecio(tipo_alojamiento, personas, noches);
-  if ('error' in precio) {
-    return json({ error: precio.error }, 400, headers);
-  }
-
-  const { estado } = await chequearDisponibilidad(env.DB, tipo_alojamiento, personas, fecha_entrada, fecha_salida);
-
-  const senaPorcentaje = precio.subtotal <= 100000 ? 0.5 : 0.3;
-  const montoSena = Math.round(precio.subtotal * senaPorcentaje);
-  const saldoCheckin = precio.subtotal - montoSena;
+  const cotizacion = resultado.valor;
 
   return json(
     {
-      estado,
+      estado: cotizacion.disponibilidad.estado,
       fecha_entrada,
       fecha_salida,
-      desglose: precio,
-      subtotal: precio.subtotal,
-      sena: {
-        porcentaje: senaPorcentaje,
-        monto: montoSena,
-      },
-      saldo_checkin: saldoCheckin,
-      mensaje_privacidad: mensajePrivacidad(tipo_alojamiento, personas),
+      desglose: cotizacion.desglose,
+      subtotal: cotizacion.desglose.subtotal,
+      sena: cotizacion.sena,
+      saldo_checkin: cotizacion.saldoCheckin,
+      mensaje_privacidad: cotizacion.mensajePrivacidad,
     },
     200,
     headers
