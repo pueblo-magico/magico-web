@@ -8,6 +8,22 @@ import type {
   ReservaPanel,
   SolicitudCotizacion,
 } from '../../_domain/reservas/models.ts';
+import type {
+  ContextoAlojamiento,
+  EspacioInventario,
+  ModalidadAlojamiento,
+  ModalidadEspacio,
+  UnidadAsignable,
+} from '../../_domain/reservas/accommodationInventory.ts';
+
+export interface RepositorioInventarioAlojamiento {
+  listarEspaciosReservables(
+    contexto: ContextoAlojamiento,
+    modalidad?: ModalidadAlojamiento
+  ): Promise<EspacioInventario[]>;
+  listarModalidades(espacioId: number): Promise<ModalidadEspacio[]>;
+  listarUnidadesAsignables(espacioId: number): Promise<UnidadAsignable[]>;
+}
 
 export interface RepositorioDisponibilidad {
   consultar(solicitud: SolicitudCotizacion): Promise<Disponibilidad>;
