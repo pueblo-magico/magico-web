@@ -31,6 +31,8 @@ La cotización compartida por `/api/cotizar` y `/api/manychat` usa ahora `cotiza
 
 La disponibilidad pública de `/api/disponibilidad` usa `consultarCalendarioDisponibilidad`. La proyección nocturna es una función pura y el handler ya no contiene SQL ni reglas de ocupación. `D1RepositorioCalendarioDisponibilidad` conserva las lecturas legacy hasta que WRESERV-6 introduzca el esquema normalizado.
 
+El dashboard principal de `/api/admin/reservas` usa `consultarPanelReservas`. Las consultas legacy están encapsuladas en `D1RepositorioPanelReservas` y las métricas son una función pura. El cálculo de “hoy” continúa en UTC para preservar comportamiento; WRESERV-17 es responsable del cambio de zona horaria.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.

@@ -71,3 +71,71 @@ export type CalendarioDisponibilidad = {
 export type RespuestaCalendario =
   | { ok: true; valor: CalendarioDisponibilidad }
   | { ok: false; error: { codigo: 'RANGO_INVALIDO'; mensaje: string } };
+
+export type VistaPanelReservas = 'operativa' | 'historial';
+
+export type AlojamientoPanel = {
+  id: number;
+  nombre: string;
+  tipo: string;
+  capacidad_total: number;
+};
+
+export type ReservaPanel = {
+  id: number;
+  cliente_nombre: string;
+  cliente_telefono: string | null;
+  cliente_email: string | null;
+  alojamiento_id: number;
+  alojamiento_nombre: string;
+  alojamiento_tipo: string;
+  fecha_checkin: string;
+  fecha_checkout: string;
+  cantidad_personas: number;
+  monto_total: number;
+  monto_sena: number | null;
+  estado: string;
+  unidad_asignada: string | null;
+  canal_origen: string | null;
+  mp_preference_id: string | null;
+  mp_payment_id: string | null;
+  manychat_user_id: string | null;
+  created_at: string;
+};
+
+export type PendienteVieja = Pick<
+  ReservaPanel,
+  'id' | 'cliente_nombre' | 'cliente_telefono' | 'monto_sena' | 'created_at' | 'alojamiento_nombre'
+>;
+
+export type ConversionManyChat = {
+  total: number;
+  confirmadas: number;
+};
+
+export type MetricasPanelReservas = {
+  total_confirmadas: number;
+  ingresos_senas: number;
+  checkins_hoy: number;
+  checkins_semana: number;
+  checkouts_hoy: number;
+  saldo_pendiente_total: number;
+  total_a_facturar: number;
+  pendientes_viejas: {
+    cantidad: number;
+    umbral_dias: number;
+    items: PendienteVieja[];
+  };
+  conversion_manychat: {
+    total: number;
+    confirmadas: number;
+    pct: number | null;
+  };
+};
+
+export type PanelReservas = {
+  metricas: MetricasPanelReservas;
+  alojamientos: AlojamientoPanel[];
+  reservas: ReservaPanel[];
+  vista: VistaPanelReservas;
+};
