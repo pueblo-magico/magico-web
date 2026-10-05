@@ -1,5 +1,5 @@
 -- WRESERV-9: la consulta aborta si falta alguna estructura de seguridad.
-CREATE TEMP TABLE __wreserv_security_guard (
+CREATE TABLE __wreserv_security_guard (
   ok INTEGER NOT NULL CHECK (ok = 1)
 );
 
