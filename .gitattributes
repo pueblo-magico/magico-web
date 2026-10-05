@@ -1,0 +1,2 @@
+migrations/*.sql text eol=lf
+scripts/reservas/*.sql text eol=lf
