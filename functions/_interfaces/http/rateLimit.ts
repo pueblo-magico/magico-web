@@ -1,4 +1,5 @@
 type Limite = { permitido: boolean; reintentarEn: number };
+const SALT_FALLBACK = 'pueblo-magico-reservas-rate-limit-v1';
 
 async function sha256(valor: string): Promise<string> {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(valor));
@@ -15,8 +16,10 @@ export async function consumirLimite(
 ): Promise<Limite> {
   const salt = typeof env.RATE_LIMIT_SALT === 'string' && env.RATE_LIMIT_SALT.length >= 16
     ? env.RATE_LIMIT_SALT
-    : env.SESSION_SECRET;
-  if (!env.DB || typeof salt !== 'string' || salt.length < 16) {
+    : (typeof env.SESSION_SECRET === 'string' && env.SESSION_SECRET.length >= 16
+      ? env.SESSION_SECRET
+      : SALT_FALLBACK);
+  if (!env.DB) {
     return { permitido: false, reintentarEn: ventanaSegundos };
   }
   const ip = request.headers.get('CF-Connecting-IP') || 'desconocida';

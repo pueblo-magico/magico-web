@@ -37,7 +37,7 @@ Los secretos se configuran como secretos de Cloudflare Pages, nunca como variabl
 | Contabilidad | `ACCOUNTING_API_SECRET` | `reservas:leer` |
 | Stock | `STOCK_API_SECRET` | `stock:leer` |
 
-`RATE_LIMIT_SALT` separa los hashes usados por los límites de tráfico. Si no está definido, se usa `SESSION_SECRET` como fallback operativo; se recomienda configurar un valor aleatorio independiente. Las credenciales de Mercado Pago y ManyChat saliente mantienen su uso específico y no otorgan acceso a APIs internas.
+`RATE_LIMIT_SALT` separa los hashes usados por los límites de tráfico. Si no está definido, se usa `SESSION_SECRET` y, como último fallback que evita interrumpir APIs públicas, un namespace fijo de la aplicación. En todos los casos D1 recibe sólo el hash, nunca la IP. Se recomienda configurar un valor aleatorio independiente. Las credenciales de Mercado Pago y ManyChat saliente mantienen su uso específico y no otorgan acceso a APIs internas.
 
 La integración futura con Cucuru debe tener identidad y secreto propios, firma verificable de webhooks, protección contra replay, idempotencia, rotación documentada y alcance mínimo. No se habilita ningún acceso Cucuru en esta tarea.
 

@@ -91,6 +91,7 @@ test('rate limiting persiste sólo un hash del sujeto', async () => {
   assert.equal(respuestaLimite({ permitido: true, reintentarEn: 1 }), null);
   assert.equal(respuestaLimite({ permitido: false, reintentarEn: 9 })?.headers.get('Retry-After'), '9');
   assert.equal((await consumirLimite(request, { DB: env.DB }, 'sin-salt', 1, 60)).permitido, false);
+  assert.equal((await consumirLimite(request, {}, 'sin-db', 1, 60)).permitido, false);
 });
 
 function d1(db: DatabaseSync) {
