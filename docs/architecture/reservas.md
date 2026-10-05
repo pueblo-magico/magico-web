@@ -39,6 +39,8 @@ La creación manual usa `crearReservaManual` y `D1RepositorioCreacionReserva`. E
 
 La edición parcial usa `editarReserva` y `D1RepositorioEdicionReserva`. El adaptador vuelve a validar la lista cerrada de columnas antes de construir el `UPDATE`; los valores permanecen parametrizados y la cancelación conserva una acción de auditoría diferenciada.
 
+Las interfaces HTTP de reservas usan `jsonReserva` y `respuestaErrorReserva`. Los errores tipados conservan código y estado estables; las excepciones desconocidas reciben un mensaje público genérico y no exponen texto de D1 al cliente.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.

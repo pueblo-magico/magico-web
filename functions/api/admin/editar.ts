@@ -20,13 +20,7 @@ import {
 import type { CambiosReserva, CampoEditableReserva } from '../../_application/reservas/ports.ts';
 import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
 import { D1RepositorioEdicionReserva } from '../../_infrastructure/d1/D1RepositorioEdicionReserva.ts';
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body, null, 2), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+import { jsonReserva as json, respuestaErrorReserva } from '../../_interfaces/http/reservasHttp.ts';
 
 export async function onRequestPost({ request, env }: any) {
   const auth = await requireRole(request, env, ['super_admin', 'editor']);
@@ -67,9 +61,13 @@ export async function onRequestPost({ request, env }: any) {
     if (!resultado.ok) return json({ error: `No existe la reserva #${id}.` }, 404);
 
     return json({ ok: true, reserva_id: resultado.reservaId });
-  } catch (e: any) {
+  } catch (error: unknown) {
     // Típicamente un CHECK violado (fecha_checkout <= fecha_checkin, estado
     // inválido, cantidad_personas <= 0) o un alojamiento_id que no existe.
-    return json({ error: `No se pudo actualizar: ${e.message}` }, 400);
+    return respuestaErrorReserva(error, {
+      codigo: 'DATOS_INVALIDOS',
+      mensaje: 'No se pudo actualizar la reserva con los datos enviados.',
+      status: 400,
+    });
   }
 }

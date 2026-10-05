@@ -8,13 +8,7 @@ import { requireRole } from '../../_lib/authGuard';
 import { asignarUnidadReserva } from '../../_application/reservas/asignarUnidadReserva.ts';
 import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
 import { D1RepositorioAsignacionesReserva } from '../../_infrastructure/d1/D1RepositorioAsignacionesReserva.ts';
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body, null, 2), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+import { jsonReserva as json } from '../../_interfaces/http/reservasHttp.ts';
 
 export async function onRequestPost({ request, env }: any) {
   const auth = await requireRole(request, env, ['super_admin', 'editor']);

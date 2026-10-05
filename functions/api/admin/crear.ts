@@ -15,15 +15,9 @@ import { requireRole } from '../../_lib/authGuard';
 import { crearReservaManual } from '../../_application/reservas/crearReservaManual.ts';
 import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
 import { D1RepositorioCreacionReserva } from '../../_infrastructure/d1/D1RepositorioCreacionReserva.ts';
+import { jsonReserva as json, respuestaErrorReserva } from '../../_interfaces/http/reservasHttp.ts';
 
 const TIPOS_ESTADIA_VALIDOS = ['huesped', 'staff', 'voluntario', 'residente'];
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body, null, 2), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
 
 export async function onRequestPost({ request, env }: any) {
   const auth = await requireRole(request, env, ['super_admin', 'editor']);
@@ -86,7 +80,11 @@ export async function onRequestPost({ request, env }: any) {
     );
 
     return json({ ok: true, reserva_id: resultado.reservaId, disponible: resultado.disponible }, 200);
-  } catch (e: any) {
-    return json({ error: `No se pudo crear la reserva: ${e.message}` }, 400);
+  } catch (error: unknown) {
+    return respuestaErrorReserva(error, {
+      codigo: 'DATOS_INVALIDOS',
+      mensaje: 'No se pudo crear la reserva con los datos enviados.',
+      status: 400,
+    });
   }
 }
