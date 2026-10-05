@@ -80,7 +80,11 @@ export async function onRequestPost({ request, env }: any) {
       dataId,
       new MercadoPagoProveedorPagos(env.MP_ACCESS_TOKEN),
       new D1RepositorioEstadoPagoReserva(env.DB),
-      crearNotificadorManyChat(env.MANYCHAT_API_KEY, env.MANYCHAT_CONFIRMATION_FLOW_NS)
+      crearNotificadorManyChat({
+        apiKey: env.MANYCHAT_API_KEY,
+        flowNs: env.MANYCHAT_CONFIRMATION_FLOW_NS,
+        habilitado: env.MANYCHAT_NOTIFICATIONS_ENABLED,
+      })
     );
     if (resultado.estado === 'confirmada' && resultado.notificacionFallida) {
       console.error('webhook-mp: growth action falló (pago igual quedó confirmado)');

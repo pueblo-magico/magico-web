@@ -45,12 +45,19 @@ export class ManyChatNotificadorReserva implements NotificadorReservaConfirmada 
 type Logger = (message: string) => void;
 
 export function crearNotificadorManyChat(
-  apiKey: string | undefined,
-  flowNs: string | undefined,
+  configuracion: {
+    apiKey?: string;
+    flowNs?: string;
+    habilitado?: string;
+  },
   fetcher: Fetcher = fetch,
   logger: Logger = console.info
 ): NotificadorReservaConfirmada {
-  if (typeof apiKey !== 'string' || apiKey.length === 0 ||
+  const { apiKey, flowNs, habilitado } = configuracion;
+  const deshabilitadoExplicitamente = habilitado?.toLowerCase() === 'false';
+
+  if (deshabilitadoExplicitamente ||
+      typeof apiKey !== 'string' || apiKey.length === 0 ||
       typeof flowNs !== 'string' || flowNs.length === 0) {
     return {
       async notificar() {

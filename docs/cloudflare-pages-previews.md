@@ -42,6 +42,10 @@ Do not configure the production `MANYCHAT_API_KEY` in preview. When
 continues to update in preview D1 and the outbound ManyChat notification is
 skipped without failing the webhook.
 
+Set `MANYCHAT_NOTIFICATIONS_ENABLED=false` in preview as an explicit kill
+switch. This prevents outbound calls even if a stale or placeholder API-key
+secret remains configured.
+
 Mercado Pago preferences created from a preview request use that preview's
 origin for `notification_url`; they never point to the production webhook.
 

@@ -173,14 +173,26 @@ test('omite ManyChat sin credenciales salientes y conserva el adaptador real cua
     fechaCheckout: '2026-10-12',
   };
 
-  const deshabilitado = crearNotificadorManyChat(undefined, undefined, fetcher, mensaje => logs.push(mensaje));
+  const deshabilitado = crearNotificadorManyChat({}, fetcher, mensaje => logs.push(mensaje));
   await deshabilitado.notificar(reserva);
 
   assert.equal(fetches.length, 0);
   assert.equal(logs.length, 1);
   assert.match(logs[0], /omitida/);
 
-  const habilitado = crearNotificadorManyChat('key', 'flow-ns', fetcher);
+  const apagado = crearNotificadorManyChat(
+    { apiKey: 'key', flowNs: 'flow-ns', habilitado: 'false' },
+    fetcher,
+    mensaje => logs.push(mensaje)
+  );
+  await apagado.notificar(reserva);
+  assert.equal(fetches.length, 0);
+  assert.equal(logs.length, 2);
+
+  const habilitado = crearNotificadorManyChat(
+    { apiKey: 'key', flowNs: 'flow-ns', habilitado: 'true' },
+    fetcher
+  );
   await habilitado.notificar(reserva);
   assert.equal(fetches.length, 2);
 });
