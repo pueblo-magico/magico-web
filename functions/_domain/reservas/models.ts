@@ -101,6 +101,19 @@ export type ReservaPanel = {
   mp_payment_id: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  excepcion_capacidad?: {
+    id: number;
+    capacidad_autorizada: number;
+    motivo: string;
+    plan_camas: string;
+    fecha_desde: string | null;
+    fecha_hasta: string | null;
+    estado: 'solicitada' | 'aprobada' | 'rechazada' | 'revocada';
+    solicitada_por: string;
+    decidida_por: string | null;
+    solicitada_at: string;
+    decidida_at: string | null;
+  } | null;
 };
 
 export type PendienteVieja = Pick<
