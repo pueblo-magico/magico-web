@@ -36,3 +36,11 @@ La cotización compartida por `/api/cotizar` y `/api/manychat` usa ahora `cotiza
 - Los cambios de comportamiento requieren pruebas de dominio o contrato.
 - Los importes actuales siguen siendo legacy; WRESERV-25 definirá unidades menores y snapshots versionados.
 - El esquema actual no se modifica dentro de WRESERV-5.
+
+## Estrategia de pruebas
+
+- Node 24 ejecuta las pruebas unitarias TypeScript sin una capa adicional de runtime.
+- `npm run test:reservas` ejecuta dominio, aplicación, límites arquitectónicos y adaptadores aislados.
+- `npm run test:reservas:coverage` exige como mínimo 90% de líneas, 85% de ramas y 100% de funciones sobre los módulos cargados.
+- Los repositorios D1 se prueban primero como adaptadores aislados; WRESERV-6/WRESERV-10 incorporarán una base D1 real para integración.
+- Playwright queda reservado para contratos de navegador y administración cuando exista un ambiente de prueba con Chromium instalado.

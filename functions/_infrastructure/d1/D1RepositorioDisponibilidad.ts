@@ -3,7 +3,7 @@ import type { Disponibilidad, SolicitudCotizacion } from '../../_domain/reservas
 
 type D1Statement = {
   bind(...values: unknown[]): D1Statement;
-  first<T = Record<string, unknown>>(): Promise<T | null>;
+  first(): Promise<Record<string, unknown> | null>;
 };
 
 type D1Database = {
@@ -11,11 +11,15 @@ type D1Database = {
 };
 
 export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
-  constructor(private readonly db: D1Database) {}
+  private readonly db: D1Database;
+
+  constructor(db: D1Database) {
+    this.db = db;
+  }
 
   async consultar(solicitud: SolicitudCotizacion): Promise<Disponibilidad> {
     if (solicitud.tipo === 'domo') {
-      const libre = await this.db
+      const libre = (await this.db
         .prepare(
           `SELECT a.id FROM alojamientos a
            WHERE a.tipo = 'domo'
@@ -27,7 +31,7 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
            LIMIT 1`
         )
         .bind(solicitud.fechaEntrada, solicitud.fechaSalida)
-        .first<{ id: number }>();
+        .first()) as { id: number } | null;
 
       return {
         estado: libre ? 'disponible' : 'ocupado',
@@ -35,7 +39,7 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
       };
     }
 
-    const row = await this.db
+    const row = (await this.db
       .prepare(
         `SELECT a.id AS id, a.capacidad_total AS capacidad_total,
                 COALESCE(SUM(
@@ -49,7 +53,7 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
          GROUP BY a.id`
       )
       .bind(solicitud.fechaEntrada, solicitud.fechaSalida)
-      .first<{ id: number; capacidad_total: number; ocupadas: number }>();
+      .first()) as { id: number; capacidad_total: number; ocupadas: number } | null;
 
     const capacidad = row ? Number(row.capacidad_total) : 15;
     const ocupadas = row ? Number(row.ocupadas) : 0;
