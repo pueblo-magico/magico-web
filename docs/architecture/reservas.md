@@ -29,6 +29,8 @@ La cotización compartida por `/api/cotizar` y `/api/manychat` usa ahora `cotiza
 
 `D1RepositorioDisponibilidad` conserva las consultas actuales. WRESERV-6 y WRESERV-11 podrán reemplazar el esquema y la proyección sin cambiar el dominio ni los contratos HTTP al mismo tiempo.
 
+La disponibilidad pública de `/api/disponibilidad` usa `consultarCalendarioDisponibilidad`. La proyección nocturna es una función pura y el handler ya no contiene SQL ni reglas de ocupación. `D1RepositorioCalendarioDisponibilidad` conserva las lecturas legacy hasta que WRESERV-6 introduzca el esquema normalizado.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.

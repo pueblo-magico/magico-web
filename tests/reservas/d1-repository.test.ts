@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { D1RepositorioDisponibilidad } from '../../functions/_infrastructure/d1/D1RepositorioDisponibilidad.ts';
+import { D1RepositorioCalendarioDisponibilidad } from '../../functions/_infrastructure/d1/D1RepositorioCalendarioDisponibilidad.ts';
 
 function fakeDb(row: Record<string, unknown> | null) {
   const calls: { query: string; values: unknown[] }[] = [];
@@ -89,4 +90,36 @@ test('mantiene el fallback legacy cuando falta la fila del refugio', async () =>
   });
 
   assert.deepEqual(resultado, { estado: 'disponible', alojamiento_id: null });
+});
+
+test('el repositorio de calendario mapea alojamientos y reservas activas', async () => {
+  const calls: { query: string; values: unknown[] }[] = [];
+  const rows = [
+    [{ id: 1, nombre: 'Refugio', tipo: 'refugio', capacidad_total: 15 }],
+    [{ alojamiento_id: 1, fecha_checkin: '2026-10-10', fecha_checkout: '2026-10-11', cantidad_personas: 2 }],
+  ];
+  const db = {
+    prepare(query: string) {
+      const call = { query, values: [] as unknown[] };
+      calls.push(call);
+      const result = rows.shift() || [];
+      return {
+        bind(...values: unknown[]) {
+          call.values = values;
+          return this;
+        },
+        async all() {
+          return { results: result };
+        },
+      };
+    },
+  };
+  const repository = new D1RepositorioCalendarioDisponibilidad(db);
+
+  const espacios = await repository.listarAlojamientos();
+  const reservas = await repository.listarReservasActivas('2026-10-10', '2026-10-12');
+
+  assert.equal(espacios.length, 1);
+  assert.equal(reservas.length, 1);
+  assert.deepEqual(calls[1].values, ['2026-10-10', '2026-10-12']);
 });

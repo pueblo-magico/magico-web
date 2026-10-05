@@ -40,3 +40,34 @@ export type ErrorCotizacion = {
 export type RespuestaCotizacion =
   | { ok: true; valor: ResultadoCotizacion }
   | { ok: false; error: ErrorCotizacion };
+
+export type AlojamientoCalendario = {
+  id: number;
+  nombre: string;
+  tipo: TipoAlojamiento;
+  capacidad_total: number;
+};
+
+export type ReservaCalendario = {
+  alojamiento_id: number;
+  fecha_checkin: string;
+  fecha_checkout: string;
+  cantidad_personas: number;
+};
+
+export type CalendarioDisponibilidad = {
+  desde: string;
+  hasta: string;
+  domo: { blocked: string[] };
+  refugio: { blocked: string[] };
+  unidades: Array<{
+    id: number;
+    nombre: string;
+    tipo: TipoAlojamiento;
+    blocked: string[];
+  }>;
+};
+
+export type RespuestaCalendario =
+  | { ok: true; valor: CalendarioDisponibilidad }
+  | { ok: false; error: { codigo: 'RANGO_INVALIDO'; mensaje: string } };
