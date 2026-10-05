@@ -255,11 +255,11 @@ BEGIN
     NEW.created_at,
     NEW.updated_at
   FROM espacios e
-  WHERE e.codigo = CASE NEW.alojamiento_legacy_id
+  WHERE e.codigo = (CASE NEW.alojamiento_legacy_id
     WHEN 1 THEN 'domo-1'
     WHEN 2 THEN 'domo-2'
     WHEN 3 THEN 'refugio'
-  END;
+  END);
 END;
 
 CREATE TRIGGER IF NOT EXISTS reserva_estadias_mapear_espacio_update
@@ -277,11 +277,11 @@ BEGIN
     OLD.created_at,
     NEW.updated_at
   FROM espacios e
-  WHERE e.codigo = CASE NEW.alojamiento_legacy_id
+  WHERE e.codigo = (CASE NEW.alojamiento_legacy_id
     WHEN 1 THEN 'domo-1'
     WHEN 2 THEN 'domo-2'
     WHEN 3 THEN 'refugio'
-  END;
+  END);
 END;
 
 INSERT OR IGNORE INTO espacios (
