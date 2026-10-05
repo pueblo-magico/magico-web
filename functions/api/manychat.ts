@@ -11,7 +11,7 @@
 //   MP_ACCESS_TOKEN     — access token de Mercado Pago (Producción o Test) para
 //                         crear la Preferencia de pago.
 
-import { calcularPrecio, chequearDisponibilidad, mensajePrivacidad, nochesEntre } from '../_lib/cotizador';
+import { cotizarEstadia } from '../_lib/cotizador';
 
 // Keep the Pages Function independent from the Vite client configuration.
 // Importing src/data/config here makes Wrangler evaluate import.meta.env while
@@ -53,18 +53,19 @@ export async function onRequestPost({ request, env }: any) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400);
   }
 
-  const noches = nochesEntre(fecha_entrada, fecha_salida);
-  if (noches === null) {
-    return json({ error: 'Fechas inválidas: fecha_salida debe ser posterior a fecha_entrada.' }, 400);
-  }
-
-  const precio = calcularPrecio(alojamiento_seleccionado, personas, noches);
-  if ('error' in precio) {
-    return json({ error: precio.error }, 400);
-  }
-
   const db = env.DB;
-  const disponibilidad = await chequearDisponibilidad(db, alojamiento_seleccionado, personas, fecha_entrada, fecha_salida);
+  const resultado = await cotizarEstadia(db, {
+    tipo: alojamiento_seleccionado,
+    personas,
+    fechaEntrada: fecha_entrada,
+    fechaSalida: fecha_salida,
+  });
+  if (resultado.ok === false) {
+    return json({ error: resultado.error.mensaje }, 400);
+  }
+
+  const cotizacion = resultado.valor;
+  const disponibilidad = cotizacion.disponibilidad;
 
   if (disponibilidad.estado === 'ocupado' || disponibilidad.alojamiento_id === null) {
     return json(
@@ -73,8 +74,7 @@ export async function onRequestPost({ request, env }: any) {
     );
   }
 
-  const senaPorcentaje = precio.subtotal <= 100000 ? 0.5 : 0.3;
-  const montoSena = Math.round(precio.subtotal * senaPorcentaje);
+  const montoSena = cotizacion.sena.monto;
 
   // NOTA: el schema exige cliente_nombre y ManyChat solo nos manda el user_id.
   // Guardamos un placeholder identificable — reemplazalo cuando tengas el
@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env }: any) {
        VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, 'ManyChat')
        RETURNING id`
     )
-    .bind(clienteNombrePlaceholder, disponibilidad.alojamiento_id, fecha_entrada, fecha_salida, personas, precio.subtotal, montoSena, String(user_id))
+    .bind(clienteNombrePlaceholder, disponibilidad.alojamiento_id, fecha_entrada, fecha_salida, personas, cotizacion.desglose.subtotal, montoSena, String(user_id))
     .first();
 
   const reservaId = inserted?.id;
@@ -146,10 +146,10 @@ export async function onRequestPost({ request, env }: any) {
       estado: 'pendiente_pago',
       reserva_id: reservaId,
       checkout_url: checkoutUrl,
-      subtotal: precio.subtotal,
+      subtotal: cotizacion.desglose.subtotal,
       monto_sena: montoSena,
-      saldo_checkin: precio.subtotal - montoSena,
-      mensaje_privacidad: mensajePrivacidad(alojamiento_seleccionado, personas),
+      saldo_checkin: cotizacion.saldoCheckin,
+      mensaje_privacidad: cotizacion.mensajePrivacidad,
     },
     200
   );

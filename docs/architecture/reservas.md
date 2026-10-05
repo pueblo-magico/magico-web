@@ -1,0 +1,38 @@
+# Arquitectura del servicio de reservas
+
+Este documento fija los límites iniciales de WRESERV-1 / WRESERV-5. La migración es incremental: los endpoints existentes conservan su contrato mientras la lógica se mueve a capas explícitas.
+
+## Capas y dependencias
+
+```text
+interfaces HTTP → aplicación → dominio
+                           ↑
+infraestructura D1 ────────┘
+```
+
+- `functions/_domain/reservas`: tipos y reglas puras. No conoce HTTP, Cloudflare, D1, SQL, Mercado Pago ni ManyChat.
+- `functions/_application/reservas`: casos de uso y puertos. Coordina reglas del dominio a través de interfaces.
+- `functions/_infrastructure`: adaptadores técnicos que implementan puertos, inicialmente D1.
+- `functions/api`: interfaces HTTP de Cloudflare Pages. Validan el contrato, invocan un caso de uso y serializan el resultado.
+- `functions/_lib`: fachadas temporales para migrar consumidores legacy sin un corte coordinado.
+
+Las dependencias siempre apuntan hacia el dominio. Un caso de uso no importa un endpoint ni un adaptador concreto.
+
+## Primera migración vertical
+
+La cotización compartida por `/api/cotizar` y `/api/manychat` usa ahora `cotizarEstadia`. El caso de uso coordina:
+
+1. Validación del rango de fechas.
+2. Regla de precio legacy, aislada para ser reemplazada por WRESERV-25.
+3. Consulta de disponibilidad a través de `RepositorioDisponibilidad`.
+4. Cálculo de seña y saldo.
+
+`D1RepositorioDisponibilidad` conserva las consultas actuales. WRESERV-6 y WRESERV-11 podrán reemplazar el esquema y la proyección sin cambiar el dominio ni los contratos HTTP al mismo tiempo.
+
+## Reglas de implementación
+
+- No agregar SQL a `functions/api` ni a `functions/_domain`.
+- No duplicar reglas entre web, administración, ManyChat o webhooks.
+- Los cambios de comportamiento requieren pruebas de dominio o contrato.
+- Los importes actuales siguen siendo legacy; WRESERV-25 definirá unidades menores y snapshots versionados.
+- El esquema actual no se modifica dentro de WRESERV-5.
