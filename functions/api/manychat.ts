@@ -3,27 +3,26 @@
 // el link de pago de Mercado Pago por el monto de la seña.
 //
 // Requiere estas variables de entorno en Cloudflare Pages:
-//   MANYCHAT_API_KEY   — secreto compartido con ManyChat (valida X-ManyChat-Secret
-//                         Y se usa como Bearer token al llamar la API de ManyChat
-//                         desde webhook-mp.ts). Si en tu cuenta de ManyChat el
-//                         secreto del External Request y el API key "real" son
-//                         valores distintos, separalos en dos env vars.
-//   MP_ACCESS_TOKEN     — access token de Mercado Pago (Producción o Test) para
-//                         crear la Preferencia de pago.
+//   MANYCHAT_INBOUND_SECRET — secreto propio que valida X-ManyChat-Secret.
+//                             No es el API key de la cuenta de ManyChat.
+//   MP_ACCESS_TOKEN          — access token de Mercado Pago (Producción o Test)
+//                              para crear la Preferencia de pago.
 
 import { iniciarReservaManyChat } from '../_application/reservas/iniciarReservaManyChat.ts';
 import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { D1RepositorioReservasManyChat } from '../_infrastructure/d1/D1RepositorioReservasManyChat.ts';
 import { MercadoPagoCheckoutReservas } from '../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonReserva as json } from '../_interfaces/http/reservasHttp.ts';
-
-// Keep the Pages Function independent from the Vite client configuration.
-// Importing src/data/config here makes Wrangler evaluate import.meta.env while
-// bundling the server-side Function, where Vite's import.meta.env is unavailable.
-const SITE_URL = 'https://experienciamagico.com';
+import {
+  autenticarSolicitudManyChat,
+  obtenerOrigenSolicitudManyChat,
+} from '../_interfaces/http/manychatAuth.ts';
 
 export async function onRequestPost({ request, env }: any) {
-  if (request.headers.get('X-ManyChat-Secret') !== env.MANYCHAT_API_KEY) {
+  if (!autenticarSolicitudManyChat(
+    request.headers.get('X-ManyChat-Secret'),
+    env.MANYCHAT_INBOUND_SECRET
+  )) {
     return json({ error: 'No autorizado.' }, 401);
   }
 
@@ -59,7 +58,7 @@ export async function onRequestPost({ request, env }: any) {
   },
   new D1RepositorioDisponibilidad(env.DB),
   new D1RepositorioReservasManyChat(env.DB),
-  new MercadoPagoCheckoutReservas(env.MP_ACCESS_TOKEN, SITE_URL));
+  new MercadoPagoCheckoutReservas(env.MP_ACCESS_TOKEN, obtenerOrigenSolicitudManyChat(request.url)));
 
   if (resultado.estado === 'error_validacion') {
     return json({ error: resultado.mensaje }, 400);

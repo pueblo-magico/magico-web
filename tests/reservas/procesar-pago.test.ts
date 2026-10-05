@@ -8,7 +8,10 @@ import type {
   RepositorioEstadoPagoReserva,
 } from '../../functions/_application/reservas/ports.ts';
 import { D1RepositorioEstadoPagoReserva } from '../../functions/_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
-import { ManyChatNotificadorReserva } from '../../functions/_infrastructure/manychat/ManyChatNotificadorReserva.ts';
+import {
+  crearNotificadorManyChat,
+  ManyChatNotificadorReserva,
+} from '../../functions/_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { MercadoPagoProveedorPagos } from '../../functions/_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 
 const notificadorNulo: NotificadorReservaConfirmada = { async notificar() {} };
@@ -155,4 +158,29 @@ test('el notificador ManyChat envía campos y flow con el mismo usuario', async 
   assert.match(calls[1].url, /sendFlow/);
   assert.equal(JSON.parse(String(calls[1].init?.body)).flow_ns, 'flow-ns');
   assert.equal((calls[0].init?.headers as Record<string, string>).Authorization, 'Bearer key');
+});
+
+test('omite ManyChat sin credenciales salientes y conserva el adaptador real cuando existen', async () => {
+  const logs: string[] = [];
+  const fetches: string[] = [];
+  const fetcher = async (url: string) => {
+    fetches.push(url);
+    return new Response('{}', { status: 200 });
+  };
+  const reserva = {
+    manyChatUserId: 'mc-preview',
+    fechaCheckin: '2026-10-10',
+    fechaCheckout: '2026-10-12',
+  };
+
+  const deshabilitado = crearNotificadorManyChat(undefined, undefined, fetcher, mensaje => logs.push(mensaje));
+  await deshabilitado.notificar(reserva);
+
+  assert.equal(fetches.length, 0);
+  assert.equal(logs.length, 1);
+  assert.match(logs[0], /omitida/);
+
+  const habilitado = crearNotificadorManyChat('key', 'flow-ns', fetcher);
+  await habilitado.notificar(reserva);
+  assert.equal(fetches.length, 2);
 });

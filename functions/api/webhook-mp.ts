@@ -5,8 +5,10 @@
 // Requiere estas variables de entorno en Cloudflare Pages:
 //   MP_ACCESS_TOKEN               — access token de Mercado Pago (para GET /v1/payments/:id)
 //   MP_WEBHOOK_SECRET             — "Clave secreta" de la notificación webhook (MP > Tus integraciones > Webhooks)
-//   MANYCHAT_API_KEY              — API key de ManyChat (Bearer, para setCustomFields + sendFlow)
-//   MANYCHAT_CONFIRMATION_FLOW_NS — flow_ns del flow de confirmación a disparar en ManyChat
+//   MANYCHAT_API_KEY              — API key real de la cuenta de ManyChat (opcional).
+//   MANYCHAT_CONFIRMATION_FLOW_NS — flow_ns de confirmación (opcional). Si falta
+//                                   cualquiera de las dos, la confirmación de D1
+//                                   continúa y la notificación externa se omite.
 //
 // IMPORTANTE — esto no se pudo probar contra un webhook real de Mercado Pago
 // (no hay credenciales de test en este entorno). El esquema de x-signature
@@ -16,7 +18,7 @@
 
 import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMercadoPago.ts';
 import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
-import { ManyChatNotificadorReserva } from '../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
+import { crearNotificadorManyChat } from '../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 
 async function hmacSha256Hex(secret: string, message: string): Promise<string> {
@@ -78,7 +80,7 @@ export async function onRequestPost({ request, env }: any) {
       dataId,
       new MercadoPagoProveedorPagos(env.MP_ACCESS_TOKEN),
       new D1RepositorioEstadoPagoReserva(env.DB),
-      new ManyChatNotificadorReserva(env.MANYCHAT_API_KEY, env.MANYCHAT_CONFIRMATION_FLOW_NS)
+      crearNotificadorManyChat(env.MANYCHAT_API_KEY, env.MANYCHAT_CONFIRMATION_FLOW_NS)
     );
     if (resultado.estado === 'confirmada' && resultado.notificacionFallida) {
       console.error('webhook-mp: growth action falló (pago igual quedó confirmado)');

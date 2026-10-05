@@ -41,9 +41,9 @@ La edición parcial usa `editarReserva` y `D1RepositorioEdicionReserva`. El adap
 
 Las interfaces HTTP de reservas usan `jsonReserva` y `respuestaErrorReserva`. Los errores tipados conservan código y estado estables; las excepciones desconocidas reciben un mensaje público genérico y no exponen texto de D1 al cliente.
 
-La integración de ManyChat usa `iniciarReservaManyChat`, el mismo caso de uso de cotización, un repositorio D1 para la reserva pendiente y un adaptador de Mercado Pago. El handler conserva autenticación, validación y traducción del resultado externo, sin SQL ni llamadas directas al proveedor de pagos.
+La integración de ManyChat usa `iniciarReservaManyChat`, el mismo caso de uso de cotización, un repositorio D1 para la reserva pendiente y un adaptador de Mercado Pago. El handler conserva autenticación, validación y traducción del resultado externo, sin SQL ni llamadas directas al proveedor de pagos. `MANYCHAT_INBOUND_SECRET` autentica exclusivamente las solicitudes entrantes; nunca se reutiliza como credencial de la API pública. La URL de notificación de Mercado Pago conserva el origen de la solicitud, por lo que una preferencia creada en preview vuelve al webhook de preview y no al productivo.
 
-El webhook de Mercado Pago conserva la validación HMAC en la interfaz HTTP y delega la consulta del pago, la transición de reserva y la notificación de ManyChat a puertos separados mediante `procesarPagoMercadoPago`. La firma, reintentos e idempotencia integral se endurecen en WRESERV-13.
+El webhook de Mercado Pago conserva la validación HMAC en la interfaz HTTP y delega la consulta del pago, la transición de reserva y la notificación de ManyChat a puertos separados mediante `procesarPagoMercadoPago`. La salida a ManyChat solo se habilita cuando existen `MANYCHAT_API_KEY` y `MANYCHAT_CONFIRMATION_FLOW_NS`; sin ellas, la confirmación de D1 continúa con un notificador nulo. La firma, reintentos e idempotencia integral se endurecen en WRESERV-13.
 
 ## Reglas de implementación
 
