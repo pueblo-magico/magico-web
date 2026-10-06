@@ -50,6 +50,10 @@ import type {
   PaginaReservasAdmin,
   ResumenReservaAdmin,
 } from '../../_domain/reservas/adminReservationManagement.ts';
+import type {
+  FilaExportacionReserva,
+  FiltrosExportacionReservas,
+} from '../../_domain/reservas/adminReservationExport.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -139,6 +143,21 @@ export interface RepositorioGestionReservasAdmin {
     actorEmail: string;
     correlationId: string;
   }): Promise<ResumenReservaAdmin | null>;
+}
+
+export interface RepositorioExportacionReservasAdmin {
+  listarParaExportar(
+    filtros: FiltrosExportacionReservas,
+    limite: number
+  ): Promise<{ filas: FilaExportacionReserva[]; truncada: boolean }>;
+  registrarExportacion(entrada: {
+    actorEmail: string;
+    correlationId: string;
+    cantidad: number;
+    truncada: boolean;
+    incluirPii: boolean;
+    filtros: Omit<FiltrosExportacionReservas, 'titular'> & { filtroTitularAplicado: boolean };
+  }): Promise<void>;
 }
 
 export interface RepositorioDisponibilidad {

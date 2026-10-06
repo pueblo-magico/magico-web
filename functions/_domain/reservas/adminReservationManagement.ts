@@ -1,5 +1,6 @@
 import { esFechaIso } from './dateRange.ts';
 import { ErrorReserva } from './errors.ts';
+import { normalizarEstadoReserva } from './reservationCatalog.ts';
 
 export type FiltrosReservasAdmin = {
   pagina: number;
@@ -28,16 +29,14 @@ export function validarFiltrosReservasAdmin(
     throw new ErrorReserva('DATOS_INVALIDOS', 'El rango de fechas es inválido.');
   }
   const estado = entrada.estado?.trim() || null;
-  if (estado && !['pendiente_pago', 'confirmada', 'cancelada', 'vencida', 'rechazada'].includes(estado)) {
-    throw new ErrorReserva('DATOS_INVALIDOS', 'El estado es inválido.');
-  }
+  const estadoCanonico = estado ? normalizarEstadoReserva(estado) : null;
   const normalizar = (valor: string | null | undefined, maximo: number) => {
     const limpio = valor?.trim() || null;
     if (limpio && limpio.length > maximo) throw new ErrorReserva('DATOS_INVALIDOS', 'Un filtro es demasiado largo.');
     return limpio;
   };
   return {
-    pagina, limite, fechaDesde, fechaHasta, estado,
+    pagina, limite, fechaDesde, fechaHasta, estado: estadoCanonico,
     origen: normalizar(entrada.origen, 80),
     espacioCodigo: normalizar(entrada.espacioCodigo, 80),
     titular: normalizar(entrada.titular, 120),

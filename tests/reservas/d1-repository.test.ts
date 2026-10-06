@@ -198,7 +198,8 @@ test('el repositorio del panel encapsula consultas y normaliza la conversión', 
   assert.equal(pendientes[0].cliente_nombre, 'Ana');
   assert.deepEqual(conversion, { total: 4, confirmadas: 3 });
   assert.deepEqual(calls[3].values, ['-3 days']);
-  assert.match(calls[1].query, /r\.estado IN \('confirmada', 'pendiente'\)/);
+  assert.match(calls[1].query, /r\.estado_flujo IN \('confirmada', 'pendiente_pago'\)/);
+  assert.match(calls[3].query, /r\.estado_flujo = 'pendiente_pago'/);
   assert.match(calls[2].query, /ORDER BY r\.fecha_checkin DESC/);
   assert.match(calls[4].query, /manychat_user_id IS NOT NULL/);
 });

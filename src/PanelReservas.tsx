@@ -23,7 +23,7 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 
 type TipoAlojamiento = 'domo' | 'refugio';
 type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'usuarios' | 'actividad';
-type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada';
+type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
 
 type Alojamiento = {
   id: number;
@@ -96,7 +96,7 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
     cantidad_personas: item.cantidadPersonas,
     monto_total: item.montoTotalCentavos / 100,
     monto_sena: item.montoSenaCentavos == null ? null : item.montoSenaCentavos / 100,
-    estado: item.estado as EstadoReserva,
+    estado: item.estadoFlujo as EstadoReserva,
     unidad_asignada: item.unidadAsignada,
     canal_origen: item.canalOrigen,
     manychat_user_id: item.manychatUserId,
@@ -220,6 +220,13 @@ type Metricas = {
 
 const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
 const toISODate = (d: Date) => d.toISOString().slice(0, 10);
+const fechaOperativaLocal = (instante: Date) => {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Cordoba', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(instante);
+  const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find(p => p.type === tipo)?.value || '';
+  return `${valor('year')}-${valor('month')}-${valor('day')}`;
+};
 const csrfToken = () => decodeURIComponent(
   document.cookie.split('; ').find(value => value.startsWith('pm_admin_csrf='))?.split('=').slice(1).join('=') || ''
 );
@@ -242,7 +249,11 @@ const fmtDateLong = (iso: string) => {
   const d = new Date(iso + 'T00:00:00Z');
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
 };
-const diasDesde = (iso: string) => Math.floor((Date.now() - new Date(iso.replace(' ', 'T') + 'Z').getTime()) / 86400000);
+const diasDesde = (iso: string) => {
+  const normalizado = iso.includes('T') ? iso : iso.replace(' ', 'T');
+  const instante = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalizado) ? normalizado : `${normalizado}Z`;
+  return Math.floor((Date.now() - Date.parse(instante)) / 86400000);
+};
 
 const VENTANA_DIAS = 14;
 const CANALES_SUGERIDOS = ['ManyChat', 'WhatsApp', 'Instagram', 'Airbnb', 'Teléfono', 'Manual'];
@@ -253,24 +264,6 @@ const ocupaFecha = (r: Reserva, fecha: string) => r.fecha_checkin <= fecha && fe
 const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2';
 
 const waLink = (telefono: string) => `https://wa.me/${telefono.replace(/\D/g, '')}`;
-
-function csvEscape(v: unknown): string {
-  const s = v === null || v === undefined ? '' : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
-function descargarCsv(reservas: Reserva[]) {
-  const columnas = ['cliente_nombre', 'cliente_telefono', 'alojamiento_nombre', 'fecha_checkin', 'fecha_checkout', 'cantidad_personas', 'estado', 'canal_origen', 'monto_total', 'monto_sena', 'unidad_asignada'];
-  const filas = reservas.map(r => columnas.map(c => csvEscape((r as any)[c])).join(','));
-  const csv = [columnas.join(','), ...filas].join('\n');
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `reservas_${toISODate(new Date())}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 const MetricCard: React.FC<{ label: string; value: string; accent?: 'brand' | 'gold' | 'red'; hint?: string; compact?: boolean; icon?: React.ReactNode }> = ({
   label, value, accent = 'brand', hint, compact, icon,
@@ -597,8 +590,10 @@ const ModalReserva: React.FC<{
             <label className={labelCls} htmlFor="f_estado">Estado *</label>
             <select id="f_estado" disabled className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.estado} onChange={e => setCampo('estado', e.target.value)}>
               <option value="confirmada">Confirmada</option>
-              <option value="pendiente">Pendiente</option>
+              <option value="pendiente_pago">Pendiente de pago</option>
               <option value="cancelada">Cancelada</option>
+              <option value="vencida">Vencida</option>
+              <option value="rechazada">Rechazada</option>
             </select>
           </div>
         </div>
@@ -716,7 +711,7 @@ const ModalReserva: React.FC<{
         )}
       </div>
 
-      {!soloLectura && modo === 'editar' && reserva?.estado === 'pendiente' && (
+      {!soloLectura && modo === 'editar' && reserva?.estado === 'pendiente_pago' && (
         <div className="mt-5 pt-4 border-t border-gray-100 grid gap-2 rounded-lg bg-emerald-50 px-3 py-2.5">
           <p className="text-xs font-semibold text-emerald-800">Confirmar reserva pendiente</p>
           <label className="text-xs text-emerald-800" htmlFor="f_motivo_confirmacion">Motivo de confirmación *</label>
@@ -842,13 +837,20 @@ const PendientesViejasAlerta: React.FC<{ data: Metricas['pendientes_viejas']; on
 
 const ESTADO_BADGE: Record<string, string> = {
   confirmada: 'bg-green-100 text-green-800',
-  pendiente: 'bg-amber-100 text-amber-800',
+  pendiente_pago: 'bg-amber-100 text-amber-800',
   cancelada: 'bg-gray-100 text-gray-500',
+  vencida: 'bg-gray-100 text-gray-500',
+  rechazada: 'bg-red-100 text-red-700',
+};
+
+const ESTADO_LABEL: Record<string, string> = {
+  confirmada: 'Confirmada', pendiente_pago: 'Pendiente de pago', cancelada: 'Cancelada',
+  vencida: 'Vencida', rechazada: 'Rechazada',
 };
 
 const EstadoBadge: React.FC<{ estado: string }> = ({ estado }) => (
   <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${ESTADO_BADGE[estado] || 'bg-gray-100 text-gray-600'}`}>
-    {estado}
+    {ESTADO_LABEL[estado] || estado}
   </span>
 );
 
@@ -1518,7 +1520,7 @@ const TIPO_OCUPACION_LABEL: Record<string, string> = {
 };
 
 const SeccionOcupacionOperativa: React.FC = () => {
-  const hoy = toISODate(new Date());
+  const hoy = fechaOperativaLocal(new Date());
   const [registros, setRegistros] = useState<RegistroOcupacionOperativa[]>([]);
   const [espacios, setEspacios] = useState<EspacioOcupacion[]>([]);
   const [unidades, setUnidades] = useState<UnidadOcupacion[]>([]);
@@ -1745,7 +1747,7 @@ const PanelReservas: React.FC = () => {
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [ventanaInicio, setVentanaInicio] = useState(() => toISODate(new Date()));
+  const [ventanaInicio, setVentanaInicio] = useState(() => fechaOperativaLocal(new Date()));
   const [busqueda, setBusqueda] = useState('');
 
   const [celdaMultiple, setCeldaMultiple] = useState<{ alojamiento: Alojamiento; fecha: string; reservas: Reserva[] } | null>(null);
@@ -1762,7 +1764,7 @@ const PanelReservas: React.FC = () => {
     setLoading(true);
     setError(null);
     const parametros = (estado: string) => new URLSearchParams({
-      pagina: '1', limite: '100', fecha_desde: toISODate(new Date()), estado,
+      pagina: '1', limite: '100', fecha_desde: fechaOperativaLocal(new Date()), estado,
     });
     Promise.all([
       todasLasReservasV1(parametros('confirmada')),
@@ -1841,20 +1843,23 @@ const PanelReservas: React.FC = () => {
 
   const [descargandoReporte, setDescargandoReporte] = useState(false);
 
-  // Reporte financiero para la contadora — a diferencia de descargarCsv()
-  // (que arma el CSV en el navegador con lo ya cargado en esta vista), este
-  // le pide al servidor el reporte completo vía /api/admin/exportar.
-  const descargarReporteServidor = async () => {
+  // Reporte financiero minimizado: el servidor aplica permisos y filtros y
+  // no incluye PII salvo solicitud explícita de un flujo autorizado.
+  const descargarReporteServidor = async (filtros?: { titular?: string }) => {
     setDescargandoReporte(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/exportar');
+      const params = new URLSearchParams();
+      if (filtros?.titular) params.set('titular', filtros.titular);
+      const query = params.size > 0 ? `?${params.toString()}` : '';
+      const res = await adminFetch(`/api/v1/admin/reservas/exportar${query}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte_reservas_${toISODate(new Date())}.csv`;
+      const sugerido = res.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1];
+      a.download = sugerido || `reservas_${fechaOperativaLocal(new Date())}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e: any) {
@@ -1982,15 +1987,17 @@ const PanelReservas: React.FC = () => {
               <h1 className="text-lg sm:text-xl font-bold text-brand">Dashboard de Reservas</h1>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={descargarReporteServidor}
-                disabled={descargandoReporte}
-                aria-label="Descargar Reporte (CSV)"
-                className={`inline-flex items-center gap-1.5 text-sm font-semibold rounded-lg px-3 sm:px-4 py-2.5 text-white bg-brand hover:opacity-90 transition-opacity disabled:opacity-60 ${FOCUS_RING}`}
-              >
-                <Download size={15} className={descargandoReporte ? 'animate-pulse' : ''} aria-hidden="true" />
-                <span className="hidden sm:inline">{descargandoReporte ? 'Descargando…' : 'Descargar Reporte (CSV)'}</span>
-              </button>
+              {esSuperAdmin && (
+                <button
+                  onClick={() => descargarReporteServidor()}
+                  disabled={descargandoReporte}
+                  aria-label="Descargar Reporte (CSV)"
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold rounded-lg px-3 sm:px-4 py-2.5 text-white bg-brand hover:opacity-90 transition-opacity disabled:opacity-60 ${FOCUS_RING}`}
+                >
+                  <Download size={15} className={descargandoReporte ? 'animate-pulse' : ''} aria-hidden="true" />
+                  <span className="hidden sm:inline">{descargandoReporte ? 'Descargando…' : 'Descargar Reporte (CSV)'}</span>
+                </button>
+              )}
               {puedeEditar && (
                 <button
                   onClick={() => setModalReserva({ modo: 'crear', reserva: null })}
@@ -2068,7 +2075,7 @@ const PanelReservas: React.FC = () => {
                 <button onClick={() => setVentanaInicio(prev => addDays(prev, -7))} className={`inline-flex items-center gap-1 text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
                   <ChevronLeft size={14} aria-hidden="true" /> <span className="hidden xs:inline">Anterior</span>
                 </button>
-                <button onClick={() => setVentanaInicio(toISODate(new Date()))} className={`text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
+                <button onClick={() => setVentanaInicio(fechaOperativaLocal(new Date()))} className={`text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
                   Hoy
                 </button>
                 <button onClick={() => setVentanaInicio(prev => addDays(prev, 7))} className={`inline-flex items-center gap-1 text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
@@ -2116,7 +2123,7 @@ const PanelReservas: React.FC = () => {
                           {dias.map(fecha => {
                             const enCelda = reservas.filter(r => r.alojamiento_id === aloj.id && ocupaFecha(r, fecha));
                             const vacia = enCelda.length === 0;
-                            const hayPendiente = enCelda.some(r => r.estado === 'pendiente');
+                            const hayPendiente = enCelda.some(r => r.estado === 'pendiente_pago');
 
                             let contenido: string;
                             let colorClases: string;
@@ -2189,15 +2196,15 @@ const PanelReservas: React.FC = () => {
               value={metricas?.conversion_manychat.pct !== null && metricas ? `${metricas.conversion_manychat.pct}%` : 'Sin datos'}
               hint={metricas ? `${metricas.conversion_manychat.confirmadas} de ${metricas.conversion_manychat.total} pagaron` : undefined}
             />
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
+            {esSuperAdmin && <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Exportar</p>
               <button
-                onClick={() => descargarCsv(reservas)}
+                onClick={() => descargarReporteServidor()}
                 className={`inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}
               >
-                <Download size={15} aria-hidden="true" /> Descargar CSV (vista operativa)
+                <Download size={15} aria-hidden="true" /> Descargar reporte minimizado
               </button>
-            </div>
+            </div>}
             {puedeEditar && <SeccionAirbnb alojamientos={alojamientos} onSincronizado={handleGuardado} />}
           </div>
         )}
@@ -2220,13 +2227,15 @@ const PanelReservas: React.FC = () => {
                     className={`text-sm border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 sm:py-2 w-full sm:w-64 ${FOCUS_RING}`}
                   />
                 </div>
-                <button
-                  onClick={() => descargarCsv(reservasHistorialFiltradas)}
-                  aria-label="Descargar CSV"
-                  className={`inline-flex items-center gap-1.5 text-sm font-semibold border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 hover:bg-gray-100 flex-shrink-0 ${FOCUS_RING}`}
-                >
-                  <Download size={15} aria-hidden="true" />
-                </button>
+                {esSuperAdmin && (
+                  <button
+                    onClick={() => descargarReporteServidor(busqueda.trim() ? { titular: busqueda.trim() } : undefined)}
+                    aria-label="Descargar CSV filtrado"
+                    className={`inline-flex items-center gap-1.5 text-sm font-semibold border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 hover:bg-gray-100 flex-shrink-0 ${FOCUS_RING}`}
+                  >
+                    <Download size={15} aria-hidden="true" />
+                  </button>
+                )}
               </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

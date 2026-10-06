@@ -17,8 +17,7 @@ import { crearReservaManual } from '../../_application/reservas/crearReservaManu
 import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
 import { D1RepositorioCreacionReserva } from '../../_infrastructure/d1/D1RepositorioCreacionReserva.ts';
 import { jsonReserva as json, respuestaErrorReserva } from '../../_interfaces/http/reservasHttp.ts';
-
-const TIPOS_ESTADIA_VALIDOS = ['huesped', 'staff', 'voluntario', 'residente'];
+import { TIPOS_ESTADIA } from '../../_domain/reservas/reservationCatalog.ts';
 
 export async function onRequestPost({ request, env }: any) {
   const auth = await requirePermission(request, env, 'reservas.crear');
@@ -55,8 +54,8 @@ export async function onRequestPost({ request, env }: any) {
   if (estado && !['pendiente', 'confirmada', 'cancelada'].includes(estado)) {
     return json({ error: "estado debe ser 'pendiente', 'confirmada' o 'cancelada'." }, 400);
   }
-  if (tipo_estadia && !TIPOS_ESTADIA_VALIDOS.includes(tipo_estadia)) {
-    return json({ error: `tipo_estadia debe ser uno de: ${TIPOS_ESTADIA_VALIDOS.join(', ')}.` }, 400);
+  if (tipo_estadia && !TIPOS_ESTADIA.includes(tipo_estadia)) {
+    return json({ error: `tipo_estadia debe ser uno de: ${TIPOS_ESTADIA.join(', ')}.` }, 400);
   }
 
   try {

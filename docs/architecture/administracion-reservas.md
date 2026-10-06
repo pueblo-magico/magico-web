@@ -12,6 +12,10 @@ sesión administrativa; las mutaciones también requieren un token CSRF válido.
   asignaciones, pagos, eventos y excepciones. Requiere `reservas.leer`.
 - `GET /api/v1/admin/reservas/panel`: alojamientos y métricas agregadas para
   la vista operativa, sin duplicar el listado de reservas.
+- `GET /api/v1/admin/reservas/exportar`: exportación CSV filtrada y auditada.
+  Requiere `datos_personales.exportar`; sólo incluye PII cuando se solicita
+  explícitamente con `incluir_pii=true`. Por defecto exporta el mínimo dato
+  financiero necesario y limita el resultado a 5.000 filas.
 - `POST /api/v1/admin/reservas`: crea una reserva comercial confirmada y ocupa
   sus noches de forma atómica. Requiere `reservas.crear`.
 - `PATCH /api/v1/admin/reservas/:id`: corrige nombre, teléfono, email u origen.
@@ -30,3 +34,21 @@ Las fechas, importes y asignaciones no se corrigen con el endpoint genérico de
 edición porque afectan inventario y trazabilidad. Las asignaciones tienen su
 contrato específico, y las estadías no comerciales se gestionan como ocupación
 operativa, no como reservas de monto cero.
+
+## Catálogos y tiempo operativo
+
+El contrato v1 usa un único catálogo de estados:
+`pendiente_pago`, `confirmada`, `cancelada`, `vencida` y `rechazada`. La columna
+legacy `reservas.estado` se conserva temporalmente para compatibilidad, pero no
+se expone como estado operativo; `reservas.estado_flujo` es la fuente de verdad
+para API y panel. Los tipos de estadía admitidos son `huesped`, `staff`,
+`voluntario` y `residente`.
+
+Las fechas de estadía son fechas civiles con intervalo `[check-in, check-out)`.
+Los timestamps técnicos se guardan en UTC. Cualquier cálculo de “hoy”, nombre
+de reporte o ventana operativa se resuelve en `America/Argentina/Cordoba` para
+evitar que la medianoche UTC cambie el día mostrado al equipo local.
+
+La descarga del panel siempre atraviesa el endpoint protegido: no se genera
+otro CSV con PII en el navegador. Cada exportación registra actor, correlación,
+filtros no sensibles, cantidad, truncamiento y si incluyó datos personales.
