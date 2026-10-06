@@ -2,6 +2,8 @@ export type TipoAlojamiento = 'domo' | 'refugio';
 
 export type Cotizacion = {
   tipo_alojamiento: TipoAlojamiento;
+  modalidad?: 'privada' | 'compartida' | 'camping';
+  contexto?: 'general' | 'retiro';
   cantidad_personas: number;
   noches: number;
   precio_por_noche: number | null;
@@ -17,6 +19,11 @@ export type Cotizacion = {
 export type Disponibilidad = {
   estado: 'disponible' | 'ocupado';
   alojamiento_id: number | null;
+  motivo_codigo?: 'DISPONIBLE' | 'INVENTARIO_OCUPADO' | 'CAPACIDAD_INSUFICIENTE' | 'MODALIDAD_NO_DISPONIBLE';
+  espacio_id?: number | null;
+  espacio_codigo?: string | null;
+  modalidad?: 'privada' | 'compartida' | 'camping';
+  capacidad_disponible?: number;
 };
 
 export type SolicitudCotizacion = {
@@ -24,6 +31,8 @@ export type SolicitudCotizacion = {
   personas: number;
   fechaEntrada: string;
   fechaSalida: string;
+  modalidad?: 'privada' | 'compartida' | 'camping';
+  contexto?: 'general' | 'retiro';
 };
 
 export type ResultadoCotizacion = {

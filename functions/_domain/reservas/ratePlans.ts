@@ -69,6 +69,7 @@ export function cotizarConPlan(
     const candidatas = configuracion.reglasPrecio
       .filter(regla =>
         regla.tipoAlojamiento === solicitud.tipo &&
+        (regla.modalidad === 'cualquiera' || regla.modalidad === solicitud.modalidad) &&
         solicitud.personas >= regla.ocupacionMin &&
         solicitud.personas <= regla.ocupacionMax &&
         fecha >= regla.fechaDesde && fecha <= regla.fechaHasta

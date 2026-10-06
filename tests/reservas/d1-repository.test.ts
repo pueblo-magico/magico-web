@@ -29,7 +29,9 @@ function fakeDb(row: Record<string, unknown> | null) {
 }
 
 test('encuentra un domo libre usando el intervalo solicitado', async () => {
-  const { db, calls } = fakeDb({ id: 4 });
+  const { db, calls } = fakeDb({
+    espacio_id: 2, codigo: 'domo-1', capacidad_comercial: 7, ocupado: 0,
+  });
   const repository = new D1RepositorioDisponibilidad(db);
 
   const resultado = await repository.consultar({
@@ -39,9 +41,12 @@ test('encuentra un domo libre usando el intervalo solicitado', async () => {
     fechaSalida: '2026-10-12',
   });
 
-  assert.deepEqual(resultado, { estado: 'disponible', alojamiento_id: 4 });
-  assert.deepEqual(calls[0].values, ['2026-10-10', '2026-10-12']);
-  assert.match(calls[0].query, /r\.fecha_checkin < \?2 AND r\.fecha_checkout > \?1/);
+  assert.equal(resultado.estado, 'disponible');
+  assert.equal(resultado.alojamiento_id, 1);
+  assert.equal(resultado.espacio_codigo, 'domo-1');
+  assert.equal(resultado.capacidad_disponible, 7);
+  assert.deepEqual(calls[0].values, ['2026-10-10', '2026-10-12', 2, 'privada', 'general']);
+  assert.match(calls[0].query, /re\.fecha_checkin < \?2 AND re\.fecha_checkout > \?1/);
 });
 
 test('informa un domo ocupado cuando no hay unidad libre', async () => {
@@ -55,11 +60,16 @@ test('informa un domo ocupado cuando no hay unidad libre', async () => {
     fechaSalida: '2026-10-12',
   });
 
-  assert.deepEqual(resultado, { estado: 'ocupado', alojamiento_id: null });
+  assert.equal(resultado.estado, 'ocupado');
+  assert.equal(resultado.alojamiento_id, null);
+  assert.equal(resultado.motivo_codigo, 'CAPACIDAD_INSUFICIENTE');
 });
 
 test('calcula disponibilidad compartida del refugio', async () => {
-  const { db } = fakeDb({ id: 1, capacidad_total: 15, ocupadas: 12 });
+  const { db } = fakeDb({
+    espacio_id: 1, codigo: 'refugio', capacidad_comercial: 15,
+    reservas_ocupadas: 12, operativas: 0,
+  });
   const repository = new D1RepositorioDisponibilidad(db);
 
   const disponible = await repository.consultar({
@@ -75,11 +85,14 @@ test('calcula disponibilidad compartida del refugio', async () => {
     fechaSalida: '2026-10-12',
   });
 
-  assert.deepEqual(disponible, { estado: 'disponible', alojamiento_id: 1 });
-  assert.deepEqual(ocupado, { estado: 'ocupado', alojamiento_id: 1 });
+  assert.equal(disponible.estado, 'disponible');
+  assert.equal(disponible.alojamiento_id, 3);
+  assert.equal(disponible.capacidad_disponible, 3);
+  assert.equal(ocupado.estado, 'ocupado');
+  assert.equal(ocupado.alojamiento_id, 3);
 });
 
-test('mantiene el fallback legacy cuando falta la fila del refugio', async () => {
+test('falla cerrado cuando falta la configuración normalizada del refugio', async () => {
   const { db } = fakeDb(null);
   const repository = new D1RepositorioDisponibilidad(db);
 
@@ -90,7 +103,9 @@ test('mantiene el fallback legacy cuando falta la fila del refugio', async () =>
     fechaSalida: '2026-10-12',
   });
 
-  assert.deepEqual(resultado, { estado: 'disponible', alojamiento_id: null });
+  assert.equal(resultado.estado, 'ocupado');
+  assert.equal(resultado.alojamiento_id, null);
+  assert.equal(resultado.motivo_codigo, 'MODALIDAD_NO_DISPONIBLE');
 });
 
 test('el repositorio de calendario mapea alojamientos y reservas activas', async () => {

@@ -31,6 +31,7 @@ export class D1RepositorioCotizaciones implements RepositorioCotizaciones {
     const requestCanonico = JSON.stringify({
       tipo: solicitud.tipo, personas: solicitud.personas,
       fechaEntrada: solicitud.fechaEntrada, fechaSalida: solicitud.fechaSalida,
+      modalidad: solicitud.modalidad ?? null, contexto: solicitud.contexto ?? 'general',
     });
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(requestCanonico));
     const requestHash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
