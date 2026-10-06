@@ -31,6 +31,10 @@ import type {
   ExcepcionCapacidad,
   SolicitudExcepcionCapacidadValidada,
 } from '../../_domain/reservas/capacityExceptions.ts';
+import type {
+  CotizacionAceptada,
+  ReservaPublicaCreada,
+} from '../../_domain/reservas/reservationCreation.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -73,6 +77,35 @@ export interface RepositorioCotizaciones {
     solicitud: SolicitudCotizacion,
     resultado: Omit<ResultadoCotizacion, 'referencia'>
   ): Promise<{ id: number; codigo: string; expiresAt: string }>;
+}
+
+export type SolicitudIdempotenteGuardada = {
+  requestHash: string;
+  respuesta: ReservaPublicaCreada | null;
+};
+
+export interface RepositorioCreacionReservaPublica {
+  buscarIdempotencia(clave: string): Promise<SolicitudIdempotenteGuardada | null>;
+  obtenerCotizacion(codigo: string): Promise<CotizacionAceptada | null>;
+  crearAtomica(entrada: {
+    solicitud: {
+      cotizacionCodigo: string;
+      espacioCodigo: string;
+      clienteNombre: string;
+      clienteTelefono: string | null;
+      clienteEmail: string | null;
+      idempotencyKey: string;
+    };
+    cotizacion: CotizacionAceptada;
+    requestHash: string;
+    reservaUid: string;
+    reservaCodigo: string;
+    holdExpiresAt: string;
+  }): Promise<ReservaPublicaCreada>;
+}
+
+export interface RepositorioRetencionesReserva {
+  expirarVencidas(ahoraIso: string, limite?: number): Promise<number[]>;
 }
 
 export type ResumenPlanTarifa = {

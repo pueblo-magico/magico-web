@@ -9,6 +9,8 @@ const OPERACIONES: Record<string, string> = {
   '/api/v1/public/alojamientos': 'public.v1.accommodations',
   '/api/v1/public/disponibilidad': 'public.v1.availability',
   '/api/v1/public/cotizaciones': 'public.v1.quotes',
+  '/api/v1/public/reservas': 'public.v1.reservations',
+  '/api/v1/integrations/reservas/expirar-retenciones': 'integration.reservations.expire_holds',
   '/api/ical': 'public.calendar',
   '/api/manychat': 'integration.manychat.create_reservation',
   '/api/webhook-mp': 'integration.mercadopago.webhook',

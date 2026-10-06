@@ -9,7 +9,7 @@ export function headersPublicos(request: Request, metodos: string): Record<strin
   return {
     'Access-Control-Allow-Origin': permitido ? origin : ORIGENES[0],
     'Access-Control-Allow-Methods': `${metodos}, OPTIONS`,
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Idempotency-Key',
     Vary: 'Origin',
   };
 }

@@ -1,12 +1,13 @@
 export type AlcanceServicio =
   | 'reservas:crear'
   | 'reservas:leer'
+  | 'reservas:expirar'
   | 'pagos:notificar'
   | 'stock:leer';
 
 const IDENTIDADES = {
   manychat: { env: 'MANYCHAT_INBOUND_SECRET', alcances: ['reservas:crear'] },
-  n8n: { env: 'N8N_INBOUND_SECRET', alcances: ['reservas:crear', 'reservas:leer'] },
+  n8n: { env: 'N8N_INBOUND_SECRET', alcances: ['reservas:crear', 'reservas:leer', 'reservas:expirar'] },
   accounting: { env: 'ACCOUNTING_API_SECRET', alcances: ['reservas:leer'] },
   stock: { env: 'STOCK_API_SECRET', alcances: ['stock:leer'] },
 } as const;

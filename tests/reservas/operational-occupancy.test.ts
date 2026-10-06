@@ -94,6 +94,24 @@ test('rechaza conflicto con reserva activa pero respeta el checkout exclusivo', 
   sqlite.close();
 });
 
+test('una retención vencida no impide un bloqueo operativo', async () => {
+  const { sqlite, db } = database();
+  sqlite.exec(`
+    INSERT INTO reservas (
+      cliente_nombre, alojamiento_id, fecha_checkin, fecha_checkout,
+      cantidad_personas, monto_total, estado, canal_origen, hold_expires_at
+    ) VALUES ('QA vencida', 1, '2027-02-10', '2027-02-12', 2, 0, 'pendiente', 'QA',
+      '2000-01-01T00:00:00.000Z');
+  `);
+  const espacioId = Number(sqlite.prepare("SELECT id FROM espacios WHERE codigo = 'domo-1'").get()?.id);
+  const creado = await crearBloqueoInventario({
+    espacioId, unidadInventarioId: null, fechaDesde: '2027-02-10', fechaHasta: '2027-02-12',
+    tipo: 'mantenimiento', motivo: 'Retención ya vencida',
+  }, 'admin@test', new D1RepositorioOcupacionOperativa(db), new D1RegistroAuditoriaReservas(db));
+  assert.equal(creado.estado, 'activo');
+  sqlite.close();
+});
+
 test('registra estadía no comercial sin crear reserva ni pago ficticio', async () => {
   const { sqlite, db } = database();
   const repositorio = new D1RepositorioOcupacionOperativa(db);

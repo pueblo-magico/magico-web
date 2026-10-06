@@ -1,0 +1,55 @@
+import { crearReservaPublica } from '../../../_application/reservas/crearReservaPublica.ts';
+import { D1RepositorioCreacionReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
+import { D1RepositorioDisponibilidad } from '../../../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
+import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
+import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
+
+export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
+
+const statusPorCodigo: Record<string, number> = {
+  SOLICITUD_INVALIDA: 400,
+  IDEMPOTENCY_KEY_REQUERIDA: 400,
+  IDEMPOTENCY_KEY_REUTILIZADA: 409,
+  COTIZACION_NO_ENCONTRADA: 404,
+  COTIZACION_VENCIDA: 410,
+  INVENTARIO_NO_DISPONIBLE: 409,
+};
+
+export async function onRequestPost({ request, env }: any) {
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.v1.reservas', 30, 60));
+  if (limitada) return limitada;
+  const lectura = await leerJsonPublico(request, 'POST');
+  if (!lectura.ok) return lectura.response;
+  const body: any = lectura.body;
+  const cliente = body.cliente || {};
+
+  const resultado = await crearReservaPublica({
+    cotizacionCodigo: String(body.cotizacion_codigo || ''),
+    espacioCodigo: String(body.espacio_codigo || ''),
+    clienteNombre: String(cliente.nombre || ''),
+    clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
+    clienteEmail: cliente.email ? String(cliente.email) : null,
+    idempotencyKey: request.headers.get('Idempotency-Key') || '',
+  }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB));
+
+  if (resultado.ok === false) {
+    return jsonPublico(
+      request,
+      'POST',
+      { error: resultado.error },
+      statusPorCodigo[resultado.error.codigo] || 400
+    );
+  }
+  return jsonPublico(request, 'POST', {
+    data: {
+      reserva: {
+        id: resultado.valor.reservaId,
+        codigo: resultado.valor.codigo,
+        estado: resultado.valor.estado,
+        expires_at: resultado.valor.expiresAt,
+      },
+      cotizacion_codigo: resultado.valor.cotizacionCodigo,
+    },
+    meta: { version: 'v1', idempotente: resultado.valor.idempotente },
+  }, resultado.valor.idempotente ? 200 : 201);
+}
