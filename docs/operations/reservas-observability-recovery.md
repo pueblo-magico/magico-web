@@ -20,10 +20,11 @@ tokens ni errores internos. Para seguir una operación, buscar primero por
 logs**. Para diagnóstico en vivo también se puede usar
 `npx wrangler pages deployment tail` sobre el deployment correcto.
 
-`functions/api/_middleware.ts` aplica esta correlación a toda la superficie
-`/api`. Los handlers con señales de negocio propias se excluyen del log genérico
-para evitar eventos duplicados. Las rutas desconocidas usan `api.unknown`, sin
-incorporar el path potencialmente sensible al log.
+`functions/_middleware.ts` aplica esta correlación a toda la superficie `/api`
+y deja pasar páginas y archivos estáticos sin telemetría adicional. Los handlers
+con señales de negocio propias se excluyen del log genérico para evitar eventos
+duplicados. Las rutas desconocidas usan `api.unknown`, sin incorporar el path
+potencialmente sensible al log.
 
 ## Señales y alertas
 

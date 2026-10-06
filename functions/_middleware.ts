@@ -1,7 +1,7 @@
 import {
   observarSolicitud,
   type LoggerObservabilidad,
-} from '../_interfaces/http/observability.ts';
+} from './_interfaces/http/observability.ts';
 
 const OPERACIONES: Record<string, string> = {
   '/api/cotizar': 'public.quote',
@@ -32,6 +32,11 @@ const INSTRUMENTADAS_EN_HANDLER = new Set([
   'GET /api/admin/me',
 ]);
 
+export function esRutaApi(request: Request): boolean {
+  const pathname = new URL(request.url).pathname;
+  return pathname === '/api' || pathname.startsWith('/api/');
+}
+
 export function operacionApi(request: Request): string {
   return OPERACIONES[new URL(request.url).pathname] || 'api.unknown';
 }
@@ -42,7 +47,7 @@ export function handlerYaInstrumentado(request: Request): boolean {
 }
 
 export async function onRequest({ request, next, env }: any): Promise<Response> {
-  if (handlerYaInstrumentado(request)) return next();
+  if (!esRutaApi(request) || handlerYaInstrumentado(request)) return next();
 
   const logger = env?.OBSERVABILITY_LOGGER as LoggerObservabilidad | undefined;
   return observarSolicitud(

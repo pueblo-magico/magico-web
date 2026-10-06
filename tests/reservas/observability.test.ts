@@ -7,10 +7,11 @@ import {
   type LoggerObservabilidad,
 } from '../../functions/_interfaces/http/observability.ts';
 import {
+  esRutaApi,
   handlerYaInstrumentado,
   onRequest as middlewareApi,
   operacionApi,
-} from '../../functions/api/_middleware.ts';
+} from '../../functions/_middleware.ts';
 
 function loggerCapturado() {
   const eventos: Record<string, unknown>[] = [];
@@ -132,4 +133,18 @@ test('el middleware evita logs duplicados y cubre métodos no instrumentados', a
 
 test('el middleware usa una operación neutra para rutas desconocidas', () => {
   assert.equal(operacionApi(new Request('https://test/api/privado/huesped@example.test')), 'api.unknown');
+});
+
+test('el middleware raíz deja pasar archivos y páginas sin generar telemetría', async () => {
+  const { eventos, logger } = loggerCapturado();
+  const request = new Request('https://test/estadia');
+  assert.equal(esRutaApi(request), false);
+  assert.equal(esRutaApi(new Request('https://test/api')), true);
+  const response = await middlewareApi({
+    request,
+    env: { OBSERVABILITY_LOGGER: logger },
+    next: async () => new Response('página', { status: 200 }),
+  });
+  assert.equal(await response.text(), 'página');
+  assert.equal(eventos.length, 0);
 });
