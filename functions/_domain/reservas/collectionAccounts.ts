@@ -34,6 +34,7 @@ export type DestinoCobroProveedor = {
 
 export type CollectionCucuruNormalizada = {
   collectionId: string;
+  collectorId: string;
   customerId: string | null;
   externalAccountId: string | null;
   cvu: string | null;

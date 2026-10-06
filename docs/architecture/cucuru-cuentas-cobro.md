@@ -36,6 +36,21 @@ guarda el checkpoint después de cada página, reanuda una ventana interrumpida
 y solapa 15 minutos entre ventanas completas. Si pierde el lock, se detiene;
 el consumidor de cada Collection debe ser idempotente por `collection_id`.
 
+La conciliación normalizada valida `collector_id`, esquema, destino, importe,
+moneda y fecha antes de tocar D1. La transacción D1 clasifica la observación,
+registra el pago y confirma la reserva exactamente una vez. Una prueba de
+importe cero queda como `prueba_cero` y no crea un pago. Cuenta desconocida,
+reserva no pendiente, pago tardío, moneda o importe incorrectos quedan en
+`revision_manual`; no cancelan ni confirman automáticamente. El pago Cucuru no
+se escribe en `mp_payment_id`, que continúa siendo sólo compatibilidad legacy
+de Mercado Pago. Una redelivery con el mismo `collection_id` y el mismo hash es
+un duplicado inocuo; si cambia el hash, crea una entrada pendiente en
+`cucuru_revisiones_pago` sin repetir el pago ni los efectos de inventario.
+
+Este núcleo recibe una Collection ya normalizada. El endpoint HTTP no se
+habilita hasta conocer la firma y el esquema oficiales: aceptar un supuesto
+payload sin ese contrato anularía la verificación de autenticidad.
+
 ## Activación segura
 
 `CUCURU_TRANSFER_ENABLED` es una feature flag server-side y sólo el valor

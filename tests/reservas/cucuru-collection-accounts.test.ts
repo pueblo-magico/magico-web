@@ -5,6 +5,7 @@ import test from 'node:test';
 
 import { provisionarCuentaCobroReserva } from '../../functions/_application/reservas/provisionarCuentaCobro.ts';
 import { ejecutarBackfillCucuru } from '../../functions/_application/reservas/ejecutarBackfillCucuru.ts';
+import { procesarCollectionCucuru } from '../../functions/_application/reservas/procesarCollectionCucuru.ts';
 import {
   ErrorProvisionamientoDesconocido,
   cucuruHabilitado,
@@ -12,6 +13,7 @@ import {
 } from '../../functions/_domain/reservas/collectionAccounts.ts';
 import { D1RepositorioCuentasCobroReserva } from '../../functions/_infrastructure/d1/D1RepositorioCuentasCobroReserva.ts';
 import { D1RepositorioBackfillCucuru } from '../../functions/_infrastructure/d1/D1RepositorioBackfillCucuru.ts';
+import { D1RepositorioConciliacionCucuru } from '../../functions/_infrastructure/d1/D1RepositorioConciliacionCucuru.ts';
 
 function baseCompleta(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
@@ -181,7 +183,8 @@ test('el backfill pagina con checkpoint, solapamiento UTC y lock exclusivo', asy
   const consultas: Array<{ desde: string; hasta: string; cursor: string | null }> = [];
   const procesadas: string[] = [];
   const collection = (id: string) => ({
-    collectionId: id, customerId: null, externalAccountId: `acct-${id}`, cvu: null,
+    collectionId: id, collectorId: 'collector-qa', customerId: null,
+    externalAccountId: `acct-${id}`, cvu: null,
     montoCentavos: 30_000, moneda: 'ARS', occurredAt: '2026-10-06T12:00:00.000Z',
     payloadHash: `hash-${id}`,
   });
@@ -222,5 +225,100 @@ test('el backfill pagina con checkpoint, solapamiento UTC y lock exclusivo', asy
     () => new Date('2026-10-06T15:00:00.000Z'), () => 'lock-backfill-3'
   );
   assert.deepEqual(bloqueada, { estado: 'locked' });
+  sqlite.close();
+});
+
+test('concilia una Collection válida exactamente una vez sin usar campos legacy de Mercado Pago', async () => {
+  const sqlite = baseCompleta();
+  const uid = '44444444-4444-4444-8444-444444444444';
+  const reservaId = crearReserva(sqlite, uid);
+  sqlite.prepare(`
+    INSERT INTO cuentas_cobro_reserva (
+      reserva_id, proveedor, customer_id, estado, external_account_id, cvu,
+      alias, moneda, ultima_operacion_uid, ready_at
+    ) VALUES (?, 'cucuru', ?, 'ready', 'acct-ready-1', '0000003100000000000004',
+      'pueblo.reserva.4', 'ARS', 'ready-operation-4', '2026-10-06T12:00:00.000Z')
+  `).run(reservaId, `pm-reserva-${uid}`);
+  const repositorio = new D1RepositorioConciliacionCucuru(d1(sqlite));
+  let notificaciones = 0;
+  const collection = {
+    collectionId: 'collection-ready-1', collectorId: 'collector-qa',
+    customerId: `pm-reserva-${uid}`, externalAccountId: 'acct-ready-1',
+    cvu: '0000003100000000000004', montoCentavos: 30_000, moneda: 'ARS',
+    occurredAt: '2026-10-06T12:30:00.000Z', payloadHash: 'a'.repeat(64),
+  };
+  const primera = await procesarCollectionCucuru(
+    collection, 'collector-qa', repositorio,
+    { async notificar() { notificaciones++; } }, 'request-cucuru-1'
+  );
+  assert.equal(primera.estado, 'aplicado');
+  assert.equal(primera.notificacionFallida, false);
+  assert.equal(notificaciones, 0);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT estado, estado_flujo, mp_payment_id FROM reservas WHERE id = ?
+  `).get(reservaId) }, { estado: 'confirmada', estado_flujo: 'confirmada', mp_payment_id: null });
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT proveedor, estado, external_payment_id FROM pagos WHERE reserva_id = ?
+  `).get(reservaId) }, {
+    proveedor: 'cucuru', estado: 'aprobado', external_payment_id: 'collection-ready-1',
+  });
+
+  const duplicada = await procesarCollectionCucuru(
+    collection, 'collector-qa', repositorio,
+    { async notificar() { notificaciones++; } }, 'request-cucuru-duplicate'
+  );
+  assert.equal(duplicada.estado, 'duplicado');
+  const inconsistente = await procesarCollectionCucuru(
+    { ...collection, payloadHash: 'd'.repeat(64) }, 'collector-qa', repositorio,
+    { async notificar() { notificaciones++; } }, 'request-cucuru-inconsistent'
+  );
+  assert.equal(inconsistente.estado, 'revision_manual');
+  assert.equal(inconsistente.motivoCodigo, 'DUPLICADO_INCONSISTENTE');
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM pagos WHERE proveedor = 'cucuru'").get()?.n, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE evento_uid = 'pago:cucuru:collection-ready-1:aprobado'").get()?.n, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM cucuru_revisiones_pago WHERE motivo_codigo = 'DUPLICADO_INCONSISTENTE'").get()?.n, 1);
+  sqlite.close();
+});
+
+test('la prueba cero no concilia y los importes incorrectos van a revisión manual', async () => {
+  const sqlite = baseCompleta();
+  const uid = '55555555-5555-4555-8555-555555555555';
+  const reservaId = crearReserva(sqlite, uid);
+  sqlite.prepare(`
+    INSERT INTO cuentas_cobro_reserva (
+      reserva_id, proveedor, customer_id, estado, external_account_id, cvu,
+      moneda, ultima_operacion_uid, ready_at
+    ) VALUES (?, 'cucuru', ?, 'ready', 'acct-ready-5', '0000003100000000000005',
+      'ARS', 'ready-operation-5', '2026-10-06T12:00:00.000Z')
+  `).run(reservaId, `pm-reserva-${uid}`);
+  const repositorio = new D1RepositorioConciliacionCucuru(d1(sqlite));
+  const base = {
+    collectorId: 'collector-qa', customerId: `pm-reserva-${uid}`,
+    externalAccountId: 'acct-ready-5', cvu: '0000003100000000000005', moneda: 'ARS',
+    occurredAt: '2026-10-06T12:30:00.000Z', payloadHash: 'b'.repeat(64),
+  };
+  const cero = await procesarCollectionCucuru(
+    { ...base, collectionId: 'collection-zero-5', montoCentavos: 0 },
+    'collector-qa', repositorio, { async notificar() {} }, 'request-zero-5'
+  );
+  assert.equal(cero.estado, 'prueba_cero');
+  assert.equal(cero.motivoCodigo, 'PRUEBA_IMPORTE_CERO');
+
+  const incorrecta = await procesarCollectionCucuru(
+    { ...base, collectionId: 'collection-wrong-5', montoCentavos: 29_999, payloadHash: 'c'.repeat(64) },
+    'collector-qa', repositorio, { async notificar() {} }, 'request-wrong-5'
+  );
+  assert.equal(incorrecta.estado, 'revision_manual');
+  assert.equal(incorrecta.motivoCodigo, 'MONTO_INCORRECTO');
+  assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas WHERE id = ?').get(reservaId)?.estado_flujo, 'pendiente_pago');
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM pagos WHERE proveedor = 'cucuru'").get()?.n, 0);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM cucuru_revisiones_pago WHERE estado = 'pendiente'").get()?.n, 1);
+  await assert.rejects(
+    procesarCollectionCucuru(
+      { ...base, collectionId: 'collection-bad-collector', montoCentavos: 30_000 },
+      'collector-real', repositorio, { async notificar() {} }, 'request-invalid'
+    ),
+    /observación de Cucuru es inválida/
+  );
   sqlite.close();
 });

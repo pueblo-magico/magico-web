@@ -559,6 +559,19 @@ export interface RepositorioBackfillCucuru {
   liberarLock(alcance: string, lockUid: string): Promise<void>;
 }
 
+export type ResultadoConciliacionCucuru = {
+  estado: 'aplicado' | 'prueba_cero' | 'revision_manual' | 'duplicado';
+  motivoCodigo: string | null;
+  reserva: ReservaConfirmadaParaNotificar | null;
+};
+
+export interface RepositorioConciliacionCucuru {
+  procesar(
+    collection: CollectionCucuruNormalizada,
+    correlationId: string
+  ): Promise<ResultadoConciliacionCucuru>;
+}
+
 export type DatosPersonalesReserva = {
   id: number;
   codigo: string | null;
