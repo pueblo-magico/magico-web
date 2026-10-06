@@ -21,6 +21,7 @@ import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1Reposito
 import { crearNotificadorManyChat } from '../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
+import { observarSolicitud, type ContextoObservabilidad } from '../_interfaces/http/observability.ts';
 
 async function hmacSha256Hex(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder();
@@ -65,8 +66,16 @@ async function firmaValida(request: Request, env: any): Promise<{ ok: boolean; d
 }
 
 export async function onRequestPost({ request, env }: any) {
+  return observarSolicitud(request, 'integration.mercadopago.webhook', contexto => ejecutar(request, env, contexto));
+}
+
+async function ejecutar(request: Request, env: any, contexto: ContextoObservabilidad) {
+  contexto.setEventId(request.headers.get('x-request-id'));
   const limitada = respuestaLimite(await consumirLimite(request, env, 'webhook.mercadopago', 120, 60));
-  if (limitada) return limitada;
+  if (limitada) {
+    contexto.signal('rate_limit.rejected', 'warn', { metric: 'reservas_rate_limit_rejections_total' });
+    return limitada;
+  }
   // CRÍTICO: una firma inválida se rechaza (401), no se procesa. Una vez que
   // la firma es válida (es realmente Mercado Pago), cualquier error interno
   // de acá en adelante (falla al consultar el pago, falla al llamar a
@@ -74,7 +83,7 @@ export async function onRequestPost({ request, env }: any) {
   // MP no reintente sobre algo que ya procesamos de nuestro lado.
   const { ok: firmaOk, dataId } = await firmaValida(request, env);
   if (!firmaOk || !dataId) {
-    console.warn('webhook-mp: firma inválida o datos faltantes — petición rechazada');
+    contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
     return new Response('Firma inválida', { status: 401 });
   }
 
@@ -90,12 +99,14 @@ export async function onRequestPost({ request, env }: any) {
       })
     );
     if (resultado.estado === 'confirmada' && resultado.notificacionFallida) {
-      console.error('webhook-mp: growth action falló (pago igual quedó confirmado)');
+      contexto.signal('notification.delivery_failed', 'error', { metric: 'reservas_notification_errors_total' });
     }
+
+    contexto.signal('payment.webhook_processed', 'info', { metric: 'reservas_webhooks_processed_total' });
 
     return new Response('OK', { status: 200 });
   } catch {
-    console.error('webhook-mp: error inesperado');
+    contexto.signal('payment.webhook_processing_failed', 'error', { metric: 'reservas_webhook_errors_total' });
     return new Response('OK', { status: 200 });
   }
 }

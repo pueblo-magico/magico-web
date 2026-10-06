@@ -26,6 +26,12 @@ jobs:
       - name: Test reservations with coverage
         run: npm run test:reservas:coverage
 
+      - name: Test Cloudflare preview cleanup
+        run: npm run test:cloudflare-cleanup
+
+      - name: Test reservation recovery drill
+        run: npm run test:reservas:recovery
+
       - name: Build
         run: npm run build
 

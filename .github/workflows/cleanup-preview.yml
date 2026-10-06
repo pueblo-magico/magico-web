@@ -1,0 +1,38 @@
+name: Cleanup Cloudflare Pages PR Preview
+
+on:
+  pull_request:
+    types: [closed]
+
+# Share the preview workflow's concurrency group so closing a PR cancels any
+# deployment that is still running before cleanup begins.
+concurrency:
+  group: cloudflare-pages-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    name: Delete preview deployments
+    # Forked PRs never receive a Cloudflare preview from preview.yml.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Delete Cloudflare Pages preview deployments
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PROJECT_NAME: pueblo-magico-web
+          CLOUDFLARE_PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
+        run: node scripts/cloudflare/cleanup-pages-preview.mjs
