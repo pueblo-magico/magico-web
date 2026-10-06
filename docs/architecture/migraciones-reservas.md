@@ -43,6 +43,13 @@ Antes de una migración productiva, ejecutar
 controlado. El reporte enumera tablas, columnas, conteos, IDs externos
 duplicados, filas inválidas y asignaciones pendientes de mapeo.
 
+Para revisar una base que ya tiene todas las migraciones, ejecutar además
+`scripts/reservas/verificar-consistencia.sql`. Es un reporte de sólo lectura que
+detecta drift del esquema y datos base, estados o tipos fuera de catálogo,
+proyecciones legacy inconsistentes, claves externas duplicadas e índices únicos
+faltantes. Todos los controles `*_hallazgos` deben devolver `0` antes de un
+despliegue o cambio de restricciones.
+
 La propia migración repite como guards bloqueantes las condiciones que harían
 ambiguo el backfill. Si una falla, D1 revierte `0002` y no la registra como
 aplicada. Después de aplicar, `scripts/reservas/verificar-migracion.sql`

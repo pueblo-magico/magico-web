@@ -41,7 +41,7 @@ test('calcula las métricas operativas sin depender del handler', () => {
     monto_total: 200_000,
     monto_sena: null,
   });
-  const pendiente = reserva({ id: 3, estado: 'pendiente', monto_total: 50_000, monto_sena: 10_000 });
+  const pendiente = reserva({ id: 3, estado: 'pendiente_pago', monto_total: 50_000, monto_sena: 10_000 });
 
   const metricas = calcularMetricasPanelReservas(
     [confirmadaHoy, confirmadaSemana, pendiente],

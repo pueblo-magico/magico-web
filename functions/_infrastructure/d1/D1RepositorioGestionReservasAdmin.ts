@@ -46,7 +46,7 @@ function mapearResumen(row: Record<string, unknown>): ResumenReservaAdmin {
     clienteEmail: row.cliente_email == null ? null : String(row.cliente_email),
     fechaCheckin: String(row.fecha_checkin),
     fechaCheckout: String(row.fecha_checkout), cantidadPersonas: Number(row.cantidad_personas),
-    estado: String(row.estado), estadoFlujo: String(row.estado_flujo),
+    estado: String(row.estado_flujo), estadoFlujo: String(row.estado_flujo),
     canalOrigen: row.canal_origen == null ? null : String(row.canal_origen),
     alojamientoId: Number(row.alojamiento_id), alojamientoTipo: String(row.alojamiento_tipo),
     espacioCodigo: row.espacio_codigo == null ? null : String(row.espacio_codigo),

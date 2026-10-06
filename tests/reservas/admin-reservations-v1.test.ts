@@ -86,6 +86,7 @@ test('lista reservas con paginación estable y filtros combinables', async () =>
   assert.equal(pagina.totalPaginas, 3);
   assert.equal(pagina.items[0].montoTotalCentavos, 10_000);
   assert.ok(pagina.items[0].alojamientoId > 0);
+  assert.ok(pagina.items.every(item => item.estado === item.estadoFlujo && item.estado !== 'pendiente'));
   const filtrada = await listarReservasAdmin({
     pagina: 1, limite: 20, origen: 'Web', espacioCodigo: 'domo-1', titular: 'Titular',
   }, repositorio);
