@@ -19,7 +19,7 @@ type D1Database = {
 };
 
 const CAMPOS_RESERVA = `
-  r.id, r.cliente_nombre, r.cliente_telefono, r.cliente_email,
+  r.id, r.version, r.cliente_nombre, r.cliente_telefono, r.cliente_email,
   r.alojamiento_id, a.nombre AS alojamiento_nombre, a.tipo AS alojamiento_tipo,
   r.fecha_checkin, r.fecha_checkout, r.cantidad_personas,
   r.monto_total, r.monto_sena, r.estado, r.unidad_asignada, r.canal_origen,

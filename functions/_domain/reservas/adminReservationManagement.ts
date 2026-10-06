@@ -78,3 +78,84 @@ export type DetalleReservaAdmin = ResumenReservaAdmin & {
   estadias: Array<Record<string, unknown>>;
   excepciones: Array<Record<string, unknown>>;
 };
+
+export type NuevaReservaAdmin = {
+  clienteNombre: string;
+  clienteTelefono: string | null;
+  clienteEmail: string | null;
+  fechaCheckin: string;
+  fechaCheckout: string;
+  cantidadPersonas: number;
+  espacioCodigo: string;
+  modalidad: 'privada' | 'compartida' | 'camping';
+  canalOrigen: string;
+  montoTotalCentavos: number;
+  montoSenaCentavos: number | null;
+};
+
+export type CambiosReservaAdmin = Partial<Pick<
+  NuevaReservaAdmin,
+  'clienteNombre' | 'clienteTelefono' | 'clienteEmail' | 'canalOrigen'
+>>;
+
+export type AccionEstadoReservaAdmin = 'confirmar' | 'cancelar' | 'vencer';
+
+function textoRequerido(valor: unknown, etiqueta: string, maximo = 160): string {
+  if (typeof valor !== 'string' || !valor.trim() || valor.trim().length > maximo) {
+    throw new ErrorReserva('DATOS_INVALIDOS', `${etiqueta} es inválido.`);
+  }
+  return valor.trim();
+}
+
+export function validarNuevaReservaAdmin(entrada: NuevaReservaAdmin): NuevaReservaAdmin {
+  const fechaCheckin = entrada.fechaCheckin?.trim();
+  const fechaCheckout = entrada.fechaCheckout?.trim();
+  if (!esFechaIso(fechaCheckin) || !esFechaIso(fechaCheckout) || fechaCheckout <= fechaCheckin) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'Las fechas de la reserva son inválidas.');
+  }
+  if (!Number.isSafeInteger(entrada.cantidadPersonas) || entrada.cantidadPersonas < 1) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'La cantidad de personas es inválida.');
+  }
+  if (!Number.isSafeInteger(entrada.montoTotalCentavos) || entrada.montoTotalCentavos < 0 ||
+      (entrada.montoSenaCentavos !== null &&
+       (!Number.isSafeInteger(entrada.montoSenaCentavos) || entrada.montoSenaCentavos < 0 ||
+        entrada.montoSenaCentavos > entrada.montoTotalCentavos))) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'Los importes son inválidos.');
+  }
+  if (!['privada', 'compartida', 'camping'].includes(entrada.modalidad)) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'La modalidad es inválida.');
+  }
+  return {
+    ...entrada,
+    clienteNombre: textoRequerido(entrada.clienteNombre, 'El titular'),
+    clienteTelefono: entrada.clienteTelefono?.trim() || null,
+    clienteEmail: entrada.clienteEmail?.trim().toLowerCase() || null,
+    fechaCheckin, fechaCheckout,
+    espacioCodigo: textoRequerido(entrada.espacioCodigo, 'El espacio', 80),
+    canalOrigen: textoRequerido(entrada.canalOrigen, 'El origen', 80),
+  };
+}
+
+export function validarCambiosReservaAdmin(entrada: CambiosReservaAdmin): CambiosReservaAdmin {
+  const campos = Object.keys(entrada);
+  if (campos.length === 0 || campos.some(campo =>
+    !['clienteNombre', 'clienteTelefono', 'clienteEmail', 'canalOrigen'].includes(campo)
+  )) throw new ErrorReserva('DATOS_INVALIDOS', 'No hay campos editables válidos.');
+  return {
+    ...(entrada.clienteNombre !== undefined
+      ? { clienteNombre: textoRequerido(entrada.clienteNombre, 'El titular') } : {}),
+    ...(entrada.clienteTelefono !== undefined
+      ? { clienteTelefono: entrada.clienteTelefono?.trim() || null } : {}),
+    ...(entrada.clienteEmail !== undefined
+      ? { clienteEmail: entrada.clienteEmail?.trim().toLowerCase() || null } : {}),
+    ...(entrada.canalOrigen !== undefined
+      ? { canalOrigen: textoRequerido(entrada.canalOrigen, 'El origen', 80) } : {}),
+  };
+}
+
+export function validarMotivoCambioSensible(motivo: unknown): string {
+  if (typeof motivo !== 'string' || motivo.trim().length < 5 || motivo.trim().length > 500) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El motivo debe tener entre 5 y 500 caracteres.');
+  }
+  return motivo.trim();
+}

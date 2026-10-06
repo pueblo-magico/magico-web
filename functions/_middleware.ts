@@ -53,6 +53,7 @@ export function handlerYaInstrumentado(request: Request): boolean {
   const pathname = new URL(request.url).pathname;
   if (pathname === '/api/v1/admin/reservas') return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+$/.test(pathname)) return true;
+  if (/^\/api\/v1\/admin\/reservas\/[^/]+\/estado$/.test(pathname)) return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+\/asignaciones$/.test(pathname)) return true;
   return INSTRUMENTADAS_EN_HANDLER.has(`${request.method.toUpperCase()} ${pathname}`);
 }

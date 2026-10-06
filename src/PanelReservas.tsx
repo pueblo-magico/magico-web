@@ -34,6 +34,7 @@ type Alojamiento = {
 
 type Reserva = {
   id: number;
+  version: number;
   cliente_nombre: string;
   cliente_telefono: string | null;
   cliente_email: string | null;
@@ -269,7 +270,6 @@ type FormReserva = {
   estado: EstadoReserva;
   canal_origen: string;
   unidad_asignada: string;
-  tipo_estadia: string;
 };
 
 const TIPOS_ESTADIA = [
@@ -278,6 +278,15 @@ const TIPOS_ESTADIA = [
   { value: 'voluntario', label: 'Voluntario' },
   { value: 'residente', label: 'Residente' },
 ];
+
+const ESPACIO_POR_ALOJAMIENTO: Record<number, string> = {
+  1: 'domo-1',
+  2: 'domo-2',
+  3: 'refugio',
+};
+
+const modalidadPara = (alojamiento: Alojamiento | undefined): 'privada' | 'compartida' =>
+  alojamiento?.tipo === 'domo' ? 'privada' : 'compartida';
 
 const ModalReserva: React.FC<{
   modo: 'crear' | 'editar';
@@ -301,14 +310,15 @@ const ModalReserva: React.FC<{
     estado: reserva?.estado || 'confirmada',
     canal_origen: reserva?.canal_origen || 'Manual',
     unidad_asignada: reserva?.unidad_asignada || '',
-    tipo_estadia: 'huesped',
   }));
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [error, setError] = useState('');
-  const [aviso, setAviso] = useState('');
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [motivoCancelacion, setMotivoCancelacion] = useState('');
+  const [confirmandoReserva, setConfirmandoReserva] = useState(false);
+  const [motivoConfirmacion, setMotivoConfirmacion] = useState('');
   const [excepcion, setExcepcion] = useState(reserva?.excepcion_capacidad || null);
   const [capacidadExcepcional, setCapacidadExcepcional] = useState('8');
   const [motivoExcepcion, setMotivoExcepcion] = useState('');
@@ -317,21 +327,9 @@ const ModalReserva: React.FC<{
 
   const setCampo = (campo: keyof FormReserva, valor: string) => setForm(f => ({ ...f, [campo]: valor }));
 
-  // Staff/voluntario/residente no pagan estadía — al elegir cualquier tipo
-  // distinto de "Huésped" forzamos $0 y bloqueamos los montos para que nadie
-  // tipee un número ahí por error.
-  const esHuesped = form.tipo_estadia === 'huesped';
-  const cambiarTipoEstadia = (valor: string) => {
-    setForm(f => ({
-      ...f,
-      tipo_estadia: valor,
-      monto_total: valor === 'huesped' ? f.monto_total : '0',
-      monto_sena: valor === 'huesped' ? f.monto_sena : '0',
-    }));
-  };
-
   const validar = (): string | null => {
     if (!form.cliente_nombre.trim()) return 'Falta el nombre del huésped.';
+    if (modo === 'editar') return null;
     if (!form.alojamiento_id) return 'Elegí un alojamiento.';
     if (!form.fecha_checkin || !form.fecha_checkout) return 'Faltan las fechas.';
     if (form.fecha_checkout <= form.fecha_checkin) return 'El check-out debe ser posterior al check-in.';
@@ -346,50 +344,42 @@ const ModalReserva: React.FC<{
 
     setGuardando(true);
     setError('');
-    setAviso('');
     try {
       if (modo === 'crear') {
-        const res = await adminFetch('/api/admin/crear', {
+        const alojamiento = alojamientos.find(item => item.id === Number(form.alojamiento_id));
+        const espacioCodigo = ESPACIO_POR_ALOJAMIENTO[Number(form.alojamiento_id)];
+        if (!alojamiento || !espacioCodigo) throw new Error('El alojamiento no tiene un espacio operativo configurado.');
+        const res = await adminFetch('/api/v1/admin/reservas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             cliente_nombre: form.cliente_nombre.trim(),
             cliente_telefono: form.cliente_telefono.trim() || null,
             cliente_email: form.cliente_email.trim() || null,
-            alojamiento_id: Number(form.alojamiento_id),
+            espacio_codigo: espacioCodigo,
+            modalidad: modalidadPara(alojamiento),
             fecha_checkin: form.fecha_checkin,
             fecha_checkout: form.fecha_checkout,
             cantidad_personas: Number(form.cantidad_personas),
-            monto_total: Number(form.monto_total),
-            monto_sena: form.monto_sena !== '' ? Number(form.monto_sena) : null,
-            estado: form.estado,
+            monto_total_centavos: Math.round(Number(form.monto_total) * 100),
+            monto_sena_centavos: form.monto_sena !== '' ? Math.round(Number(form.monto_sena) * 100) : null,
             canal_origen: form.canal_origen.trim() || 'Manual',
-            tipo_estadia: form.tipo_estadia,
           }),
         });
         const data: any = await res.json();
         if (!res.ok) throw new Error(data.error || 'No se pudo crear.');
-        if (data.disponible === false) {
-          setAviso('Se cargó igual, pero esas fechas se solapan con otra reserva en ese alojamiento — revisalo.');
-        }
       } else if (reserva) {
-        const res = await adminFetch('/api/admin/editar', {
-          method: 'POST',
+        const res = await adminFetch(`/api/v1/admin/reservas/${reserva.id}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            reserva_id: reserva.id,
-            cliente_nombre: form.cliente_nombre.trim(),
-            cliente_telefono: form.cliente_telefono.trim() || null,
-            cliente_email: form.cliente_email.trim() || null,
-            alojamiento_id: Number(form.alojamiento_id),
-            fecha_checkin: form.fecha_checkin,
-            fecha_checkout: form.fecha_checkout,
-            cantidad_personas: Number(form.cantidad_personas),
-            monto_total: Number(form.monto_total),
-            monto_sena: form.monto_sena !== '' ? Number(form.monto_sena) : null,
-            estado: form.estado,
-            canal_origen: form.canal_origen.trim() || null,
-            unidad_asignada: form.unidad_asignada.trim() || null,
+            expected_version: reserva.version,
+            cambios: {
+              cliente_nombre: form.cliente_nombre.trim(),
+              cliente_telefono: form.cliente_telefono.trim() || null,
+              cliente_email: form.cliente_email.trim() || null,
+              canal_origen: form.canal_origen.trim() || 'Admin',
+            },
           }),
         });
         const data: any = await res.json();
@@ -397,7 +387,7 @@ const ModalReserva: React.FC<{
       }
       setGuardado(true);
       onGuardado();
-      setTimeout(onClose, aviso ? 1600 : 700);
+      setTimeout(onClose, 700);
     } catch (e: any) {
       setError(e.message || 'Ocurrió un error.');
     } finally {
@@ -407,19 +397,57 @@ const ModalReserva: React.FC<{
 
   const cancelarReserva = async () => {
     if (!reserva) return;
+    if (motivoCancelacion.trim().length < 5) {
+      setError('Indicá un motivo de al menos 5 caracteres para cancelar.');
+      return;
+    }
     setCancelando(true);
+    setError('');
     try {
-      const res = await adminFetch('/api/admin/editar', {
+      const res = await adminFetch(`/api/v1/admin/reservas/${reserva.id}/estado`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reserva_id: reserva.id, estado: 'cancelada' }),
+        body: JSON.stringify({
+          expected_version: reserva.version,
+          accion: 'cancelar',
+          motivo: motivoCancelacion.trim(),
+        }),
       });
-      if (!res.ok) throw new Error('failed');
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo cancelar.');
       onGuardado();
       onClose();
-    } catch {
+    } catch (e: any) {
       setCancelando(false);
-      setError('No se pudo cancelar. Probá de nuevo.');
+      setError(e.message || 'No se pudo cancelar. Probá de nuevo.');
+    }
+  };
+
+  const confirmarReserva = async () => {
+    if (!reserva) return;
+    if (motivoConfirmacion.trim().length < 5) {
+      setError('Indicá un motivo de al menos 5 caracteres para confirmar.');
+      return;
+    }
+    setConfirmandoReserva(true);
+    setError('');
+    try {
+      const res = await adminFetch(`/api/v1/admin/reservas/${reserva.id}/estado`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expected_version: reserva.version,
+          accion: 'confirmar',
+          motivo: motivoConfirmacion.trim(),
+        }),
+      });
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo confirmar.');
+      onGuardado();
+      onClose();
+    } catch (e: any) {
+      setConfirmandoReserva(false);
+      setError(e.message || 'No se pudo confirmar. Probá de nuevo.');
     }
   };
 
@@ -460,7 +488,13 @@ const ModalReserva: React.FC<{
     <ModalBase titulo={modo === 'crear' ? 'Nueva reserva' : 'Editar reserva'} onClose={onClose} ancho="sm:max-w-lg">
       {modo === 'crear' && (
         <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-          Para cargar reservas que no vinieron por ManyChat: falló el bot, se cerró por teléfono, vino de Airbnb, etc.
+          Para cargar reservas comerciales confirmadas que se cerraron por teléfono u otro canal. Las estadías de staff, voluntariado o residentes se registran en Ocupación.
+        </p>
+      )}
+
+      {modo === 'editar' && (
+        <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+          Acá podés corregir datos del huésped y el canal. Las fechas, importes y asignaciones se conservan para no alterar inventario ni trazabilidad.
         </p>
       )}
 
@@ -490,47 +524,35 @@ const ModalReserva: React.FC<{
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_aloj">Alojamiento *</label>
-            <select id="f_aloj" className={inputCls} value={form.alojamiento_id} onChange={e => setCampo('alojamiento_id', e.target.value)}>
+            <select id="f_aloj" disabled={modo === 'editar'} className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.alojamiento_id} onChange={e => setCampo('alojamiento_id', e.target.value)}>
               {alojamientos.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
             </select>
           </div>
           <div>
             <label className={labelCls} htmlFor="f_estado">Estado *</label>
-            <select id="f_estado" className={inputCls} value={form.estado} onChange={e => setCampo('estado', e.target.value)}>
-              <option value="pendiente">Pendiente</option>
+            <select id="f_estado" disabled className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.estado} onChange={e => setCampo('estado', e.target.value)}>
               <option value="confirmada">Confirmada</option>
+              <option value="pendiente">Pendiente</option>
               <option value="cancelada">Cancelada</option>
             </select>
           </div>
         </div>
 
-        {modo === 'crear' && (
-          <div>
-            <label className={labelCls} htmlFor="f_tipo_estadia">Tipo de estadía *</label>
-            <select id="f_tipo_estadia" className={inputCls} value={form.tipo_estadia} onChange={e => cambiarTipoEstadia(e.target.value)}>
-              {TIPOS_ESTADIA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            {!esHuesped && (
-              <p className="text-[11px] text-gray-400 mt-1">Staff/voluntario/residente no pagan estadía — el monto queda en $0.</p>
-            )}
-          </div>
-        )}
-
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_in">Check-in *</label>
-            <input id="f_in" type="date" className={`${inputCls} tabular-nums`} value={form.fecha_checkin} onChange={e => setCampo('fecha_checkin', e.target.value)} />
+            <input id="f_in" type="date" disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-500`} value={form.fecha_checkin} onChange={e => setCampo('fecha_checkin', e.target.value)} />
           </div>
           <div>
             <label className={labelCls} htmlFor="f_out">Check-out *</label>
-            <input id="f_out" type="date" className={`${inputCls} tabular-nums`} value={form.fecha_checkout} onChange={e => setCampo('fecha_checkout', e.target.value)} />
+            <input id="f_out" type="date" disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-500`} value={form.fecha_checkout} onChange={e => setCampo('fecha_checkout', e.target.value)} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_personas">Personas *</label>
-            <input id="f_personas" type="number" inputMode="numeric" min={1} className={inputCls} value={form.cantidad_personas} onChange={e => setCampo('cantidad_personas', e.target.value)} />
+            <input id="f_personas" type="number" inputMode="numeric" min={1} disabled={modo === 'editar'} className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.cantidad_personas} onChange={e => setCampo('cantidad_personas', e.target.value)} />
           </div>
           <div>
             <label className={labelCls} htmlFor="f_canal">Canal</label>
@@ -544,18 +566,18 @@ const ModalReserva: React.FC<{
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_total">Monto total *</label>
-            <input id="f_total" type="number" inputMode="decimal" min={0} disabled={modo === 'crear' && !esHuesped} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_total} onChange={e => setCampo('monto_total', e.target.value)} />
+            <input id="f_total" type="number" inputMode="decimal" min={0} disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_total} onChange={e => setCampo('monto_total', e.target.value)} />
           </div>
           <div>
             <label className={labelCls} htmlFor="f_sena">Seña</label>
-            <input id="f_sena" type="number" inputMode="decimal" min={0} disabled={modo === 'crear' && !esHuesped} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_sena} onChange={e => setCampo('monto_sena', e.target.value)} />
+            <input id="f_sena" type="number" inputMode="decimal" min={0} disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_sena} onChange={e => setCampo('monto_sena', e.target.value)} />
           </div>
         </div>
 
         {modo === 'editar' && (
           <div>
             <label className={labelCls} htmlFor="f_unidad">Cama / unidad asignada</label>
-            <input id="f_unidad" className={inputCls} value={form.unidad_asignada} onChange={e => setCampo('unidad_asignada', e.target.value)} placeholder="Ej. Cama 3 Habitación 1" />
+            <input id="f_unidad" disabled className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.unidad_asignada} onChange={e => setCampo('unidad_asignada', e.target.value)} placeholder="Se gestiona desde la asignación de inventario" />
           </div>
         )}
 
@@ -612,8 +634,6 @@ const ModalReserva: React.FC<{
       )}
 
       {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
-      {aviso && !error && <p className="text-xs text-amber-600 mb-3" role="alert">{aviso}</p>}
-
       <div className="flex justify-end gap-2">
         <button onClick={onClose} className={`text-sm font-semibold px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 ${FOCUS_RING}`}>
           Cerrar
@@ -631,6 +651,30 @@ const ModalReserva: React.FC<{
         )}
       </div>
 
+      {!soloLectura && modo === 'editar' && reserva?.estado === 'pendiente' && (
+        <div className="mt-5 pt-4 border-t border-gray-100 grid gap-2 rounded-lg bg-emerald-50 px-3 py-2.5">
+          <p className="text-xs font-semibold text-emerald-800">Confirmar reserva pendiente</p>
+          <label className="text-xs text-emerald-800" htmlFor="f_motivo_confirmacion">Motivo de confirmación *</label>
+          <textarea
+            id="f_motivo_confirmacion"
+            rows={2}
+            maxLength={500}
+            value={motivoConfirmacion}
+            onChange={e => setMotivoConfirmacion(e.target.value)}
+            placeholder="Ej. Pago verificado manualmente"
+            className={`${inputCls} border-emerald-200`}
+          />
+          <button
+            type="button"
+            onClick={confirmarReserva}
+            disabled={confirmandoReserva}
+            className={`justify-self-end text-xs font-semibold text-white bg-emerald-700 rounded-lg px-3 py-2 disabled:opacity-60 ${FOCUS_RING}`}
+          >
+            {confirmandoReserva ? 'Confirmando…' : 'Confirmar reserva'}
+          </button>
+        </div>
+      )}
+
       {!soloLectura && modo === 'editar' && reserva && reserva.estado !== 'cancelada' && (
         <div className="mt-5 pt-4 border-t border-gray-100">
           {!confirmandoCancelar ? (
@@ -638,9 +682,19 @@ const ModalReserva: React.FC<{
               Cancelar esta reserva
             </button>
           ) : (
-            <div className="flex items-center justify-between gap-2 bg-red-50 rounded-lg px-3 py-2.5">
+            <div className="grid gap-2 bg-red-50 rounded-lg px-3 py-2.5">
               <p className="text-xs text-red-700">¿Seguro? No se borra — queda registrada como "cancelada".</p>
-              <div className="flex gap-2 flex-shrink-0">
+              <label className="text-xs font-semibold text-red-700" htmlFor="f_motivo_cancelacion">Motivo de cancelación *</label>
+              <textarea
+                id="f_motivo_cancelacion"
+                rows={2}
+                maxLength={500}
+                value={motivoCancelacion}
+                onChange={e => setMotivoCancelacion(e.target.value)}
+                placeholder="Ej. Solicitud expresa del huésped"
+                className={`${inputCls} border-red-200`}
+              />
+              <div className="flex justify-end gap-2">
                 <button onClick={() => setConfirmandoCancelar(false)} className={`text-xs font-semibold text-gray-500 hover:text-gray-700 rounded ${FOCUS_RING}`}>
                   No
                 </button>
