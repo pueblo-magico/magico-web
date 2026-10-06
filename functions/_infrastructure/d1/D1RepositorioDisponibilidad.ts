@@ -47,7 +47,10 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
           JOIN reserva_estadias re ON re.reserva_id = r.id
           JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
           JOIN espacios reservado ON reservado.id = ree.espacio_id
-          WHERE r.estado IN ('pendiente', 'confirmada')
+          WHERE (
+              r.estado = 'confirmada'
+              OR (r.estado = 'pendiente' AND (r.hold_expires_at IS NULL OR r.hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+            )
             AND re.fecha_checkin < ?2 AND re.fecha_checkout > ?1
             AND (reservado.id = e.id OR reservado.parent_id = e.id OR e.parent_id = reservado.id)
         ) OR EXISTS (
@@ -111,7 +114,10 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
           JOIN reserva_estadias re ON re.reserva_id = r.id
           JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
           JOIN espacios reservado ON reservado.id = ree.espacio_id
-          WHERE r.estado IN ('pendiente', 'confirmada')
+          WHERE (
+              r.estado = 'confirmada'
+              OR (r.estado = 'pendiente' AND (r.hold_expires_at IS NULL OR r.hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+            )
             AND re.fecha_checkin <= n.fecha AND re.fecha_checkout > n.fecha
             AND (reservado.id = c.id OR reservado.parent_id = c.id OR c.parent_id = reservado.id)
         )), 0) reservas_ocupadas,
