@@ -175,6 +175,69 @@ BEFORE UPDATE ON solicitudes_idempotentes
 WHEN OLD.estado = 'completada'
 BEGIN SELECT RAISE(ABORT, 'solicitud idempotente completada es inmutable'); END;
 
+-- WRESERV-7 consideraba toda reserva pendiente como activa. Se reemplazan los
+-- dos guards operativos para que una retención vencida no bloquee mantenimiento
+-- ni estadías internas mientras espera el proceso de limpieza.
+DROP TRIGGER bloqueos_inventario_conflicto_reserva_insert;
+CREATE TRIGGER bloqueos_inventario_conflicto_reserva_insert
+BEFORE INSERT ON bloqueos_inventario
+WHEN NEW.estado = 'activo' AND EXISTS (
+  SELECT 1
+  FROM reservas r
+  JOIN reserva_estadias re ON re.reserva_id = r.id
+  LEFT JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
+  LEFT JOIN espacios reservado ON reservado.id = ree.espacio_id
+  LEFT JOIN asignaciones_inventario ai
+    ON ai.reserva_estadia_id = re.id AND ai.estado = 'activa'
+  LEFT JOIN unidades_inventario ui ON ui.id = ai.unidad_inventario_id
+  WHERE (
+      r.estado = 'confirmada'
+      OR (r.estado = 'pendiente' AND (r.hold_expires_at IS NULL OR r.hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+    )
+    AND re.fecha_checkin < NEW.fecha_hasta AND re.fecha_checkout > NEW.fecha_desde
+    AND (
+      (NEW.unidad_inventario_id IS NOT NULL AND ai.unidad_inventario_id = NEW.unidad_inventario_id)
+      OR (NEW.espacio_id IS NOT NULL AND (
+        ree.espacio_id = NEW.espacio_id
+        OR reservado.parent_id = NEW.espacio_id
+        OR EXISTS (SELECT 1 FROM espacios objetivo
+          WHERE objetivo.id = NEW.espacio_id AND objetivo.parent_id = ree.espacio_id)
+        OR ui.espacio_id = NEW.espacio_id
+      ))
+    )
+)
+BEGIN SELECT RAISE(ABORT, 'bloqueo en conflicto con reserva activa'); END;
+
+DROP TRIGGER estadias_no_comerciales_conflicto_reserva_insert;
+CREATE TRIGGER estadias_no_comerciales_conflicto_reserva_insert
+BEFORE INSERT ON estadias_no_comerciales
+WHEN NEW.estado = 'activa' AND EXISTS (
+  SELECT 1
+  FROM reservas r
+  JOIN reserva_estadias re ON re.reserva_id = r.id
+  LEFT JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
+  LEFT JOIN espacios reservado ON reservado.id = ree.espacio_id
+  LEFT JOIN asignaciones_inventario ai
+    ON ai.reserva_estadia_id = re.id AND ai.estado = 'activa'
+  LEFT JOIN unidades_inventario ui ON ui.id = ai.unidad_inventario_id
+  WHERE (
+      r.estado = 'confirmada'
+      OR (r.estado = 'pendiente' AND (r.hold_expires_at IS NULL OR r.hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+    )
+    AND re.fecha_checkin < NEW.fecha_checkout AND re.fecha_checkout > NEW.fecha_checkin
+    AND (
+      (NEW.unidad_inventario_id IS NOT NULL AND ai.unidad_inventario_id = NEW.unidad_inventario_id)
+      OR (NEW.espacio_id IS NOT NULL AND (
+        ree.espacio_id = NEW.espacio_id
+        OR reservado.parent_id = NEW.espacio_id
+        OR EXISTS (SELECT 1 FROM espacios objetivo
+          WHERE objetivo.id = NEW.espacio_id AND objetivo.parent_id = ree.espacio_id)
+        OR ui.espacio_id = NEW.espacio_id
+      ))
+    )
+)
+BEGIN SELECT RAISE(ABORT, 'estadia no comercial en conflicto con reserva activa'); END;
+
 INSERT INTO schema_migrations (version, descripcion, checksum_ref)
 VALUES ('0009', 'reservas idempotentes y retenciones de inventario',
         'migrations/0009_reservation_holds_idempotency.sql');
