@@ -32,7 +32,10 @@ export class D1RepositorioCalendarioDisponibilidad implements RepositorioCalenda
       .prepare(
         `SELECT alojamiento_id, fecha_checkin, fecha_checkout, cantidad_personas
          FROM reservas
-         WHERE estado IN ('pendiente', 'confirmada')
+         WHERE (
+             estado = 'confirmada'
+             OR (estado = 'pendiente' AND (hold_expires_at IS NULL OR hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+           )
            AND fecha_checkin < ?2 AND fecha_checkout > ?1
          UNION ALL
          SELECT

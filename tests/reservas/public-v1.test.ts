@@ -4,9 +4,13 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 
 import { D1RepositorioDisponibilidad } from '../../functions/_infrastructure/d1/D1RepositorioDisponibilidad.ts';
+import { D1RepositorioCreacionReservaPublica } from '../../functions/_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
+import { crearReservaPublica } from '../../functions/_application/reservas/crearReservaPublica.ts';
 import { onRequestGet as listarAlojamientos } from '../../functions/api/v1/public/alojamientos.ts';
 import { onRequestGet as consultarDisponibilidad } from '../../functions/api/v1/public/disponibilidad.ts';
 import { onRequestPost as crearCotizacion } from '../../functions/api/v1/public/cotizaciones.ts';
+import { onRequestPost as crearReserva } from '../../functions/api/v1/public/reservas.ts';
+import { onRequestPost as expirarRetenciones } from '../../functions/api/v1/integrations/reservas/expirar-retenciones.ts';
 
 function baseMigrada() {
   const sqlite = new DatabaseSync(':memory:');
@@ -26,9 +30,24 @@ function baseMigrada() {
     async run() { return sqlite.prepare(this.query).run(...this.values as any[]); }
   }
 
+  const db = {
+    prepare(query: string) { return new Statement(query); },
+    async batch(statements: Statement[]) {
+      sqlite.exec('BEGIN IMMEDIATE');
+      try {
+        const results = [];
+        for (const statement of statements) results.push(await statement.run());
+        sqlite.exec('COMMIT');
+        return results;
+      } catch (error) {
+        sqlite.exec('ROLLBACK');
+        throw error;
+      }
+    },
+  };
   return {
     sqlite,
-    db: { prepare(query: string) { return new Statement(query); } },
+    db,
   };
 }
 
@@ -226,5 +245,197 @@ test('rechaza regímenes de alimentación fuera del contrato', async () => {
   assert.equal(response.status, 400);
   assert.equal((await response.json() as any).error.codigo, 'REGIMEN_ALIMENTACION_INVALIDO');
   assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM cotizaciones').get()?.cantidad, 0);
+  sqlite.close();
+});
+
+async function cotizarDomo(db: unknown) {
+  const response = await crearCotizacion({
+    request: new Request('https://test/api/v1/public/cotizaciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in: '2027-08-10', check_out: '2027-08-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
+      }),
+    }),
+    env: env(db),
+  });
+  assert.equal(response.status, 200);
+  return response.json() as Promise<any>;
+}
+
+function requestReserva(cotizacionCodigo: string, clave: string, nombre = 'Huésped QA') {
+  return new Request('https://test/api/v1/public/reservas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': clave },
+    body: JSON.stringify({
+      cotizacion_codigo: cotizacionCodigo,
+      espacio_codigo: 'domo-1',
+      cliente: { nombre, email: 'QA@Example.Test' },
+    }),
+  });
+}
+
+test('crea una retención atómica y un retry devuelve la misma reserva', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const codigo = quote.data.cotizacion.codigo;
+
+  const creada = await crearReserva({ request: requestReserva(codigo, 'qa-create-0001'), env: env(db) });
+  assert.equal(creada.status, 201);
+  const bodyCreada = await creada.json() as any;
+  assert.equal(bodyCreada.data.reserva.estado, 'pendiente_pago');
+  assert.equal(bodyCreada.meta.idempotente, false);
+
+  const retry = await crearReserva({ request: requestReserva(codigo, 'qa-create-0001'), env: env(db) });
+  assert.equal(retry.status, 200);
+  const bodyRetry = await retry.json() as any;
+  assert.equal(bodyRetry.data.reserva.id, bodyCreada.data.reserva.id);
+  assert.equal(bodyRetry.meta.idempotente, true);
+
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM retenciones_reserva').get()?.n, 1);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ocupacion_reserva_noches').get()?.n, 2);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo IN ('reserva.creada', 'reserva.retencion_iniciada')").get()?.n, 2);
+  assert.equal(sqlite.prepare('SELECT cliente_email FROM reservas').get()?.cliente_email, 'qa@example.test');
+  sqlite.close();
+});
+
+test('rechaza reutilizar la clave con otro payload y evita la sobreventa', async () => {
+  const { sqlite, db } = baseMigrada();
+  const primeraQuote = await cotizarDomo(db);
+  const segundaQuote = await cotizarDomo(db);
+  const primera = await crearReserva({
+    request: requestReserva(primeraQuote.data.cotizacion.codigo, 'qa-create-0002'), env: env(db),
+  });
+  assert.equal(primera.status, 201);
+
+  const claveReutilizada = await crearReserva({
+    request: requestReserva(primeraQuote.data.cotizacion.codigo, 'qa-create-0002', 'Otra persona'), env: env(db),
+  });
+  assert.equal(claveReutilizada.status, 409);
+  assert.equal((await claveReutilizada.json() as any).error.codigo, 'IDEMPOTENCY_KEY_REUTILIZADA');
+
+  const competidora = await crearReserva({
+    request: requestReserva(segundaQuote.data.cotizacion.codigo, 'qa-create-0003'), env: env(db),
+  });
+  assert.equal(competidora.status, 409);
+  assert.equal((await competidora.json() as any).error.codigo, 'INVENTARIO_NO_DISPONIBLE');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
+  sqlite.close();
+});
+
+test('la restricción D1 evita sobreventa aunque dos chequeos hayan visto disponibilidad', async () => {
+  const { sqlite, db } = baseMigrada();
+  const primeraQuote = await cotizarDomo(db);
+  const segundaQuote = await cotizarDomo(db);
+  const primera = await crearReserva({
+    request: requestReserva(primeraQuote.data.cotizacion.codigo, 'qa-race-0001'), env: env(db),
+  });
+  assert.equal(primera.status, 201);
+
+  const resultado = await crearReservaPublica({
+    cotizacionCodigo: segundaQuote.data.cotizacion.codigo,
+    espacioCodigo: 'domo-1',
+    clienteNombre: 'Carrera QA',
+    clienteTelefono: null,
+    clienteEmail: null,
+    idempotencyKey: 'qa-race-0002',
+  }, new D1RepositorioCreacionReservaPublica(db), {
+    async consultar() {
+      return {
+        estado: 'disponible', alojamiento_id: 1, motivo_codigo: 'DISPONIBLE',
+        espacio_id: 1, espacio_codigo: 'domo-1', modalidad: 'privada', capacidad_disponible: 7,
+      };
+    },
+  });
+
+  assert.equal(resultado.ok, false);
+  if (resultado.ok) return;
+  assert.equal(resultado.error.codigo, 'INVENTARIO_NO_DISPONIBLE');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM solicitudes_idempotentes WHERE clave = 'qa-race-0002'").get()?.n, 0);
+  sqlite.close();
+});
+
+test('confirmar una reserva convierte la retención y protege estados finales', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const creada = await crearReserva({
+    request: requestReserva(quote.data.cotizacion.codigo, 'qa-confirm-0001'), env: env(db),
+  });
+  assert.equal(creada.status, 201);
+  sqlite.prepare("UPDATE reservas SET estado = 'confirmada' WHERE codigo = ?")
+    .run((await creada.json() as any).data.reserva.codigo);
+
+  assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas').get()?.estado_flujo, 'confirmada');
+  assert.equal(sqlite.prepare('SELECT estado FROM retenciones_reserva').get()?.estado, 'convertida');
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM ocupacion_reserva_noches WHERE estado = 'confirmada'").get()?.n, 2);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo = 'reserva.confirmada'").get()?.n, 1);
+  assert.throws(
+    () => sqlite.prepare("UPDATE reservas SET estado_flujo = 'cancelada'").run(),
+    /transicion de reserva invalida/
+  );
+  sqlite.close();
+});
+
+test('exige clave idempotente y rechaza cotizaciones vencidas', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const codigo = quote.data.cotizacion.codigo;
+  const sinClave = await crearReserva({ request: requestReserva(codigo, ''), env: env(db) });
+  assert.equal(sinClave.status, 400);
+  assert.equal((await sinClave.json() as any).error.codigo, 'IDEMPOTENCY_KEY_REQUERIDA');
+
+  sqlite.prepare("UPDATE cotizaciones SET expires_at = '2000-01-01T00:00:00.000Z' WHERE codigo = ?").run(codigo);
+  const vencida = await crearReserva({ request: requestReserva(codigo, 'qa-create-0004'), env: env(db) });
+  assert.equal(vencida.status, 410);
+  assert.equal((await vencida.json() as any).error.codigo, 'COTIZACION_VENCIDA');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 0);
+  sqlite.close();
+});
+
+test('vence retenciones de forma idempotente y libera la disponibilidad', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const creada = await crearReserva({
+    request: requestReserva(quote.data.cotizacion.codigo, 'qa-create-0005'), env: env(db),
+  });
+  assert.equal(creada.status, 201);
+  sqlite.exec(`
+    UPDATE reservas SET hold_expires_at = '2000-01-01T00:00:00.000Z';
+    UPDATE retenciones_reserva SET expires_at = '2000-01-01T00:00:00.000Z';
+  `);
+
+  const noAutorizada = await expirarRetenciones({
+    request: new Request('https://test/api/v1/integrations/reservas/expirar-retenciones', { method: 'POST' }),
+    env: { ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123' },
+  });
+  assert.equal(noAutorizada.status, 401);
+
+  const request = () => new Request('https://test/api/v1/integrations/reservas/expirar-retenciones', {
+    method: 'POST', headers: { 'X-Service-Secret': 'n8n-secret-seguro-de-pruebas-123' },
+  });
+  const expirada = await expirarRetenciones({
+    request: request(), env: { ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123' },
+  });
+  assert.equal(expirada.status, 200);
+  assert.equal((await expirada.json() as any).expiradas, 1);
+
+  const retry = await expirarRetenciones({
+    request: request(), env: { ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123' },
+  });
+  assert.equal((await retry.json() as any).expiradas, 0);
+  assert.deepEqual({ ...sqlite.prepare('SELECT estado, estado_flujo FROM reservas').get() }, {
+    estado: 'cancelada', estado_flujo: 'vencida',
+  });
+  assert.equal(sqlite.prepare('SELECT estado FROM retenciones_reserva').get()?.estado, 'vencida');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ocupacion_reserva_noches WHERE estado = \'liberada\'').get()?.n, 2);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo = 'reserva.retencion_vencida'").get()?.n, 1);
+
+  const disponible = await consultarDisponibilidad({
+    request: new Request('https://test/api/v1/public/disponibilidad?check_in=2027-08-10&check_out=2027-08-12&personas=2&tipo_alojamiento=domo&modalidad=privada'),
+    env: env(db),
+  });
+  assert.equal((await disponible.json() as any).data.estado, 'disponible');
   sqlite.close();
 });
