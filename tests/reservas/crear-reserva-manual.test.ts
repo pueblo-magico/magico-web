@@ -45,9 +45,7 @@ test('crea una reserva disponible y registra auditoría', async () => {
 
   assert.deepEqual(resultado, { reservaId: 22, disponible: true });
   assert.deepEqual(auditadas, [[
-    'admin@magico.test',
-    'crear_reserva',
-    'Reserva #22 — Ana',
+    { email: 'admin@magico.test', accion: 'crear_reserva', entidadTipo: 'reserva', entidadId: 22, metadata: { canal: 'Manual' } },
   ]]);
 });
 

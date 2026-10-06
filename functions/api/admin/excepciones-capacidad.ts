@@ -7,6 +7,7 @@ import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1Registro
 import { D1RepositorioExcepcionesCapacidad } from '../../_infrastructure/d1/D1RepositorioExcepcionesCapacidad.ts';
 import { jsonReserva as json, respuestaErrorReserva } from '../../_interfaces/http/reservasHttp.ts';
 import { requireAuth, tienePermiso } from '../../_lib/authGuard.ts';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../../_interfaces/http/requestSecurity.ts';
 
 const ACCIONES = ['solicitar', 'aprobar', 'rechazar', 'revocar'] as const;
 type Accion = typeof ACCIONES[number];
@@ -35,9 +36,9 @@ export async function onRequestPost({ request, env }: any) {
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const accion = body?.accion as Accion;

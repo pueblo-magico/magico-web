@@ -20,6 +20,7 @@ import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMe
 import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
 import { crearNotificadorManyChat } from '../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
+import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
 
 async function hmacSha256Hex(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder();
@@ -64,6 +65,8 @@ async function firmaValida(request: Request, env: any): Promise<{ ok: boolean; d
 }
 
 export async function onRequestPost({ request, env }: any) {
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'webhook.mercadopago', 120, 60));
+  if (limitada) return limitada;
   // CRÍTICO: una firma inválida se rechaza (401), no se procesa. Una vez que
   // la firma es válida (es realmente Mercado Pago), cualquier error interno
   // de acá en adelante (falla al consultar el pago, falla al llamar a
@@ -71,7 +74,7 @@ export async function onRequestPost({ request, env }: any) {
   // MP no reintente sobre algo que ya procesamos de nuestro lado.
   const { ok: firmaOk, dataId } = await firmaValida(request, env);
   if (!firmaOk || !dataId) {
-    console.warn('webhook-mp: firma inválida o datos faltantes — petición rechazada', { dataId });
+    console.warn('webhook-mp: firma inválida o datos faltantes — petición rechazada');
     return new Response('Firma inválida', { status: 401 });
   }
 
@@ -91,8 +94,8 @@ export async function onRequestPost({ request, env }: any) {
     }
 
     return new Response('OK', { status: 200 });
-  } catch (err) {
-    console.error('webhook-mp: error inesperado', err);
+  } catch {
+    console.error('webhook-mp: error inesperado');
     return new Response('OK', { status: 200 });
   }
 }

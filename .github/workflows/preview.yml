@@ -74,6 +74,14 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-capacidad.sql
 
+      - name: Verify preview security controls
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-seguridad.sql
+
       - name: Deploy Cloudflare Pages preview
         id: deploy
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -130,3 +138,15 @@ jobs:
             } else {
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
+      - name: Smoke test preview security
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}
+        shell: bash
+        run: |
+          availability_status=$(curl --silent --show-error --output /tmp/disponibilidad.json --write-out '%{http_code}' "$PREVIEW_URL/api/disponibilidad?desde=2026-11-10&hasta=2026-11-13")
+          test "$availability_status" = "200" || { cat /tmp/disponibilidad.json; exit 1; }
+
+          admin_status=$(curl --silent --show-error --output /tmp/admin-me.json --write-out '%{http_code}' "$PREVIEW_URL/api/admin/me")
+          test "$admin_status" = "401" || { cat /tmp/admin-me.json; echo 'Preview SESSION_SECRET is missing or invalid.'; exit 1; }

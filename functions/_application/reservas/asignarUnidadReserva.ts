@@ -23,11 +23,13 @@ export async function asignarUnidadReserva(
 
   if (!asignacion) return { ok: false, codigo: 'RESERVA_NO_ENCONTRADA' };
 
-  await auditoria.registrar(
-    solicitud.actorEmail,
-    'asignar_unidad',
-    `Reserva #${solicitud.reservaId} → ${asignacion.unidad_asignada || '(sin asignar)'}`
-  );
+  await auditoria.registrar({
+    email: solicitud.actorEmail,
+    accion: 'asignar_unidad',
+    entidadTipo: 'reserva',
+    entidadId: solicitud.reservaId,
+    metadata: { asignada: Boolean(asignacion.unidad_asignada) },
+  });
 
   return {
     ok: true,

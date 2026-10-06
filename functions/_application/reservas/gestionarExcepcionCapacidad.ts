@@ -35,11 +35,13 @@ export async function gestionarExcepcionCapacidad(
 
     const validada = validarSolicitudExcepcionCapacidad(contexto, comando);
     const excepcion = await repositorio.crearSolicitud(validada, comando.actorEmail);
-    await auditoria.registrar(
-      comando.actorEmail,
-      'solicitar_excepcion_capacidad',
-      `Reserva #${contexto.reservaId} — capacidad ${excepcion.capacidadAutorizada}`
-    );
+    await auditoria.registrar({
+      email: comando.actorEmail,
+      accion: 'solicitar_excepcion_capacidad',
+      entidadTipo: 'reserva',
+      entidadId: contexto.reservaId,
+      metadata: { excepcion_id: excepcion.id, capacidad: excepcion.capacidadAutorizada },
+    });
     return excepcion;
   }
 
@@ -79,10 +81,12 @@ export async function gestionarExcepcionCapacidad(
     throw new ErrorReserva('CONFLICTO_RESERVA', 'La excepción cambió mientras se procesaba la acción.');
   }
 
-  await auditoria.registrar(
-    comando.actorEmail,
-    `${comando.accion}_excepcion_capacidad`,
-    `Reserva #${actualizada.reservaId} — excepción #${actualizada.id}`
-  );
+  await auditoria.registrar({
+    email: comando.actorEmail,
+    accion: `${comando.accion}_excepcion_capacidad`,
+    entidadTipo: 'reserva',
+    entidadId: actualizada.reservaId,
+    metadata: { excepcion_id: actualizada.id },
+  });
   return actualizada;
 }

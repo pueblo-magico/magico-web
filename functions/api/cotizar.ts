@@ -3,6 +3,8 @@
 // desglose de precio, seña y saldo. No crea la reserva — es solo el "cotizador".
 
 import { cotizarEstadia } from '../_lib/cotizador';
+import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../_interfaces/http/requestSecurity.ts';
 
 const ALLOWED_ORIGINS = [
   'https://experienciamagico.com',
@@ -33,12 +35,14 @@ export async function onRequestOptions({ request }: any) {
 
 export async function onRequestPost({ request, env }: any) {
   const headers = corsHeaders(request);
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.cotizar', 60, 60));
+  if (limitada) return limitada;
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400, headers);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error, headers);
   }
 
   const { fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento } = body || {};
