@@ -1,12 +1,11 @@
 const MS_POR_DIA = 86_400_000;
 
 export function nochesEntre(entrada: string, salida: string): number | null {
-  const entradaMs = Date.parse(entrada);
-  const salidaMs = Date.parse(salida);
+  if (!esFechaIso(entrada) || !esFechaIso(salida)) return null;
+  const entradaMs = Date.parse(`${entrada}T00:00:00Z`);
+  const salidaMs = Date.parse(`${salida}T00:00:00Z`);
 
-  if (Number.isNaN(entradaMs) || Number.isNaN(salidaMs)) return null;
-
-  const noches = Math.round((salidaMs - entradaMs) / MS_POR_DIA);
+  const noches = (salidaMs - entradaMs) / MS_POR_DIA;
   return noches > 0 ? noches : null;
 }
 

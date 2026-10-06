@@ -43,6 +43,7 @@ test('calcula noches con checkout exclusivo', () => {
   assert.equal(nochesEntre('2026-10-10', '2026-10-13'), 3);
   assert.equal(nochesEntre('2026-10-10', '2026-10-10'), null);
   assert.equal(nochesEntre('fecha-invalida', '2026-10-11'), null);
+  assert.equal(nochesEntre('2027-02-30', '2027-03-03'), null);
 });
 
 test('expone el mensaje legacy de privacidad del refugio', () => {
@@ -88,6 +89,14 @@ test('rechaza fechas inválidas antes de consultar disponibilidad', async () => 
       mensaje: 'Fechas inválidas: fecha_salida debe ser posterior a fecha_entrada.',
     },
   });
+
+  const fechaNormalizable = await cotizarEstadia(
+    { tipo: 'domo', personas: 2, fechaEntrada: '2027-02-30', fechaSalida: '2027-03-03' },
+    noDebeConsultarse,
+    tarifas,
+    cotizaciones
+  );
+  assert.deepEqual(fechaNormalizable, resultado);
 });
 
 test('rechaza ocupación inválida antes de consultar disponibilidad', async () => {
