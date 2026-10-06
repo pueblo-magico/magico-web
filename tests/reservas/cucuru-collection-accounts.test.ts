@@ -92,6 +92,32 @@ test('la feature flag es explícita y la referencia no contiene PII', () => {
   assert.throws(() => customerIdCuentaCobro('RES-123'), /referencia opaca/);
 });
 
+test('la migración 0017 actualiza un preview con 0016 aplicado sin perder observaciones', () => {
+  const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec('PRAGMA foreign_keys = ON');
+  for (const nombre of readdirSync(new URL('../../migrations', import.meta.url))
+    .filter(nombre => /^\d{4}_.+\.sql$/.test(nombre) && nombre <= '0016_cucuru_collection_accounts.sql')
+    .sort()) {
+    sqlite.exec(readFileSync(new URL(`../../migrations/${nombre}`, import.meta.url), 'utf8'));
+  }
+  sqlite.prepare(`
+    INSERT INTO cucuru_observaciones_transferencia (
+      collection_id, monto_centavos, moneda, occurred_at, payload_hash, resultado
+    ) VALUES ('legacy-col-1', 0, 'ARS', '2026-10-06T12:00:00.000Z', ?, 'prueba_cero')
+  `).run('f'.repeat(64));
+  sqlite.exec(readFileSync(new URL('../../migrations/0017_cucuru_reconciliation.sql', import.meta.url), 'utf8'));
+  assert.equal(sqlite.prepare(`
+    SELECT resultado FROM cucuru_observaciones_transferencia WHERE collection_id = 'legacy-col-1'
+  `).get()?.resultado, 'prueba_cero');
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version = '0017'").get()?.n, 1);
+  assert.doesNotThrow(() => sqlite.prepare(`
+    INSERT INTO cucuru_observaciones_transferencia (
+      collection_id, monto_centavos, moneda, occurred_at, payload_hash, resultado
+    ) VALUES ('new-col-1', 1, 'ARS', '2026-10-06T12:01:00.000Z', ?, 'recibido')
+  `).run('e'.repeat(64)));
+  sqlite.close();
+});
+
 test('provisiona fuera de la reserva, busca antes de crear y no duplica la cuenta', async () => {
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite, '11111111-1111-4111-8111-111111111111');
