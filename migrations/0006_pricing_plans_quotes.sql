@@ -92,7 +92,15 @@ CREATE UNIQUE INDEX idx_reservas_cotizacion ON reservas (cotizacion_id) WHERE co
 -- realizan creando una versión nueva en borrador y publicándola.
 CREATE TRIGGER planes_tarifa_publicados_inmutables_update
 BEFORE UPDATE ON planes_tarifa
-WHEN OLD.estado = 'publicado'
+WHEN OLD.estado = 'publicado' AND (
+  NEW.estado <> 'retirado'
+  OR NEW.codigo IS NOT OLD.codigo
+  OR NEW.nombre IS NOT OLD.nombre
+  OR NEW.moneda IS NOT OLD.moneda
+  OR NEW.version IS NOT OLD.version
+  OR NEW.publicado_at IS NOT OLD.publicado_at
+  OR NEW.created_at IS NOT OLD.created_at
+)
 BEGIN
   SELECT RAISE(ABORT, 'published rate plans are immutable');
 END;

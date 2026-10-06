@@ -21,6 +21,8 @@ test('la matriz RBAC impide escalamiento y separa pagos, usuarios y PII', () => 
   assert.equal(rolTienePermiso('viewer', 'reservas.editar'), false);
   assert.equal(rolTienePermiso('editor', 'reservas.cancelar'), true);
   assert.equal(rolTienePermiso('editor', 'reservas.pagos.gestionar'), false);
+  assert.equal(rolTienePermiso('editor', 'reservas.tarifas.gestionar'), false);
+  assert.equal(rolTienePermiso('super_admin', 'reservas.tarifas.gestionar'), true);
   assert.equal(rolTienePermiso('editor', 'usuarios.gestionar'), false);
   assert.equal(rolTienePermiso('super_admin', 'datos_personales.anonimizar'), true);
 });

@@ -63,5 +63,7 @@ test('impide modificar o eliminar un plan publicado', () => {
   assert.throws(() => db.prepare("DELETE FROM planes_tarifa WHERE codigo = 'alojamiento-base'").run(), /immutable/);
   assert.throws(() => db.prepare("UPDATE reglas_precio SET importe_centavos = 1 WHERE id = 1").run(), /immutable/);
   assert.throws(() => db.prepare("DELETE FROM reglas_sena WHERE id = 1").run(), /immutable/);
+  db.prepare("UPDATE planes_tarifa SET estado = 'retirado' WHERE codigo = 'alojamiento-base'").run();
+  assert.equal(db.prepare("SELECT estado FROM planes_tarifa WHERE codigo = 'alojamiento-base'").get()?.estado, 'retirado');
   db.close();
 });
