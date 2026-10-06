@@ -45,7 +45,10 @@ export async function onRequestPost({ request, env }: any) {
     return respuestaJsonInvalido(error, headers);
   }
 
-  const { fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento } = body || {};
+  const {
+    fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento,
+    modalidad, contexto,
+  } = body || {};
 
   if (!fecha_entrada || !fecha_salida || !cantidad_personas || !tipo_alojamiento) {
     return json(
@@ -61,12 +64,20 @@ export async function onRequestPost({ request, env }: any) {
   if (!Number.isInteger(personas) || personas < 1) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400, headers);
   }
+  if (modalidad !== undefined && !['privada', 'compartida'].includes(modalidad)) {
+    return json({ error: "modalidad debe ser 'privada' o 'compartida'." }, 400, headers);
+  }
+  if (contexto !== undefined && !['general', 'retiro'].includes(contexto)) {
+    return json({ error: "contexto debe ser 'general' o 'retiro'." }, 400, headers);
+  }
 
   const resultado = await cotizarEstadia(env.DB, {
     tipo: tipo_alojamiento,
     personas,
     fechaEntrada: fecha_entrada,
     fechaSalida: fecha_salida,
+    modalidad,
+    contexto,
   });
   if (resultado.ok === false) {
     return json({ error: resultado.error.mensaje }, 400, headers);

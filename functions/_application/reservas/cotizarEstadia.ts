@@ -10,7 +10,12 @@ export async function cotizarEstadia(
   tarifas: RepositorioTarifas,
   cotizaciones: RepositorioCotizaciones
 ): Promise<RespuestaCotizacion> {
-  const noches = nochesEntre(solicitud.fechaEntrada, solicitud.fechaSalida);
+  const solicitudNormalizada: SolicitudCotizacion = {
+    ...solicitud,
+    modalidad: solicitud.modalidad ?? (solicitud.tipo === 'domo' ? 'privada' : 'compartida'),
+    contexto: solicitud.contexto ?? 'general',
+  };
+  const noches = nochesEntre(solicitudNormalizada.fechaEntrada, solicitudNormalizada.fechaSalida);
   if (noches === null) {
     return {
       ok: false,
@@ -21,27 +26,31 @@ export async function cotizarEstadia(
     };
   }
 
-  const capacidadMaxima = solicitud.tipo === 'domo' ? 7 : 15;
-  if (solicitud.personas < 1 || solicitud.personas > capacidadMaxima) {
+  const capacidadMaxima = solicitudNormalizada.tipo === 'domo'
+    ? 7
+    : solicitudNormalizada.modalidad === 'privada' ? 4 : 15;
+  if (solicitudNormalizada.personas < 1 || solicitudNormalizada.personas > capacidadMaxima) {
     return {
       ok: false,
       error: {
         codigo: 'OCUPACION_INVALIDA',
-        mensaje: solicitud.tipo === 'domo'
+        mensaje: solicitudNormalizada.tipo === 'domo'
           ? 'El Domo admite entre 1 y 7 personas.'
-          : 'El Refugio Compartido admite entre 1 y 15 personas.',
+          : solicitudNormalizada.modalidad === 'privada'
+            ? 'La habitación privada del Refugio admite entre 1 y 4 personas.'
+            : 'El Refugio Compartido admite entre 1 y 15 personas.',
       },
     };
   }
 
   const [estado, configuracion] = await Promise.all([
-    disponibilidad.consultar(solicitud),
+    disponibilidad.consultar(solicitudNormalizada),
     tarifas.obtenerPublicada(),
   ]);
   if (!configuracion) {
     return { ok: false, error: { codigo: 'TARIFA_NO_CONFIGURADA', mensaje: 'No hay una tarifa publicada para la estadía.' } };
   }
-  const calculada = cotizarConPlan(solicitud, configuracion);
+  const calculada = cotizarConPlan(solicitudNormalizada, configuracion);
   if ('error' in calculada) {
     return {
       ok: false,
@@ -59,8 +68,10 @@ export async function cotizarEstadia(
   const subtotal = calculada.subtotalCentavos / 100;
   const montoSena = calculada.senaCentavos / 100;
   const desglose = {
-    tipo_alojamiento: solicitud.tipo,
-    cantidad_personas: solicitud.personas,
+    tipo_alojamiento: solicitudNormalizada.tipo,
+    modalidad: solicitudNormalizada.modalidad!,
+    contexto: solicitudNormalizada.contexto!,
+    cantidad_personas: solicitudNormalizada.personas,
     noches,
     precio_por_noche: precioUniforme ? importesNocturnos[0] / 100 : null,
     subtotal,
@@ -85,9 +96,9 @@ export async function cotizarEstadia(
         monto_centavos: calculada.senaCentavos,
       },
       saldoCheckin: calculada.saldoCentavos / 100,
-      mensajePrivacidad: mensajePrivacidad(solicitud.tipo, solicitud.personas),
+      mensajePrivacidad: mensajePrivacidad(solicitudNormalizada.tipo, solicitudNormalizada.personas),
   };
-  const referencia = await cotizaciones.guardar(solicitud, valorSinReferencia);
+  const referencia = await cotizaciones.guardar(solicitudNormalizada, valorSinReferencia);
 
   return {
     ok: true,

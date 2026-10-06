@@ -6,6 +6,9 @@ import {
 const OPERACIONES: Record<string, string> = {
   '/api/cotizar': 'public.quote',
   '/api/disponibilidad': 'public.availability',
+  '/api/v1/public/alojamientos': 'public.v1.accommodations',
+  '/api/v1/public/disponibilidad': 'public.v1.availability',
+  '/api/v1/public/cotizaciones': 'public.v1.quotes',
   '/api/ical': 'public.calendar',
   '/api/manychat': 'integration.manychat.create_reservation',
   '/api/webhook-mp': 'integration.mercadopago.webhook',

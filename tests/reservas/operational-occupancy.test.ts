@@ -148,16 +148,22 @@ test('bloqueos y estadías internas afectan la disponibilidad pública y el cale
     espacioId: domo1, unidadInventarioId: null, ...rango, tipo: 'mantenimiento', motivo: 'Lona',
   }, 'admin@test', repositorio, auditoria);
   const disponibilidad = new D1RepositorioDisponibilidad(db);
-  assert.deepEqual(await disponibilidad.consultar({
+  const domoDisponible = await disponibilidad.consultar({
     tipo: 'domo', personas: 2, fechaEntrada: rango.fechaDesde, fechaSalida: rango.fechaHasta,
-  }), { estado: 'disponible', alojamiento_id: 2 });
+  });
+  assert.equal(domoDisponible.estado, 'disponible');
+  assert.equal(domoDisponible.alojamiento_id, 2);
+  assert.equal(domoDisponible.espacio_codigo, 'domo-2');
 
   await crearBloqueoInventario({
     espacioId: domo2, unidadInventarioId: null, ...rango, tipo: 'cierre', motivo: 'Cierre',
   }, 'admin@test', repositorio, auditoria);
-  assert.deepEqual(await disponibilidad.consultar({
+  const domosOcupados = await disponibilidad.consultar({
     tipo: 'domo', personas: 2, fechaEntrada: rango.fechaDesde, fechaSalida: rango.fechaHasta,
-  }), { estado: 'ocupado', alojamiento_id: null });
+  });
+  assert.equal(domosOcupados.estado, 'ocupado');
+  assert.equal(domosOcupados.alojamiento_id, null);
+  assert.equal(domosOcupados.motivo_codigo, 'INVENTARIO_OCUPADO');
 
   await crearEstadiaNoComercial({
     espacioId: refugio, unidadInventarioId: null, fechaCheckin: rango.fechaDesde, fechaCheckout: rango.fechaHasta,
