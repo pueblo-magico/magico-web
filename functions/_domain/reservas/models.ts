@@ -113,6 +113,7 @@ export type AlojamientoPanel = {
 
 export type ReservaPanel = {
   id: number;
+  version: number;
   cliente_nombre: string;
   cliente_telefono: string | null;
   cliente_email: string | null;

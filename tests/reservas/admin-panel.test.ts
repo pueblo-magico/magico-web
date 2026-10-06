@@ -9,6 +9,7 @@ import type { ReservaPanel } from '../../functions/_domain/reservas/models.ts';
 function reserva(overrides: Partial<ReservaPanel>): ReservaPanel {
   return {
     id: 1,
+    version: 1,
     cliente_nombre: 'Huésped',
     cliente_telefono: null,
     cliente_email: null,

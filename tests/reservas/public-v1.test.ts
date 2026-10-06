@@ -416,8 +416,10 @@ test('confirmar una reserva convierte la retención y protege estados finales', 
   assert.equal(sqlite.prepare('SELECT estado FROM retenciones_reserva').get()?.estado, 'convertida');
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM ocupacion_reserva_noches WHERE estado = 'confirmada'").get()?.n, 2);
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo = 'reserva.confirmada'").get()?.n, 1);
+  sqlite.prepare("UPDATE reservas SET estado_flujo = 'cancelada'").run();
+  assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas').get()?.estado_flujo, 'cancelada');
   assert.throws(
-    () => sqlite.prepare("UPDATE reservas SET estado_flujo = 'cancelada'").run(),
+    () => sqlite.prepare("UPDATE reservas SET estado_flujo = 'confirmada'").run(),
     /transicion de reserva invalida/
   );
   sqlite.close();

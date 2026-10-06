@@ -41,6 +41,15 @@ import type {
   ContextoAsignacionInventario,
   PlanAsignacionInventario,
 } from '../../_domain/reservas/inventoryAssignment.ts';
+import type {
+  AccionEstadoReservaAdmin,
+  CambiosReservaAdmin,
+  DetalleReservaAdmin,
+  FiltrosReservasAdmin,
+  NuevaReservaAdmin,
+  PaginaReservasAdmin,
+  ResumenReservaAdmin,
+} from '../../_domain/reservas/adminReservationManagement.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -101,6 +110,35 @@ export interface RepositorioAsignacionInventario {
     actorEmail: string;
     correlationId: string;
   }): Promise<AsignacionInventarioGuardada | null>;
+}
+
+export interface RepositorioGestionReservasAdmin {
+  listar(filtros: FiltrosReservasAdmin): Promise<PaginaReservasAdmin>;
+  obtenerDetalle(reservaId: number): Promise<DetalleReservaAdmin | null>;
+  crear(entrada: {
+    reserva: NuevaReservaAdmin;
+    reservaUid: string;
+    reservaCodigo: string;
+    actorEmail: string;
+    correlationId: string;
+  }): Promise<ResumenReservaAdmin>;
+  editar(entrada: {
+    reservaId: number;
+    expectedVersion: number;
+    cambios: CambiosReservaAdmin;
+    operacionUid: string;
+    actorEmail: string;
+    correlationId: string;
+  }): Promise<ResumenReservaAdmin | null>;
+  cambiarEstado(entrada: {
+    reservaId: number;
+    expectedVersion: number;
+    accion: AccionEstadoReservaAdmin;
+    motivo: string;
+    operacionUid: string;
+    actorEmail: string;
+    correlationId: string;
+  }): Promise<ResumenReservaAdmin | null>;
 }
 
 export interface RepositorioDisponibilidad {
