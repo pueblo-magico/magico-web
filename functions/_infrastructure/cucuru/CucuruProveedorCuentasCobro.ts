@@ -22,6 +22,19 @@ type CuentaApi = {
   alias?: unknown;
 };
 
+function diagnosticoFetch(cause: unknown): { codigo: string; nombre: string; mensaje: string } {
+  const nombre = cause instanceof Error ? cause.name : typeof cause;
+  const mensajeOriginal = cause instanceof Error ? cause.message : String(cause);
+  const mensaje = mensajeOriginal.replace(/[\r\n\t]+/g, ' ').slice(0, 300);
+  if (cause instanceof DOMException && cause.name === 'AbortError') {
+    return { codigo: 'CUCURU_TIMEOUT', nombre, mensaje };
+  }
+  if (cause instanceof TypeError && /invalid url|failed to parse url/i.test(mensaje)) {
+    return { codigo: 'CUCURU_URL_INVALIDA', nombre, mensaje };
+  }
+  return { codigo: 'CUCURU_NETWORK_ERROR', nombre, mensaje };
+}
+
 export class ErrorCucuruConfiguracion extends Error {
   constructor() {
     super('La integración Cucuru no está configurada.');
@@ -205,10 +218,16 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
     try {
       response = await this.fetchConTimeout(this.url(path, parametros), { headers: this.headers() });
     } catch (cause) {
-      const codigo = cause instanceof DOMException && cause.name === 'AbortError'
-        ? 'CUCURU_TIMEOUT'
-        : 'CUCURU_NETWORK_ERROR';
-      throw new ErrorCucuruTransitorio('No se pudo consultar Cucuru.', codigo, { cause });
+      const diagnostico = diagnosticoFetch(cause);
+      console.error(JSON.stringify({
+        evento: 'cucuru_fetch_error',
+        operacion: 'GET',
+        path,
+        codigo: diagnostico.codigo,
+        error_nombre: diagnostico.nombre,
+        error_mensaje: diagnostico.mensaje,
+      }));
+      throw new ErrorCucuruTransitorio('No se pudo consultar Cucuru.', diagnostico.codigo, { cause });
     }
     if (!response.ok) throw errorHttp(response.status);
     try {
