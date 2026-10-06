@@ -66,6 +66,71 @@ type Reserva = {
   } | null;
 };
 
+type ReservaAdminV1 = {
+  id: number; version: number; titular: string;
+  clienteTelefono: string | null; clienteEmail: string | null;
+  fechaCheckin: string; fechaCheckout: string; cantidadPersonas: number;
+  estado: string; estadoFlujo: string; canalOrigen: string | null;
+  alojamientoId: number; alojamientoTipo: string;
+  espacioCodigo: string | null; espacioNombre: string | null; modalidad: string;
+  montoTotalCentavos: number; montoSenaCentavos: number | null;
+  unidadAsignada: string | null; manychatUserId: string | null; createdAt: string;
+  excepciones?: Array<Record<string, any>>;
+};
+
+type MetaPaginaReservas = { pagina: number; limite: number; total: number; total_paginas: number };
+
+const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
+  const excepcion = item.excepciones?.[0];
+  return {
+    id: item.id,
+    version: item.version,
+    cliente_nombre: item.titular,
+    cliente_telefono: item.clienteTelefono,
+    cliente_email: item.clienteEmail,
+    alojamiento_id: item.alojamientoId,
+    alojamiento_nombre: item.espacioNombre || (item.alojamientoId === 1 ? 'Domo 1' : item.alojamientoId === 2 ? 'Domo 2' : 'Refugio'),
+    alojamiento_tipo: item.alojamientoTipo as TipoAlojamiento,
+    fecha_checkin: item.fechaCheckin,
+    fecha_checkout: item.fechaCheckout,
+    cantidad_personas: item.cantidadPersonas,
+    monto_total: item.montoTotalCentavos / 100,
+    monto_sena: item.montoSenaCentavos == null ? null : item.montoSenaCentavos / 100,
+    estado: item.estado as EstadoReserva,
+    unidad_asignada: item.unidadAsignada,
+    canal_origen: item.canalOrigen,
+    manychat_user_id: item.manychatUserId,
+    created_at: item.createdAt,
+    excepcion_capacidad: excepcion ? {
+      id: Number(excepcion.id), capacidad_autorizada: Number(excepcion.capacidad_autorizada),
+      motivo: String(excepcion.motivo), plan_camas: String(excepcion.plan_camas),
+      fecha_desde: excepcion.fecha_desde ?? null, fecha_hasta: excepcion.fecha_hasta ?? null,
+      estado: excepcion.estado, solicitada_por: String(excepcion.solicitada_por),
+      decidida_por: excepcion.decidida_por ?? null, solicitada_at: String(excepcion.solicitada_at),
+      decidida_at: excepcion.decidida_at ?? null,
+    } : null,
+  };
+};
+
+async function paginaReservasV1(params: URLSearchParams): Promise<{ reservas: Reserva[]; meta: MetaPaginaReservas }> {
+  const res = await adminFetch(`/api/v1/admin/reservas?${params.toString()}`);
+  if (res.status === 401) throw new Error('__unauthorized__');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const body: any = await res.json();
+  return { reservas: (body.data || []).map(reservaDesdeV1), meta: body.meta };
+}
+
+async function todasLasReservasV1(params: URLSearchParams): Promise<Reserva[]> {
+  const primera = await paginaReservasV1(params);
+  const paginas = [primera.reservas];
+  for (let pagina = 2; pagina <= primera.meta.total_paginas; pagina++) {
+    const siguientes = new URLSearchParams(params);
+    siguientes.set('pagina', String(pagina));
+    paginas.push((await paginaReservasV1(siguientes)).reservas);
+  }
+  return paginas.flat();
+}
+
 type Consulta = {
   id: number;
   cliente_nombre: string;
@@ -1672,6 +1737,9 @@ const PanelReservas: React.FC = () => {
   const [vistaActiva, setVistaActiva] = useState<VistaActiva>('operativa');
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [reservasHistorial, setReservasHistorial] = useState<Reserva[] | null>(null);
+  const [historialPagina, setHistorialPagina] = useState(1);
+  const [historialTotalPaginas, setHistorialTotalPaginas] = useState(1);
+  const [historialTotal, setHistorialTotal] = useState(0);
   const [consultas, setConsultas] = useState<Consulta[] | null>(null);
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
@@ -1693,32 +1761,47 @@ const PanelReservas: React.FC = () => {
   const cargarOperativa = () => {
     setLoading(true);
     setError(null);
-    adminFetch('/api/admin/reservas')
-      .then(res => {
-        if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    const parametros = (estado: string) => new URLSearchParams({
+      pagina: '1', limite: '100', fecha_desde: toISODate(new Date()), estado,
+    });
+    Promise.all([
+      todasLasReservasV1(parametros('confirmada')),
+      todasLasReservasV1(parametros('pendiente_pago')),
+      adminFetch('/api/v1/admin/reservas/panel'),
+    ])
+      .then(async ([confirmadas, pendientes, contextoResponse]) => {
+        if (contextoResponse.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
+        if (!contextoResponse.ok) throw new Error(`HTTP ${contextoResponse.status}`);
+        const contexto: any = await contextoResponse.json();
+        setReservas([...confirmadas, ...pendientes]);
+        setAlojamientos(contexto.data?.alojamientos || []);
+        setMetricas(contexto.data?.metricas || null);
       })
-      .then(data => {
-        setReservas(data.reservas || []);
-        setAlojamientos(data.alojamientos || []);
-        setMetricas(data.metricas || null);
+      .catch(err => {
+        if (err.message === '__unauthorized__') manejarNoAutenticado();
+        else setError(err.message || 'Error al cargar las reservas');
       })
-      .catch(err => { if (err.message !== '__unauthorized__') setError(err.message || 'Error al cargar las reservas'); })
       .finally(() => setLoading(false));
   };
 
-  const cargarHistorial = () => {
+  const cargarHistorial = (pagina = historialPagina, titular = busqueda) => {
     setLoading(true);
     setError(null);
-    return adminFetch('/api/admin/reservas?vista=historial')
-      .then(res => {
-        if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    const params = new URLSearchParams({ pagina: String(pagina), limite: '25' });
+    if (titular.trim()) params.set('titular', titular.trim());
+    return paginaReservasV1(params)
+      .then(({ reservas: items, meta }) => {
+        setReservasHistorial(items);
+        setHistorialPagina(meta.pagina);
+        setHistorialTotalPaginas(Math.max(meta.total_paginas, 1));
+        setHistorialTotal(meta.total);
+        return items;
       })
-      .then(data => { setReservasHistorial(data.reservas || []); return data.reservas || []; })
-      .catch(err => { if (err.message !== '__unauthorized__') setError(err.message || 'Error al cargar el historial'); return []; })
+      .catch(err => {
+        if (err.message === '__unauthorized__') manejarNoAutenticado();
+        else setError(err.message || 'Error al cargar el historial');
+        return [];
+      })
       .finally(() => setLoading(false));
   };
 
@@ -1782,29 +1865,38 @@ const PanelReservas: React.FC = () => {
   };
 
   useEffect(() => {
-    if (vistaActiva === 'historial' && reservasHistorial === null) cargarHistorial();
+    if (vistaActiva === 'historial' && reservasHistorial === null) cargarHistorial(1, busqueda);
     if (vistaActiva === 'consultas' && consultas === null) cargarConsultas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vistaActiva]);
 
-  const actualizar = () => (vistaActiva === 'historial' ? cargarHistorial() : cargarOperativa());
+  useEffect(() => {
+    if (vistaActiva !== 'historial' || reservasHistorial === null) return;
+    const timeout = window.setTimeout(() => cargarHistorial(1, busqueda), 300);
+    return () => window.clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busqueda]);
+
+  const actualizar = () => (vistaActiva === 'historial' ? cargarHistorial(historialPagina, busqueda) : cargarOperativa());
 
   // Después de crear/editar/cancelar, refrescamos desde el servidor en vez de
   // parchear el estado a mano — los cambios pueden tocar fechas, alojamiento,
   // montos, todo lo que alimenta la grilla y las métricas.
   const handleGuardado = () => {
     cargarOperativa();
-    if (reservasHistorial !== null) cargarHistorial();
+    if (reservasHistorial !== null) cargarHistorial(historialPagina, busqueda);
   };
 
   const abrirPorId = async (id: number) => {
     let r = reservas.find(x => x.id === id) || (reservasHistorial || []).find(x => x.id === id);
-    if (!r) {
-      // No estaba en lo ya cargado — típico de una pendiente vieja para
-      // fechas ya pasadas, que no entra en la vista operativa. La buscamos
-      // en el historial completo.
-      const historial = await cargarHistorial();
-      r = historial.find((x: Reserva) => x.id === id);
+    try {
+      const res = await adminFetch(`/api/v1/admin/reservas/${id}`);
+      if (res.status === 401) { manejarNoAutenticado(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body: any = await res.json();
+      r = reservaDesdeV1(body.data.reserva);
+    } catch (e: any) {
+      if (!r) setError(e.message || 'No se pudo cargar la reserva.');
     }
     if (r) setModalReserva({ modo: 'editar', reserva: r });
   };
@@ -1835,16 +1927,11 @@ const PanelReservas: React.FC = () => {
   const abrirCelda = (alojamiento: Alojamiento, fecha: string) => {
     const enEsaCelda = reservas.filter(r => r.alojamiento_id === alojamiento.id && ocupaFecha(r, fecha));
     if (enEsaCelda.length === 0) return;
-    if (enEsaCelda.length === 1) setModalReserva({ modo: 'editar', reserva: enEsaCelda[0] });
+    if (enEsaCelda.length === 1) abrirPorId(enEsaCelda[0].id);
     else setCeldaMultiple({ alojamiento, fecha, reservas: enEsaCelda });
   };
 
-  const reservasHistorialFiltradas = useMemo(() => {
-    const base = reservasHistorial || [];
-    const q = busqueda.trim().toLowerCase();
-    if (!q) return base;
-    return base.filter(r => r.cliente_nombre.toLowerCase().includes(q) || (r.cliente_telefono || '').includes(q));
-  }, [reservasHistorial, busqueda]);
+  const reservasHistorialFiltradas = reservasHistorial || [];
 
   if (auth === 'cargando') {
     return (
@@ -2128,7 +2215,7 @@ const PanelReservas: React.FC = () => {
                     type="search"
                     value={busqueda}
                     onChange={e => setBusqueda(e.target.value)}
-                    placeholder="Buscar por nombre o teléfono…"
+                    placeholder="Buscar por nombre…"
                     aria-label="Buscar reservas"
                     className={`text-sm border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 sm:py-2 w-full sm:w-64 ${FOCUS_RING}`}
                   />
@@ -2143,7 +2230,24 @@ const PanelReservas: React.FC = () => {
               </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <TablaHistorial reservas={reservasHistorialFiltradas} onSeleccionar={r => setModalReserva({ modo: 'editar', reserva: r })} />
+              <TablaHistorial reservas={reservasHistorialFiltradas} onSeleccionar={r => abrirPorId(r.id)} />
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
+              <span>{historialTotal} reserva{historialTotal === 1 ? '' : 's'} · página {historialPagina} de {historialTotalPaginas}</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={loading || historialPagina <= 1}
+                  onClick={() => cargarHistorial(historialPagina - 1, busqueda)}
+                  className={`rounded-lg border border-gray-300 px-3 py-2 font-semibold disabled:opacity-40 ${FOCUS_RING}`}
+                >Anterior</button>
+                <button
+                  type="button"
+                  disabled={loading || historialPagina >= historialTotalPaginas}
+                  onClick={() => cargarHistorial(historialPagina + 1, busqueda)}
+                  className={`rounded-lg border border-gray-300 px-3 py-2 font-semibold disabled:opacity-40 ${FOCUS_RING}`}
+                >Siguiente</button>
+              </div>
             </div>
           </>
         )}
@@ -2172,7 +2276,7 @@ const PanelReservas: React.FC = () => {
           fecha={celdaMultiple.fecha}
           reservas={celdaMultiple.reservas}
           onClose={() => setCeldaMultiple(null)}
-          onSeleccionar={r => { setCeldaMultiple(null); setModalReserva({ modo: 'editar', reserva: r }); }}
+          onSeleccionar={r => { setCeldaMultiple(null); abrirPorId(r.id); }}
         />
       )}
 

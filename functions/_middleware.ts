@@ -52,6 +52,7 @@ export function operacionApi(request: Request): string {
 export function handlerYaInstrumentado(request: Request): boolean {
   const pathname = new URL(request.url).pathname;
   if (pathname === '/api/v1/admin/reservas') return true;
+  if (pathname === '/api/v1/admin/reservas/panel') return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+$/.test(pathname)) return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+\/estado$/.test(pathname)) return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+\/asignaciones$/.test(pathname)) return true;

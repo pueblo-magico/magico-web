@@ -49,15 +49,24 @@ export type ResumenReservaAdmin = {
   codigo: string;
   version: number;
   titular: string;
+  clienteTelefono: string | null;
+  clienteEmail: string | null;
   fechaCheckin: string;
   fechaCheckout: string;
   cantidadPersonas: number;
   estado: string;
   estadoFlujo: string;
   canalOrigen: string | null;
+  alojamientoId: number;
+  alojamientoTipo: string;
   espacioCodigo: string | null;
   espacioNombre: string | null;
   modalidad: string;
+  montoTotalCentavos: number;
+  montoSenaCentavos: number | null;
+  unidadAsignada: string | null;
+  manychatUserId: string | null;
+  createdAt: string;
   updatedAt: string;
 };
 
@@ -70,11 +79,7 @@ export type PaginaReservasAdmin = {
 };
 
 export type DetalleReservaAdmin = ResumenReservaAdmin & {
-  clienteTelefono: string | null;
-  clienteEmail: string | null;
   moneda: string;
-  montoTotalCentavos: number;
-  montoSenaCentavos: number | null;
   estadias: Array<Record<string, unknown>>;
   excepciones: Array<Record<string, unknown>>;
 };

@@ -10,6 +10,8 @@ sesión administrativa; las mutaciones también requieren un token CSRF válido.
   de flujo, origen, espacio y titular. Requiere `reservas.leer`.
 - `GET /api/v1/admin/reservas/:id`: detalle compuesto con estadías,
   asignaciones, pagos, eventos y excepciones. Requiere `reservas.leer`.
+- `GET /api/v1/admin/reservas/panel`: alojamientos y métricas agregadas para
+  la vista operativa, sin duplicar el listado de reservas.
 - `POST /api/v1/admin/reservas`: crea una reserva comercial confirmada y ocupa
   sus noches de forma atómica. Requiere `reservas.crear`.
 - `PATCH /api/v1/admin/reservas/:id`: corrige nombre, teléfono, email u origen.

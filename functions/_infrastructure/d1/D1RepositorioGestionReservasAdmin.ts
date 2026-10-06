@@ -21,14 +21,18 @@ type Database = {
 
 const SELECT_RESUMEN = `
   r.id, COALESCE(r.codigo, printf('RES-%08d', r.id)) codigo, r.version,
-  r.cliente_nombre titular, re.fecha_checkin, re.fecha_checkout,
+  r.cliente_nombre titular, r.cliente_telefono, r.cliente_email,
+  re.fecha_checkin, re.fecha_checkout,
   re.cantidad_huespedes cantidad_personas, r.estado, r.estado_flujo,
-  r.canal_origen, e.codigo espacio_codigo, e.nombre espacio_nombre,
-  re.modalidad, r.updated_at
+  r.canal_origen, r.alojamiento_id, a.tipo alojamiento_tipo,
+  e.codigo espacio_codigo, e.nombre espacio_nombre, re.modalidad,
+  r.monto_total_centavos, r.monto_sena_centavos, r.unidad_asignada,
+  r.manychat_user_id, r.created_at, r.updated_at
 `;
 
 const FROM_RESERVA = `
   FROM reservas r
+  JOIN alojamientos a ON a.id = r.alojamiento_id
   JOIN reserva_estadias re ON re.reserva_id = r.id AND re.tramo = 1
   LEFT JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
   LEFT JOIN espacios e ON e.id = ree.espacio_id
@@ -37,13 +41,21 @@ const FROM_RESERVA = `
 function mapearResumen(row: Record<string, unknown>): ResumenReservaAdmin {
   return {
     id: Number(row.id), codigo: String(row.codigo), version: Number(row.version),
-    titular: String(row.titular), fechaCheckin: String(row.fecha_checkin),
+    titular: String(row.titular),
+    clienteTelefono: row.cliente_telefono == null ? null : String(row.cliente_telefono),
+    clienteEmail: row.cliente_email == null ? null : String(row.cliente_email),
+    fechaCheckin: String(row.fecha_checkin),
     fechaCheckout: String(row.fecha_checkout), cantidadPersonas: Number(row.cantidad_personas),
     estado: String(row.estado), estadoFlujo: String(row.estado_flujo),
     canalOrigen: row.canal_origen == null ? null : String(row.canal_origen),
+    alojamientoId: Number(row.alojamiento_id), alojamientoTipo: String(row.alojamiento_tipo),
     espacioCodigo: row.espacio_codigo == null ? null : String(row.espacio_codigo),
     espacioNombre: row.espacio_nombre == null ? null : String(row.espacio_nombre),
-    modalidad: String(row.modalidad), updatedAt: String(row.updated_at),
+    modalidad: String(row.modalidad), montoTotalCentavos: Number(row.monto_total_centavos),
+    montoSenaCentavos: row.monto_sena_centavos == null ? null : Number(row.monto_sena_centavos),
+    unidadAsignada: row.unidad_asignada == null ? null : String(row.unidad_asignada),
+    manychatUserId: row.manychat_user_id == null ? null : String(row.manychat_user_id),
+    createdAt: String(row.created_at), updatedAt: String(row.updated_at),
   };
 }
 
@@ -90,8 +102,7 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
   async obtenerDetalle(reservaId: number): Promise<DetalleReservaAdmin | null> {
     const [row, estadias, excepciones] = await Promise.all([
       this.db.prepare(`
-        SELECT ${SELECT_RESUMEN}, r.cliente_telefono, r.cliente_email,
-          r.moneda, r.monto_total_centavos, r.monto_sena_centavos
+        SELECT ${SELECT_RESUMEN}, r.moneda
         ${FROM_RESERVA} WHERE r.id = ?
       `).bind(reservaId).first(),
       this.db.prepare(`
@@ -114,11 +125,7 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
     if (!row) return null;
     return {
       ...mapearResumen(row),
-      clienteTelefono: row.cliente_telefono == null ? null : String(row.cliente_telefono),
-      clienteEmail: row.cliente_email == null ? null : String(row.cliente_email),
       moneda: String(row.moneda),
-      montoTotalCentavos: Number(row.monto_total_centavos),
-      montoSenaCentavos: row.monto_sena_centavos == null ? null : Number(row.monto_sena_centavos),
       estadias: estadias.results || [],
       excepciones: excepciones.results || [],
     };

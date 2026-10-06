@@ -22,6 +22,7 @@ import {
 } from '../../functions/api/v1/admin/reservas/index.ts';
 import { onRequestPatch as editarAdmin } from '../../functions/api/v1/admin/reservas/[id]/index.ts';
 import { onRequestPost as cambiarEstadoAdmin } from '../../functions/api/v1/admin/reservas/[id]/estado.ts';
+import { onRequestGet as consultarPanelAdmin } from '../../functions/api/v1/admin/reservas/panel.ts';
 
 function baseCompleta(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
@@ -83,6 +84,8 @@ test('lista reservas con paginación estable y filtros combinables', async () =>
   assert.equal(pagina.items.length, 5);
   assert.equal(pagina.total, 12);
   assert.equal(pagina.totalPaginas, 3);
+  assert.equal(pagina.items[0].montoTotalCentavos, 10_000);
+  assert.ok(pagina.items[0].alojamientoId > 0);
   const filtrada = await listarReservasAdmin({
     pagina: 1, limite: 20, origen: 'Web', espacioCodigo: 'domo-1', titular: 'Titular',
   }, repositorio);
@@ -225,6 +228,12 @@ test('el contrato v1 crea, edita y cancela con sesión, CSRF y versión optimist
   });
   assert.equal(creada.status, 201);
   const reservaCreada = (await creada.json() as any).data;
+
+  const panel = await consultarPanelAdmin({
+    request: new Request('https://test/api/v1/admin/reservas/panel', { headers: { Cookie: cookie } }), env,
+  });
+  assert.equal(panel.status, 200);
+  assert.ok((await panel.json() as any).data.alojamientos.length >= 3);
 
   const editada = await editarAdmin({
     request: new Request(`https://test/api/v1/admin/reservas/${reservaCreada.id}`, {
