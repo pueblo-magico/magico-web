@@ -71,6 +71,12 @@ escritura de reserva, estadía, noches ocupadas, retención, eventos y respuesta
 idempotente se ejecuta como una única operación D1. Si el inventario cambió
 desde la cotización, no queda una reserva parcial.
 
+Al vencer la retención, deja de bloquear disponibilidad aun antes de ejecutar
+la limpieza. El proceso autenticado de n8n invoca
+`POST /api/v1/integrations/reservas/expirar-retenciones` para marcar la reserva
+como `vencida`, liberar sus noches y registrar el evento de dominio. La
+operación es idempotente y procesa las retenciones vencidas en lotes.
+
 ## Capacidad y disponibilidad
 
 - Los domos publican una capacidad comercial máxima de 7, aunque su capacidad
@@ -92,8 +98,6 @@ Las respuestas públicas no incluyen PII, identificadores de reserva ni IDs
 internos del inventario. Los endpoints tienen CORS explícito, lectura JSON
 limitada y rate limiting persistido por hash.
 
-Hasta WRESERV-12, una reserva `pendiente` bloquea inventario sin vencimiento
-automático: ese ticket incorporará holds de pago con expiración explícita.
 Hasta WRESERV-15, los domos y la habitación privada se resuelven de manera
 conservadora; ese ticket incorporará asignación física definitiva por unidad.
 
