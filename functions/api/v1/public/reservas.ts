@@ -1,4 +1,8 @@
 import { crearReservaPublica } from '../../../_application/reservas/crearReservaPublica.ts';
+import { provisionarCuentaCobroReserva } from '../../../_application/reservas/provisionarCuentaCobro.ts';
+import { cucuruHabilitado } from '../../../_domain/reservas/collectionAccounts.ts';
+import { CucuruContratoNoDisponible } from '../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
+import { D1RepositorioCuentasCobroReserva } from '../../../_infrastructure/d1/D1RepositorioCuentasCobroReserva.ts';
 import { D1RepositorioCreacionReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
 import { D1RepositorioDisponibilidad } from '../../../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
@@ -40,6 +44,26 @@ export async function onRequestPost({ request, env }: any) {
       statusPorCodigo[resultado.error.codigo] || 400
     );
   }
+  let cuentaCobro: Record<string, unknown> = { proveedor: 'cucuru', estado: 'no_disponible' };
+  try {
+    const provisionamiento = await provisionarCuentaCobroReserva({
+      reservaId: resultado.valor.reservaId,
+      habilitada: cucuruHabilitado(env.CUCURU_TRANSFER_ENABLED),
+    }, new D1RepositorioCuentasCobroReserva(env.DB), new CucuruContratoNoDisponible());
+    cuentaCobro = {
+      proveedor: 'cucuru',
+      estado: provisionamiento.estado,
+      ...(provisionamiento.estado === 'ready' ? {
+        destino: {
+          cvu: provisionamiento.cuenta.cvu,
+          alias: provisionamiento.cuenta.alias,
+          moneda: provisionamiento.cuenta.moneda,
+        },
+      } : {}),
+    };
+  } catch {
+    // La reserva durable conserva su respuesta aunque falle la integración externa.
+  }
   return jsonPublico(request, 'POST', {
     data: {
       reserva: {
@@ -49,6 +73,7 @@ export async function onRequestPost({ request, env }: any) {
         expires_at: resultado.valor.expiresAt,
       },
       cotizacion_codigo: resultado.valor.cotizacionCodigo,
+      cuenta_cobro: cuentaCobro,
     },
     meta: { version: 'v1', idempotente: resultado.valor.idempotente },
   }, resultado.valor.idempotente ? 200 : 201);

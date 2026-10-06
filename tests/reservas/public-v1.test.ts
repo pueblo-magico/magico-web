@@ -284,6 +284,7 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   assert.equal(creada.status, 201);
   const bodyCreada = await creada.json() as any;
   assert.equal(bodyCreada.data.reserva.estado, 'pendiente_pago');
+  assert.deepEqual(bodyCreada.data.cuenta_cobro, { proveedor: 'cucuru', estado: 'disabled' });
   assert.equal(bodyCreada.meta.idempotente, false);
 
   const retry = await crearReserva({ request: requestReserva(codigo, 'qa-create-0001'), env: env(db) });
@@ -294,6 +295,7 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
 
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM retenciones_reserva').get()?.n, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM cuentas_cobro_reserva WHERE estado = 'disabled'").get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ocupacion_reserva_noches').get()?.n, 2);
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT estado_configuracion, codigo, version

@@ -54,6 +54,10 @@ import type {
   FilaExportacionReserva,
   FiltrosExportacionReservas,
 } from '../../_domain/reservas/adminReservationExport.ts';
+import type {
+  CuentaCobroReserva,
+  DestinoCobroProveedor,
+} from '../../_domain/reservas/collectionAccounts.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -475,6 +479,48 @@ export interface RepositorioHistorialReserva {
 
 export interface NotificadorReservaConfirmada {
   notificar(reserva: ReservaConfirmadaParaNotificar): Promise<void>;
+}
+
+export type ContextoCuentaCobroReserva = {
+  reservaId: number;
+  reservaUid: string;
+  estadoFlujo: string;
+  moneda: string;
+  montoEsperadoCentavos: number;
+};
+
+export interface RepositorioCuentasCobroReserva {
+  obtenerContexto(reservaId: number): Promise<ContextoCuentaCobroReserva | null>;
+  preparar(entrada: {
+    reservaId: number;
+    customerId: string;
+    habilitada: boolean;
+    operacionUid: string;
+  }): Promise<CuentaCobroReserva>;
+  reclamarProvisionamiento(cuentaId: number, operacionUid: string): Promise<CuentaCobroReserva | null>;
+  registrarIntento(entrada: {
+    cuentaId: number;
+    operacionUid: string;
+    tipo: 'lookup' | 'create';
+  }): Promise<void>;
+  completarIntento(
+    operacionUid: string,
+    resultado: 'succeeded' | 'not_found' | 'failed' | 'unknown_outcome',
+    errorCodigo?: string
+  ): Promise<void>;
+  marcarLista(cuentaId: number, operacionUid: string, destino: DestinoCobroProveedor): Promise<CuentaCobroReserva>;
+  marcarFalla(entrada: {
+    cuentaId: number;
+    operacionUid: string;
+    resultado: 'failed' | 'unknown_outcome';
+    errorCodigo: string;
+    nextRetryAt: string;
+  }): Promise<CuentaCobroReserva>;
+}
+
+export interface ProveedorCuentasCobro {
+  buscarPorCustomerId(customerId: string): Promise<DestinoCobroProveedor | null>;
+  crear(entrada: { customerId: string; idempotencyKey: string }): Promise<DestinoCobroProveedor>;
 }
 
 export type DatosPersonalesReserva = {

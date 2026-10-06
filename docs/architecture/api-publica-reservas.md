@@ -71,6 +71,13 @@ escritura de reserva, estadía, noches ocupadas, retención, eventos y respuesta
 idempotente se ejecuta como una única operación D1. Si el inventario cambió
 desde la cotización, no queda una reserva parcial.
 
+Después de completar esa operación durable, el sistema prepara la asignación
+del destino de transferencia Cucuru. `data.cuenta_cobro` informa proveedor y
+estado. Sólo cuando el estado es `ready` incluye CVU, alias y moneda. Con
+`CUCURU_TRANSFER_ENABLED` ausente o falsa responde `disabled` y no realiza
+ninguna llamada externa. El provisionamiento nunca revierte ni deja parcial la
+reserva ya creada.
+
 Al vencer la retención, deja de bloquear disponibilidad aun antes de ejecutar
 la limpieza. El proceso autenticado de n8n invoca
 `POST /api/v1/integrations/reservas/expirar-retenciones` para marcar la reserva
