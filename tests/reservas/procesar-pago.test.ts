@@ -33,6 +33,7 @@ function repositorio(overrides: Partial<RepositorioEstadoPagoReserva> = {}): Rep
     async obtenerEsperado(reservaId) {
       return { reservaId, estadoFlujo: 'pendiente_pago', montoCentavos: 2500, moneda: 'ARS', preferenciaId: 'pref-7' };
     },
+    async obtenerEstadoPago() { return null; },
     async registrarObservacion() { return true; },
     async registrarPago() {},
     async confirmar() {
@@ -126,6 +127,21 @@ test('conserva inconsistencias sin confirmar monto, moneda o referencia incorrec
   assert.equal(confirmaciones, 0);
 });
 
+test('rechaza regresiones de un intento de pago ya aprobado', async () => {
+  let pagosRegistrados = 0;
+  const repository = repositorio({
+    async obtenerEstadoPago() { return 'aprobado'; },
+    async registrarPago() { pagosRegistrados += 1; },
+  });
+
+  const resultado = await procesarPagoMercadoPago(
+    'pay-7', pagos('pending'), repository, notificadorNulo, 'delivery-regresiva'
+  );
+
+  assert.equal(resultado.estado, 'pago_inconsistente');
+  assert.equal(pagosRegistrados, 0);
+});
+
 test('el repositorio D1 aplica ledger, upsert y transición guardada', async () => {
   const calls: { query: string; values: unknown[] }[] = [];
   const db = {
@@ -142,6 +158,9 @@ test('el repositorio D1 aplica ledger, upsert y transición guardada', async () 
         },
         async run() { return {}; },
       };
+    },
+    async batch(statements: { run(): Promise<unknown> }[]) {
+      return Promise.all(statements.map(statement => statement.run()));
     },
   };
   const repository = new D1RepositorioEstadoPagoReserva(db);

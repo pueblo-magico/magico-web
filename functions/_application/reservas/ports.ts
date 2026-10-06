@@ -36,6 +36,7 @@ import type {
   ReservaPublicaCreada,
 } from '../../_domain/reservas/reservationCreation.ts';
 import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundPolicies.ts';
+import type { EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -321,13 +322,57 @@ export interface ProveedorPagosReserva {
 
 export interface RepositorioEstadoPagoReserva {
   obtenerEsperado(reservaId: number): Promise<PagoEsperadoReserva | null>;
+  obtenerEstadoPago(proveedor: string, externalPaymentId: string): Promise<EstadoPagoReserva | null>;
   registrarObservacion(observacion: ObservacionPagoReserva): Promise<boolean>;
-  registrarPago(observacion: ObservacionPagoReserva, estado: 'pendiente' | 'aprobado' | 'rechazado' | 'devuelto'): Promise<void>;
+  registrarPago(observacion: ObservacionPagoReserva, estado: EstadoPagoReserva): Promise<void>;
   confirmar(
     reservaId: number,
     pagoId: string
   ): Promise<ReservaConfirmadaParaNotificar | null>;
   cancelarPendiente(reservaId: number, pagoId: string): Promise<void>;
+}
+
+export type PagoTimelineReserva = {
+  id: number;
+  proveedor: string;
+  tipo: string;
+  estado: string;
+  montoCentavos: number;
+  moneda: string;
+  externalPaymentId: string | null;
+  correlationId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type EventoTimelineReserva = {
+  id: number;
+  tipo: string;
+  version: number;
+  actorTipo: string;
+  actorRef: string | null;
+  correlationId: string | null;
+  payload: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export type HistorialReserva = {
+  reservaId: number;
+  estado: string;
+  estadoFlujo: string;
+  resumenFinanciero: {
+    moneda: string;
+    intentos: number;
+    aprobadoCentavos: number;
+    devueltoCentavos: number;
+    netoCentavos: number;
+  };
+  pagos: PagoTimelineReserva[];
+  eventos: EventoTimelineReserva[];
+};
+
+export interface RepositorioHistorialReserva {
+  obtener(reservaId: number): Promise<HistorialReserva | null>;
 }
 
 export interface NotificadorReservaConfirmada {

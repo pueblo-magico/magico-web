@@ -3,6 +3,7 @@ import type {
   ProveedorPagosReserva,
   RepositorioEstadoPagoReserva,
 } from './ports.ts';
+import { transicionPagoValida, type EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
 
 export type ResultadoProcesamientoPago =
   | { estado: 'pago_no_disponible' | 'referencia_invalida' | 'reserva_desconocida' | 'pago_inconsistente' | 'duplicado' | 'sin_cambios' | 'cancelada' }
@@ -46,6 +47,24 @@ export async function procesarPagoMercadoPago(
     if (!await reservas.registrarObservacion(observacion)) return { estado: 'duplicado' };
     if (motivo === 'REFERENCIA_INVALIDA') return { estado: 'referencia_invalida' };
     if (motivo === 'RESERVA_DESCONOCIDA') return { estado: 'reserva_desconocida' };
+    return { estado: 'pago_inconsistente' };
+  }
+
+  const estadoNormalizado: EstadoPagoReserva = pago.estado === 'approved'
+    ? 'aprobado'
+    : pago.estado === 'rejected' || pago.estado === 'cancelled'
+      ? 'rechazado'
+      : pago.estado === 'refunded' || pago.estado === 'charged_back'
+        ? 'devuelto'
+        : 'pendiente';
+  const estadoActual = await reservas.obtenerEstadoPago(observacion.proveedor, pago.id);
+  if (estadoActual && !transicionPagoValida(estadoActual, estadoNormalizado)) {
+    const inconsistente = {
+      ...observacion,
+      resultado: 'inconsistente' as const,
+      motivoCodigo: 'TRANSICION_PAGO_INVALIDA',
+    };
+    if (!await reservas.registrarObservacion(inconsistente)) return { estado: 'duplicado' };
     return { estado: 'pago_inconsistente' };
   }
 
