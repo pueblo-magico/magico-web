@@ -5,7 +5,7 @@
 // completó el pago. Separado de /api/admin/reservas a propósito — ver
 // add_consultas.sql para el motivo de la tabla aparte.
 
-import { requireAuth } from '../../_lib/authGuard';
+import { requirePermission } from '../../_lib/authGuard';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body, null, 2), {
@@ -15,7 +15,7 @@ function json(body: unknown, status = 200) {
 }
 
 export async function onRequestGet({ request, env }: any) {
-  const auth = await requireAuth(request, env);
+  const auth = await requirePermission(request, env, 'consultas.leer');
   if (auth instanceof Response) return auth;
 
   const db = env.DB;

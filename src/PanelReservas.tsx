@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2 } from 'lucide-react';
 
-// Dashboard interno de reservas — /admin/reservas. SIN LOGIN a propósito:
-// la protección es Cloudflare Zero Trust Access a nivel DNS sobre /admin.
-// Este componente asume que quien lo ve ya está autenticado de forma segura.
+// Dashboard interno de reservas — /admin/reservas. La API valida sesión,
+// permisos por rol y CSRF en cada mutación; la UI nunca decide autorización.
 //
 // Tres pestañas, pensadas para dos personas distintas que usan esto:
 //   Operativa — "¿quién llega hoy / esta semana?" — cards rápidas + la
@@ -51,6 +50,19 @@ type Reserva = {
   canal_origen: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  excepcion_capacidad?: {
+    id: number;
+    capacidad_autorizada: number;
+    motivo: string;
+    plan_camas: string;
+    fecha_desde: string | null;
+    fecha_hasta: string | null;
+    estado: 'solicitada' | 'aprobada' | 'rechazada' | 'revocada';
+    solicitada_por: string;
+    decidida_por: string | null;
+    solicitada_at: string;
+    decidida_at: string | null;
+  } | null;
 };
 
 type Consulta = {
@@ -80,7 +92,10 @@ type RegistroActividad = {
   id: number;
   email: string;
   accion: string;
-  detalle: string | null;
+  entidad_tipo: string | null;
+  entidad_id: string | null;
+  motivo: string | null;
+  metadata_json: string | null;
   created_at: string;
 };
 
@@ -113,6 +128,15 @@ type Metricas = {
 
 const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
 const toISODate = (d: Date) => d.toISOString().slice(0, 10);
+const csrfToken = () => decodeURIComponent(
+  document.cookie.split('; ').find(value => value.startsWith('pm_admin_csrf='))?.split('=').slice(1).join('=') || ''
+);
+const adminFetch = (input: RequestInfo | URL, init: RequestInit = {}) => {
+  const method = (init.method || 'GET').toUpperCase();
+  const headers = new Headers(init.headers);
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) headers.set('X-CSRF-Token', csrfToken());
+  return fetch(input, { ...init, headers });
+};
 const addDays = (iso: string, days: number) => {
   const d = new Date(iso + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
@@ -234,9 +258,10 @@ const ModalReserva: React.FC<{
   reserva: Reserva | null;
   alojamientos: Alojamiento[];
   soloLectura?: boolean;
+  rol?: Rol;
   onClose: () => void;
   onGuardado: () => void;
-}> = ({ modo, reserva, alojamientos, soloLectura, onClose, onGuardado }) => {
+}> = ({ modo, reserva, alojamientos, soloLectura, rol, onClose, onGuardado }) => {
   const [form, setForm] = useState<FormReserva>(() => ({
     cliente_nombre: reserva?.cliente_nombre || '',
     cliente_telefono: reserva?.cliente_telefono || '',
@@ -258,6 +283,11 @@ const ModalReserva: React.FC<{
   const [aviso, setAviso] = useState('');
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [excepcion, setExcepcion] = useState(reserva?.excepcion_capacidad || null);
+  const [capacidadExcepcional, setCapacidadExcepcional] = useState('8');
+  const [motivoExcepcion, setMotivoExcepcion] = useState('');
+  const [planCamas, setPlanCamas] = useState('');
+  const [gestionandoCapacidad, setGestionandoCapacidad] = useState(false);
 
   const setCampo = (campo: keyof FormReserva, valor: string) => setForm(f => ({ ...f, [campo]: valor }));
 
@@ -293,7 +323,7 @@ const ModalReserva: React.FC<{
     setAviso('');
     try {
       if (modo === 'crear') {
-        const res = await fetch('/api/admin/crear', {
+        const res = await adminFetch('/api/admin/crear', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -317,7 +347,7 @@ const ModalReserva: React.FC<{
           setAviso('Se cargó igual, pero esas fechas se solapan con otra reserva en ese alojamiento — revisalo.');
         }
       } else if (reserva) {
-        const res = await fetch('/api/admin/editar', {
+        const res = await adminFetch('/api/admin/editar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -353,7 +383,7 @@ const ModalReserva: React.FC<{
     if (!reserva) return;
     setCancelando(true);
     try {
-      const res = await fetch('/api/admin/editar', {
+      const res = await adminFetch('/api/admin/editar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reserva_id: reserva.id, estado: 'cancelada' }),
@@ -364,6 +394,36 @@ const ModalReserva: React.FC<{
     } catch {
       setCancelando(false);
       setError('No se pudo cancelar. Probá de nuevo.');
+    }
+  };
+
+  const gestionarCapacidad = async (accion: 'solicitar' | 'aprobar' | 'rechazar' | 'revocar') => {
+    if (!reserva) return;
+    setGestionandoCapacidad(true);
+    setError('');
+    try {
+      const body = accion === 'solicitar'
+        ? {
+            accion,
+            reserva_id: reserva.id,
+            capacidad_autorizada: Number(capacidadExcepcional),
+            motivo: motivoExcepcion.trim(),
+            plan_camas: planCamas.trim(),
+          }
+        : { accion, excepcion_id: excepcion?.id };
+      const res = await adminFetch('/api/admin/excepciones-capacidad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo gestionar la capacidad.');
+      setExcepcion(data.excepcion);
+      onGuardado();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo gestionar la capacidad.');
+    } finally {
+      setGestionandoCapacidad(false);
     }
   };
 
@@ -479,6 +539,51 @@ const ModalReserva: React.FC<{
           </a>
         )}
       </fieldset>
+
+      {modo === 'editar' && reserva?.alojamiento_tipo === 'domo' && (
+        <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3" aria-label="Capacidad excepcional">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">Capacidad excepcional</p>
+          {excepcion ? (
+            <div className="mt-2 space-y-1 text-xs text-amber-900">
+              <p><strong>{excepcion.capacidad_autorizada} personas</strong> · {excepcion.estado}</p>
+              <p>Motivo: {excepcion.motivo}</p>
+              <p>Plan de camas: {excepcion.plan_camas}</p>
+              <p className="text-amber-700">Solicitada por {excepcion.solicitada_por}</p>
+              {rol === 'super_admin' && excepcion.estado === 'solicitada' && (
+                <div className="flex gap-2 pt-2">
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('aprobar')} className={`text-xs font-semibold rounded-lg bg-brand px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Aprobar</button>
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('rechazar')} className={`text-xs font-semibold rounded-lg border border-red-300 px-3 py-2 text-red-700 disabled:opacity-60 ${FOCUS_RING}`}>Rechazar</button>
+                </div>
+              )}
+              {rol === 'super_admin' && excepcion.estado === 'aprobada' && (
+                <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('revocar')} className={`mt-2 text-xs font-semibold text-red-700 hover:underline disabled:opacity-60 ${FOCUS_RING}`}>Revocar excepción</button>
+              )}
+              {!soloLectura && (excepcion.estado === 'rechazada' || excepcion.estado === 'revocada') && (
+                <div className="mt-3 grid gap-2 border-t border-amber-200 pt-3">
+                  <p className="text-xs font-semibold text-amber-800">Nueva solicitud</p>
+                  <div className="grid grid-cols-[7rem_1fr] gap-2">
+                    <input aria-label="Nueva capacidad solicitada" type="number" min={8} max={10} className={inputCls} value={capacidadExcepcional} onChange={e => setCapacidadExcepcional(e.target.value)} />
+                    <input aria-label="Nuevo motivo de la excepción" className={inputCls} placeholder="Motivo obligatorio" value={motivoExcepcion} onChange={e => setMotivoExcepcion(e.target.value)} />
+                  </div>
+                  <textarea aria-label="Nuevo plan de camas" className={inputCls} rows={2} placeholder="Plan de camas obligatorio" value={planCamas} onChange={e => setPlanCamas(e.target.value)} />
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('solicitar')} className={`justify-self-start text-xs font-semibold rounded-lg bg-amber-700 px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Solicitar nueva excepción</button>
+                </div>
+              )}
+            </div>
+          ) : !soloLectura ? (
+            <div className="mt-2 grid gap-2">
+              <div className="grid grid-cols-[7rem_1fr] gap-2">
+                <input aria-label="Capacidad solicitada" type="number" min={8} max={10} className={inputCls} value={capacidadExcepcional} onChange={e => setCapacidadExcepcional(e.target.value)} />
+                <input aria-label="Motivo de la excepción" className={inputCls} placeholder="Motivo obligatorio" value={motivoExcepcion} onChange={e => setMotivoExcepcion(e.target.value)} />
+              </div>
+              <textarea aria-label="Plan de camas" className={inputCls} rows={2} placeholder="Plan de camas obligatorio" value={planCamas} onChange={e => setPlanCamas(e.target.value)} />
+              <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('solicitar')} className={`justify-self-start text-xs font-semibold rounded-lg bg-amber-700 px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Solicitar excepción</button>
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-amber-700">No hay una excepción registrada.</p>
+          )}
+        </section>
+      )}
 
       {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
       {aviso && !error && <p className="text-xs text-amber-600 mb-3" role="alert">{aviso}</p>}
@@ -777,7 +882,7 @@ const SeccionAirbnb: React.FC<{ alojamientos: Alojamiento[]; onSincronizado: () 
     setError('');
     setResumen(null);
     try {
-      const res = await fetch('/api/admin/sync-airbnb', { method: 'POST' });
+      const res = await adminFetch('/api/admin/sync-airbnb', { method: 'POST' });
       const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || 'No se pudo sincronizar.');
       setResumen(data.resumen);
@@ -1006,7 +1111,7 @@ const ModalCredencial: React.FC<{
 
   const guardar = async () => {
     if (pedirEmail && !email.trim()) { setError('Falta el email.'); return; }
-    if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
+    if (password.length < 12) { setError('La contraseña debe tener al menos 12 caracteres.'); return; }
     setGuardando(true);
     setError('');
     try {
@@ -1039,7 +1144,7 @@ const ModalCredencial: React.FC<{
         )}
         <div>
           <label className={LABEL_CLS} htmlFor="cred_password">{pedirEmail ? 'Contraseña' : 'Nueva contraseña'}</label>
-          <input id="cred_password" type="password" autoFocus={!pedirEmail} className={INPUT_CLS} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" />
+          <input id="cred_password" type="password" autoFocus={!pedirEmail} className={INPUT_CLS} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 12 caracteres" />
         </div>
       </div>
       {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
@@ -1060,7 +1165,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
   const [modalReset, setModalReset] = useState<Usuario | null>(null);
 
   const cargar = () => {
-    fetch('/api/admin/usuarios')
+    adminFetch('/api/admin/usuarios')
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(data => setUsuarios(data.usuarios || []))
       .catch(err => setError(err.message || 'Error al cargar usuarios'));
@@ -1069,7 +1174,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
   useEffect(() => { cargar(); }, []);
 
   const cambiarEstado = async (u: Usuario) => {
-    const res = await fetch('/api/admin/usuarios', {
+    const res = await adminFetch('/api/admin/usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: u.activo ? 'desactivar' : 'reactivar', id: u.id }),
@@ -1081,7 +1186,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
   };
 
   const cambiarRol = async (u: Usuario, rol: Rol) => {
-    const res = await fetch('/api/admin/usuarios', {
+    const res = await adminFetch('/api/admin/usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'cambiar_rol', id: u.id, rol }),
@@ -1155,7 +1260,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
           pedirEmail
           onClose={() => setModalNuevo(false)}
           onGuardar={async (email, password, rol) => {
-            const res = await fetch('/api/admin/usuarios', {
+            const res = await adminFetch('/api/admin/usuarios', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accion: 'crear', email, password, rol }),
@@ -1172,7 +1277,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
           titulo={`Resetear contraseña — ${modalReset.email}`}
           onClose={() => setModalReset(null)}
           onGuardar={async (_email, password) => {
-            const res = await fetch('/api/admin/usuarios', {
+            const res = await adminFetch('/api/admin/usuarios', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accion: 'resetear_password', id: modalReset.id, password }),
@@ -1200,7 +1305,7 @@ const SeccionMetricasOperativas: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/metricas')
+    adminFetch('/api/admin/metricas')
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(data => setGrupos(data.grupos || []))
       .catch(err => setError(err.message || 'Error al cargar métricas operativas'));
@@ -1242,6 +1347,10 @@ const ACCION_LABEL: Record<string, string> = {
   cambiar_rol: 'Cambió rol',
   desactivar_usuario: 'Desactivó usuario',
   reactivar_usuario: 'Reactivó usuario',
+  solicitar_excepcion_capacidad: 'Solicitó una excepción de capacidad',
+  aprobar_excepcion_capacidad: 'Aprobó una excepción de capacidad',
+  rechazar_excepcion_capacidad: 'Rechazó una excepción de capacidad',
+  revocar_excepcion_capacidad: 'Revocó una excepción de capacidad',
 };
 
 const fmtFechaHora = (iso: string) => {
@@ -1254,7 +1363,7 @@ const SeccionActividad: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/actividad')
+    adminFetch('/api/admin/actividad')
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(data => setRegistros(data.registros || []))
       .catch(err => setError(err.message || 'Error al cargar la actividad'));
@@ -1272,7 +1381,8 @@ const SeccionActividad: React.FC = () => {
             <p className="text-sm text-gray-800">
               <span className="font-semibold">{r.email}</span> — {ACCION_LABEL[r.accion] || r.accion}
             </p>
-            {r.detalle && <p className="text-xs text-gray-500 mt-0.5">{r.detalle}</p>}
+            {r.entidad_tipo && <p className="text-xs text-gray-500 mt-0.5">{r.entidad_tipo}{r.entidad_id ? ` #${r.entidad_id}` : ''}</p>}
+            {r.motivo && <p className="text-xs text-gray-500 mt-0.5">Motivo: {r.motivo}</p>}
             <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">{fmtFechaHora(r.created_at)}</p>
           </li>
         ))}
@@ -1311,7 +1421,7 @@ const PanelReservas: React.FC = () => {
   const cargarOperativa = () => {
     setLoading(true);
     setError(null);
-    fetch('/api/admin/reservas')
+    adminFetch('/api/admin/reservas')
       .then(res => {
         if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1329,7 +1439,7 @@ const PanelReservas: React.FC = () => {
   const cargarHistorial = () => {
     setLoading(true);
     setError(null);
-    return fetch('/api/admin/reservas?vista=historial')
+    return adminFetch('/api/admin/reservas?vista=historial')
       .then(res => {
         if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1343,7 +1453,7 @@ const PanelReservas: React.FC = () => {
   const cargarConsultas = () => {
     setLoading(true);
     setError(null);
-    fetch('/api/admin/consultas')
+    adminFetch('/api/admin/consultas')
       .then(res => {
         if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1355,7 +1465,7 @@ const PanelReservas: React.FC = () => {
   };
 
   useEffect(() => {
-    fetch('/api/admin/me')
+    adminFetch('/api/admin/me')
       .then(res => { if (!res.ok) throw new Error('401'); return res.json(); })
       .then(data => setAuth({ email: data.email, rol: data.rol }))
       .catch(() => setAuth(null));
@@ -1369,7 +1479,7 @@ const PanelReservas: React.FC = () => {
   }, [auth]);
 
   const cerrarSesion = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await adminFetch('/api/admin/logout', { method: 'POST' });
     setSesionExpirada(false);
     setAuth(null);
   };
@@ -1797,6 +1907,7 @@ const PanelReservas: React.FC = () => {
           reserva={modalReserva.reserva}
           alojamientos={alojamientos}
           soloLectura={!puedeEditar}
+          rol={auth.rol}
           onClose={() => setModalReserva(null)}
           onGuardado={handleGuardado}
         />

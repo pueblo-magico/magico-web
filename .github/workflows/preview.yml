@@ -2,8 +2,6 @@ name: Cloudflare Pages PR Preview
 
 on:
   pull_request:
-    branches:
-      - main
     types: [opened, synchronize, reopened]
 
 concurrency:
@@ -36,11 +34,60 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
 
+      - name: Test reservations with coverage
+        run: npm run test:reservas:coverage
+
+      - name: Test Cloudflare preview cleanup
+        run: npm run test:cloudflare-cleanup
+
+      - name: Test reservation recovery drill
+        run: npm run test:reservas:recovery
+
       - name: Build
         run: npm run build
 
       # GitHub intentionally withholds repository secrets from forked pull
       # requests. Those PRs still run the complete build above, but cannot deploy.
+      - name: Apply preview D1 migrations
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply DB --remote --env preview
+
+      - name: Verify preview D1 migration
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-migracion.sql
+
+      - name: Verify preview accommodation inventory
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-inventario.sql
+
+      - name: Verify preview capacity rules
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-capacidad.sql
+
+      - name: Verify preview security controls
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-seguridad.sql
+
       - name: Deploy Cloudflare Pages preview
         id: deploy
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -70,6 +117,8 @@ jobs:
               '',
               `Preview: ${previewUrl}`,
               '',
+              'Database: shared preview D1 `magico-ensueno-db-preview`.',
+              '',
               `Updated from commit \`${context.sha.slice(0, 7)}\`.`,
             ].join('\n');
 
@@ -95,3 +144,31 @@ jobs:
             } else {
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
+      - name: Smoke test preview security
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}
+        shell: bash
+        run: |
+          availability_status=$(curl --silent --show-error --output /tmp/disponibilidad.json --write-out '%{http_code}' "$PREVIEW_URL/api/disponibilidad?desde=2026-11-10&hasta=2026-11-13")
+          test "$availability_status" = "200" || { cat /tmp/disponibilidad.json; exit 1; }
+
+          admin_status=$(curl --silent --show-error --output /tmp/admin-me.json --write-out '%{http_code}' "$PREVIEW_URL/api/admin/me")
+          test "$admin_status" = "401" || { cat /tmp/admin-me.json; echo 'Preview SESSION_SECRET is missing or invalid.'; exit 1; }
+
+          correlation_id="smoke-wreserv-10-${{ github.event.pull_request.number }}"
+          for attempt in {1..6}; do
+            reservations_status=$(curl --silent --show-error --dump-header /tmp/admin-reservas.headers --output /tmp/admin-reservas.json --write-out '%{http_code}' --header "X-Request-ID: $correlation_id" "$PREVIEW_URL/api/admin/reservas")
+            if test "$reservations_status" = "401" && grep --ignore-case --quiet "^x-request-id: $correlation_id" /tmp/admin-reservas.headers; then
+              break
+            fi
+            if test "$attempt" = "6"; then
+              cat /tmp/admin-reservas.headers
+              cat /tmp/admin-reservas.json
+              echo 'Preview alias did not converge to the deployment with API middleware.'
+              exit 1
+            fi
+            echo "Waiting for Cloudflare preview alias propagation (attempt $attempt/6)."
+            sleep 10
+          done
