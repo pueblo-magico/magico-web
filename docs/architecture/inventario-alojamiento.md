@@ -46,8 +46,39 @@ habitaciones sin aplanar la jerarquía.
 
 Las funciones puras `modalidadValidaParaEspacio` y
 `calcularDisponibilidadInventario` validan contexto, modalidad, capacidad y
-unidades ocupadas sin depender de D1. WRESERV-11 conectará estas proyecciones a
-la disponibilidad pública; WRESERV-15 realizará asignaciones definitivas.
+unidades ocupadas sin depender de D1. WRESERV-11 conecta estas proyecciones a
+la disponibilidad pública.
+
+## Asignación administrativa
+
+WRESERV-15 reemplaza la asignación de texto libre para el flujo nuevo. Cada
+cambio usa `asignaciones_inventario` para indicar dónde duerme cada huésped y
+`ocupacion_noches` para bloquear unidades físicas con intervalo de checkout
+exclusivo. Una cama doble sigue siendo una unidad con capacidad dos; no se
+duplica artificialmente.
+
+La modalidad privada ocupa todas las unidades del espacio durante cada noche,
+aunque sólo las camas efectivamente utilizadas tengan huéspedes asignados. La
+modalidad compartida y camping ocupan las camas o parcelas seleccionadas. Por
+eso una asignación privada y una compartida no pueden coexistir sobre el mismo
+inventario.
+
+Los cambios nunca borran filas anteriores: las asignaciones y noches previas
+pasan a `liberada`, y una operación nueva registra las unidades activas. La
+reserva usa control optimista mediante `version`; una edición concurrente se
+rechaza antes de mezclar decisiones administrativas. La operación, el evento
+`reserva.asignada` o `reserva.asignacion_liberada`, la auditoría y la nueva
+versión se guardan en un único batch D1.
+
+La API administrativa versionada expone `GET`, `POST` y `DELETE` en
+`/api/v1/admin/reservas/:id/asignaciones`. La lectura devuelve las unidades
+bloqueadas, huéspedes por unidad y la capacidad física mínima restante a lo
+largo de la estadía. WRESERV-14 puede consumir este contrato para el tablero sin
+volver a leer `unidad_asignada`.
+
+El camping y las bell tents usan el mismo servicio cuando sus espacios,
+modalidades y unidades estén activos. El salón continúa excluido: habilitarlo
+para un retiro exige el caso de uso específico de WRESERV-30.
 
 La columna `asignaciones_inventario.unidad_inventario_id` fue creada antes que
 el catálogo. SQLite no permite agregarle una FK con `ALTER TABLE`; WRESERV-7
