@@ -8,6 +8,7 @@ import type {
   ReservaPanel,
   SolicitudCotizacion,
 } from '../../_domain/reservas/models.ts';
+import type { ConfiguracionTarifa } from '../../_domain/reservas/ratePlans.ts';
 import type {
   ContextoAlojamiento,
   EspacioInventario,
@@ -48,6 +49,10 @@ export interface RepositorioInventarioAlojamiento {
 
 export interface RepositorioDisponibilidad {
   consultar(solicitud: SolicitudCotizacion): Promise<Disponibilidad>;
+}
+
+export interface RepositorioTarifas {
+  obtenerPublicada(): Promise<ConfiguracionTarifa | null>;
 }
 
 export interface RepositorioCalendarioDisponibilidad {
