@@ -35,6 +35,7 @@ import type {
   CotizacionAceptada,
   ReservaPublicaCreada,
 } from '../../_domain/reservas/reservationCreation.ts';
+import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundPolicies.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -106,6 +107,49 @@ export interface RepositorioCreacionReservaPublica {
 
 export interface RepositorioRetencionesReserva {
   expirarVencidas(ahoraIso: string, limite?: number): Promise<number[]>;
+}
+
+export type ResumenPoliticaCancelacion = {
+  id: number;
+  codigo: string;
+  nombre: string;
+  version: number;
+  estado: 'pendiente_configuracion' | 'borrador' | 'publicada' | 'retirada';
+  vigenciaDesde: string | null;
+  publicadoAt: string | null;
+  reglas: unknown;
+};
+
+export interface RepositorioPoliticasCancelacion {
+  listar(): Promise<ResumenPoliticaCancelacion[]>;
+  crearBorrador(politica: BorradorPoliticaCancelacion): Promise<ResumenPoliticaCancelacion>;
+  publicar(id: number): Promise<ResumenPoliticaCancelacion | null>;
+}
+
+export type ExcepcionPoliticaReserva = {
+  id: number;
+  reservaId: number;
+  tipo: 'cancelacion' | 'devolucion' | 'vencimiento';
+  estado: 'solicitada' | 'aprobada' | 'rechazada';
+  montoDevolucionCentavos: number | null;
+  motivo: string;
+  solicitadaPor: string;
+  resueltaPor: string | null;
+};
+
+export interface RepositorioExcepcionesPoliticaReserva {
+  solicitar(entrada: {
+    reservaId: number;
+    tipo: ExcepcionPoliticaReserva['tipo'];
+    montoDevolucionCentavos: number | null;
+    motivo: string;
+    actorEmail: string;
+  }): Promise<ExcepcionPoliticaReserva | null>;
+  resolver(
+    id: number,
+    estado: 'aprobada' | 'rechazada',
+    actorEmail: string
+  ): Promise<ExcepcionPoliticaReserva | null>;
 }
 
 export type ResumenPlanTarifa = {
