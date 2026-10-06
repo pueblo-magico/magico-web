@@ -41,6 +41,11 @@ import type {
   ContextoAsignacionInventario,
   PlanAsignacionInventario,
 } from '../../_domain/reservas/inventoryAssignment.ts';
+import type {
+  DetalleReservaAdmin,
+  FiltrosReservasAdmin,
+  PaginaReservasAdmin,
+} from '../../_domain/reservas/adminReservationManagement.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -101,6 +106,11 @@ export interface RepositorioAsignacionInventario {
     actorEmail: string;
     correlationId: string;
   }): Promise<AsignacionInventarioGuardada | null>;
+}
+
+export interface RepositorioGestionReservasAdmin {
+  listar(filtros: FiltrosReservasAdmin): Promise<PaginaReservasAdmin>;
+  obtenerDetalle(reservaId: number): Promise<DetalleReservaAdmin | null>;
 }
 
 export interface RepositorioDisponibilidad {
