@@ -51,6 +51,7 @@ export function operacionApi(request: Request): string {
 
 export function handlerYaInstrumentado(request: Request): boolean {
   const pathname = new URL(request.url).pathname;
+  if (/^\/api\/v1\/admin\/reservas\/[^/]+\/asignaciones$/.test(pathname)) return true;
   return INSTRUMENTADAS_EN_HANDLER.has(`${request.method.toUpperCase()} ${pathname}`);
 }
 

@@ -37,6 +37,10 @@ import type {
 } from '../../_domain/reservas/reservationCreation.ts';
 import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundPolicies.ts';
 import type { EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
+import type {
+  ContextoAsignacionInventario,
+  PlanAsignacionInventario,
+} from '../../_domain/reservas/inventoryAssignment.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -60,6 +64,43 @@ export interface RepositorioInventarioAlojamiento {
   ): Promise<EspacioInventario[]>;
   listarModalidades(espacioId: number): Promise<ModalidadEspacio[]>;
   listarUnidadesAsignables(espacioId: number): Promise<UnidadAsignable[]>;
+}
+
+export type AsignacionInventarioGuardada = {
+  reservaId: number;
+  reservaVersion: number;
+  estadiaId: number;
+  espacioCodigo: string;
+  modalidad: ModalidadAlojamiento;
+  capacidadRestante: number;
+  unidades: Array<{
+    codigo: string;
+    capacidad: number;
+    cantidadHuespedes: number;
+  }>;
+};
+
+export interface RepositorioAsignacionInventario {
+  obtenerActual(reservaId: number): Promise<AsignacionInventarioGuardada | null>;
+  obtenerContexto(
+    reservaId: number,
+    espacioCodigo: string,
+    modalidad: ModalidadAlojamiento
+  ): Promise<ContextoAsignacionInventario | null>;
+  reemplazar(entrada: {
+    contexto: ContextoAsignacionInventario;
+    plan: PlanAsignacionInventario;
+    operacionUid: string;
+    actorEmail: string;
+    correlationId: string;
+  }): Promise<AsignacionInventarioGuardada | null>;
+  liberar(entrada: {
+    reservaId: number;
+    expectedVersion: number;
+    operacionUid: string;
+    actorEmail: string;
+    correlationId: string;
+  }): Promise<AsignacionInventarioGuardada | null>;
 }
 
 export interface RepositorioDisponibilidad {
