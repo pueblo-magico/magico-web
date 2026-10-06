@@ -287,6 +287,26 @@ export type PagoExternoReserva = {
   id: string;
   estado: string;
   referenciaExterna: unknown;
+  montoCentavos: number | null;
+  moneda: string | null;
+};
+
+export type PagoEsperadoReserva = {
+  reservaId: number;
+  estadoFlujo: string;
+  montoCentavos: number;
+  moneda: string;
+  preferenciaId: string | null;
+};
+
+export type ObservacionPagoReserva = {
+  proveedor: string;
+  eventoExternoId: string;
+  correlationId: string;
+  pago: PagoExternoReserva;
+  reservaId: number | null;
+  resultado: 'recibido' | 'aplicado' | 'sin_cambios' | 'inconsistente';
+  motivoCodigo: string | null;
 };
 
 export type ReservaConfirmadaParaNotificar = {
@@ -300,6 +320,9 @@ export interface ProveedorPagosReserva {
 }
 
 export interface RepositorioEstadoPagoReserva {
+  obtenerEsperado(reservaId: number): Promise<PagoEsperadoReserva | null>;
+  registrarObservacion(observacion: ObservacionPagoReserva): Promise<boolean>;
+  registrarPago(observacion: ObservacionPagoReserva, estado: 'pendiente' | 'aprobado' | 'rechazado' | 'devuelto'): Promise<void>;
   confirmar(
     reservaId: number,
     pagoId: string
