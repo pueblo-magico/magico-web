@@ -295,8 +295,53 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM retenciones_reserva').get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ocupacion_reserva_noches').get()?.n, 2);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT estado_configuracion, codigo, version
+    FROM reserva_politica_snapshots
+  `).get() }, {
+    estado_configuracion: 'pendiente_configuracion',
+    codigo: 'reservas-general',
+    version: 1,
+  });
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo IN ('reserva.creada', 'reserva.retencion_iniciada')").get()?.n, 2);
   assert.equal(sqlite.prepare('SELECT cliente_email FROM reservas').get()?.cliente_email, 'qa@example.test');
+  sqlite.close();
+});
+
+test('la reserva conserva la política publicada que aceptó la cotización', async () => {
+  const { sqlite, db } = baseMigrada();
+  sqlite.prepare(`
+    INSERT INTO politicas_cancelacion (
+      codigo, nombre, version, estado, reglas_json, vigencia_desde, publicado_at
+    ) VALUES (
+      'reservas-general', 'Política QA', 2, 'publicada',
+      '{"estado":"configurada","reglas":[{"horas_minimas_antes":0,"porcentaje_devolucion_bps":0}]}',
+      '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'
+    )
+  `).run();
+
+  const quote = await cotizarDomo(db);
+  const cotizacion = sqlite.prepare(`
+    SELECT politica_cancelacion_version, politica_cancelacion_estado
+    FROM cotizaciones WHERE codigo = ?
+  `).get(quote.data.cotizacion.codigo);
+  assert.deepEqual({ ...cotizacion }, {
+    politica_cancelacion_version: 2,
+    politica_cancelacion_estado: 'publicada',
+  });
+
+  const creada = await crearReserva({
+    request: requestReserva(quote.data.cotizacion.codigo, 'qa-politica-0001'), env: env(db),
+  });
+  assert.equal(creada.status, 201);
+  const snapshot = sqlite.prepare(`
+    SELECT codigo, version, estado_configuracion, aceptada_at
+    FROM reserva_politica_snapshots
+  `).get();
+  assert.equal(snapshot?.codigo, 'reservas-general');
+  assert.equal(snapshot?.version, 2);
+  assert.equal(snapshot?.estado_configuracion, 'configurada');
+  assert.ok(snapshot?.aceptada_at);
   sqlite.close();
 });
 

@@ -42,10 +42,25 @@ export class D1RepositorioCotizaciones implements RepositorioCotizaciones {
         fecha_checkin, fecha_checkout, cantidad_personas,
         subtotal_centavos, sena_centavos, total_centavos, alojamiento_centavos,
         alimentacion_centavos, regimen_alimentacion, tarifa_alimentacion_version,
-        desglose_json, request_hash, expires_at
+        desglose_json, request_hash, expires_at,
+        politica_cancelacion_codigo, politica_cancelacion_version,
+        politica_cancelacion_estado, politica_cancelacion_json
       )
-      SELECT ?, p.id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      FROM planes_tarifa p WHERE p.codigo = ? AND p.version = ?
+      SELECT ?, p.id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+             pc.codigo, pc.version, pc.estado, pc.reglas_json
+      FROM planes_tarifa p
+      CROSS JOIN (
+        SELECT codigo, version, estado, reglas_json
+        FROM politicas_cancelacion
+        WHERE codigo = 'reservas-general'
+          AND (
+            (estado = 'publicada' AND vigencia_desde <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+            OR estado = 'pendiente_configuracion'
+          )
+        ORDER BY CASE estado WHEN 'publicada' THEN 0 ELSE 1 END, version DESC
+        LIMIT 1
+      ) pc
+      WHERE p.codigo = ? AND p.version = ?
       RETURNING id
     `).bind(
       codigo, resultado.desglose.plan_codigo, resultado.desglose.plan_version,

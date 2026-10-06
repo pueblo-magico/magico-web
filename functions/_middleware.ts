@@ -26,6 +26,7 @@ const OPERACIONES: Record<string, string> = {
   '/api/admin/me': 'admin.session.read',
   '/api/admin/metricas': 'admin.metrics.read',
   '/api/admin/ocupacion-operativa': 'admin.operational_occupancy.manage',
+  '/api/admin/politicas-reserva': 'admin.reservation_policies.manage',
   '/api/admin/reservas': 'admin.reservations.read',
   '/api/admin/sync-airbnb': 'admin.calendar.sync',
   '/api/admin/tarifas': 'admin.rate_plans.manage',

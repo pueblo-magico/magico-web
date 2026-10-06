@@ -121,6 +121,25 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
         SELECT id, ? FROM reservas WHERE reserva_uid = ?
       `).bind(entrada.holdExpiresAt, entrada.reservaUid),
       this.db.prepare(`
+        INSERT INTO reserva_politica_snapshots (
+          reserva_id, politica_id, codigo, version, estado_configuracion,
+          reglas_json, aceptada_at
+        )
+        SELECT r.id, p.id, c.politica_cancelacion_codigo,
+               c.politica_cancelacion_version,
+               CASE WHEN c.politica_cancelacion_estado = 'publicada'
+                 THEN 'configurada' ELSE 'pendiente_configuracion' END,
+               c.politica_cancelacion_json,
+               CASE WHEN c.politica_cancelacion_estado = 'publicada'
+                 THEN strftime('%Y-%m-%dT%H:%M:%fZ', 'now') ELSE NULL END
+        FROM reservas r
+        JOIN cotizaciones c ON c.id = r.cotizacion_id
+        LEFT JOIN politicas_cancelacion p
+          ON p.codigo = c.politica_cancelacion_codigo
+         AND p.version = c.politica_cancelacion_version
+        WHERE r.reserva_uid = ?
+      `).bind(entrada.reservaUid),
+      this.db.prepare(`
         INSERT INTO ocupacion_reserva_noches (
           reserva_estadia_id, espacio_id, fecha, cantidad_huespedes, modalidad
         )
