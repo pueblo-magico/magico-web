@@ -54,7 +54,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 migrations apply DB --remote --env preview
+          command: d1 migrations apply DB --remote
 
       - name: Verify preview D1 migration
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -62,7 +62,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-migracion.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-migracion.sql
 
       - name: Verify preview accommodation inventory
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -70,7 +70,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-inventario.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-inventario.sql
 
       - name: Verify preview capacity rules
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -78,7 +78,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-capacidad.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-capacidad.sql
 
       - name: Verify preview security controls
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -86,7 +86,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-seguridad.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-seguridad.sql
 
       - name: Verify preview pricing rules
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -94,7 +94,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-tarifas.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-tarifas.sql
 
       - name: Verify preview operational occupancy
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -102,7 +102,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-ocupacion-operativa.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-ocupacion-operativa.sql
 
       - name: Deploy Cloudflare Pages preview
         id: deploy

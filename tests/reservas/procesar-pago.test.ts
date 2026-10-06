@@ -12,50 +12,71 @@ import {
   crearNotificadorManyChat,
   ManyChatNotificadorReserva,
 } from '../../functions/_infrastructure/manychat/ManyChatNotificadorReserva.ts';
-import { MercadoPagoProveedorPagos } from '../../functions/_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
+import {
+  ErrorProveedorPagosTransitorio,
+  MercadoPagoProveedorPagos,
+} from '../../functions/_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 
 const notificadorNulo: NotificadorReservaConfirmada = { async notificar() {} };
 
-function pagos(estado: string, referenciaExterna: unknown = '7'): ProveedorPagosReserva {
-  return { async obtenerPago() { return { id: 'pay-7', estado, referenciaExterna }; } };
+function pagos(
+  estado: string,
+  referenciaExterna: unknown = '7',
+  montoCentavos: number | null = 2500,
+  moneda: string | null = 'ARS'
+): ProveedorPagosReserva {
+  return { async obtenerPago() { return { id: 'pay-7', estado, referenciaExterna, montoCentavos, moneda }; } };
 }
 
-test('confirma una reserva y notifica ManyChat una sola vez', async () => {
-  let notificaciones = 0;
-  const repository: RepositorioEstadoPagoReserva = {
+function repositorio(overrides: Partial<RepositorioEstadoPagoReserva> = {}): RepositorioEstadoPagoReserva {
+  return {
+    async obtenerEsperado(reservaId) {
+      return { reservaId, estadoFlujo: 'pendiente_pago', montoCentavos: 2500, moneda: 'ARS', preferenciaId: 'pref-7' };
+    },
+    async registrarObservacion() { return true; },
+    async registrarPago() {},
     async confirmar() {
       return { manyChatUserId: 'mc-7', fechaCheckin: '2026-10-10', fechaCheckout: '2026-10-12' };
     },
     async cancelarPendiente() {},
+    ...overrides,
+  };
+}
+
+test('confirma y notifica una sola vez ante entregas duplicadas', async () => {
+  let notificaciones = 0;
+  let primera = true;
+  const repository = repositorio({
+    async registrarObservacion() { const insertada = primera; primera = false; return insertada; },
+  });
+  const notificador = {
+    async notificar() { notificaciones += 1; },
   };
 
-  const resultado = await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, {
-    async notificar() { notificaciones += 1; },
-  });
-
-  assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
+  assert.deepEqual(
+    await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, notificador, 'delivery-1'),
+    { estado: 'confirmada', notificacionFallida: false }
+  );
+  assert.deepEqual(
+    await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, notificador, 'delivery-1'),
+    { estado: 'duplicado' }
+  );
   assert.equal(notificaciones, 1);
 });
 
 test('mantiene confirmación aunque falle la notificación y omite usuarios ausentes', async () => {
   const fallida = await procesarPagoMercadoPago(
     'pay-7', pagos('approved'),
-    {
-      async confirmar() {
-        return { manyChatUserId: 'mc-7', fechaCheckin: '2026-10-10', fechaCheckout: '2026-10-12' };
-      },
-      async cancelarPendiente() {},
-    },
+    repositorio(),
     { async notificar() { throw new Error('ManyChat caído'); } }
   );
   const sinUsuario = await procesarPagoMercadoPago(
     'pay-8', pagos('approved', 8),
-    {
+    repositorio({
       async confirmar() {
         return { manyChatUserId: null, fechaCheckin: '2026-10-10', fechaCheckout: '2026-10-12' };
       },
-      async cancelarPendiente() {},
-    },
+    }),
     { async notificar() { throw new Error('no debe ejecutarse'); } }
   );
 
@@ -63,83 +84,104 @@ test('mantiene confirmación aunque falle la notificación y omite usuarios ause
   assert.deepEqual(sinUsuario, { estado: 'confirmada', notificacionFallida: false });
 });
 
-test('cancela rechazos y cancelaciones, e ignora estados intermedios', async () => {
+test('registra rechazos, cancelaciones, devoluciones y estados intermedios', async () => {
   const canceladas: unknown[][] = [];
-  const repository: RepositorioEstadoPagoReserva = {
-    async confirmar() { return null; },
-    async cancelarPendiente(...valores) { canceladas.push(valores); },
-  };
+  const estados: string[] = [];
+  const operaciones: string[] = [];
+  const repository = repositorio({
+    async registrarPago(_observacion, estado) { estados.push(estado); operaciones.push(`pago:${estado}`); },
+    async cancelarPendiente(...valores) { canceladas.push(valores); operaciones.push('cancelar'); },
+  });
 
   const rechazada = await procesarPagoMercadoPago('1', pagos('rejected'), repository, notificadorNulo);
   const cancelada = await procesarPagoMercadoPago('2', pagos('cancelled'), repository, notificadorNulo);
   const pendiente = await procesarPagoMercadoPago('3', pagos('pending'), repository, notificadorNulo);
+  const devuelta = await procesarPagoMercadoPago('4', pagos('refunded'), repository, notificadorNulo);
 
   assert.equal(rechazada.estado, 'cancelada');
   assert.equal(cancelada.estado, 'cancelada');
   assert.equal(pendiente.estado, 'sin_cambios');
+  assert.equal(devuelta.estado, 'sin_cambios');
   assert.deepEqual(canceladas, [[7, 'pay-7'], [7, 'pay-7']]);
+  assert.deepEqual(estados, ['rechazado', 'rechazado', 'pendiente', 'devuelto']);
+  assert.deepEqual(operaciones.slice(0, 2), ['cancelar', 'pago:rechazado']);
 });
 
-test('descarta pagos ausentes o referencias inválidas', async () => {
-  const repository: RepositorioEstadoPagoReserva = {
-    async confirmar() { throw new Error('no debe ejecutarse'); },
-    async cancelarPendiente() { throw new Error('no debe ejecutarse'); },
-  };
+test('conserva inconsistencias sin confirmar monto, moneda o referencia incorrectos', async () => {
+  let confirmaciones = 0;
+  const repository = repositorio({
+    async confirmar() { confirmaciones += 1; return null; },
+  });
   const ausente = await procesarPagoMercadoPago(
     'x', { async obtenerPago() { return null; } }, repository, notificadorNulo
   );
   const invalida = await procesarPagoMercadoPago('x', pagos('approved', 'abc'), repository, notificadorNulo);
+  const monto = await procesarPagoMercadoPago('x', pagos('approved', '7', 2600), repository, notificadorNulo, 'monto');
+  const moneda = await procesarPagoMercadoPago('x', pagos('approved', '7', 2500, 'USD'), repository, notificadorNulo, 'moneda');
 
   assert.equal(ausente.estado, 'pago_no_disponible');
   assert.equal(invalida.estado, 'referencia_invalida');
+  assert.equal(monto.estado, 'pago_inconsistente');
+  assert.equal(moneda.estado, 'pago_inconsistente');
+  assert.equal(confirmaciones, 0);
 });
 
-test('el repositorio D1 aplica guards idempotentes y mapea la notificación', async () => {
+test('el repositorio D1 aplica ledger, upsert y transición guardada', async () => {
   const calls: { query: string; values: unknown[] }[] = [];
-  const rows = [
-    { manychat_user_id: 'mc-9', fecha_checkin: '2026-10-10', fecha_checkout: '2026-10-12' },
-    null,
-  ];
   const db = {
     prepare(query: string) {
       const call = { query, values: [] as unknown[] };
       calls.push(call);
       return {
         bind(...values: unknown[]) { call.values = values; return this; },
-        async first() { return rows.shift() || null; },
+        async first() {
+          if (query.includes('SELECT id, estado_flujo')) return { id: 9, estado_flujo: 'pendiente_pago', monto_centavos: 2500, moneda: 'ARS', mp_preference_id: 'pref-9' };
+          if (query.includes('INSERT INTO pago_eventos_externos')) return { id: 1 };
+          if (query.includes("UPDATE reservas SET estado = 'confirmada'")) return { manychat_user_id: 'mc-9', fecha_checkin: '2026-10-10', fecha_checkout: '2026-10-12' };
+          return null;
+        },
         async run() { return {}; },
       };
     },
   };
   const repository = new D1RepositorioEstadoPagoReserva(db);
 
+  assert.equal((await repository.obtenerEsperado(9))?.montoCentavos, 2500);
+  const observacion = {
+    proveedor: 'mercado_pago', eventoExternoId: 'delivery-9', correlationId: 'request-9',
+    pago: { id: 'pay-9', estado: 'approved', referenciaExterna: '9', montoCentavos: 2500, moneda: 'ARS' },
+    reservaId: 9, resultado: 'aplicado' as const, motivoCodigo: null,
+  };
+  assert.equal(await repository.registrarObservacion(observacion), true);
+  await repository.registrarPago(observacion, 'aprobado');
   assert.deepEqual(await repository.confirmar(9, 'pay-9'), {
     manyChatUserId: 'mc-9', fechaCheckin: '2026-10-10', fechaCheckout: '2026-10-12',
   });
-  assert.equal(await repository.confirmar(9, 'pay-9'), null);
   await repository.cancelarPendiente(10, 'pay-10');
 
-  assert.match(calls[0].query, /estado != 'confirmada'/);
-  assert.deepEqual(calls[0].values, ['pay-9', 9]);
-  assert.match(calls[2].query, /estado = 'pendiente'/);
-  assert.deepEqual(calls[2].values, ['pay-10', 10]);
+  assert.ok(calls.some(call => /ON CONFLICT \(proveedor, evento_externo_id\)/.test(call.query)));
+  assert.ok(calls.some(call => /estado_flujo = 'pendiente_pago'/.test(call.query)));
 });
 
 test('el proveedor Mercado Pago verifica estado HTTP y normaliza el pago', async () => {
   let authorization = '';
   const exitoso = new MercadoPagoProveedorPagos('token', async (_url, init) => {
     authorization = (init?.headers as Record<string, string>).Authorization;
-    return new Response(JSON.stringify({ id: 11, status: 'approved', external_reference: '9' }), { status: 200 });
+    return new Response(JSON.stringify({ id: 11, status: 'approved', external_reference: '9', transaction_amount: 25, currency_id: 'ars' }), { status: 200 });
   });
   const fallido = new MercadoPagoProveedorPagos('token', async () =>
     new Response('{}', { status: 503 })
   );
+  const sinRed = new MercadoPagoProveedorPagos('token', async () => {
+    throw new TypeError('fetch failed');
+  });
 
   assert.deepEqual(await exitoso.obtenerPago('11'), {
-    id: '11', estado: 'approved', referenciaExterna: '9',
+    id: '11', estado: 'approved', referenciaExterna: '9', montoCentavos: 2500, moneda: 'ARS',
   });
   assert.equal(authorization, 'Bearer token');
-  assert.equal(await fallido.obtenerPago('12'), null);
+  await assert.rejects(() => fallido.obtenerPago('12'), ErrorProveedorPagosTransitorio);
+  await assert.rejects(() => sinRed.obtenerPago('13'), ErrorProveedorPagosTransitorio);
 });
 
 test('el notificador ManyChat envía campos y flow con el mismo usuario', async () => {

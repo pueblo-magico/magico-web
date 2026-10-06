@@ -20,6 +20,7 @@ import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMe
 import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
 import { crearNotificadorManyChat } from '../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
+import { ErrorProveedorPagosTransitorio } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
 import { observarSolicitud, type ContextoObservabilidad } from '../_interfaces/http/observability.ts';
 
@@ -76,11 +77,9 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     contexto.signal('rate_limit.rejected', 'warn', { metric: 'reservas_rate_limit_rejections_total' });
     return limitada;
   }
-  // CRÍTICO: una firma inválida se rechaza (401), no se procesa. Una vez que
-  // la firma es válida (es realmente Mercado Pago), cualquier error interno
-  // de acá en adelante (falla al consultar el pago, falla al llamar a
-  // ManyChat, etc.) se maneja sin romper el webhook: siempre 200, para que
-  // MP no reintente sobre algo que ya procesamos de nuestro lado.
+  // Una firma inválida se rechaza sin procesar. Las inconsistencias comerciales
+  // se registran y responden 200, mientras que una falla técnica responde 503
+  // para que Mercado Pago pueda reintentar el procesamiento idempotente.
   const { ok: firmaOk, dataId } = await firmaValida(request, env);
   if (!firmaOk || !dataId) {
     contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
@@ -96,7 +95,9 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
         apiKey: env.MANYCHAT_API_KEY,
         flowNs: env.MANYCHAT_CONFIRMATION_FLOW_NS,
         habilitado: env.MANYCHAT_NOTIFICATIONS_ENABLED,
-      })
+      }),
+      request.headers.get('x-request-id') || `payment:${dataId}`,
+      contexto.requestId
     );
     if (resultado.estado === 'confirmada' && resultado.notificacionFallida) {
       contexto.signal('notification.delivery_failed', 'error', { metric: 'reservas_notification_errors_total' });
@@ -105,8 +106,11 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     contexto.signal('payment.webhook_processed', 'info', { metric: 'reservas_webhooks_processed_total' });
 
     return new Response('OK', { status: 200 });
-  } catch {
+  } catch (error) {
     contexto.signal('payment.webhook_processing_failed', 'error', { metric: 'reservas_webhook_errors_total' });
-    return new Response('OK', { status: 200 });
+    const mensaje = error instanceof ErrorProveedorPagosTransitorio
+      ? 'Proveedor temporalmente no disponible'
+      : 'Procesamiento temporalmente no disponible';
+    return new Response(mensaje, { status: 503 });
   }
 }
