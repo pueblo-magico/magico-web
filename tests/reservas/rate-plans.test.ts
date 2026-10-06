@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import { cotizarConPlan, type ConfiguracionTarifa } from '../../functions/_domain/reservas/ratePlans.ts';
 import { D1RepositorioTarifas } from '../../functions/_infrastructure/d1/D1RepositorioTarifas.ts';
+import { D1RepositorioCotizaciones } from '../../functions/_infrastructure/d1/D1RepositorioCotizaciones.ts';
 
 const base: ConfiguracionTarifa = {
   planId: 1, codigo: 'base', version: 2, moneda: 'ARS',
@@ -89,4 +90,53 @@ test('el repositorio D1 devuelve null si no existe un plan publicado', async () 
     },
   };
   assert.equal(await new D1RepositorioTarifas(db).obtenerPublicada(), null);
+});
+
+test('persiste un snapshot con código, hash y vencimiento sin datos personales', async () => {
+  let values: unknown[] = [];
+  const db = {
+    prepare() {
+      return {
+        bind(...args: unknown[]) { values = args; return this; },
+        async first() { return { id: '42' }; },
+      };
+    },
+  };
+  const repo = new D1RepositorioCotizaciones(db);
+  const guardada = await repo.guardar(
+    { tipo: 'domo', personas: 2, fechaEntrada: '2026-10-10', fechaSalida: '2026-10-11' },
+    {
+      disponibilidad: { estado: 'disponible', alojamiento_id: 1 },
+      desglose: {
+        tipo_alojamiento: 'domo', cantidad_personas: 2, noches: 1, precio_por_noche: 75_000,
+        subtotal: 75_000, exclusividad_gratis: false, moneda: 'ARS', subtotal_centavos: 7_500_000,
+        plan_codigo: 'alojamiento-base', plan_version: 1,
+        desglose_noches: [{ fecha: '2026-10-10', temporada: 'base', importe_centavos: 7_500_000 }],
+      },
+      sena: { porcentaje: 0.5, monto: 37_500, monto_centavos: 3_750_000 },
+      saldoCheckin: 37_500,
+      mensajePrivacidad: '',
+    }
+  );
+  assert.equal(guardada.id, 42);
+  assert.match(guardada.codigo, /^COT-[0-9a-f-]+$/);
+  assert.ok(Date.parse(guardada.expiresAt) > Date.now());
+  assert.equal(values[0], guardada.codigo);
+  assert.match(String(values[11]), /^[a-f0-9]{64}$/);
+  assert.equal(String(values[10]).includes('cliente'), false);
+});
+
+test('falla cerrado si D1 no devuelve el snapshot insertado', async () => {
+  const db = { prepare() { return { bind() { return this; }, async first() { return null; } }; } };
+  const repo = new D1RepositorioCotizaciones(db, () => new Date(), () => 'COT-X');
+  await assert.rejects(() => repo.guardar(
+    { tipo: 'domo', personas: 1, fechaEntrada: '2026-01-01', fechaSalida: '2026-01-02' },
+    {
+      disponibilidad: { estado: 'disponible', alojamiento_id: 1 },
+      desglose: { tipo_alojamiento: 'domo', cantidad_personas: 1, noches: 1, precio_por_noche: 1,
+        subtotal: 1, exclusividad_gratis: false, moneda: 'ARS', subtotal_centavos: 100,
+        plan_codigo: 'base', plan_version: 1, desglose_noches: [] },
+      sena: { porcentaje: 1, monto: 1, monto_centavos: 100 }, saldoCheckin: 0, mensajePrivacidad: '',
+    }
+  ), /persistir/);
 });

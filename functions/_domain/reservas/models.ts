@@ -4,9 +4,14 @@ export type Cotizacion = {
   tipo_alojamiento: TipoAlojamiento;
   cantidad_personas: number;
   noches: number;
-  precio_por_noche: number;
+  precio_por_noche: number | null;
   subtotal: number;
   exclusividad_gratis: boolean;
+  moneda: string;
+  subtotal_centavos: number;
+  plan_codigo: string;
+  plan_version: number;
+  desglose_noches: Array<{ fecha: string; temporada: string; importe_centavos: number }>;
 };
 
 export type Disponibilidad = {
@@ -27,13 +32,19 @@ export type ResultadoCotizacion = {
   sena: {
     porcentaje: number;
     monto: number;
+    monto_centavos: number;
   };
   saldoCheckin: number;
   mensajePrivacidad: string;
+  referencia: {
+    id: number;
+    codigo: string;
+    expiresAt: string;
+  } | null;
 };
 
 export type ErrorCotizacion = {
-  codigo: 'FECHAS_INVALIDAS' | 'OCUPACION_INVALIDA';
+  codigo: 'FECHAS_INVALIDAS' | 'OCUPACION_INVALIDA' | 'TARIFA_NO_CONFIGURADA' | 'TARIFA_AMBIGUA';
   mensaje: string;
 };
 

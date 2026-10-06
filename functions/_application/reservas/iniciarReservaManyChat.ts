@@ -2,7 +2,9 @@ import type { ResultadoCotizacion, SolicitudCotizacion } from '../../_domain/res
 import { cotizarEstadia } from './cotizarEstadia.ts';
 import type {
   ProveedorCheckoutReserva,
+  RepositorioCotizaciones,
   RepositorioDisponibilidad,
+  RepositorioTarifas,
   RepositorioReservasManyChat,
 } from './ports.ts';
 
@@ -21,15 +23,18 @@ export type ResultadoInicioReservaManyChat =
 export async function iniciarReservaManyChat(
   solicitud: SolicitudCotizacion & { userId: string },
   disponibilidad: RepositorioDisponibilidad,
+  tarifas: RepositorioTarifas,
+  cotizaciones: RepositorioCotizaciones,
   reservas: RepositorioReservasManyChat,
   checkout: ProveedorCheckoutReserva
 ): Promise<ResultadoInicioReservaManyChat> {
-  const resultadoCotizacion = await cotizarEstadia(solicitud, disponibilidad);
+  const resultadoCotizacion = await cotizarEstadia(solicitud, disponibilidad, tarifas, cotizaciones);
   if (resultadoCotizacion.ok === false) {
     return { estado: 'error_validacion', mensaje: resultadoCotizacion.error.mensaje };
   }
 
   const cotizacion = resultadoCotizacion.valor;
+  if (!cotizacion.referencia) return { estado: 'error_creacion' };
   if (
     cotizacion.disponibilidad.estado === 'ocupado' ||
     cotizacion.disponibilidad.alojamiento_id === null
@@ -46,6 +51,7 @@ export async function iniciarReservaManyChat(
     montoTotal: cotizacion.desglose.subtotal,
     montoSena: cotizacion.sena.monto,
     manyChatUserId: solicitud.userId,
+    cotizacionId: cotizacion.referencia.id,
   });
 
   if (!creada.id) return { estado: 'error_creacion' };

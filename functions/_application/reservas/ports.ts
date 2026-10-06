@@ -6,6 +6,7 @@ import type {
   PendienteVieja,
   ReservaCalendario,
   ReservaPanel,
+  ResultadoCotizacion,
   SolicitudCotizacion,
 } from '../../_domain/reservas/models.ts';
 import type { ConfiguracionTarifa } from '../../_domain/reservas/ratePlans.ts';
@@ -53,6 +54,13 @@ export interface RepositorioDisponibilidad {
 
 export interface RepositorioTarifas {
   obtenerPublicada(): Promise<ConfiguracionTarifa | null>;
+}
+
+export interface RepositorioCotizaciones {
+  guardar(
+    solicitud: SolicitudCotizacion,
+    resultado: Omit<ResultadoCotizacion, 'referencia'>
+  ): Promise<{ id: number; codigo: string; expiresAt: string }>;
 }
 
 export interface RepositorioCalendarioDisponibilidad {
@@ -142,6 +150,7 @@ export type ReservaPendienteManyChat = {
   montoTotal: number;
   montoSena: number;
   manyChatUserId: string;
+  cotizacionId: number;
 };
 
 export interface RepositorioReservasManyChat {

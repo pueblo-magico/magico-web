@@ -11,6 +11,8 @@
 import { iniciarReservaManyChat } from '../_application/reservas/iniciarReservaManyChat.ts';
 import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { D1RepositorioReservasManyChat } from '../_infrastructure/d1/D1RepositorioReservasManyChat.ts';
+import { D1RepositorioTarifas } from '../_infrastructure/d1/D1RepositorioTarifas.ts';
+import { D1RepositorioCotizaciones } from '../_infrastructure/d1/D1RepositorioCotizaciones.ts';
 import { MercadoPagoCheckoutReservas } from '../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonReserva as json } from '../_interfaces/http/reservasHttp.ts';
 import { obtenerOrigenSolicitudManyChat } from '../_interfaces/http/manychatAuth.ts';
@@ -67,6 +69,8 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     userId: String(user_id),
   },
   new D1RepositorioDisponibilidad(env.DB),
+  new D1RepositorioTarifas(env.DB),
+  new D1RepositorioCotizaciones(env.DB),
   new D1RepositorioReservasManyChat(env.DB),
   new MercadoPagoCheckoutReservas(env.MP_ACCESS_TOKEN, obtenerOrigenSolicitudManyChat(request.url)));
 
