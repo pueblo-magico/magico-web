@@ -392,7 +392,7 @@ test('la restricción D1 evita sobreventa aunque dos chequeos hayan visto dispon
         espacio_id: 1, espacio_codigo: 'domo-1', modalidad: 'privada', capacidad_disponible: 7,
       };
     },
-  });
+  }, { async obtenerPaymentHoldMinutes() { return 15; } });
 
   assert.equal(resultado.ok, false);
   if (resultado.ok) return;

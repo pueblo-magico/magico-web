@@ -1,4 +1,8 @@
-import type { RepositorioCreacionReservaPublica, RepositorioDisponibilidad } from './ports.ts';
+import type {
+  RepositorioConfiguracionBaseReservas,
+  RepositorioCreacionReservaPublica,
+  RepositorioDisponibilidad,
+} from './ports.ts';
 import type {
   ErrorCreacionReserva,
   ResultadoCreacionReservaPublica,
@@ -25,6 +29,7 @@ export async function crearReservaPublica(
   solicitud: SolicitudCrearReservaPublica,
   repositorio: RepositorioCreacionReservaPublica,
   disponibilidad: RepositorioDisponibilidad,
+  configuracion: Pick<RepositorioConfiguracionBaseReservas, 'obtenerPaymentHoldMinutes'>,
   ahora: () => Date = () => new Date(),
   crearUuid: () => string = () => crypto.randomUUID()
 ): Promise<ResultadoCreacionReservaPublica> {
@@ -71,7 +76,8 @@ export async function crearReservaPublica(
   }
 
   const uuid = crearUuid();
-  const holdExpiresAt = new Date(ahora().getTime() + 15 * 60_000).toISOString();
+  const holdMinutes = await configuracion.obtenerPaymentHoldMinutes();
+  const holdExpiresAt = new Date(ahora().getTime() + holdMinutes * 60_000).toISOString();
   try {
     const creada = await repositorio.crearAtomica({
       solicitud: {

@@ -66,7 +66,8 @@ mientras que reutilizarla con otros datos responde conflicto.
 }
 ```
 
-La reserva queda en `pendiente_pago` con una retención de 15 minutos. La
+La reserva queda en `pendiente_pago` con una retención cuyo valor inicial es 15
+minutos y cuya fuente efectiva es `payment_hold_minutes`. La
 escritura de reserva, estadía, noches ocupadas, retención, eventos y respuesta
 idempotente se ejecuta como una única operación D1. Si el inventario cambió
 desde la cotización, no queda una reserva parcial.
@@ -76,6 +77,10 @@ la limpieza. El proceso autenticado de n8n invoca
 `POST /api/v1/integrations/reservas/expirar-retenciones` para marcar la reserva
 como `vencida`, liberar sus noches y registrar el evento de dominio. La
 operación es idempotente y procesa las retenciones vencidas en lotes.
+
+El plazo se lee una sola vez al crear la reserva y el timestamp resultante se
+persiste como snapshot. Un cambio administrativo posterior sólo afecta nuevas
+reservas y nunca recalcula una retención existente.
 
 ## Capacidad y disponibilidad
 
