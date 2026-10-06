@@ -4,12 +4,14 @@ import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import test from 'node:test';
 
 import { provisionarCuentaCobroReserva } from '../../functions/_application/reservas/provisionarCuentaCobro.ts';
+import { ejecutarBackfillCucuru } from '../../functions/_application/reservas/ejecutarBackfillCucuru.ts';
 import {
   ErrorProvisionamientoDesconocido,
   cucuruHabilitado,
   customerIdCuentaCobro,
 } from '../../functions/_domain/reservas/collectionAccounts.ts';
 import { D1RepositorioCuentasCobroReserva } from '../../functions/_infrastructure/d1/D1RepositorioCuentasCobroReserva.ts';
+import { D1RepositorioBackfillCucuru } from '../../functions/_infrastructure/d1/D1RepositorioBackfillCucuru.ts';
 
 function baseCompleta(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
@@ -170,5 +172,55 @@ test('desactivada no llama al proveedor y un timeout queda recuperable sin crear
   assert.equal(inmediata.estado, 'unknown_outcome');
   assert.equal(llamadas, 1);
   assert.equal(sqlite.prepare("SELECT resultado FROM cuenta_cobro_intentos WHERE tipo = 'lookup'").get()?.resultado, 'unknown_outcome');
+  sqlite.close();
+});
+
+test('el backfill pagina con checkpoint, solapamiento UTC y lock exclusivo', async () => {
+  const sqlite = baseCompleta();
+  const repositorio = new D1RepositorioBackfillCucuru(d1(sqlite));
+  const consultas: Array<{ desde: string; hasta: string; cursor: string | null }> = [];
+  const procesadas: string[] = [];
+  const collection = (id: string) => ({
+    collectionId: id, customerId: null, externalAccountId: `acct-${id}`, cvu: null,
+    montoCentavos: 30_000, moneda: 'ARS', occurredAt: '2026-10-06T12:00:00.000Z',
+    payloadHash: `hash-${id}`,
+  });
+  const proveedor = {
+    async listar(entrada: { desde: string; hasta: string; cursor: string | null }) {
+      consultas.push(entrada);
+      return entrada.cursor === null
+        ? { items: [collection('col-1')], nextCursor: 'page-2' }
+        : { items: [collection('col-2')], nextCursor: null };
+    },
+  };
+  const consumidor = { async procesar(item: { collectionId: string }) { procesadas.push(item.collectionId); } };
+
+  const primera = await ejecutarBackfillCucuru(
+    repositorio, proveedor, consumidor,
+    () => new Date('2026-10-06T13:00:00.000Z'), () => 'lock-backfill-1'
+  );
+  assert.deepEqual(primera, {
+    estado: 'completado', paginas: 2, observaciones: 2,
+    desde: '2026-10-05T13:00:00.000Z', hasta: '2026-10-06T13:00:00.000Z',
+  });
+  assert.deepEqual(procesadas, ['col-1', 'col-2']);
+  assert.deepEqual(consultas.map(item => item.cursor), [null, 'page-2']);
+
+  consultas.length = 0;
+  await ejecutarBackfillCucuru(
+    repositorio, { async listar(entrada) { consultas.push(entrada); return { items: [], nextCursor: null }; } },
+    consumidor, () => new Date('2026-10-06T14:00:00.000Z'), () => 'lock-backfill-2'
+  );
+  assert.equal(consultas[0].desde, '2026-10-06T12:45:00.000Z');
+  assert.equal(consultas[0].hasta, '2026-10-06T14:00:00.000Z');
+
+  sqlite.prepare(`UPDATE cucuru_backfill_checkpoints
+    SET lock_uid = 'otro-proceso', lock_expires_at = '2099-01-01T00:00:00.000Z'
+    WHERE alcance = 'collections'`).run();
+  const bloqueada = await ejecutarBackfillCucuru(
+    repositorio, proveedor, consumidor,
+    () => new Date('2026-10-06T15:00:00.000Z'), () => 'lock-backfill-3'
+  );
+  assert.deepEqual(bloqueada, { estado: 'locked' });
   sqlite.close();
 });

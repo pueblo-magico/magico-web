@@ -55,6 +55,7 @@ import type {
   FiltrosExportacionReservas,
 } from '../../_domain/reservas/adminReservationExport.ts';
 import type {
+  CollectionCucuruNormalizada,
   CuentaCobroReserva,
   DestinoCobroProveedor,
 } from '../../_domain/reservas/collectionAccounts.ts';
@@ -521,6 +522,41 @@ export interface RepositorioCuentasCobroReserva {
 export interface ProveedorCuentasCobro {
   buscarPorCustomerId(customerId: string): Promise<DestinoCobroProveedor | null>;
   crear(entrada: { customerId: string; idempotencyKey: string }): Promise<DestinoCobroProveedor>;
+}
+
+export interface ProveedorCollectionsCucuru {
+  listar(entrada: {
+    desde: string;
+    hasta: string;
+    cursor: string | null;
+    limite: number;
+  }): Promise<{ items: CollectionCucuruNormalizada[]; nextCursor: string | null }>;
+}
+
+export interface ConsumidorCollectionCucuru {
+  procesar(collection: CollectionCucuruNormalizada): Promise<void>;
+}
+
+export type CheckpointBackfillCucuru = {
+  cursor: string | null;
+  windowStartAt: string | null;
+  windowEndAt: string | null;
+};
+
+export interface RepositorioBackfillCucuru {
+  adquirirLock(entrada: {
+    alcance: string;
+    lockUid: string;
+    lockExpiresAt: string;
+  }): Promise<CheckpointBackfillCucuru | null>;
+  guardarCheckpoint(entrada: {
+    alcance: string;
+    lockUid: string;
+    cursor: string | null;
+    windowStartAt: string;
+    windowEndAt: string;
+  }): Promise<boolean>;
+  liberarLock(alcance: string, lockUid: string): Promise<void>;
 }
 
 export type DatosPersonalesReserva = {

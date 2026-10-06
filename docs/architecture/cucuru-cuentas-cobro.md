@@ -30,8 +30,11 @@ llamada externa participa de la transacción D1 que protege el inventario.
 `cucuru_observaciones_transferencia` reserva el ledger idempotente para
 Collections, usando `collection_id` como clave natural y sólo campos
 normalizados más el hash del payload. No se guardará `transfer_data` completo.
-`cucuru_backfill_checkpoints` reserva cursor, ventana UTC y lock para la
-recuperación paginada.
+`cucuru_backfill_checkpoints` conserva cursor, ventana UTC y lock para la
+recuperación paginada. El caso de uso de backfill procesa páginas en orden,
+guarda el checkpoint después de cada página, reanuda una ventana interrumpida
+y solapa 15 minutos entre ventanas completas. Si pierde el lock, se detiene;
+el consumidor de cada Collection debe ser idempotente por `collection_id`.
 
 ## Activación segura
 
@@ -62,4 +65,3 @@ Sólo se documentan nombres, nunca valores:
 - `CUCURU_WEBHOOK_SECRET`
 - `CUCURU_API_BASE_URL`
 - `CUCURU_TRANSFER_ENABLED`
-

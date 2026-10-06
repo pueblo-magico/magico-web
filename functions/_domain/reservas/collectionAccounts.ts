@@ -32,6 +32,17 @@ export type DestinoCobroProveedor = {
   moneda: string;
 };
 
+export type CollectionCucuruNormalizada = {
+  collectionId: string;
+  customerId: string | null;
+  externalAccountId: string | null;
+  cvu: string | null;
+  montoCentavos: number;
+  moneda: string;
+  occurredAt: string;
+  payloadHash: string;
+};
+
 export function cucuruHabilitado(valor: unknown): boolean {
   return typeof valor === 'string' && valor.trim().toLowerCase() === 'true';
 }
@@ -62,4 +73,3 @@ export class ErrorProvisionamientoDesconocido extends Error {
     this.name = 'ErrorProvisionamientoDesconocido';
   }
 }
-

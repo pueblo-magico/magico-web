@@ -77,6 +77,7 @@ CREATE INDEX idx_cucuru_observacion_reserva
 CREATE TABLE cucuru_backfill_checkpoints (
   alcance               TEXT PRIMARY KEY,
   cursor                TEXT,
+  window_start_at       TEXT,
   window_end_at         TEXT,
   lock_uid              TEXT,
   lock_expires_at       TEXT,
