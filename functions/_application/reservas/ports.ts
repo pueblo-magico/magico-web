@@ -517,7 +517,7 @@ export interface RepositorioCuentasCobroReserva {
   registrarIntento(entrada: {
     cuentaId: number;
     operacionUid: string;
-    tipo: 'lookup' | 'create';
+    tipo: 'lookup' | 'create' | 'alias';
   }): Promise<void>;
   completarIntento(
     operacionUid: string,
@@ -537,6 +537,11 @@ export interface RepositorioCuentasCobroReserva {
 export interface ProveedorCuentasCobro {
   buscarPorCustomerId(customerId: string): Promise<DestinoCobroProveedor | null>;
   crear(entrada: { customerId: string; idempotencyKey: string }): Promise<DestinoCobroProveedor>;
+  asignarAlias(entrada: {
+    cuenta: DestinoCobroProveedor;
+    alias: string;
+    idempotencyKey: string;
+  }): Promise<DestinoCobroProveedor>;
 }
 
 export interface ProveedorCollectionsCucuru {

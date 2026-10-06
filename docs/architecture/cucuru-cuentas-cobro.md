@@ -21,11 +21,17 @@ usa estados explícitos: `pending`, `provisioning`, `ready`, `failed`,
 `disabled` y `unknown_outcome`. La referencia enviada al proveedor deriva de
 `reserva_uid`; no contiene nombre, email, teléfono ni documento del huésped.
 
-Cada operación queda en `cuenta_cobro_intentos`. Un reintento siempre consulta
+Cada operación (`lookup`, `create` o `alias`) queda en `cuenta_cobro_intentos`. Un reintento siempre consulta
 primero por `customer_id`; después de un timeout nunca crea otra cuenta a
 ciegas. `external_account_id` y CVU son únicos por proveedor. La reserva y su
 retención ya existen antes de comenzar el provisionamiento, por lo que ninguna
 llamada externa participa de la transacción D1 que protege el inventario.
+
+Una cuenta sólo queda `ready` cuando posee alias. Si una cuenta recuperada por
+`customer_id` todavía no lo tiene, se asigna mediante el endpoint específico de
+Cucuru antes de publicarla como destino. El alias se genera de forma determinista
+como `<CUCURU_ALIAS_PREFIX>.reserva<ID>`; Preview usa `magico.qa` para distinguir
+sus cuentas de las productivas.
 
 `cucuru_observaciones_transferencia` reserva el ledger idempotente para
 Collections, usando `collection_id` como clave natural y sólo campos
@@ -85,6 +91,7 @@ Sólo se documentan nombres, nunca valores:
 - `CUCURU_WEBHOOK_SECRET`
 - `CUCURU_API_BASE_URL`
 - `CUCURU_TRANSFER_ENABLED`
+- `CUCURU_ALIAS_PREFIX`
 
 Los secretos locales van en `.dev.vars`, que está ignorado por Git. Preview y
 producción deben usar valores distintos en Cloudflare; ninguna variable Cucuru

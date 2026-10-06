@@ -117,6 +117,39 @@ test('crea un CVU read-only y trata un timeout como resultado desconocido', asyn
   );
 });
 
+test('asigna un alias a una cuenta existente mediante el contrato argentino', async () => {
+  let request: { url: string; init?: RequestInit } | null = null;
+  const cliente = new CucuruClienteHttp(configuracion, async (url, init) => {
+    request = { url, init };
+    return new Response(null, { status: 200 });
+  });
+  const cuenta = {
+    externalAccountId: '0000277800000000000483',
+    customerId: 'pm-reserva-11111111-1111-4111-8111-111111111111',
+    cvu: '0000277800000000000483', alias: null, moneda: 'ARS',
+  };
+
+  const actualizada = await cliente.asignarAlias({
+    cuenta, alias: 'magico.qa.reserva12', idempotencyKey: 'alias-local',
+  });
+
+  assert.equal(request?.init?.method, 'POST');
+  assert.equal(new URL(request?.url || '').pathname, '/app/v1/Collection/accounts/account/alias');
+  assert.deepEqual(JSON.parse(String(request?.init?.body)), {
+    account_number: cuenta.cvu,
+    alias: 'magico.qa.reserva12',
+  });
+  assert.equal(actualizada.alias, 'magico.qa.reserva12');
+});
+
+test('clasifica el estado HTTP de Cucuru sin persistir el cuerpo del proveedor', async () => {
+  const cliente = new CucuruClienteHttp(configuracion, async () => new Response('credencial inválida', { status: 401 }));
+  await assert.rejects(
+    cliente.buscarPorCustomerId('pm-reserva-11111111-1111-4111-8111-111111111111'),
+    (error: any) => error.codigo === 'CUCURU_HTTP_401'
+  );
+});
+
 test('normaliza Collections paginadas sin depender de transfer_data ni datos del pagador', async () => {
   const payload = {
     collection_id: 'collection-1',

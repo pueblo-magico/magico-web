@@ -56,6 +56,18 @@ export function customerIdCuentaCobro(reservaUid: string): string {
   return `pm-reserva-${normalizado}`;
 }
 
+export function aliasCuentaCobro(reservaId: number, prefijo: unknown): string {
+  const base = typeof prefijo === 'string' ? prefijo.trim().toLowerCase() : '';
+  if (!Number.isSafeInteger(reservaId) || reservaId <= 0 || !/^[a-z0-9.-]{3,16}$/.test(base)) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'La configuración de alias Cucuru es inválida.');
+  }
+  const alias = `${base}.reserva${reservaId}`;
+  if (alias.length > 20) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El alias Cucuru excede la longitud permitida.');
+  }
+  return alias;
+}
+
 export function validarDestinoCobro(destino: DestinoCobroProveedor): DestinoCobroProveedor {
   const externalAccountId = destino.externalAccountId?.trim();
   const customerId = destino.customerId?.trim();

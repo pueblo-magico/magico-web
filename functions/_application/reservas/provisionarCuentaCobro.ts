@@ -1,4 +1,5 @@
 import {
+  aliasCuentaCobro,
   ErrorProvisionamientoDesconocido,
   customerIdCuentaCobro,
   validarDestinoCobro,
@@ -16,6 +17,10 @@ export type ResultadoProvisionamientoCuenta =
 
 function codigoError(error: unknown): string {
   if (error instanceof ErrorProvisionamientoDesconocido) return 'RESULTADO_DESCONOCIDO';
+  const codigo = error && typeof error === 'object' && 'codigo' in error
+    ? String((error as { codigo?: unknown }).codigo || '')
+    : '';
+  if (/^[A-Z0-9_]{3,80}$/.test(codigo)) return codigo;
   return error instanceof Error && error.name ? error.name.slice(0, 80).toUpperCase() : 'ERROR_PROVEEDOR';
 }
 
@@ -31,7 +36,7 @@ function asegurarCustomerId(destino: DestinoCobroProveedor, esperado: string): D
 }
 
 export async function provisionarCuentaCobroReserva(
-  entrada: { reservaId: number; habilitada: boolean },
+  entrada: { reservaId: number; habilitada: boolean; aliasPrefix?: unknown },
   repositorio: RepositorioCuentasCobroReserva,
   proveedor: ProveedorCuentasCobro,
   ahora: () => Date = () => new Date(),
@@ -58,25 +63,36 @@ export async function provisionarCuentaCobroReserva(
 
   let intentoUid = crearUuid();
   try {
+    const aliasEsperado = aliasCuentaCobro(contexto.reservaId, entrada.aliasPrefix);
     await repositorio.registrarIntento({ cuentaId: reclamada.id, operacionUid: intentoUid, tipo: 'lookup' });
     const existente = await proveedor.buscarPorCustomerId(customerId);
+    let destino: DestinoCobroProveedor;
     if (existente) {
       await repositorio.completarIntento(intentoUid, 'succeeded');
-      const cuenta = await repositorio.marcarLista(
-        reclamada.id, operacionUid, asegurarCustomerId(existente, customerId)
-      );
-      return { estado: 'ready', cuenta };
+      destino = asegurarCustomerId(existente, customerId);
+    } else {
+      await repositorio.completarIntento(intentoUid, 'not_found');
+      intentoUid = crearUuid();
+      await repositorio.registrarIntento({ cuentaId: reclamada.id, operacionUid: intentoUid, tipo: 'create' });
+      destino = asegurarCustomerId(await proveedor.crear({
+        customerId,
+        idempotencyKey: operacionUid,
+      }), customerId);
+      await repositorio.completarIntento(intentoUid, 'succeeded');
     }
-    await repositorio.completarIntento(intentoUid, 'not_found');
 
-    intentoUid = crearUuid();
-    await repositorio.registrarIntento({ cuentaId: reclamada.id, operacionUid: intentoUid, tipo: 'create' });
-    const creada = asegurarCustomerId(await proveedor.crear({
-      customerId,
-      idempotencyKey: operacionUid,
-    }), customerId);
-    await repositorio.completarIntento(intentoUid, 'succeeded');
-    const cuenta = await repositorio.marcarLista(reclamada.id, operacionUid, creada);
+    if (!destino.alias) {
+      intentoUid = crearUuid();
+      await repositorio.registrarIntento({ cuentaId: reclamada.id, operacionUid: intentoUid, tipo: 'alias' });
+      destino = asegurarCustomerId(await proveedor.asignarAlias({
+        cuenta: destino,
+        alias: aliasEsperado,
+        idempotencyKey: operacionUid,
+      }), customerId);
+      await repositorio.completarIntento(intentoUid, 'succeeded');
+    }
+
+    const cuenta = await repositorio.marcarLista(reclamada.id, operacionUid, destino);
     return { estado: 'ready', cuenta };
   } catch (error) {
     const desconocido = error instanceof ErrorProvisionamientoDesconocido;
@@ -93,4 +109,3 @@ export async function provisionarCuentaCobroReserva(
     return { estado: resultado, cuenta };
   }
 }
-

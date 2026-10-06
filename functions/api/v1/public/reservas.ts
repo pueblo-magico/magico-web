@@ -51,6 +51,7 @@ export async function onRequestPost({ request, env }: any) {
     const provisionamiento = await provisionarCuentaCobroReserva({
       reservaId: resultado.valor.reservaId,
       habilitada: cucuruHabilitado(env.CUCURU_TRANSFER_ENABLED),
+      aliasPrefix: env.CUCURU_ALIAS_PREFIX,
     }, new D1RepositorioCuentasCobroReserva(env.DB), new CucuruClienteHttp({
       apiKey: env.CUCURU_API_KEY,
       collectorId: env.CUCURU_COLLECTOR_ID,

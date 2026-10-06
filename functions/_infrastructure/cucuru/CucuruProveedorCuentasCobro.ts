@@ -30,17 +30,28 @@ export class ErrorCucuruConfiguracion extends Error {
 }
 
 export class ErrorCucuruTransitorio extends Error {
-  constructor(message: string, options?: ErrorOptions) {
+  readonly codigo: string;
+  constructor(message: string, codigo = 'CUCURU_TRANSITORIO', options?: ErrorOptions) {
     super(message, options);
     this.name = 'ErrorCucuruTransitorio';
+    this.codigo = codigo;
   }
 }
 
 export class ErrorCucuruContrato extends Error {
-  constructor(message: string) {
+  readonly codigo: string;
+  constructor(message: string, codigo = 'CUCURU_CONTRATO_INVALIDO') {
     super(message);
     this.name = 'ErrorCucuruContrato';
+    this.codigo = codigo;
   }
+}
+
+function errorHttp(status: number): ErrorCucuruTransitorio | ErrorCucuruContrato {
+  const codigo = `CUCURU_HTTP_${status}`;
+  return status === 408 || status === 429 || status >= 500
+    ? new ErrorCucuruTransitorio(`Cucuru respondió ${status}.`, codigo)
+    : new ErrorCucuruContrato(`Cucuru respondió ${status}.`, codigo);
 }
 
 function textoObligatorio(valor: unknown, campo: string): string {
@@ -194,9 +205,12 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
     try {
       response = await this.fetchConTimeout(this.url(path, parametros), { headers: this.headers() });
     } catch (cause) {
-      throw new ErrorCucuruTransitorio('No se pudo consultar Cucuru.', { cause });
+      const codigo = cause instanceof DOMException && cause.name === 'AbortError'
+        ? 'CUCURU_TIMEOUT'
+        : 'CUCURU_NETWORK_ERROR';
+      throw new ErrorCucuruTransitorio('No se pudo consultar Cucuru.', codigo, { cause });
     }
-    if (!response.ok) throw new ErrorCucuruTransitorio(`Cucuru respondió ${response.status}.`);
+    if (!response.ok) throw errorHttp(response.status);
     try {
       const body = await response.json();
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error();
@@ -237,7 +251,7 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
       throw new ErrorProvisionamientoDesconocido();
     }
     if (response.status >= 500) throw new ErrorProvisionamientoDesconocido();
-    if (!response.ok) throw new ErrorCucuruContrato(`Cucuru rechazó el alta con HTTP ${response.status}.`);
+    if (!response.ok) throw errorHttp(response.status);
     let body: Record<string, unknown>;
     try {
       body = await response.json() as Record<string, unknown>;
@@ -245,6 +259,28 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
       throw new ErrorProvisionamientoDesconocido();
     }
     return destinoCuenta(body, entrada.customerId);
+  }
+
+  async asignarAlias(entrada: {
+    cuenta: DestinoCobroProveedor;
+    alias: string;
+    idempotencyKey: string;
+  }): Promise<DestinoCobroProveedor> {
+    let response: Response;
+    try {
+      response = await this.fetchConTimeout(this.url('/app/v1/Collection/accounts/account/alias'), {
+        method: 'POST',
+        headers: this.headers(),
+        body: JSON.stringify({ account_number: entrada.cuenta.cvu, alias: entrada.alias }),
+      });
+    } catch {
+      throw new ErrorProvisionamientoDesconocido();
+    }
+    if (response.status >= 500 || response.status === 408 || response.status === 429) {
+      throw new ErrorProvisionamientoDesconocido();
+    }
+    if (!response.ok) throw errorHttp(response.status);
+    return { ...entrada.cuenta, alias: entrada.alias };
   }
 
   async listar(entrada: {
@@ -294,6 +330,10 @@ export class CucuruContratoNoDisponible implements ProveedorCuentasCobro {
   }
 
   async crear(): Promise<never> {
+    throw new ErrorCucuruConfiguracion();
+  }
+
+  async asignarAlias(): Promise<never> {
     throw new ErrorCucuruConfiguracion();
   }
 }

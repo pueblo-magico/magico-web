@@ -62,17 +62,26 @@ export class D1RepositorioCuentasCobroReserva implements RepositorioCuentasCobro
       ) VALUES (?, 'cucuru', ?, ?, ?)
       ON CONFLICT (reserva_id, proveedor) DO UPDATE SET
         estado = CASE
-          WHEN cuentas_cobro_reserva.estado = 'disabled' AND excluded.estado = 'pending'
+          WHEN excluded.estado = 'pending' AND (
+            cuentas_cobro_reserva.estado = 'disabled' OR
+            (cuentas_cobro_reserva.estado = 'ready' AND cuentas_cobro_reserva.alias IS NULL)
+          )
             THEN 'pending'
           ELSE cuentas_cobro_reserva.estado
         END,
         ultima_operacion_uid = CASE
-          WHEN cuentas_cobro_reserva.estado = 'disabled' AND excluded.estado = 'pending'
+          WHEN excluded.estado = 'pending' AND (
+            cuentas_cobro_reserva.estado = 'disabled' OR
+            (cuentas_cobro_reserva.estado = 'ready' AND cuentas_cobro_reserva.alias IS NULL)
+          )
             THEN excluded.ultima_operacion_uid
           ELSE cuentas_cobro_reserva.ultima_operacion_uid
         END,
         updated_at = CASE
-          WHEN cuentas_cobro_reserva.estado = 'disabled' AND excluded.estado = 'pending'
+          WHEN excluded.estado = 'pending' AND (
+            cuentas_cobro_reserva.estado = 'disabled' OR
+            (cuentas_cobro_reserva.estado = 'ready' AND cuentas_cobro_reserva.alias IS NULL)
+          )
             THEN strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
           ELSE cuentas_cobro_reserva.updated_at
         END

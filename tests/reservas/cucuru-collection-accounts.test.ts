@@ -7,6 +7,7 @@ import { provisionarCuentaCobroReserva } from '../../functions/_application/rese
 import { ejecutarBackfillCucuru } from '../../functions/_application/reservas/ejecutarBackfillCucuru.ts';
 import { procesarCollectionCucuru } from '../../functions/_application/reservas/procesarCollectionCucuru.ts';
 import {
+  aliasCuentaCobro,
   ErrorProvisionamientoDesconocido,
   cucuruHabilitado,
   customerIdCuentaCobro,
@@ -90,6 +91,8 @@ test('la feature flag es explícita y la referencia no contiene PII', () => {
     'pm-reserva-11111111-1111-4111-8111-111111111111'
   );
   assert.throws(() => customerIdCuentaCobro('RES-123'), /referencia opaca/);
+  assert.equal(aliasCuentaCobro(12, 'magico.qa'), 'magico.qa.reserva12');
+  assert.throws(() => aliasCuentaCobro(12, 'prefijo con espacios'), /configuración de alias/);
 });
 
 test('la migración 0017 actualiza un preview con 0016 aplicado sin perder observaciones', () => {
@@ -118,6 +121,37 @@ test('la migración 0017 actualiza un preview con 0016 aplicado sin perder obser
   sqlite.close();
 });
 
+test('la migración 0018 conserva intentos y habilita intentos de alias', () => {
+  const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec('PRAGMA foreign_keys = ON');
+  for (const nombre of readdirSync(new URL('../../migrations', import.meta.url))
+    .filter(nombre => /^\d{4}_.+\.sql$/.test(nombre) && nombre <= '0017_cucuru_reconciliation.sql')
+    .sort()) {
+    sqlite.exec(readFileSync(new URL(`../../migrations/${nombre}`, import.meta.url), 'utf8'));
+  }
+  const reservaId = crearReserva(sqlite, '99999999-9999-4999-8999-999999999999');
+  const cuentaId = Number(sqlite.prepare(`
+    INSERT INTO cuentas_cobro_reserva (
+      reserva_id, proveedor, customer_id, estado, ultima_operacion_uid
+    ) VALUES (?, 'cucuru', 'pm-reserva-99999999-9999-4999-8999-999999999999',
+      'failed', 'op-legacy') RETURNING id
+  `).get(reservaId)?.id);
+  sqlite.prepare(`
+    INSERT INTO cuenta_cobro_intentos (cuenta_cobro_id, operacion_uid, tipo, resultado)
+    VALUES (?, 'lookup-legacy', 'lookup', 'failed')
+  `).run(cuentaId);
+
+  sqlite.exec(readFileSync(new URL('../../migrations/0018_cucuru_account_aliases.sql', import.meta.url), 'utf8'));
+
+  assert.equal(sqlite.prepare("SELECT tipo FROM cuenta_cobro_intentos WHERE operacion_uid = 'lookup-legacy'").get()?.tipo, 'lookup');
+  assert.doesNotThrow(() => sqlite.prepare(`
+    INSERT INTO cuenta_cobro_intentos (cuenta_cobro_id, operacion_uid, tipo, resultado)
+    VALUES (?, 'alias-nuevo', 'alias', 'started')
+  `).run(cuentaId));
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM schema_migrations WHERE version = '0018'").get()?.n, 1);
+  sqlite.close();
+});
+
 test('provisiona fuera de la reserva, busca antes de crear y no duplica la cuenta', async () => {
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite, '11111111-1111-4111-8111-111111111111');
@@ -133,6 +167,7 @@ test('provisiona fuera de la reserva, busca antes de crear y no duplica la cuent
         cvu: '0000003100000000000001', alias: 'pueblo.reserva.1', moneda: 'ARS',
       };
     },
+    async asignarAlias() { throw new Error('NO_DEBE_ASIGNAR'); },
   };
   const crearUuid = uuids(
     '10000000-0000-4000-8000-000000000001',
@@ -142,7 +177,7 @@ test('provisiona fuera de la reserva, busca antes de crear y no duplica la cuent
   );
 
   const primera = await provisionarCuentaCobroReserva(
-    { reservaId, habilitada: true }, repositorio, proveedor,
+    { reservaId, habilitada: true, aliasPrefix: 'magico.qa' }, repositorio, proveedor,
     () => new Date('2026-10-06T12:00:00.000Z'), crearUuid
   );
   assert.equal(primera.estado, 'ready');
@@ -152,7 +187,7 @@ test('provisiona fuera de la reserva, busca antes de crear y no duplica la cuent
   assert.equal(creaciones, 1);
 
   const repetida = await provisionarCuentaCobroReserva(
-    { reservaId, habilitada: true }, repositorio, proveedor,
+    { reservaId, habilitada: true, aliasPrefix: 'magico.qa' }, repositorio, proveedor,
     () => new Date('2026-10-06T12:01:00.000Z'), crearUuid
   );
   assert.equal(repetida.estado, 'ready');
@@ -172,6 +207,7 @@ test('desactivada no llama al proveedor y un timeout queda recuperable sin crear
   const proveedor = {
     async buscarPorCustomerId() { llamadas++; throw new ErrorProvisionamientoDesconocido(); },
     async crear() { llamadas++; throw new Error('NO_DEBE_CREAR'); },
+    async asignarAlias() { llamadas++; throw new Error('NO_DEBE_ASIGNAR'); },
   };
   const deshabilitada = await provisionarCuentaCobroReserva(
     { reservaId: deshabilitadaId, habilitada: false }, repositorio, proveedor,
@@ -187,19 +223,60 @@ test('desactivada no llama al proveedor y un timeout queda recuperable sin crear
     '30000000-0000-4000-8000-000000000003'
   );
   const incierta = await provisionarCuentaCobroReserva(
-    { reservaId: inciertaId, habilitada: true }, repositorio, proveedor,
+    { reservaId: inciertaId, habilitada: true, aliasPrefix: 'magico.qa' }, repositorio, proveedor,
     () => new Date('2099-10-01T12:00:00.000Z'), crearUuid
   );
   assert.equal(incierta.estado, 'unknown_outcome');
   assert.equal(llamadas, 1);
 
   const inmediata = await provisionarCuentaCobroReserva(
-    { reservaId: inciertaId, habilitada: true }, repositorio, proveedor,
+    { reservaId: inciertaId, habilitada: true, aliasPrefix: 'magico.qa' }, repositorio, proveedor,
     () => new Date('2099-10-01T12:01:00.000Z'), crearUuid
   );
   assert.equal(inmediata.estado, 'unknown_outcome');
   assert.equal(llamadas, 1);
   assert.equal(sqlite.prepare("SELECT resultado FROM cuenta_cobro_intentos WHERE tipo = 'lookup'").get()?.resultado, 'unknown_outcome');
+  sqlite.close();
+});
+
+test('recupera una cuenta existente sin alias y sólo queda lista después de asignarlo', async () => {
+  const sqlite = baseCompleta();
+  const reservaId = crearReserva(sqlite, '44444444-4444-4444-8444-444444444444');
+  const repositorio = new D1RepositorioCuentasCobroReserva(d1(sqlite));
+  let aliasSolicitado: string | null = null;
+  const proveedor = {
+    async buscarPorCustomerId(customerId: string) {
+      return {
+        externalAccountId: '0000003100000000000004', customerId,
+        cvu: '0000003100000000000004', alias: null, moneda: 'ARS',
+      };
+    },
+    async crear() { throw new Error('NO_DEBE_CREAR'); },
+    async asignarAlias({ cuenta, alias }: { cuenta: any; alias: string }) {
+      aliasSolicitado = alias;
+      return { ...cuenta, alias };
+    },
+  };
+
+  const resultado = await provisionarCuentaCobroReserva(
+    { reservaId, habilitada: true, aliasPrefix: 'magico.qa' }, repositorio, proveedor,
+    () => new Date('2026-10-06T20:30:00.000Z'), uuids(
+      '40000000-0000-4000-8000-000000000001',
+      '40000000-0000-4000-8000-000000000002',
+      '40000000-0000-4000-8000-000000000003',
+      '40000000-0000-4000-8000-000000000004'
+    )
+  );
+
+  assert.equal(resultado.estado, 'ready');
+  if (resultado.estado !== 'ready') return;
+  assert.equal(aliasSolicitado, `magico.qa.reserva${reservaId}`);
+  assert.equal(resultado.cuenta.alias, `magico.qa.reserva${reservaId}`);
+  assert.deepEqual(
+    sqlite.prepare('SELECT tipo, resultado FROM cuenta_cobro_intentos ORDER BY id').all()
+      .map(row => ({ ...row })),
+    [{ tipo: 'lookup', resultado: 'succeeded' }, { tipo: 'alias', resultado: 'succeeded' }]
+  );
   sqlite.close();
 });
 
