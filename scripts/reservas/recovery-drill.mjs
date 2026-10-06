@@ -51,6 +51,7 @@ assert.deepEqual(
   db.prepare('SELECT version FROM schema_migrations ORDER BY version').all().map(row => row.version),
   migraciones.map(nombre => nombre.slice(0, 4))
 );
+db.exec(readFileSync(join(raiz, 'scripts', 'reservas', 'verificar-tarifas.sql'), 'utf8'));
 db.close();
 if (carpeta) rmSync(carpeta, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 
@@ -60,4 +61,5 @@ console.log(JSON.stringify({
   migrations: migraciones.length,
   restored_record: true,
   foreign_keys_valid: true,
+  pricing_rules_valid: true,
 }));

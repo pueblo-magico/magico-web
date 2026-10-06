@@ -1,4 +1,4 @@
-CREATE TEMP TABLE __wreserv_pricing_guard (ok INTEGER NOT NULL CHECK (ok = 1));
+CREATE TABLE __wreserv_pricing_guard (ok INTEGER NOT NULL CHECK (ok = 1));
 
 INSERT INTO __wreserv_pricing_guard (ok)
 SELECT CASE WHEN
