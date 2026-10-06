@@ -7,6 +7,7 @@ import type {
   RepositorioCotizaciones,
   RepositorioDisponibilidad,
   RepositorioTarifas,
+  RepositorioTarifasAlimentacion,
   RepositorioReservasManyChat,
   ReservaPendienteManyChat,
 } from '../../functions/_application/reservas/ports.ts';
@@ -41,6 +42,12 @@ const plan: ConfiguracionTarifa = {
   reglasSena: [{ subtotalDesdeCentavos: 0, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 3000 }],
 };
 const tarifas: RepositorioTarifas = { async obtenerPublicada() { return plan; } };
+const tarifasAlimentacion: RepositorioTarifasAlimentacion = {
+  async obtenerPublicada(regimen) {
+    return { codigo: regimen, version: 1, moneda: 'ARS', precioComidaCentavos: 2_000_000,
+      comidasAdicionalesPorPersonaNoche: regimen === 'pension_completa' ? 2 : 0 };
+  },
+};
 const cotizaciones: RepositorioCotizaciones = {
   async guardar() { return { id: 70, codigo: 'COT-70', expiresAt: '2026-10-01T00:15:00.000Z' }; },
 };
@@ -62,6 +69,7 @@ test('inicia una reserva ManyChat y persiste la preferencia de pago', async () =
     solicitud,
     disponibilidad(3),
     tarifas,
+    tarifasAlimentacion,
     cotizaciones,
     reservas,
     checkout
@@ -90,11 +98,14 @@ test('devuelve validación u ocupado sin crear una reserva', async () => {
     { ...solicitud, fechaSalida: solicitud.fechaEntrada },
     disponibilidad(3),
     tarifas,
+    tarifasAlimentacion,
     cotizaciones,
     reservas,
     checkout
   );
-  const ocupada = await iniciarReservaManyChat(solicitud, disponibilidad(null), tarifas, cotizaciones, reservas, checkout);
+  const ocupada = await iniciarReservaManyChat(
+    solicitud, disponibilidad(null), tarifas, tarifasAlimentacion, cotizaciones, reservas, checkout
+  );
 
   assert.equal(invalida.estado, 'error_validacion');
   assert.deepEqual(ocupada, { estado: 'ocupado' });
@@ -106,6 +117,7 @@ test('distingue fallas de creación y de pago conservando la reserva pendiente',
     solicitud,
     disponibilidad(3),
     tarifas,
+    tarifasAlimentacion,
     cotizaciones,
     {
       async crearPendiente() { return { id: undefined }; },
@@ -117,6 +129,7 @@ test('distingue fallas de creación y de pago conservando la reserva pendiente',
     solicitud,
     disponibilidad(3),
     tarifas,
+    tarifasAlimentacion,
     cotizaciones,
     {
       async crearPendiente() { return { id: 55 }; },
@@ -134,6 +147,7 @@ test('también trata como error de pago una preferencia que no puede persistirse
     solicitud,
     disponibilidad(3),
     tarifas,
+    tarifasAlimentacion,
     cotizaciones,
     {
       async crearPendiente() { return { id: 56 }; },

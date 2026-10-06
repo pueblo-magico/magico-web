@@ -9,6 +9,7 @@ import { mensajePrivacidad } from '../_domain/reservas/pricing.ts';
 import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { D1RepositorioTarifas } from '../_infrastructure/d1/D1RepositorioTarifas.ts';
 import { D1RepositorioCotizaciones } from '../_infrastructure/d1/D1RepositorioCotizaciones.ts';
+import { D1RepositorioTarifasAlimentacion } from '../_infrastructure/d1/D1RepositorioTarifasAlimentacion.ts';
 
 export type { Cotizacion, Disponibilidad, TipoAlojamiento } from '../_domain/reservas/models.ts';
 export { mensajePrivacidad, nochesEntre };
@@ -37,6 +38,7 @@ export async function cotizarEstadia(
     solicitud,
     repositorio || new D1RepositorioDisponibilidad(db),
     new D1RepositorioTarifas(db),
+    new D1RepositorioTarifasAlimentacion(db),
     new D1RepositorioCotizaciones(db)
   );
 }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { cotizarEstadia } from '../../functions/_application/reservas/cotizarEstadia.ts';
-import type { RepositorioCotizaciones, RepositorioDisponibilidad, RepositorioTarifas } from '../../functions/_application/reservas/ports.ts';
+import type { RepositorioCotizaciones, RepositorioDisponibilidad, RepositorioTarifas, RepositorioTarifasAlimentacion } from '../../functions/_application/reservas/ports.ts';
 import { nochesEntre } from '../../functions/_domain/reservas/dateRange.ts';
 import { mensajePrivacidad } from '../../functions/_domain/reservas/pricing.ts';
 import type { ConfiguracionTarifa } from '../../functions/_domain/reservas/ratePlans.ts';
@@ -34,6 +34,14 @@ const configuracion: ConfiguracionTarifa = {
   ],
 };
 const tarifas: RepositorioTarifas = { async obtenerPublicada() { return configuracion; } };
+const tarifasAlimentacion: RepositorioTarifasAlimentacion = {
+  async obtenerPublicada(regimen) {
+    return {
+      codigo: regimen, version: 1, moneda: 'ARS', precioComidaCentavos: 2_000_000,
+      comidasAdicionalesPorPersonaNoche: regimen === 'pension_completa' ? 2 : 0,
+    };
+  },
+};
 const cotizaciones: RepositorioCotizaciones = {
   async guardar() { return { id: 10, codigo: 'COT-10', expiresAt: '2026-10-01T00:15:00.000Z' }; },
 };
@@ -56,6 +64,7 @@ test('cotiza a través de un puerto sin depender de D1 o Workers', async () => {
     { tipo: 'refugio', personas: 2, fechaEntrada: '2026-10-10', fechaSalida: '2026-10-12' },
     disponible,
     tarifas,
+    tarifasAlimentacion,
     cotizaciones
   );
 
@@ -79,6 +88,7 @@ test('rechaza fechas inválidas antes de consultar disponibilidad', async () => 
     { tipo: 'domo', personas: 2, fechaEntrada: '2026-10-12', fechaSalida: '2026-10-10' },
     noDebeConsultarse,
     tarifas,
+    tarifasAlimentacion,
     cotizaciones
   );
 
@@ -94,6 +104,7 @@ test('rechaza fechas inválidas antes de consultar disponibilidad', async () => 
     { tipo: 'domo', personas: 2, fechaEntrada: '2027-02-30', fechaSalida: '2027-03-03' },
     noDebeConsultarse,
     tarifas,
+    tarifasAlimentacion,
     cotizaciones
   );
   assert.deepEqual(fechaNormalizable, resultado);
@@ -110,6 +121,7 @@ test('rechaza ocupación inválida antes de consultar disponibilidad', async () 
     { tipo: 'domo', personas: 8, fechaEntrada: '2026-10-10', fechaSalida: '2026-10-12' },
     noDebeConsultarse,
     tarifas,
+    tarifasAlimentacion,
     cotizaciones
   );
 

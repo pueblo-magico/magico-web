@@ -13,6 +13,7 @@ import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1Repositorio
 import { D1RepositorioReservasManyChat } from '../_infrastructure/d1/D1RepositorioReservasManyChat.ts';
 import { D1RepositorioTarifas } from '../_infrastructure/d1/D1RepositorioTarifas.ts';
 import { D1RepositorioCotizaciones } from '../_infrastructure/d1/D1RepositorioCotizaciones.ts';
+import { D1RepositorioTarifasAlimentacion } from '../_infrastructure/d1/D1RepositorioTarifasAlimentacion.ts';
 import { MercadoPagoCheckoutReservas } from '../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonReserva as json } from '../_interfaces/http/reservasHttp.ts';
 import { obtenerOrigenSolicitudManyChat } from '../_interfaces/http/manychatAuth.ts';
@@ -45,7 +46,10 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     return respuestaJsonInvalido(error);
   }
 
-  const { fecha_entrada, fecha_salida, cantidad_personas, alojamiento_seleccionado, user_id } = body || {};
+  const {
+    fecha_entrada, fecha_salida, cantidad_personas, alojamiento_seleccionado, user_id,
+    regimen_alimentacion,
+  } = body || {};
 
   if (!fecha_entrada || !fecha_salida || !cantidad_personas || !alojamiento_seleccionado || !user_id) {
     return json(
@@ -60,16 +64,22 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
   if (!Number.isInteger(personas) || personas < 1) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400);
   }
+  if (regimen_alimentacion !== undefined &&
+      !['desayuno_incluido', 'pension_completa'].includes(regimen_alimentacion)) {
+    return json({ error: "regimen_alimentacion debe ser 'desayuno_incluido' o 'pension_completa'." }, 400);
+  }
 
   const resultado = await iniciarReservaManyChat({
     tipo: alojamiento_seleccionado,
     personas,
     fechaEntrada: fecha_entrada,
     fechaSalida: fecha_salida,
+    regimenAlimentacion: regimen_alimentacion,
     userId: String(user_id),
   },
   new D1RepositorioDisponibilidad(env.DB),
   new D1RepositorioTarifas(env.DB),
+  new D1RepositorioTarifasAlimentacion(env.DB),
   new D1RepositorioCotizaciones(env.DB),
   new D1RepositorioReservasManyChat(env.DB),
   new MercadoPagoCheckoutReservas(env.MP_ACCESS_TOKEN, obtenerOrigenSolicitudManyChat(request.url)));
