@@ -156,3 +156,8 @@ jobs:
 
           admin_status=$(curl --silent --show-error --output /tmp/admin-me.json --write-out '%{http_code}' "$PREVIEW_URL/api/admin/me")
           test "$admin_status" = "401" || { cat /tmp/admin-me.json; echo 'Preview SESSION_SECRET is missing or invalid.'; exit 1; }
+
+          correlation_id="smoke-wreserv-10-${{ github.event.pull_request.number }}"
+          reservations_status=$(curl --silent --show-error --dump-header /tmp/admin-reservas.headers --output /tmp/admin-reservas.json --write-out '%{http_code}' --header "X-Request-ID: $correlation_id" "$PREVIEW_URL/api/admin/reservas")
+          test "$reservations_status" = "401" || { cat /tmp/admin-reservas.json; exit 1; }
+          grep --ignore-case --quiet "^x-request-id: $correlation_id" /tmp/admin-reservas.headers || { cat /tmp/admin-reservas.headers; echo 'API middleware did not preserve X-Request-ID.'; exit 1; }

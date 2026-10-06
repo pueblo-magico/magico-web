@@ -6,6 +6,11 @@ import {
   obtenerRequestId,
   type LoggerObservabilidad,
 } from '../../functions/_interfaces/http/observability.ts';
+import {
+  handlerYaInstrumentado,
+  onRequest as middlewareApi,
+  operacionApi,
+} from '../../functions/api/_middleware.ts';
 
 function loggerCapturado() {
   const eventos: Record<string, unknown>[] = [];
@@ -83,4 +88,48 @@ test('clasifica rechazos y errores HTTP como señales operativas', async () => {
     assert.equal(eventos[0].level, level);
     assert.equal(eventos[0].status, status);
   }
+});
+
+test('el middleware correlaciona los endpoints API que todavía no tienen instrumentación propia', async () => {
+  const { eventos, logger } = loggerCapturado();
+  const request = new Request('https://test/api/admin/reservas?cliente_email=no-registrar@example.test', {
+    headers: { 'X-Request-ID': 'middleware-admin-1' },
+  });
+  const response = await middlewareApi({
+    request,
+    env: { OBSERVABILITY_LOGGER: logger },
+    next: async () => new Response('{"ok":true}', { status: 200 }),
+  });
+
+  assert.equal(response.headers.get('X-Request-ID'), 'middleware-admin-1');
+  assert.equal(eventos.length, 1);
+  assert.equal(eventos[0].operation, 'admin.reservations.read');
+  assert.doesNotMatch(JSON.stringify(eventos), /cliente_email|no-registrar/);
+});
+
+test('el middleware evita logs duplicados y cubre métodos no instrumentados', async () => {
+  const { eventos, logger } = loggerCapturado();
+  const instrumentada = new Request('https://test/api/disponibilidad', { method: 'GET' });
+  assert.equal(handlerYaInstrumentado(instrumentada), true);
+  const directa = await middlewareApi({
+    request: instrumentada,
+    env: { OBSERVABILITY_LOGGER: logger },
+    next: async () => new Response(null, { status: 204, headers: { 'X-Request-ID': 'desde-handler' } }),
+  });
+  assert.equal(directa.headers.get('X-Request-ID'), 'desde-handler');
+  assert.equal(eventos.length, 0);
+
+  const options = new Request('https://test/api/disponibilidad', { method: 'OPTIONS' });
+  assert.equal(handlerYaInstrumentado(options), false);
+  const preflight = await middlewareApi({
+    request: options,
+    env: { OBSERVABILITY_LOGGER: logger },
+    next: async () => new Response(null, { status: 204 }),
+  });
+  assert.ok(preflight.headers.get('X-Request-ID'));
+  assert.equal(eventos[0].operation, 'public.availability');
+});
+
+test('el middleware usa una operación neutra para rutas desconocidas', () => {
+  assert.equal(operacionApi(new Request('https://test/api/privado/huesped@example.test')), 'api.unknown');
 });
