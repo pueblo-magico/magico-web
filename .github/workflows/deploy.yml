@@ -1,12 +1,21 @@
 name: Deploy to Cloudflare Pages
 
 on:
-  push:
-    branches:
-      - main
+  # Production releases stay manual until the reservation cutover is approved.
+  # Referencing the protected production environment keeps its configured
+  # reviewers and deployment rules in the release path.
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: Confirmar despliegue manual a producción
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   deploy:
+    if: ${{ inputs.confirm_production }}
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
