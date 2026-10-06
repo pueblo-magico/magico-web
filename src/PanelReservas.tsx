@@ -22,7 +22,7 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio';
-type VistaActiva = 'operativa' | 'metricas' | 'historial' | 'consultas' | 'usuarios' | 'actividad';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'usuarios' | 'actividad';
 type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada';
 
 type Alojamiento = {
@@ -97,6 +97,32 @@ type RegistroActividad = {
   motivo: string | null;
   metadata_json: string | null;
   created_at: string;
+};
+
+type RegistroOcupacionOperativa = {
+  id: number;
+  codigo: string;
+  clase: 'bloqueo' | 'estadia_no_comercial';
+  tipo: string;
+  estado: 'activo' | 'cancelado' | 'activa' | 'cancelada';
+  espacioId: number | null;
+  unidadInventarioId: number | null;
+  fechaDesde: string;
+  fechaHasta: string;
+  detalle: string;
+  cantidadPersonas: number;
+  creadoPor: string;
+  createdAt: string;
+};
+
+type EspacioOcupacion = {
+  id: number; codigo: string; nombre: string; tipo: string; parentId: number | null;
+  capacidadOperativaMaxima: number; estado: string;
+};
+
+type UnidadOcupacion = {
+  id: number; espacioId: number; codigo: string; nombre: string; tipo: string;
+  capacidad: number; estado: string;
 };
 
 const ROL_LABEL: Record<Rol, string> = {
@@ -1351,11 +1377,203 @@ const ACCION_LABEL: Record<string, string> = {
   aprobar_excepcion_capacidad: 'Aprobó una excepción de capacidad',
   rechazar_excepcion_capacidad: 'Rechazó una excepción de capacidad',
   revocar_excepcion_capacidad: 'Revocó una excepción de capacidad',
+  crear_bloqueo_inventario: 'Creó un bloqueo operativo',
+  cancelar_bloqueo_inventario: 'Canceló un bloqueo operativo',
+  crear_estadia_no_comercial: 'Registró una estadía no comercial',
+  cancelar_estadia_no_comercial: 'Canceló una estadía no comercial',
 };
 
 const fmtFechaHora = (iso: string) => {
   const d = new Date(iso.replace(' ', 'T') + (iso.endsWith('Z') ? '' : 'Z'));
   return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+};
+
+const TIPO_OCUPACION_LABEL: Record<string, string> = {
+  mantenimiento: 'Mantenimiento',
+  cierre: 'Cierre operativo',
+  uso_interno: 'Uso interno',
+  bloqueo_propietario: 'Bloqueo del propietario',
+  staff: 'Staff',
+  voluntario: 'Voluntariado',
+  residente: 'Residencia',
+};
+
+const SeccionOcupacionOperativa: React.FC = () => {
+  const hoy = toISODate(new Date());
+  const [registros, setRegistros] = useState<RegistroOcupacionOperativa[]>([]);
+  const [espacios, setEspacios] = useState<EspacioOcupacion[]>([]);
+  const [unidades, setUnidades] = useState<UnidadOcupacion[]>([]);
+  const [clase, setClase] = useState<'bloqueo' | 'estadia_no_comercial'>('bloqueo');
+  const [objetivo, setObjetivo] = useState('');
+  const [fechaDesde, setFechaDesde] = useState(hoy);
+  const [fechaHasta, setFechaHasta] = useState(addDays(hoy, 1));
+  const [tipo, setTipo] = useState('mantenimiento');
+  const [detalle, setDetalle] = useState('');
+  const [cantidadPersonas, setCantidadPersonas] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
+
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const res = await adminFetch('/api/admin/ocupacion-operativa');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setRegistros(data.registros || []);
+      setEspacios(data.espacios || []);
+      setUnidades(data.unidades || []);
+      if (!objetivo && data.espacios?.length) setObjetivo(`espacio:${data.espacios[0].id}`);
+    } catch (e: any) {
+      setError(e.message || 'No se pudo cargar la ocupación operativa.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cambiarClase = (nuevaClase: 'bloqueo' | 'estadia_no_comercial') => {
+    setClase(nuevaClase);
+    setTipo(nuevaClase === 'bloqueo' ? 'mantenimiento' : 'staff');
+    setDetalle('');
+  };
+
+  const guardar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    setError('');
+    const [objetivoTipo, objetivoId] = objetivo.split(':');
+    const comun = {
+      espacio_id: objetivoTipo === 'espacio' ? Number(objetivoId) : null,
+      unidad_inventario_id: objetivoTipo === 'unidad' ? Number(objetivoId) : null,
+      tipo,
+    };
+    const body = clase === 'bloqueo'
+      ? { accion: 'crear_bloqueo', ...comun, fecha_desde: fechaDesde, fecha_hasta: fechaHasta, motivo: detalle }
+      : {
+          accion: 'crear_estadia_no_comercial', ...comun, fecha_checkin: fechaDesde,
+          fecha_checkout: fechaHasta, referencia_operativa: detalle, cantidad_personas: cantidadPersonas,
+        };
+    try {
+      const res = await adminFetch('/api/admin/ocupacion-operativa', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setDetalle('');
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo registrar la ocupación.');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const cancelar = async (registro: RegistroOcupacionOperativa) => {
+    if (!window.confirm(`¿Cancelar ${registro.codigo}? El inventario volverá a quedar disponible.`)) return;
+    setError('');
+    try {
+      const res = await adminFetch('/api/admin/ocupacion-operativa', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: registro.clase === 'bloqueo' ? 'cancelar_bloqueo' : 'cancelar_estadia_no_comercial',
+          id: registro.id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo cancelar el registro.');
+    }
+  };
+
+  const nombreObjetivo = (registro: RegistroOcupacionOperativa) => {
+    if (registro.espacioId) return espacios.find(item => item.id === registro.espacioId)?.nombre || `Espacio #${registro.espacioId}`;
+    const unidad = unidades.find(item => item.id === registro.unidadInventarioId);
+    const espacio = espacios.find(item => item.id === unidad?.espacioId);
+    return unidad ? `${espacio?.nombre || 'Espacio'} · ${unidad.nombre}` : `Unidad #${registro.unidadInventarioId}`;
+  };
+
+  return (
+    <div className="grid lg:grid-cols-[minmax(0,360px)_1fr] gap-5 items-start">
+      <form onSubmit={guardar} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 space-y-4">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Nueva ocupación</h2>
+          <p className="text-xs text-gray-500 mt-1">Bloqueá inventario o registrá una estadía sin ingreso comercial.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Clase de ocupación">
+          {([['bloqueo', 'Bloqueo'], ['estadia_no_comercial', 'Estadía interna']] as const).map(([value, label]) => (
+            <button key={value} type="button" onClick={() => cambiarClase(value)} className={`text-sm font-semibold rounded-lg px-3 py-2 border ${FOCUS_RING} ${clase === value ? 'bg-brand text-white border-brand' : 'border-gray-300 text-gray-600'}`}>{label}</button>
+          ))}
+        </div>
+        <label className="block text-xs font-semibold text-gray-600">Inventario
+          <select required className={`${INPUT_CLS} mt-1`} value={objetivo} onChange={e => setObjetivo(e.target.value)}>
+            <option value="" disabled>Elegir espacio o unidad</option>
+            <optgroup label="Espacios">
+              {espacios.map(item => <option key={`e-${item.id}`} value={`espacio:${item.id}`}>{item.nombre} · capacidad {item.capacidadOperativaMaxima}</option>)}
+            </optgroup>
+            <optgroup label="Unidades">
+              {unidades.map(item => <option key={`u-${item.id}`} value={`unidad:${item.id}`}>{espacios.find(e => e.id === item.espacioId)?.nombre} · {item.nombre}</option>)}
+            </optgroup>
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-xs font-semibold text-gray-600">Desde (inclusive)
+            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+          </label>
+          <label className="block text-xs font-semibold text-gray-600">Hasta (checkout)
+            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+          </label>
+        </div>
+        <label className="block text-xs font-semibold text-gray-600">Tipo
+          <select className={`${INPUT_CLS} mt-1`} value={tipo} onChange={e => setTipo(e.target.value)}>
+            {(clase === 'bloqueo'
+              ? ['mantenimiento', 'cierre', 'uso_interno', 'bloqueo_propietario']
+              : ['staff', 'voluntario', 'residente']).map(value => <option key={value} value={value}>{TIPO_OCUPACION_LABEL[value]}</option>)}
+          </select>
+        </label>
+        {clase === 'estadia_no_comercial' && (
+          <label className="block text-xs font-semibold text-gray-600">Personas
+            <input required min={1} type="number" className={`${INPUT_CLS} mt-1`} value={cantidadPersonas} onChange={e => setCantidadPersonas(Number(e.target.value))} />
+          </label>
+        )}
+        <label className="block text-xs font-semibold text-gray-600">{clase === 'bloqueo' ? 'Motivo' : 'Referencia operativa'}
+          <textarea required minLength={3} rows={3} className={`${INPUT_CLS} mt-1`} value={detalle} onChange={e => setDetalle(e.target.value)} placeholder={clase === 'bloqueo' ? 'Ej. reparación de techo' : 'Ej. voluntariado de huerta'} />
+        </label>
+        <button disabled={guardando || cargando} className={`w-full text-sm font-semibold rounded-lg px-4 py-2.5 text-white bg-brand disabled:opacity-60 ${FOCUS_RING}`}>{guardando ? 'Guardando…' : 'Registrar ocupación'}</button>
+      </form>
+
+      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-4 sm:px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+          <div><h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Bloqueos y estadías internas</h2><p className="text-xs text-gray-400 mt-1">El historial cancelado se conserva para auditoría.</p></div>
+          <button onClick={cargar} disabled={cargando} aria-label="Actualizar ocupación" className={`p-2 rounded-lg border border-gray-300 disabled:opacity-60 ${FOCUS_RING}`}><RefreshCw size={15} className={cargando ? 'animate-spin' : ''} /></button>
+        </div>
+        {error && <p className="m-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">{error}</p>}
+        <ul className="divide-y divide-gray-100">
+          {registros.map(registro => {
+            const activo = registro.estado === 'activo' || registro.estado === 'activa';
+            return (
+              <li key={`${registro.clase}-${registro.id}`} className={`px-4 sm:px-5 py-4 ${activo ? '' : 'opacity-60'}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap"><span className="font-semibold text-sm text-gray-800">{nombreObjetivo(registro)}</span><span className={`text-[10px] uppercase font-bold tracking-wide rounded-full px-2 py-0.5 ${activo ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500'}`}>{activo ? 'Activo' : 'Cancelado'}</span></div>
+                    <p className="text-xs text-gray-600 mt-1">{TIPO_OCUPACION_LABEL[registro.tipo] || registro.tipo} · {fmtDateLong(registro.fechaDesde)} → {fmtDateLong(registro.fechaHasta)}{registro.cantidadPersonas > 0 ? ` · ${registro.cantidadPersonas} personas` : ''}</p>
+                    <p className="text-xs text-gray-500 mt-1">{registro.detalle}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">{registro.codigo} · {registro.creadoPor} · {fmtFechaHora(registro.createdAt)}</p>
+                  </div>
+                  {activo && <button type="button" onClick={() => cancelar(registro)} className={`text-xs font-semibold text-red-700 border border-red-200 rounded-lg px-2.5 py-1.5 hover:bg-red-50 ${FOCUS_RING}`}>Cancelar</button>}
+                </div>
+              </li>
+            );
+          })}
+          {!cargando && registros.length === 0 && <li className="px-5 py-10 text-center text-sm text-gray-400">No hay ocupaciones operativas registradas.</li>}
+        </ul>
+      </section>
+    </div>
+  );
 };
 
 const SeccionActividad: React.FC = () => {
@@ -1597,6 +1815,7 @@ const PanelReservas: React.FC = () => {
 
   const TABS: { key: VistaActiva; label: string }[] = [
     { key: 'operativa', label: 'Operativa' },
+    ...(puedeEditar ? [{ key: 'ocupacion' as VistaActiva, label: 'Bloqueos' }] : []),
     { key: 'metricas', label: 'Métricas' },
     { key: 'historial', label: 'Historial' },
     { key: 'consultas', label: 'Consultas' },
@@ -1814,6 +2033,8 @@ const PanelReservas: React.FC = () => {
             </div>
           </>
         )}
+
+        {vistaActiva === 'ocupacion' && puedeEditar && <SeccionOcupacionOperativa />}
 
         {vistaActiva === 'metricas' && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

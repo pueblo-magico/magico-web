@@ -20,6 +20,7 @@ const OPERACIONES: Record<string, string> = {
   '/api/admin/logout': 'admin.session.delete',
   '/api/admin/me': 'admin.session.read',
   '/api/admin/metricas': 'admin.metrics.read',
+  '/api/admin/ocupacion-operativa': 'admin.operational_occupancy.manage',
   '/api/admin/reservas': 'admin.reservations.read',
   '/api/admin/sync-airbnb': 'admin.calendar.sync',
   '/api/admin/tarifas': 'admin.rate_plans.manage',

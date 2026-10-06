@@ -7,6 +7,7 @@ export type PermisoAdmin =
   | 'reservas.asignar'
   | 'reservas.pagos.gestionar'
   | 'reservas.tarifas.gestionar'
+  | 'reservas.bloqueos.gestionar'
   | 'reservas.capacidad.solicitar'
   | 'reservas.capacidad.autorizar'
   | 'integraciones.airbnb.sincronizar'
@@ -19,7 +20,7 @@ export type PermisoAdmin =
 
 const TODOS_LOS_PERMISOS: readonly PermisoAdmin[] = [
   'reservas.leer', 'reservas.crear', 'reservas.editar', 'reservas.cancelar',
-  'reservas.asignar', 'reservas.pagos.gestionar', 'reservas.tarifas.gestionar',
+  'reservas.asignar', 'reservas.pagos.gestionar', 'reservas.tarifas.gestionar', 'reservas.bloqueos.gestionar',
   'reservas.capacidad.solicitar', 'reservas.capacidad.autorizar',
   'integraciones.airbnb.sincronizar', 'consultas.leer', 'metricas.leer',
   'usuarios.gestionar', 'auditoria.leer',
@@ -30,7 +31,7 @@ const PERMISOS_POR_ROL: Record<RolAdmin, readonly PermisoAdmin[]> = {
   super_admin: TODOS_LOS_PERMISOS,
   editor: [
     'reservas.leer', 'reservas.crear', 'reservas.editar', 'reservas.cancelar',
-    'reservas.asignar', 'reservas.capacidad.solicitar',
+    'reservas.asignar', 'reservas.capacidad.solicitar', 'reservas.bloqueos.gestionar',
     'integraciones.airbnb.sincronizar', 'consultas.leer', 'metricas.leer',
   ],
   viewer: ['reservas.leer', 'consultas.leer', 'metricas.leer'],
