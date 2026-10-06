@@ -22,6 +22,7 @@ const OPERACIONES: Record<string, string> = {
   '/api/admin/metricas': 'admin.metrics.read',
   '/api/admin/reservas': 'admin.reservations.read',
   '/api/admin/sync-airbnb': 'admin.calendar.sync',
+  '/api/admin/tarifas': 'admin.rate_plans.manage',
   '/api/admin/usuarios': 'admin.users.manage',
 };
 

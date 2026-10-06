@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { cotizarEstadia } from '../../functions/_application/reservas/cotizarEstadia.ts';
-import type { RepositorioDisponibilidad } from '../../functions/_application/reservas/ports.ts';
+import type { RepositorioCotizaciones, RepositorioDisponibilidad, RepositorioTarifas } from '../../functions/_application/reservas/ports.ts';
 import { nochesEntre } from '../../functions/_domain/reservas/dateRange.ts';
-import { calcularPrecio, calcularSena, mensajePrivacidad } from '../../functions/_domain/reservas/pricing.ts';
+import { mensajePrivacidad } from '../../functions/_domain/reservas/pricing.ts';
+import type { ConfiguracionTarifa } from '../../functions/_domain/reservas/ratePlans.ts';
 
 const disponible: RepositorioDisponibilidad = {
   async consultar() {
@@ -12,45 +13,37 @@ const disponible: RepositorioDisponibilidad = {
   },
 };
 
-function precioPorNoche(tipo: 'domo' | 'refugio', personas: number): number {
-  const resultado = calcularPrecio(tipo, personas, 1);
-  assert.ok(!('error' in resultado));
-  return resultado.precio_por_noche;
-}
+const configuracion: ConfiguracionTarifa = {
+  planId: 1, codigo: 'alojamiento-base', version: 1, moneda: 'ARS',
+  reglasPrecio: [
+    ['domo', 1, 1, 'unidad_noche', 15_000_000, null, null],
+    ['domo', 2, 2, 'unidad_noche', 7_500_000, null, null],
+    ['domo', 3, 5, 'persona_noche', 6_500_000, null, null],
+    ['domo', 6, 7, 'persona_noche', 5_000_000, 6, 7],
+    ['refugio', 1, 15, 'persona_noche', 3_500_000, 3, 7],
+  ].map(([tipo, min, max, base, importe, exclusivaDesde, exclusivaHasta]) => ({
+    temporadaCodigo: 'base', fechaDesde: '2000-01-01', fechaHasta: '2099-12-31', prioridad: 0,
+    tipoAlojamiento: tipo as any, modalidad: 'cualquiera' as const,
+    ocupacionMin: Number(min), ocupacionMax: Number(max), baseCalculo: base as any,
+    importeCentavos: Number(importe), exclusividadDesde: exclusivaDesde as number | null,
+    exclusividadHasta: exclusivaHasta as number | null,
+  })),
+  reglasSena: [
+    { subtotalDesdeCentavos: 0, subtotalHastaCentavos: 10_000_000, tipo: 'porcentaje_bps', valor: 5000 },
+    { subtotalDesdeCentavos: 10_000_001, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 3000 },
+  ],
+};
+const tarifas: RepositorioTarifas = { async obtenerPublicada() { return configuracion; } };
+const cotizaciones: RepositorioCotizaciones = {
+  async guardar() { return { id: 10, codigo: 'COT-10', expiresAt: '2026-10-01T00:15:00.000Z' }; },
+};
 
 test('calcula noches con checkout exclusivo', () => {
   assert.equal(nochesEntre('2026-10-10', '2026-10-11'), 1);
   assert.equal(nochesEntre('2026-10-10', '2026-10-13'), 3);
   assert.equal(nochesEntre('2026-10-10', '2026-10-10'), null);
   assert.equal(nochesEntre('fecha-invalida', '2026-10-11'), null);
-});
-
-test('preserva las reglas de precio legacy durante la migración', () => {
-  assert.deepEqual(calcularPrecio('domo', 2, 3), {
-    tipo_alojamiento: 'domo',
-    cantidad_personas: 2,
-    noches: 3,
-    precio_por_noche: 75_000,
-    subtotal: 225_000,
-    exclusividad_gratis: false,
-  });
-  assert.deepEqual(calcularSena(100_000), { porcentaje: 0.5, monto: 50_000 });
-  assert.deepEqual(calcularSena(100_001), { porcentaje: 0.3, monto: 30_000 });
-});
-
-test('cubre las bandas de precio legacy y los límites del refugio', () => {
-  assert.equal(precioPorNoche('domo', 1), 150_000);
-  assert.equal(precioPorNoche('domo', 3), 195_000);
-  assert.equal(precioPorNoche('domo', 6), 300_000);
-  assert.equal(precioPorNoche('refugio', 2), 70_000);
-  assert.deepEqual(calcularPrecio('refugio', 16, 1), {
-    error: 'El Refugio Compartido admite entre 1 y 15 personas.',
-  });
-});
-
-test('mantiene la capacidad pública de domos en siete', () => {
-  assert.ok(!('error' in calcularPrecio('domo', 7, 1)));
-  assert.deepEqual(calcularPrecio('domo', 8, 1), { error: 'El Domo admite entre 1 y 7 personas.' });
+  assert.equal(nochesEntre('2027-02-30', '2027-03-03'), null);
 });
 
 test('expone el mensaje legacy de privacidad del refugio', () => {
@@ -61,14 +54,17 @@ test('expone el mensaje legacy de privacidad del refugio', () => {
 test('cotiza a través de un puerto sin depender de D1 o Workers', async () => {
   const resultado = await cotizarEstadia(
     { tipo: 'refugio', personas: 2, fechaEntrada: '2026-10-10', fechaSalida: '2026-10-12' },
-    disponible
+    disponible,
+    tarifas,
+    cotizaciones
   );
 
   assert.equal(resultado.ok, true);
   if (!resultado.ok) return;
   assert.equal(resultado.valor.disponibilidad.alojamiento_id, 7);
   assert.equal(resultado.valor.desglose.subtotal, 140_000);
-  assert.deepEqual(resultado.valor.sena, { porcentaje: 0.3, monto: 42_000 });
+  assert.deepEqual(resultado.valor.sena, { porcentaje: 0.3, monto: 42_000, monto_centavos: 4_200_000 });
+  assert.equal(resultado.valor.desglose.plan_version, 1);
   assert.equal(resultado.valor.saldoCheckin, 98_000);
 });
 
@@ -81,7 +77,9 @@ test('rechaza fechas inválidas antes de consultar disponibilidad', async () => 
 
   const resultado = await cotizarEstadia(
     { tipo: 'domo', personas: 2, fechaEntrada: '2026-10-12', fechaSalida: '2026-10-10' },
-    noDebeConsultarse
+    noDebeConsultarse,
+    tarifas,
+    cotizaciones
   );
 
   assert.deepEqual(resultado, {
@@ -91,6 +89,14 @@ test('rechaza fechas inválidas antes de consultar disponibilidad', async () => 
       mensaje: 'Fechas inválidas: fecha_salida debe ser posterior a fecha_entrada.',
     },
   });
+
+  const fechaNormalizable = await cotizarEstadia(
+    { tipo: 'domo', personas: 2, fechaEntrada: '2027-02-30', fechaSalida: '2027-03-03' },
+    noDebeConsultarse,
+    tarifas,
+    cotizaciones
+  );
+  assert.deepEqual(fechaNormalizable, resultado);
 });
 
 test('rechaza ocupación inválida antes de consultar disponibilidad', async () => {
@@ -102,7 +108,9 @@ test('rechaza ocupación inválida antes de consultar disponibilidad', async () 
 
   const resultado = await cotizarEstadia(
     { tipo: 'domo', personas: 8, fechaEntrada: '2026-10-10', fechaSalida: '2026-10-12' },
-    noDebeConsultarse
+    noDebeConsultarse,
+    tarifas,
+    cotizaciones
   );
 
   assert.deepEqual(resultado, {

@@ -84,6 +84,10 @@ export async function onRequestPost({ request, env }: any) {
       sena: cotizacion.sena,
       saldo_checkin: cotizacion.saldoCheckin,
       mensaje_privacidad: cotizacion.mensajePrivacidad,
+      cotizacion: cotizacion.referencia,
+      moneda: cotizacion.desglose.moneda,
+      subtotal_centavos: cotizacion.desglose.subtotal_centavos,
+      sena_centavos: cotizacion.sena.monto_centavos,
     },
     200,
     headers

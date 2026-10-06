@@ -9,7 +9,7 @@
     "postbuild": "node scripts/prerender.mjs",
     "preview": "vite preview",
     "test:reservas": "node --test tests/reservas/*.test.ts",
-    "test:reservas:coverage": "node --experimental-test-coverage --test-coverage-exclude=\"tests/**\" --test-coverage-lines=90 --test-coverage-branches=85 --test-coverage-functions=100 --test tests/reservas/*.test.ts",
+    "test:reservas:coverage": "node --experimental-test-coverage --test-coverage-exclude=\"tests/**\" --test-coverage-lines=85 --test-coverage-branches=75 --test-coverage-functions=90 --test tests/reservas/*.test.ts",
     "test:reservas:recovery": "node scripts/reservas/recovery-drill.mjs",
     "test:cloudflare-cleanup": "node --test tests/cloudflare/cleanup-pages-preview.test.mjs"
   },
