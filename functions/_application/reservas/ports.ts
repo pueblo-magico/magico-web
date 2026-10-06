@@ -12,6 +12,12 @@ import type {
 import type { ConfiguracionTarifa } from '../../_domain/reservas/ratePlans.ts';
 import type { PlanTarifaBorrador } from '../../_domain/reservas/ratePlanAdministration.ts';
 import type {
+  NuevaEstadiaNoComercial,
+  NuevoBloqueoInventario,
+  ObjetivosOcupacionOperativa,
+  RegistroOcupacionOperativa,
+} from '../../_domain/reservas/operationalOccupancy.ts';
+import type {
   ContextoAlojamiento,
   EspacioInventario,
   ModalidadAlojamiento,
@@ -73,6 +79,18 @@ export interface RepositorioAdministracionTarifas {
   listar(): Promise<ResumenPlanTarifa[]>;
   crearBorrador(plan: PlanTarifaBorrador): Promise<ResumenPlanTarifa>;
   publicar(planId: number): Promise<ResumenPlanTarifa | null>;
+}
+
+export interface RepositorioOcupacionOperativa {
+  listar(): Promise<RegistroOcupacionOperativa[]>;
+  listarObjetivos(): Promise<ObjetivosOcupacionOperativa>;
+  crearBloqueo(entrada: NuevoBloqueoInventario, actorEmail: string): Promise<RegistroOcupacionOperativa>;
+  cancelarBloqueo(id: number, actorEmail: string): Promise<RegistroOcupacionOperativa | null>;
+  crearEstadiaNoComercial(
+    entrada: NuevaEstadiaNoComercial,
+    actorEmail: string
+  ): Promise<RegistroOcupacionOperativa>;
+  cancelarEstadiaNoComercial(id: number, actorEmail: string): Promise<RegistroOcupacionOperativa | null>;
 }
 
 export interface RepositorioCalendarioDisponibilidad {

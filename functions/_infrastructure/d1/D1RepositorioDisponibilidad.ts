@@ -28,6 +28,14 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
              WHERE r.estado IN ('pendiente', 'confirmada')
              AND r.fecha_checkin < ?2 AND r.fecha_checkout > ?1
            )
+           AND NOT EXISTS (
+             SELECT 1
+             FROM ocupacion_operativa oo
+             LEFT JOIN unidades_inventario ui ON ui.id = oo.unidad_inventario_id
+             LEFT JOIN espacios e ON e.id = COALESCE(oo.espacio_id, ui.espacio_id)
+             WHERE oo.fecha_desde < ?2 AND oo.fecha_hasta > ?1
+               AND e.codigo = CASE a.id WHEN 1 THEN 'domo-1' WHEN 2 THEN 'domo-2' END
+           )
            LIMIT 1`
         )
         .bind(solicitud.fechaEntrada, solicitud.fechaSalida)
@@ -46,18 +54,32 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
                   CASE WHEN r.estado IN ('pendiente', 'confirmada')
                     AND r.fecha_checkin < ?2 AND r.fecha_checkout > ?1
                   THEN r.cantidad_personas ELSE 0 END
-                ), 0) AS ocupadas
+                ), 0) AS ocupadas,
+                COALESCE((
+                  SELECT SUM(CASE
+                    WHEN oo.origen_tipo = 'estadia_no_comercial' THEN oo.cantidad_personas
+                    WHEN oo.unidad_inventario_id IS NOT NULL THEN ui.capacidad
+                    ELSE objetivo.capacidad_comercial
+                  END)
+                  FROM ocupacion_operativa oo
+                  LEFT JOIN unidades_inventario ui ON ui.id = oo.unidad_inventario_id
+                  LEFT JOIN espacios objetivo ON objetivo.id = COALESCE(oo.espacio_id, ui.espacio_id)
+                  LEFT JOIN espacios padre ON padre.id = objetivo.parent_id
+                  WHERE oo.fecha_desde < ?2 AND oo.fecha_hasta > ?1
+                    AND COALESCE(padre.codigo, objetivo.codigo) = 'refugio'
+                ), 0) AS operativas
          FROM alojamientos a
          LEFT JOIN reservas r ON r.alojamiento_id = a.id
          WHERE a.tipo = 'refugio'
          GROUP BY a.id`
       )
       .bind(solicitud.fechaEntrada, solicitud.fechaSalida)
-      .first()) as { id: number; capacidad_total: number; ocupadas: number } | null;
+      .first()) as { id: number; capacidad_total: number; ocupadas: number; operativas?: number } | null;
 
     const capacidad = row ? Number(row.capacidad_total) : 15;
     const ocupadas = row ? Number(row.ocupadas) : 0;
-    const disponible = ocupadas + solicitud.personas <= capacidad;
+    const operativas = row ? Number(row.operativas || 0) : 0;
+    const disponible = ocupadas + operativas + solicitud.personas <= capacidad;
 
     return {
       estado: disponible ? 'disponible' : 'ocupado',

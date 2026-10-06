@@ -33,7 +33,26 @@ export class D1RepositorioCalendarioDisponibilidad implements RepositorioCalenda
         `SELECT alojamiento_id, fecha_checkin, fecha_checkout, cantidad_personas
          FROM reservas
          WHERE estado IN ('pendiente', 'confirmada')
-           AND fecha_checkin < ?2 AND fecha_checkout > ?1`
+           AND fecha_checkin < ?2 AND fecha_checkout > ?1
+         UNION ALL
+         SELECT
+           CASE COALESCE(padre.codigo, objetivo.codigo)
+             WHEN 'domo-1' THEN 1 WHEN 'domo-2' THEN 2 WHEN 'refugio' THEN 3
+           END alojamiento_id,
+           oo.fecha_desde fecha_checkin,
+           oo.fecha_hasta fecha_checkout,
+           CASE
+             WHEN oo.origen_tipo = 'estadia_no_comercial' THEN oo.cantidad_personas
+             WHEN COALESCE(padre.codigo, objetivo.codigo) IN ('domo-1', 'domo-2') THEN 7
+             WHEN oo.unidad_inventario_id IS NOT NULL THEN ui.capacidad
+             ELSE objetivo.capacidad_comercial
+           END cantidad_personas
+         FROM ocupacion_operativa oo
+         LEFT JOIN unidades_inventario ui ON ui.id = oo.unidad_inventario_id
+         LEFT JOIN espacios objetivo ON objetivo.id = COALESCE(oo.espacio_id, ui.espacio_id)
+         LEFT JOIN espacios padre ON padre.id = objetivo.parent_id
+         WHERE oo.fecha_desde < ?2 AND oo.fecha_hasta > ?1
+           AND COALESCE(padre.codigo, objetivo.codigo) IN ('domo-1', 'domo-2', 'refugio')`
       )
       .bind(desde, hasta)
       .all();
