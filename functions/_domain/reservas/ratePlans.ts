@@ -60,7 +60,8 @@ function fechasNocturnas(desde: string, hasta: string): string[] {
 
 export function cotizarConPlan(
   solicitud: SolicitudCotizacion,
-  configuracion: ConfiguracionTarifa
+  configuracion: ConfiguracionTarifa,
+  subtotalAdicionalCentavos = 0
 ): CotizacionVersionada | { error: ErrorTarifa } {
   const noches = [] as CotizacionVersionada['noches'];
   let exclusividadGratis = false;
@@ -89,7 +90,8 @@ export function cotizarConPlan(
       solicitud.personas <= (regla.exclusividadHasta ?? Number.MAX_SAFE_INTEGER);
   }
 
-  const subtotalCentavos = noches.reduce((total, noche) => total + noche.importeCentavos, 0);
+  const subtotalCentavos = noches.reduce((total, noche) => total + noche.importeCentavos, 0) +
+    subtotalAdicionalCentavos;
   const reglasSena = configuracion.reglasSena.filter(regla =>
     subtotalCentavos >= regla.subtotalDesdeCentavos &&
     (regla.subtotalHastaCentavos === null || subtotalCentavos <= regla.subtotalHastaCentavos)

@@ -48,6 +48,7 @@ export async function onRequestPost({ request, env }: any) {
   const {
     fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento,
     modalidad, contexto,
+    regimen_alimentacion,
   } = body || {};
 
   if (!fecha_entrada || !fecha_salida || !cantidad_personas || !tipo_alojamiento) {
@@ -70,6 +71,10 @@ export async function onRequestPost({ request, env }: any) {
   if (contexto !== undefined && !['general', 'retiro'].includes(contexto)) {
     return json({ error: "contexto debe ser 'general' o 'retiro'." }, 400, headers);
   }
+  if (regimen_alimentacion !== undefined &&
+      !['desayuno_incluido', 'pension_completa'].includes(regimen_alimentacion)) {
+    return json({ error: "regimen_alimentacion debe ser 'desayuno_incluido' o 'pension_completa'." }, 400, headers);
+  }
 
   const resultado = await cotizarEstadia(env.DB, {
     tipo: tipo_alojamiento,
@@ -78,6 +83,7 @@ export async function onRequestPost({ request, env }: any) {
     fechaSalida: fecha_salida,
     modalidad,
     contexto,
+    regimenAlimentacion: regimen_alimentacion,
   });
   if (resultado.ok === false) {
     return json({ error: resultado.error.mensaje }, 400, headers);

@@ -110,6 +110,9 @@ test('persiste un snapshot con código, hash y vencimiento sin datos personales'
       desglose: {
         tipo_alojamiento: 'domo', cantidad_personas: 2, noches: 1, precio_por_noche: 75_000,
         subtotal: 75_000, exclusividad_gratis: false, moneda: 'ARS', subtotal_centavos: 7_500_000,
+        alojamiento_centavos: 7_500_000, alimentacion_centavos: 0,
+        regimen_alimentacion: 'desayuno_incluido', tarifa_alimentacion_version: 1,
+        precio_comida_centavos: 2_000_000, comidas_adicionales_por_persona_noche: 0,
         plan_codigo: 'alojamiento-base', plan_version: 1,
         desglose_noches: [{ fecha: '2026-10-10', temporada: 'base', importe_centavos: 7_500_000 }],
       },
@@ -122,8 +125,8 @@ test('persiste un snapshot con código, hash y vencimiento sin datos personales'
   assert.match(guardada.codigo, /^COT-[0-9a-f-]+$/);
   assert.ok(Date.parse(guardada.expiresAt) > Date.now());
   assert.equal(values[0], guardada.codigo);
-  assert.match(String(values[11]), /^[a-f0-9]{64}$/);
-  assert.equal(String(values[10]).includes('cliente'), false);
+  assert.match(String(values[15]), /^[a-f0-9]{64}$/);
+  assert.equal(String(values[14]).includes('cliente'), false);
 });
 
 test('falla cerrado si D1 no devuelve el snapshot insertado', async () => {
@@ -135,6 +138,9 @@ test('falla cerrado si D1 no devuelve el snapshot insertado', async () => {
       disponibilidad: { estado: 'disponible', alojamiento_id: 1 },
       desglose: { tipo_alojamiento: 'domo', cantidad_personas: 1, noches: 1, precio_por_noche: 1,
         subtotal: 1, exclusividad_gratis: false, moneda: 'ARS', subtotal_centavos: 100,
+        alojamiento_centavos: 100, alimentacion_centavos: 0,
+        regimen_alimentacion: 'desayuno_incluido', tarifa_alimentacion_version: 1,
+        precio_comida_centavos: 2_000_000, comidas_adicionales_por_persona_noche: 0,
         plan_codigo: 'base', plan_version: 1, desglose_noches: [] },
       sena: { porcentaje: 1, monto: 1, monto_centavos: 100 }, saldoCheckin: 0, mensajePrivacidad: '',
     }

@@ -18,7 +18,8 @@ Ejemplo de solicitud de cotización:
   "personas": 2,
   "tipo_alojamiento": "domo",
   "modalidad": "privada",
-  "contexto": "general"
+  "contexto": "general",
+  "regimen_alimentacion": "pension_completa"
 }
 ```
 
@@ -29,6 +30,21 @@ evita conversiones de zona horaria sobre una fecha de alojamiento.
 Los importes v1 se expresan en centavos enteros y siempre incluyen moneda,
 código y versión del plan tarifario. Cada cotización persiste un snapshot del
 desglose vigente, sin datos personales.
+
+## Alimentación
+
+La cotización admite únicamente dos valores estables:
+
+- `desayuno_incluido`: incluido en el alojamiento, sin recargo.
+- `pension_completa`: agrega almuerzo y cena por cada persona y noche.
+
+Cada comida cuesta ARS 20.000. Por lo tanto, `pension_completa` agrega ARS
+40.000 por persona y noche. La respuesta separa `alojamiento_centavos` de
+`alimentacion_centavos`, y la seña se calcula sobre la suma de ambos. El
+snapshot conserva el régimen, el precio por comida y la versión de la tarifa.
+
+Para compatibilidad, si se omite `regimen_alimentacion` se utiliza
+`desayuno_incluido`.
 
 ## Capacidad y disponibilidad
 

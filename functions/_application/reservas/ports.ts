@@ -10,6 +10,7 @@ import type {
   SolicitudCotizacion,
 } from '../../_domain/reservas/models.ts';
 import type { ConfiguracionTarifa } from '../../_domain/reservas/ratePlans.ts';
+import type { ConfiguracionTarifaAlimentacion, RegimenAlimentacion } from '../../_domain/reservas/alimentacion.ts';
 import type { PlanTarifaBorrador } from '../../_domain/reservas/ratePlanAdministration.ts';
 import type {
   NuevaEstadiaNoComercial,
@@ -61,6 +62,10 @@ export interface RepositorioDisponibilidad {
 
 export interface RepositorioTarifas {
   obtenerPublicada(): Promise<ConfiguracionTarifa | null>;
+}
+
+export interface RepositorioTarifasAlimentacion {
+  obtenerPublicada(regimen: RegimenAlimentacion): Promise<ConfiguracionTarifaAlimentacion | null>;
 }
 
 export interface RepositorioCotizaciones {

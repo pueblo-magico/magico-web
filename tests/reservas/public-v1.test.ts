@@ -164,9 +164,67 @@ test('cotizaciones v1 rechaza fechas inexistentes y devuelve importes enteros ve
   assert.equal(body.data.precio.moneda, 'ARS');
   assert.equal(body.data.precio.plan_codigo, 'alojamiento-base');
   assert.equal(body.data.precio.plan_version, 1);
+  assert.equal(body.data.precio.regimen_alimentacion, 'desayuno_incluido');
+  assert.equal(body.data.precio.alimentacion_centavos, 0);
   assert.ok(Number.isInteger(body.data.precio.subtotal_centavos));
   assert.ok(Number.isInteger(body.data.precio.sena_centavos));
   assert.equal(body.data.precio.desglose_noches.length, 2);
   assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM cotizaciones').get()?.cantidad, 1);
+  sqlite.close();
+});
+
+test('cotiza pensión completa con dos comidas de ARS 20.000 por persona y noche', async () => {
+  const { sqlite, db } = baseMigrada();
+  const response = await crearCotizacion({
+    request: new Request('https://test/api/v1/public/cotizaciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in: '2027-04-10', check_out: '2027-04-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
+        regimen_alimentacion: 'pension_completa',
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 200);
+  const body = await response.json() as any;
+  assert.equal(body.data.precio.alojamiento_centavos, 15_000_000);
+  assert.equal(body.data.precio.alimentacion_centavos, 16_000_000);
+  assert.equal(body.data.precio.subtotal_centavos, 31_000_000);
+  assert.equal(body.data.precio.sena_centavos, 9_300_000);
+  assert.equal(body.data.precio.precio_comida_centavos, 2_000_000);
+  assert.equal(body.data.precio.comidas_adicionales_por_persona_noche, 2);
+
+  const snapshot = sqlite.prepare(`
+    SELECT regimen_alimentacion, tarifa_alimentacion_version,
+           alojamiento_centavos, alimentacion_centavos, subtotal_centavos
+    FROM cotizaciones ORDER BY id DESC LIMIT 1
+  `).get();
+  assert.deepEqual({ ...snapshot }, {
+    regimen_alimentacion: 'pension_completa', tarifa_alimentacion_version: 1,
+    alojamiento_centavos: 15_000_000, alimentacion_centavos: 16_000_000,
+    subtotal_centavos: 31_000_000,
+  });
+  sqlite.close();
+});
+
+test('rechaza regímenes de alimentación fuera del contrato', async () => {
+  const { sqlite, db } = baseMigrada();
+  const response = await crearCotizacion({
+    request: new Request('https://test/api/v1/public/cotizaciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in: '2027-04-10', check_out: '2027-04-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada',
+        regimen_alimentacion: 'media_pension',
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal((await response.json() as any).error.codigo, 'REGIMEN_ALIMENTACION_INVALIDO');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM cotizaciones').get()?.cantidad, 0);
   sqlite.close();
 });
