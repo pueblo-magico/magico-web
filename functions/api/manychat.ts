@@ -17,8 +17,13 @@ import { obtenerOrigenSolicitudManyChat } from '../_interfaces/http/manychatAuth
 import { autenticarServicio } from '../_interfaces/http/serviceAuth.ts';
 import { leerJsonSeguro, respuestaJsonInvalido } from '../_interfaces/http/requestSecurity.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
+import { observarSolicitud, type ContextoObservabilidad } from '../_interfaces/http/observability.ts';
 
 export async function onRequestPost({ request, env }: any) {
+  return observarSolicitud(request, 'integration.manychat.create_reservation', contexto => ejecutar(request, env, contexto));
+}
+
+async function ejecutar(request: Request, env: any, contexto: ContextoObservabilidad) {
   const secreto = request.headers.get('X-ManyChat-Secret') ||
     request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '') || null;
   if (!autenticarServicio('manychat', secreto, env, 'reservas:crear')) {
@@ -26,7 +31,10 @@ export async function onRequestPost({ request, env }: any) {
   }
 
   const limitada = respuestaLimite(await consumirLimite(request, env, 'integracion.manychat', 30, 60, `manychat:${secreto}`));
-  if (limitada) return limitada;
+  if (limitada) {
+    contexto.signal('rate_limit.rejected', 'warn', { metric: 'reservas_rate_limit_rejections_total' });
+    return limitada;
+  }
 
   let body: any;
   try {
@@ -66,15 +74,19 @@ export async function onRequestPost({ request, env }: any) {
     return json({ error: resultado.mensaje }, 400);
   }
   if (resultado.estado === 'ocupado') {
+    contexto.signal('reservation.conflict', 'warn', { metric: 'reservas_conflicts_total' });
     return json(
       { estado: 'ocupado', mensaje: 'No hay disponibilidad para esas fechas. ¿Querés que te proponga otras opciones?' },
       200
     );
   }
   if (resultado.estado === 'error_creacion') {
+    contexto.signal('reservation.create_failed', 'error', { metric: 'reservas_creation_errors_total' });
     return json({ error: 'No se pudo crear la reserva.' }, 500);
   }
   if (resultado.estado === 'error_pago') {
+    contexto.setReservationId(resultado.reservaId);
+    contexto.signal('payment.preference_failed', 'error', { metric: 'reservas_payment_errors_total' });
     return json(
       { estado: 'error_pago', reserva_id: resultado.reservaId, error: 'No se pudo generar el link de pago.' },
       502
@@ -82,6 +94,8 @@ export async function onRequestPost({ request, env }: any) {
   }
 
   const cotizacion = resultado.cotizacion;
+  contexto.setReservationId(resultado.reservaId);
+  contexto.signal('reservation.created', 'info', { metric: 'reservas_created_total' });
   return json(
     {
       estado: 'pendiente_pago',

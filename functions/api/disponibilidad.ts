@@ -9,6 +9,7 @@
 import { consultarCalendarioDisponibilidad } from '../_application/reservas/consultarCalendarioDisponibilidad.ts';
 import { D1RepositorioCalendarioDisponibilidad } from '../_infrastructure/d1/D1RepositorioCalendarioDisponibilidad.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
+import { observarSolicitud, type ContextoObservabilidad } from '../_interfaces/http/observability.ts';
 
 const ALLOWED_ORIGINS = ['https://experienciamagico.com'];
 const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
@@ -36,8 +37,15 @@ export async function onRequestOptions({ request }: any) {
 }
 
 export async function onRequestGet({ request, env }: any) {
+  return observarSolicitud(request, 'public.availability', contexto => consultar(request, env, contexto));
+}
+
+async function consultar(request: Request, env: any, contexto: ContextoObservabilidad) {
   const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.disponibilidad', 60, 60));
-  if (limitada) return limitada;
+  if (limitada) {
+    contexto.signal('rate_limit.rejected', 'warn', { metric: 'reservas_rate_limit_rejections_total' });
+    return limitada;
+  }
   const headers = corsHeaders(request);
   const url = new URL(request.url);
   const desde = url.searchParams.get('desde') || '';
@@ -50,6 +58,7 @@ export async function onRequestGet({ request, env }: any) {
   );
 
   if (resultado.ok === false) {
+    contexto.signal('availability.invalid_range', 'warn', { metric: 'reservas_availability_rejections_total' });
     return json({ error: resultado.error.mensaje }, 400, headers);
   }
 
