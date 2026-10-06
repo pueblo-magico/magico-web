@@ -18,7 +18,7 @@ function validarCollection(
   const fecha = new Date(collection.occurredAt);
   const algunDestino = collection.externalAccountId || collection.customerId || collection.cvu;
   if (!collectorIdEsperado || collection.collectorId !== collectorIdEsperado ||
-      !collection.collectionId?.trim() || !algunDestino ||
+      !collection.collectionId?.trim() || (!algunDestino && collection.montoCentavos !== 0) ||
       !Number.isSafeInteger(collection.montoCentavos) || collection.montoCentavos < 0 ||
       !/^[A-Z]{3}$/.test(collection.moneda) ||
       Number.isNaN(fecha.getTime()) || fecha.toISOString() !== collection.occurredAt ||
@@ -50,4 +50,3 @@ export async function procesarCollectionCucuru(
     return { ...resultado, notificacionFallida: true };
   }
 }
-

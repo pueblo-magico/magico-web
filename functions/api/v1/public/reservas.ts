@@ -1,7 +1,7 @@
 import { crearReservaPublica } from '../../../_application/reservas/crearReservaPublica.ts';
 import { provisionarCuentaCobroReserva } from '../../../_application/reservas/provisionarCuentaCobro.ts';
 import { cucuruHabilitado } from '../../../_domain/reservas/collectionAccounts.ts';
-import { CucuruContratoNoDisponible } from '../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
+import { CucuruClienteHttp } from '../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
 import { D1RepositorioCuentasCobroReserva } from '../../../_infrastructure/d1/D1RepositorioCuentasCobroReserva.ts';
 import { D1RepositorioCreacionReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
 import { D1RepositorioDisponibilidad } from '../../../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
@@ -51,7 +51,11 @@ export async function onRequestPost({ request, env }: any) {
     const provisionamiento = await provisionarCuentaCobroReserva({
       reservaId: resultado.valor.reservaId,
       habilitada: cucuruHabilitado(env.CUCURU_TRANSFER_ENABLED),
-    }, new D1RepositorioCuentasCobroReserva(env.DB), new CucuruContratoNoDisponible());
+    }, new D1RepositorioCuentasCobroReserva(env.DB), new CucuruClienteHttp({
+      apiKey: env.CUCURU_API_KEY,
+      collectorId: env.CUCURU_COLLECTOR_ID,
+      baseUrl: env.CUCURU_API_BASE_URL,
+    }));
     cuentaCobro = {
       proveedor: 'cucuru',
       estado: provisionamiento.estado,

@@ -59,7 +59,7 @@ export class D1RepositorioConciliacionCucuru implements RepositorioConciliacionC
               WHEN NOT EXISTS (SELECT 1 FROM candidata) THEN 'revision_manual'
               WHEN (SELECT estado_flujo FROM candidata) <> 'pendiente_pago' THEN 'revision_manual'
               WHEN (SELECT hold_expires_at FROM candidata) IS NOT NULL
-                AND (SELECT hold_expires_at FROM candidata) <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                AND occurred_at >= (SELECT hold_expires_at FROM candidata)
                 THEN 'revision_manual'
               WHEN monto_centavos <> (SELECT monto_esperado FROM candidata) THEN 'revision_manual'
               WHEN moneda <> (SELECT moneda_esperada FROM candidata) THEN 'revision_manual'
@@ -70,7 +70,7 @@ export class D1RepositorioConciliacionCucuru implements RepositorioConciliacionC
               WHEN NOT EXISTS (SELECT 1 FROM candidata) THEN 'CUENTA_DESCONOCIDA'
               WHEN (SELECT estado_flujo FROM candidata) <> 'pendiente_pago' THEN 'RESERVA_NO_PENDIENTE'
               WHEN (SELECT hold_expires_at FROM candidata) IS NOT NULL
-                AND (SELECT hold_expires_at FROM candidata) <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                AND occurred_at >= (SELECT hold_expires_at FROM candidata)
                 THEN 'PAGO_TARDIO'
               WHEN monto_centavos <> (SELECT monto_esperado FROM candidata) THEN 'MONTO_INCORRECTO'
               WHEN moneda <> (SELECT moneda_esperada FROM candidata) THEN 'MONEDA_INCORRECTA'

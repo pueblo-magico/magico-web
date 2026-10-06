@@ -7,12 +7,12 @@ importe esperado, la vigencia y el inventario. Cucuru se trata como proveedor
 de destinos de transferencia y observaciones de cobro, nunca como fuente de
 verdad comercial.
 
-La [web pública de Cucuru](https://www.cucuru.com/) confirma que su plataforma
-permite imputar transferencias y operar mediante APIs. El
-[centro de ayuda](https://www.cucuru.com/centro-de-ayuda) enlaza la
-especificación técnica, pero el acceso se entrega mediante soporte. Por eso el
-adaptador HTTP permanece deliberadamente cerrado: no se inventan rutas,
-firmas, campos ni reglas de reintento antes de recibir y validar ese contrato.
+La integración implementa Collections API v1.6.8. Autentica las llamadas con
+`X-Cucuru-Api-Key` y `X-Cucuru-Collector-id`, crea CVU mediante `PUT
+/app/v1/Collection/accounts/account`, consulta cuentas y recupera Collections
+con la paginación opaca `next_page`. La API no documenta idempotency key para
+el alta ni búsqueda directa de cuenta por `customer_id`: la recuperación
+pagina el catálogo de cuentas antes de crear y después de un resultado incierto.
 
 ## Modelo durable
 
@@ -47,9 +47,13 @@ de Mercado Pago. Una redelivery con el mismo `collection_id` y el mismo hash es
 un duplicado inocuo; si cambia el hash, crea una entrada pendiente en
 `cucuru_revisiones_pago` sin repetir el pago ni los efectos de inventario.
 
-Este núcleo recibe una Collection ya normalizada. El endpoint HTTP no se
-habilita hasta conocer la firma y el esquema oficiales: aceptar un supuesto
-payload sin ese contrato anularía la verificación de autenticidad.
+El webhook se expone en
+`/api/v1/integrations/cucuru/collection_received`. Cucuru no documenta una
+firma criptográfica: permite configurar un encabezado estático propio. El
+endpoint exige un secreto de al menos 24 caracteres, compara en tiempo
+constante, valida `collector_id` y deduplica durablemente por `collection_id`.
+`X-Redelivery-attempt` es informativo; no cambia la idempotencia. La prueba de
+alta del webhook con importe cero responde 200 sin crear un pago.
 
 ## Activación segura
 
@@ -60,16 +64,16 @@ proveedor. La respuesta pública nunca incluye credenciales ni errores internos.
 
 La activación real requiere, como mínimo:
 
-- contrato oficial de alta/búsqueda de cuentas y Collections;
-- ambiente de prueba, API key, Collector ID y secreto de webhook;
-- confirmación de idempotencia y unicidad de `customer_id`;
-- formato documentado de firma y política de replay;
+- API key, Collector ID y secreto de webhook por ambiente;
+- confirmación operativa de unicidad de `customer_id`;
+- validación del contrato contra una cuenta real antes de activar la flag;
 - límites, costos, liquidación a la cuenta operativa y SLA validados;
 - prueba de importe cero y varias cuentas liquidando al mismo destino.
 
-Hasta completar esos puntos, `CucuruContratoNoDisponible` falla cerrado cuando
-alguien activa la flag por error. La reserva permanece `pendiente_pago` y el
-intento queda recuperable; nunca se confirma automáticamente.
+Hasta completar esos puntos, `CUCURU_TRANSFER_ENABLED` permanece en `false`.
+Una configuración incompleta falla cerrado: la reserva permanece
+`pendiente_pago`, el intento queda recuperable y nunca se confirma por un error
+del proveedor.
 
 ## Variables
 
@@ -77,6 +81,11 @@ Sólo se documentan nombres, nunca valores:
 
 - `CUCURU_API_KEY`
 - `CUCURU_COLLECTOR_ID`
+- `CUCURU_WEBHOOK_HEADER_NAME`
 - `CUCURU_WEBHOOK_SECRET`
 - `CUCURU_API_BASE_URL`
 - `CUCURU_TRANSFER_ENABLED`
+
+Los secretos locales van en `.dev.vars`, que está ignorado por Git. Preview y
+producción deben usar valores distintos en Cloudflare; ninguna variable Cucuru
+puede llevar prefijo `VITE_`.

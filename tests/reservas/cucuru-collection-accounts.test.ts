@@ -330,6 +330,20 @@ test('la prueba cero no concilia y los importes incorrectos van a revisión manu
   assert.equal(cero.estado, 'prueba_cero');
   assert.equal(cero.motivoCodigo, 'PRUEBA_IMPORTE_CERO');
 
+  const ceroSinCuenta = await procesarCollectionCucuru(
+    {
+      ...base,
+      collectionId: 'collection-zero-sin-cuenta',
+      customerId: null,
+      externalAccountId: null,
+      cvu: null,
+      montoCentavos: 0,
+      payloadHash: 'e'.repeat(64),
+    },
+    'collector-qa', repositorio, { async notificar() {} }, 'request-zero-sin-cuenta'
+  );
+  assert.equal(ceroSinCuenta.estado, 'prueba_cero');
+
   const incorrecta = await procesarCollectionCucuru(
     { ...base, collectionId: 'collection-wrong-5', montoCentavos: 29_999, payloadHash: 'c'.repeat(64) },
     'collector-qa', repositorio, { async notificar() {} }, 'request-wrong-5'
@@ -346,5 +360,37 @@ test('la prueba cero no concilia y los importes incorrectos van a revisión manu
     ),
     /observación de Cucuru es inválida/
   );
+  sqlite.close();
+});
+
+test('el backfill usa la fecha del cobro y no la hora tardía de procesamiento', async () => {
+  const sqlite = baseCompleta();
+  const uid = '77777777-7777-4777-8777-777777777777';
+  const reservaId = crearReserva(sqlite, uid);
+  sqlite.prepare("UPDATE reservas SET hold_expires_at = '2000-01-01T00:00:00.000Z' WHERE id = ?").run(reservaId);
+  sqlite.prepare(`
+    INSERT INTO cuentas_cobro_reserva (
+      reserva_id, proveedor, customer_id, estado, external_account_id, cvu,
+      moneda, ultima_operacion_uid, ready_at
+    ) VALUES (?, 'cucuru', ?, 'ready', 'acct-timely-7', '0000003100000000000007',
+      'ARS', 'ready-operation-7', '1999-12-30T00:00:00.000Z')
+  `).run(reservaId, `pm-reserva-${uid}`);
+
+  const resultado = await procesarCollectionCucuru({
+    collectionId: 'collection-timely-7',
+    collectorId: 'collector-qa',
+    customerId: `pm-reserva-${uid}`,
+    externalAccountId: 'acct-timely-7',
+    cvu: '0000003100000000000007',
+    montoCentavos: 30_000,
+    moneda: 'ARS',
+    occurredAt: '1999-12-31T23:59:59.000Z',
+    payloadHash: 'f'.repeat(64),
+  }, 'collector-qa', new D1RepositorioConciliacionCucuru(d1(sqlite)), {
+    async notificar() {},
+  }, 'request-timely-backfill');
+
+  assert.equal(resultado.estado, 'aplicado');
+  assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas WHERE id = ?').get(reservaId)?.estado_flujo, 'confirmada');
   sqlite.close();
 });
