@@ -8,6 +8,7 @@ import {
 import { onRequestGet as sesionAdmin } from '../../functions/api/admin/me.ts';
 import { onRequestPost as manyChat } from '../../functions/api/manychat.ts';
 import { onRequestPost as webhookMercadoPago } from '../../functions/api/webhook-mp.ts';
+import { onRequestGet as tarifasAdmin } from '../../functions/api/admin/tarifas.ts';
 
 const dbRateLimit = {
   prepare() {
@@ -55,6 +56,15 @@ test('contrato administrativo no expone datos sin sesión', async () => {
 
   assert.equal(response.status, 401);
   assert.equal(response.headers.get('X-Request-ID'), 'contract-admin-1');
+  assert.deepEqual(await response.json(), { error: 'No autenticado.' });
+});
+
+test('contrato de tarifas no permite leer configuración sin sesión administrativa', async () => {
+  const response = await tarifasAdmin({
+    request: new Request('https://test/api/admin/tarifas'),
+    env: { SESSION_SECRET: 'session-secret-seguro-de-al-menos-32-caracteres' },
+  });
+  assert.equal(response.status, 401);
   assert.deepEqual(await response.json(), { error: 'No autenticado.' });
 });
 

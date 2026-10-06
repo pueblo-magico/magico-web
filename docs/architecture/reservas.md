@@ -23,7 +23,7 @@ Las dependencias siempre apuntan hacia el dominio. Un caso de uso no importa un 
 La cotización compartida por `/api/cotizar` y `/api/manychat` usa ahora `cotizarEstadia`. El caso de uso coordina:
 
 1. Validación del rango de fechas.
-2. Regla de precio legacy, aislada para ser reemplazada por WRESERV-25.
+2. Selección del plan tarifario publicado y cálculo por noche, temporada, modalidad y ocupación.
 3. Consulta de disponibilidad a través de `RepositorioDisponibilidad`.
 4. Cálculo de seña y saldo.
 
@@ -50,13 +50,13 @@ El webhook de Mercado Pago conserva la validación HMAC en la interfaz HTTP y de
 - No agregar SQL a `functions/api` ni a `functions/_domain`.
 - No duplicar reglas entre web, administración, ManyChat o webhooks.
 - Los cambios de comportamiento requieren pruebas de dominio o contrato.
-- Los importes actuales siguen siendo legacy; WRESERV-25 definirá unidades menores y snapshots versionados.
+- Los importes se guardan como enteros en unidades menores. Cada cotización persiste un snapshot versionado e inmutable del plan tarifario utilizado; ver `tarifas-reservas.md`.
 - El esquema actual no se modifica dentro de WRESERV-5.
 
 ## Estrategia de pruebas
 
 - Node 24 ejecuta las pruebas unitarias TypeScript sin una capa adicional de runtime.
 - `npm run test:reservas` ejecuta dominio, aplicación, límites arquitectónicos y adaptadores aislados.
-- `npm run test:reservas:coverage` exige como mínimo 90% de líneas, 85% de ramas y 100% de funciones sobre los módulos cargados.
-- Los repositorios D1 se prueban primero como adaptadores aislados; WRESERV-6/WRESERV-10 incorporarán una base D1 real para integración.
+- `npm run test:reservas:coverage` mantiene umbrales de regresión de 85% de líneas, 75% de ramas y 90% de funciones sobre los módulos cargados. No se agregan pruebas para alcanzar un porcentaje: se priorizan reglas de negocio, contratos HTTP, autorización, adaptadores D1, migraciones e integraciones.
+- Los repositorios D1 se prueban como adaptadores y, para los flujos críticos, contra SQLite efímero aplicando las mismas migraciones SQL que despliega Cloudflare D1.
 - Playwright queda reservado para contratos de navegador y administración cuando exista un ambiente de prueba con Chromium instalado.

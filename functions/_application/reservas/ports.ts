@@ -10,6 +10,7 @@ import type {
   SolicitudCotizacion,
 } from '../../_domain/reservas/models.ts';
 import type { ConfiguracionTarifa } from '../../_domain/reservas/ratePlans.ts';
+import type { PlanTarifaBorrador } from '../../_domain/reservas/ratePlanAdministration.ts';
 import type {
   ContextoAlojamiento,
   EspacioInventario,
@@ -61,6 +62,17 @@ export interface RepositorioCotizaciones {
     solicitud: SolicitudCotizacion,
     resultado: Omit<ResultadoCotizacion, 'referencia'>
   ): Promise<{ id: number; codigo: string; expiresAt: string }>;
+}
+
+export type ResumenPlanTarifa = {
+  id: number; codigo: string; nombre: string; moneda: string; version: number;
+  estado: 'borrador' | 'publicado' | 'retirado'; publicadoAt: string | null; createdAt: string;
+};
+
+export interface RepositorioAdministracionTarifas {
+  listar(): Promise<ResumenPlanTarifa[]>;
+  crearBorrador(plan: PlanTarifaBorrador): Promise<ResumenPlanTarifa>;
+  publicar(planId: number): Promise<ResumenPlanTarifa | null>;
 }
 
 export interface RepositorioCalendarioDisponibilidad {
