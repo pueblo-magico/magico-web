@@ -1,19 +1,37 @@
 import { nochesEntre } from '../../_domain/reservas/dateRange.ts';
+import { cotizarAlimentacion, esRegimenAlimentacion } from '../../_domain/reservas/alimentacion.ts';
 import type { RespuestaCotizacion, SolicitudCotizacion } from '../../_domain/reservas/models.ts';
 import { mensajePrivacidad } from '../../_domain/reservas/pricing.ts';
 import { cotizarConPlan } from '../../_domain/reservas/ratePlans.ts';
-import type { RepositorioCotizaciones, RepositorioDisponibilidad, RepositorioTarifas } from './ports.ts';
+import type {
+  RepositorioCotizaciones,
+  RepositorioDisponibilidad,
+  RepositorioTarifas,
+  RepositorioTarifasAlimentacion,
+} from './ports.ts';
 
 export async function cotizarEstadia(
   solicitud: SolicitudCotizacion,
   disponibilidad: RepositorioDisponibilidad,
   tarifas: RepositorioTarifas,
+  tarifasAlimentacion: RepositorioTarifasAlimentacion,
   cotizaciones: RepositorioCotizaciones
 ): Promise<RespuestaCotizacion> {
+  const regimenAlimentacion = solicitud.regimenAlimentacion ?? 'desayuno_incluido';
+  if (!esRegimenAlimentacion(regimenAlimentacion)) {
+    return {
+      ok: false,
+      error: {
+        codigo: 'REGIMEN_ALIMENTACION_INVALIDO',
+        mensaje: "regimen_alimentacion debe ser 'desayuno_incluido' o 'pension_completa'.",
+      },
+    };
+  }
   const solicitudNormalizada: SolicitudCotizacion = {
     ...solicitud,
     modalidad: solicitud.modalidad ?? (solicitud.tipo === 'domo' ? 'privada' : 'compartida'),
     contexto: solicitud.contexto ?? 'general',
+    regimenAlimentacion,
   };
   const noches = nochesEntre(solicitudNormalizada.fechaEntrada, solicitudNormalizada.fechaSalida);
   if (noches === null) {
@@ -43,14 +61,29 @@ export async function cotizarEstadia(
     };
   }
 
-  const [estado, configuracion] = await Promise.all([
+  const [estado, configuracion, configuracionAlimentacion] = await Promise.all([
     disponibilidad.consultar(solicitudNormalizada),
     tarifas.obtenerPublicada(),
+    tarifasAlimentacion.obtenerPublicada(regimenAlimentacion),
   ]);
   if (!configuracion) {
     return { ok: false, error: { codigo: 'TARIFA_NO_CONFIGURADA', mensaje: 'No hay una tarifa publicada para la estadía.' } };
   }
-  const calculada = cotizarConPlan(solicitudNormalizada, configuracion);
+  if (!configuracionAlimentacion || configuracionAlimentacion.moneda !== configuracion.moneda) {
+    return {
+      ok: false,
+      error: {
+        codigo: 'TARIFA_ALIMENTACION_NO_CONFIGURADA',
+        mensaje: 'No hay una tarifa de alimentación publicada para el régimen solicitado.',
+      },
+    };
+  }
+  const alimentacion = cotizarAlimentacion(
+    solicitudNormalizada.personas,
+    noches,
+    configuracionAlimentacion
+  );
+  const calculada = cotizarConPlan(solicitudNormalizada, configuracion, alimentacion.totalCentavos);
   if ('error' in calculada) {
     return {
       ok: false,
@@ -75,6 +108,12 @@ export async function cotizarEstadia(
     noches,
     precio_por_noche: precioUniforme ? importesNocturnos[0] / 100 : null,
     subtotal,
+    alojamiento_centavos: calculada.subtotalCentavos - alimentacion.totalCentavos,
+    alimentacion_centavos: alimentacion.totalCentavos,
+    regimen_alimentacion: alimentacion.regimen,
+    tarifa_alimentacion_version: alimentacion.version,
+    precio_comida_centavos: alimentacion.precioComidaCentavos,
+    comidas_adicionales_por_persona_noche: alimentacion.comidasAdicionalesPorPersonaNoche,
     exclusividad_gratis: calculada.exclusividadGratis,
     moneda: calculada.moneda,
     subtotal_centavos: calculada.subtotalCentavos,

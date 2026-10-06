@@ -1,3 +1,5 @@
+import type { RegimenAlimentacion } from './alimentacion.ts';
+
 export type TipoAlojamiento = 'domo' | 'refugio';
 
 export type Cotizacion = {
@@ -8,6 +10,12 @@ export type Cotizacion = {
   noches: number;
   precio_por_noche: number | null;
   subtotal: number;
+  alojamiento_centavos: number;
+  alimentacion_centavos: number;
+  regimen_alimentacion: RegimenAlimentacion;
+  tarifa_alimentacion_version: number;
+  precio_comida_centavos: number;
+  comidas_adicionales_por_persona_noche: number;
   exclusividad_gratis: boolean;
   moneda: string;
   subtotal_centavos: number;
@@ -33,6 +41,7 @@ export type SolicitudCotizacion = {
   fechaSalida: string;
   modalidad?: 'privada' | 'compartida' | 'camping';
   contexto?: 'general' | 'retiro';
+  regimenAlimentacion?: RegimenAlimentacion;
 };
 
 export type ResultadoCotizacion = {
@@ -53,7 +62,8 @@ export type ResultadoCotizacion = {
 };
 
 export type ErrorCotizacion = {
-  codigo: 'FECHAS_INVALIDAS' | 'OCUPACION_INVALIDA' | 'TARIFA_NO_CONFIGURADA' | 'TARIFA_AMBIGUA';
+  codigo: 'FECHAS_INVALIDAS' | 'OCUPACION_INVALIDA' | 'REGIMEN_ALIMENTACION_INVALIDO' |
+    'TARIFA_NO_CONFIGURADA' | 'TARIFA_AMBIGUA' | 'TARIFA_ALIMENTACION_NO_CONFIGURADA';
   mensaje: string;
 };
 

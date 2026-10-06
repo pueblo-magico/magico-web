@@ -5,6 +5,7 @@ import type {
   RepositorioCotizaciones,
   RepositorioDisponibilidad,
   RepositorioTarifas,
+  RepositorioTarifasAlimentacion,
   RepositorioReservasManyChat,
 } from './ports.ts';
 
@@ -24,11 +25,18 @@ export async function iniciarReservaManyChat(
   solicitud: SolicitudCotizacion & { userId: string },
   disponibilidad: RepositorioDisponibilidad,
   tarifas: RepositorioTarifas,
+  tarifasAlimentacion: RepositorioTarifasAlimentacion,
   cotizaciones: RepositorioCotizaciones,
   reservas: RepositorioReservasManyChat,
   checkout: ProveedorCheckoutReserva
 ): Promise<ResultadoInicioReservaManyChat> {
-  const resultadoCotizacion = await cotizarEstadia(solicitud, disponibilidad, tarifas, cotizaciones);
+  const resultadoCotizacion = await cotizarEstadia(
+    solicitud,
+    disponibilidad,
+    tarifas,
+    tarifasAlimentacion,
+    cotizaciones
+  );
   if (resultadoCotizacion.ok === false) {
     return { estado: 'error_validacion', mensaje: resultadoCotizacion.error.mensaje };
   }

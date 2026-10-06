@@ -30,6 +30,58 @@ test('migra las tarifas legacy como un plan publicado en centavos', () => {
   db.close();
 });
 
+test('publica sólo desayuno incluido y pensión completa a ARS 20.000 por comida', () => {
+  const db = baseConTarifas();
+  const tarifas = db.prepare(`
+    SELECT codigo, version, precio_comida_centavos, comidas_adicionales_por_persona_noche, estado
+    FROM tarifas_alimentacion ORDER BY codigo
+  `).all().map(row => ({ ...row }));
+
+  assert.deepEqual(tarifas, [
+    { codigo: 'desayuno_incluido', version: 1, precio_comida_centavos: 2_000_000,
+      comidas_adicionales_por_persona_noche: 0, estado: 'publicado' },
+    { codigo: 'pension_completa', version: 1, precio_comida_centavos: 2_000_000,
+      comidas_adicionales_por_persona_noche: 2, estado: 'publicado' },
+  ]);
+  assert.throws(() => db.prepare(`
+    UPDATE tarifas_alimentacion SET precio_comida_centavos = 1
+    WHERE codigo = 'pension_completa'
+  `).run(), /immutable/);
+  db.close();
+});
+
+test('conserva la versión alimentaria del snapshot al publicar una tarifa nueva', () => {
+  const db = baseConTarifas();
+  const planId = Number(db.prepare("SELECT id FROM planes_tarifa WHERE codigo = 'alojamiento-base'").get()?.id);
+  db.prepare(`
+    INSERT INTO cotizaciones (
+      codigo, plan_tarifa_id, plan_codigo, plan_version, moneda,
+      fecha_checkin, fecha_checkout, cantidad_personas,
+      subtotal_centavos, sena_centavos, total_centavos,
+      alojamiento_centavos, alimentacion_centavos, regimen_alimentacion,
+      tarifa_alimentacion_version, desglose_json, request_hash, expires_at
+    ) VALUES ('COT-FOOD', ?, 'alojamiento-base', 1, 'ARS', '2099-01-01', '2099-01-02', 2,
+      11500000, 3450000, 11500000, 7500000, 4000000, 'pension_completa', 1,
+      '{"precio_comida_centavos":2000000}', 'hash-food', '2099-01-01T00:15:00Z')
+  `).run(planId);
+  db.prepare("UPDATE tarifas_alimentacion SET estado = 'retirado' WHERE codigo = 'pension_completa'").run();
+  db.prepare(`
+    INSERT INTO tarifas_alimentacion (
+      codigo, moneda, version, precio_comida_centavos,
+      comidas_adicionales_por_persona_noche, estado, publicado_at
+    ) VALUES ('pension_completa', 'ARS', 2, 2500000, 2, 'publicado', '2098-01-01T00:00:00Z')
+  `).run();
+
+  const snapshot = db.prepare(`
+    SELECT tarifa_alimentacion_version, alimentacion_centavos, desglose_json
+    FROM cotizaciones WHERE codigo = 'COT-FOOD'
+  `).get();
+  assert.equal(snapshot?.tarifa_alimentacion_version, 1);
+  assert.equal(snapshot?.alimentacion_centavos, 4_000_000);
+  assert.match(String(snapshot?.desglose_json), /2000000/);
+  db.close();
+});
+
 test('guarda snapshots monetarios válidos y enlaza como máximo una reserva', () => {
   const db = baseConTarifas();
   const planId = Number(db.prepare("SELECT id FROM planes_tarifa WHERE codigo = 'alojamiento-base'").get()?.id);
@@ -38,9 +90,10 @@ test('guarda snapshots monetarios válidos y enlaza como máximo una reserva', (
       codigo, plan_tarifa_id, plan_codigo, plan_version, moneda,
       fecha_checkin, fecha_checkout, cantidad_personas,
       subtotal_centavos, sena_centavos, total_centavos,
+      alojamiento_centavos, alimentacion_centavos,
       desglose_json, request_hash, expires_at
     ) VALUES ('COT-1', ?, 'alojamiento-base', 1, 'ARS', '2099-01-01', '2099-01-02', 2,
-      7500000, 2250000, 7500000, '{"noches":1}', 'hash-1', '2099-01-01T00:15:00Z')
+      7500000, 2250000, 7500000, 7500000, 0, '{"noches":1}', 'hash-1', '2099-01-01T00:15:00Z')
     RETURNING id
   `).get(planId)?.id);
 
@@ -50,9 +103,10 @@ test('guarda snapshots monetarios válidos y enlaza como máximo una reserva', (
       codigo, plan_tarifa_id, plan_codigo, plan_version, moneda,
       fecha_checkin, fecha_checkout, cantidad_personas,
       subtotal_centavos, sena_centavos, total_centavos,
+      alojamiento_centavos, alimentacion_centavos,
       desglose_json, request_hash, expires_at
     ) VALUES ('COT-2', ?, 'alojamiento-base', 1, 'ARS', '2099-01-01', '2099-01-02', 2,
-      10, 11, 10, '{}', 'hash-2', '2099-01-01T00:15:00Z')
+      10, 11, 10, 10, 0, '{}', 'hash-2', '2099-01-01T00:15:00Z')
   `).run(planId), /CHECK constraint failed/);
   db.close();
 });
