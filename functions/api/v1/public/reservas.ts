@@ -1,6 +1,7 @@
 import { crearReservaPublica } from '../../../_application/reservas/crearReservaPublica.ts';
 import { D1RepositorioCreacionReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
 import { D1RepositorioDisponibilidad } from '../../../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
+import { D1RepositorioConfiguracionBaseReservas } from '../../../_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
 
@@ -30,7 +31,8 @@ export async function onRequestPost({ request, env }: any) {
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
     clienteEmail: cliente.email ? String(cliente.email) : null,
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
-  }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB));
+  }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB),
+  new D1RepositorioConfiguracionBaseReservas(env.DB));
 
   if (resultado.ok === false) {
     return jsonPublico(
