@@ -59,6 +59,11 @@ import type {
   CuentaCobroReserva,
   DestinoCobroProveedor,
 } from '../../_domain/reservas/collectionAccounts.ts';
+import type {
+  CambioParametroOperativo,
+  ConfiguracionBaseReservas,
+  ParametroOperativoReserva,
+} from '../../_domain/reservas/baseConfiguration.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -207,6 +212,16 @@ export interface RepositorioCreacionReservaPublica {
     reservaCodigo: string;
     holdExpiresAt: string;
   }): Promise<ReservaPublicaCreada>;
+}
+
+export interface RepositorioConfiguracionBaseReservas {
+  obtenerPaymentHoldMinutes(): Promise<number>;
+  obtenerEfectiva(): Promise<ConfiguracionBaseReservas>;
+  actualizarParametro(entrada: CambioParametroOperativo & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ParametroOperativoReserva | null>;
 }
 
 export interface RepositorioRetencionesReserva {

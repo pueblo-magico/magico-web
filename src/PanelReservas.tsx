@@ -22,7 +22,7 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio';
-type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'usuarios' | 'actividad';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'configuracion' | 'usuarios' | 'actividad';
 type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
 
 type Alojamiento = {
@@ -1438,6 +1438,195 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
   );
 };
 
+type ConfiguracionBaseApi = {
+  parametros: Array<{
+    codigo: 'payment_hold_minutes'; valor: number; unidad: string; version: number;
+    minimo: number; maximo: number; editable: boolean; fuente: string; actualizadoAt: string;
+  }>;
+  inventario: Array<{
+    codigo: string; nombre: string; tipo: string; capacidadComercial: number;
+    capacidadOperativaMaxima: number; estado: string;
+    modalidades: Array<{ modalidad: string; contexto: string; unidadVenta: string }>;
+  }>;
+  tarifa: null | {
+    codigo: string; nombre: string; moneda: string; version: number;
+    reglasPrecio: number; reglasSena: number; publicadoAt: string;
+  };
+  politicaCancelacion: null | {
+    codigo: string; nombre: string; version: number; estado: string; vigenciaDesde: string | null;
+  };
+  alimentacion: Array<{
+    codigo: string; moneda: string; version: number; precioComidaCentavos: number;
+    comidasAdicionalesPorPersonaNoche: number;
+  }>;
+};
+
+const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEditar }) => {
+  const [configuracion, setConfiguracion] = useState<ConfiguracionBaseApi | null>(null);
+  const [valor, setValor] = useState('15');
+  const [motivo, setMotivo] = useState('');
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
+  const [mensaje, setMensaje] = useState('');
+
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const res = await adminFetch('/api/v1/admin/configuracion-reservas');
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setConfiguracion(body.data);
+      setValor(String(body.data?.parametros?.[0]?.valor ?? 15));
+    } catch (e: any) {
+      setError(e.message || 'No se pudo cargar la configuración.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => { cargar(); }, []);
+
+  const parametro = configuracion?.parametros.find(item => item.codigo === 'payment_hold_minutes');
+  const guardar = async () => {
+    if (!parametro) return;
+    setGuardando(true);
+    setError('');
+    setMensaje('');
+    try {
+      const res = await adminFetch('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          codigo: parametro.codigo,
+          valor: Number(valor),
+          expected_version: parametro.version,
+          motivo: motivo.trim(),
+        }),
+      });
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setMotivo('');
+      setMensaje('Configuración actualizada. Sólo afecta reservas nuevas.');
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo actualizar la configuración.');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  if (cargando && !configuracion) {
+    return <div className="flex justify-center py-16"><RefreshCw className="animate-spin text-gray-400" aria-label="Cargando configuración" /></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Configuración base</h2>
+        <p className="mt-1 text-xs text-gray-500">
+          Valores efectivos usados por reservas. No se muestran secretos. Los cambios afectan sólo operaciones futuras.
+        </p>
+      </div>
+
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
+      {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
+
+      {parametro && (
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Retención de pago</p>
+              <p className="mt-1 text-2xl font-bold text-brand">{parametro.valor} minutos</p>
+              <p className="mt-1 text-xs text-gray-400">
+                Versión {parametro.version} · unidad: {parametro.unidad} · fuente: {parametro.fuente}
+                {parametro.actualizadoAt ? ` · vigente desde ${fmtFechaHora(parametro.actualizadoAt)}` : ''}
+              </p>
+            </div>
+            {puedeEditar && <div className="grid w-full gap-2 sm:max-w-md">
+              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_minutes">
+                Nuevo plazo ({parametro.minimo}–{parametro.maximo} minutos)
+              </label>
+              <input
+                id="config_hold_minutes" type="number" min={parametro.minimo} max={parametro.maximo}
+                value={valor} onChange={event => setValor(event.target.value)}
+                disabled={!parametro.editable || guardando}
+                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
+              />
+              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_reason">Motivo del cambio</label>
+              <textarea
+                id="config_hold_reason" rows={2} maxLength={500} value={motivo}
+                onChange={event => setMotivo(event.target.value)} disabled={!parametro.editable || guardando}
+                placeholder="Ej. Ajuste operativo aprobado"
+                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
+              />
+              <button
+                type="button" onClick={guardar}
+                disabled={!parametro.editable || guardando || motivo.trim().length < 5 || Number(valor) === parametro.valor}
+                className={`justify-self-end rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}
+              >
+                {guardando ? 'Guardando…' : 'Guardar plazo'}
+              </button>
+            </div>}
+          </div>
+        </section>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Tarifa publicada</p>
+          {configuracion?.tarifa ? (
+            <><p className="mt-2 font-semibold text-gray-800">{configuracion.tarifa.nombre}</p>
+            <p className="text-xs text-gray-500">{configuracion.tarifa.codigo} · v{configuracion.tarifa.version} · {configuracion.tarifa.moneda}</p>
+            <p className="mt-2 text-xs text-gray-500">{configuracion.tarifa.reglasPrecio} reglas de precio · {configuracion.tarifa.reglasSena} reglas de seña</p></>
+          ) : <p className="mt-2 text-sm text-amber-700">Sin tarifa publicada.</p>}
+        </section>
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Política de cancelación</p>
+          {configuracion?.politicaCancelacion ? (
+            <><p className="mt-2 font-semibold text-gray-800">{configuracion.politicaCancelacion.nombre}</p>
+            <p className="text-xs text-gray-500">{configuracion.politicaCancelacion.codigo} · v{configuracion.politicaCancelacion.version}</p>
+            <p className="mt-2 text-xs text-gray-500">Estado: {configuracion.politicaCancelacion.estado}
+              {configuracion.politicaCancelacion.vigenciaDesde ? ` · vigente desde ${fmtDateLong(configuracion.politicaCancelacion.vigenciaDesde.slice(0, 10))}` : ''}
+            </p></>
+          ) : <p className="mt-2 text-sm text-amber-700">Sin política configurada.</p>}
+        </section>
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Alimentación</p>
+          <ul className="mt-2 space-y-2 text-xs text-gray-600">
+            {(configuracion?.alimentacion || []).map(item => (
+              <li key={item.codigo}><strong>{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</strong><br />
+                v{item.version} · {fmtMoney(item.precioComidaCentavos / 100)} por comida · {item.comidasAdicionalesPorPersonaNoche} adicionales</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Inventario y modalidades efectivas</p>
+        </div>
+        <ul className="divide-y divide-gray-100">
+          {(configuracion?.inventario || []).map(espacio => (
+            <li key={espacio.codigo} className="px-5 py-3 text-sm">
+              <div className="flex flex-col justify-between gap-1 sm:flex-row">
+                <span className="font-semibold text-gray-800">{espacio.nombre} <span className="font-normal text-gray-400">({espacio.codigo})</span></span>
+                <span className="text-xs text-gray-500">Comercial {espacio.capacidadComercial} · máximo {espacio.capacidadOperativaMaxima} · {espacio.estado}</span>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                {espacio.modalidades.length > 0
+                  ? espacio.modalidades.map(item => `${item.modalidad}/${item.contexto} por ${item.unidadVenta}`).join(' · ')
+                  : 'Sin modalidades habilitadas'}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+};
+
 type GrupoMetricaEstadia = {
   tipo_estadia: string;
   total_personas: number;
@@ -1502,6 +1691,7 @@ const ACCION_LABEL: Record<string, string> = {
   cancelar_bloqueo_inventario: 'Canceló un bloqueo operativo',
   crear_estadia_no_comercial: 'Registró una estadía no comercial',
   cancelar_estadia_no_comercial: 'Canceló una estadía no comercial',
+  actualizar_configuracion_reservas: 'Actualizó configuración de reservas',
 };
 
 const fmtFechaHora = (iso: string) => {
@@ -1965,7 +2155,11 @@ const PanelReservas: React.FC = () => {
     { key: 'metricas', label: 'Métricas' },
     { key: 'historial', label: 'Historial' },
     { key: 'consultas', label: 'Consultas' },
-    ...(esSuperAdmin ? [{ key: 'usuarios' as VistaActiva, label: 'Usuarios' }, { key: 'actividad' as VistaActiva, label: 'Actividad' }] : []),
+    { key: 'configuracion', label: 'Configuración' },
+    ...(esSuperAdmin ? [
+      { key: 'usuarios' as VistaActiva, label: 'Usuarios' },
+      { key: 'actividad' as VistaActiva, label: 'Actividad' },
+    ] : []),
   ];
 
   return (
@@ -2275,6 +2469,7 @@ const PanelReservas: React.FC = () => {
           </>
         )}
 
+        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase puedeEditar={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}
       </main>
