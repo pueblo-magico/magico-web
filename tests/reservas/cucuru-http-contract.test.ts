@@ -196,6 +196,39 @@ test('normaliza el timestamp corto del webhook y exige su secreto configurado', 
   assert.equal(autenticarWebhookCucuru(request, {}), false);
 });
 
+test('acepta la prueba cero autenticada aunque no incluya una Collection completa', async () => {
+  const sqlite = baseCompleta();
+  const secreto = 'secreto-cucuru-con-longitud-segura';
+  const ejecutar = (amount: unknown) => webhookCucuru({
+    request: new Request('https://test/api/v1/integrations/cucuru/collection_received', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Cucuru-Webhook-Secret': secreto,
+      },
+      body: JSON.stringify({ amount }),
+    }),
+    env: {
+      DB: d1(sqlite),
+      CUCURU_WEBHOOK_SECRET: secreto,
+      CUCURU_COLLECTOR_ID: 'collector-prueba',
+      MANYCHAT_NOTIFICATIONS_ENABLED: 'false',
+    },
+  });
+
+  const numerica = await ejecutar(0);
+  const textual = await ejecutar('0.00');
+  assert.equal(numerica.status, 200);
+  assert.deepEqual(await numerica.json(), { ok: true, estado: 'prueba_cero' });
+  assert.equal(textual.status, 200);
+  assert.deepEqual(await textual.json(), { ok: true, estado: 'prueba_cero' });
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM pagos').get()?.n, 0);
+
+  const incompletaConImporte = await ejecutar(1);
+  assert.equal(incompletaConImporte.status, 400);
+  sqlite.close();
+});
+
 test('el webhook autentica, concilia una Collection y responde idempotentemente', async () => {
   const sqlite = baseCompleta();
   const uid = '66666666-6666-4666-8666-666666666666';

@@ -21,6 +21,13 @@ function igualesConstante(a: string, b: string): boolean {
   return diferencia === 0;
 }
 
+function esPruebaImporteCero(payload: Record<string, unknown>): boolean {
+  const importe = payload.amount;
+  if (typeof importe === 'number') return Number.isFinite(importe) && importe === 0;
+  if (typeof importe !== 'string') return false;
+  return /^0+(?:\.0+)?$/.test(importe.trim());
+}
+
 export function autenticarWebhookCucuru(request: Request, env: Record<string, unknown>): boolean {
   const secreto = env.CUCURU_WEBHOOK_SECRET;
   const configurado = typeof env.CUCURU_WEBHOOK_HEADER_NAME === 'string'
@@ -60,6 +67,17 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
   } catch (error) {
     contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
     return respuestaJsonInvalido(error);
+  }
+
+  // Cucuru valida un webhook nuevo con una notificación autenticada de importe cero.
+  // Esa prueba no garantiza todos los campos de una Collection real, por lo que se
+  // confirma sin escribir datos de reservas.
+  if (esPruebaImporteCero(payload)) {
+    contexto.signal('payment.webhook_processed', 'info', {
+      outcome: 'prueba_cero',
+      metric: 'reservas_webhooks_processed_total',
+    });
+    return json({ ok: true, estado: 'prueba_cero' }, 200);
   }
 
   try {
