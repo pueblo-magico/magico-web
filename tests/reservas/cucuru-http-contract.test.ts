@@ -165,6 +165,32 @@ test('clasifica el estado HTTP de Cucuru sin persistir el cuerpo del proveedor',
   );
 });
 
+test('un 403 registra sólo huellas seguras para comparar la configuración', async () => {
+  const errores: string[] = [];
+  const errorOriginal = console.error;
+  console.error = (mensaje?: unknown) => errores.push(String(mensaje));
+  try {
+    const cliente = new CucuruClienteHttp(configuracion, async () => new Response('prohibido', { status: 403 }));
+    await assert.rejects(
+      cliente.buscarPorCustomerId('pm-reserva-11111111-1111-4111-8111-111111111111'),
+      (error: any) => error.codigo === 'CUCURU_HTTP_403'
+    );
+  } finally {
+    console.error = errorOriginal;
+  }
+
+  assert.equal(errores.length, 1);
+  const diagnostico = JSON.parse(errores[0]);
+  assert.equal(diagnostico.evento, 'cucuru_http_403_diagnostico');
+  assert.equal(diagnostico.metodo, 'GET');
+  assert.equal(new URL(diagnostico.url).pathname, '/app/v1/Collection/accounts');
+  assert.match(diagnostico.api_key_sha256_16, /^[a-f0-9]{16}$/);
+  assert.match(diagnostico.collector_id_sha256_16, /^[a-f0-9]{16}$/);
+  assert.equal(errores[0].includes(configuracion.apiKey), false);
+  assert.equal(errores[0].includes(configuracion.collectorId), false);
+  assert.equal(errores[0].includes('prohibido'), false);
+});
+
 test('normaliza Collections paginadas sin depender de transfer_data ni datos del pagador', async () => {
   const payload = {
     collection_id: 'collection-1',
