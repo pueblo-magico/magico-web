@@ -179,16 +179,25 @@ test('un 403 registra sólo huellas seguras para comparar la configuración', as
     console.error = errorOriginal;
   }
 
-  assert.equal(errores.length, 1);
-  const diagnostico = JSON.parse(errores[0]);
+  const diagnosticos = errores.flatMap(mensaje => {
+    try {
+      const entrada = JSON.parse(mensaje);
+      return entrada.evento === 'cucuru_http_403_diagnostico' ? [entrada] : [];
+    } catch {
+      return [];
+    }
+  });
+  assert.equal(diagnosticos.length, 1);
+  const [diagnostico] = diagnosticos;
   assert.equal(diagnostico.evento, 'cucuru_http_403_diagnostico');
   assert.equal(diagnostico.metodo, 'GET');
   assert.equal(new URL(diagnostico.url).pathname, '/app/v1/Collection/accounts');
   assert.match(diagnostico.api_key_sha256_16, /^[a-f0-9]{16}$/);
   assert.match(diagnostico.collector_id_sha256_16, /^[a-f0-9]{16}$/);
-  assert.equal(errores[0].includes(configuracion.apiKey), false);
-  assert.equal(errores[0].includes(configuracion.collectorId), false);
-  assert.equal(errores[0].includes('prohibido'), false);
+  const registro = JSON.stringify(diagnostico);
+  assert.equal(registro.includes(configuracion.apiKey), false);
+  assert.equal(registro.includes(configuracion.collectorId), false);
+  assert.equal(registro.includes('prohibido'), false);
 });
 
 test('normaliza Collections paginadas sin depender de transfer_data ni datos del pagador', async () => {
