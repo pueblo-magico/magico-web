@@ -230,21 +230,7 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
       }));
       throw new ErrorCucuruTransitorio('No se pudo consultar Cucuru.', diagnostico.codigo, { cause });
     }
-    if (!response.ok) {
-      if (response.status === 403) {
-        const { apiKey, collectorId } = this.configuracion();
-        console.error(JSON.stringify({
-          evento: 'cucuru_http_403_diagnostico',
-          metodo: 'GET',
-          url: this.url(path, parametros),
-          body: null,
-          header_names: ['Content-Type', 'X-Cucuru-Api-Key', 'X-Cucuru-Collector-id'],
-          api_key_sha256_16: (await hashHex(apiKey)).slice(0, 16),
-          collector_id_sha256_16: (await hashHex(collectorId)).slice(0, 16),
-        }));
-      }
-      throw errorHttp(response.status);
-    }
+    if (!response.ok) throw errorHttp(response.status);
     try {
       const body = await response.json();
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error();
