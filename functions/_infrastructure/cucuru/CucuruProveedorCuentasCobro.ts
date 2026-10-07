@@ -174,11 +174,12 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
   private readonly fetcher: Fetcher;
   private readonly timeoutMs = 8_000;
 
-  constructor(configuracion: ConfiguracionCucuru, fetcher: Fetcher = fetch) {
+  constructor(configuracion: ConfiguracionCucuru, fetcher?: Fetcher) {
     this.apiKey = configuracion.apiKey;
     this.collectorId = configuracion.collectorId;
     this.baseUrl = (configuracion.baseUrl || 'https://api.cucuru.com').replace(/\/+$/, '');
-    this.fetcher = fetcher;
+    const fetchConfigurado = fetcher ?? globalThis.fetch.bind(globalThis);
+    this.fetcher = (input, init) => fetchConfigurado(input, init);
   }
 
   private configuracion() {

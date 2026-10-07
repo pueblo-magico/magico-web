@@ -17,6 +17,21 @@ const configuracion = {
   baseUrl: 'https://cucuru.test',
 };
 
+test('invoca el fetch global con el contexto requerido por Cloudflare Workers', async () => {
+  const fetchOriginal = globalThis.fetch;
+  globalThis.fetch = async function (this: unknown) {
+    assert.equal(this, globalThis);
+    return Response.json({ accounts: [], next_page: 'EOF' });
+  } as typeof fetch;
+
+  try {
+    const cliente = new CucuruClienteHttp(configuracion);
+    assert.equal(await cliente.buscarPorCustomerId('pm-reserva-contexto-cloudflare'), null);
+  } finally {
+    globalThis.fetch = fetchOriginal;
+  }
+});
+
 type TestStatement = {
   query: string;
   values: SQLInputValue[];
