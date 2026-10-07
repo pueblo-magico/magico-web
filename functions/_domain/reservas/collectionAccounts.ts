@@ -22,6 +22,7 @@ export type CuentaCobroReserva = {
   operacionUid: string;
   errorCodigo: string | null;
   nextRetryAt: string | null;
+  simulada: boolean;
 };
 
 export type DestinoCobroProveedor = {

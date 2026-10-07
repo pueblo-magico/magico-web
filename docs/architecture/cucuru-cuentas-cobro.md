@@ -81,6 +81,29 @@ Una configuración incompleta falla cerrado: la reserva permanece
 `pendiente_pago`, el intento queda recuperable y nunca se confirma por un error
 del proveedor.
 
+### Modo mock para desarrollo y Preview
+
+Mientras el acceso externo no esté disponible, el adaptador de cuentas puede
+reemplazarse sin cambiar la lógica de reservas, idempotencia ni persistencia:
+
+```text
+CUCURU_TRANSFER_ENABLED=true
+CUCURU_PROVIDER_MODE=mock
+CUCURU_MOCK_ALLOWED=true
+CUCURU_ALIAS_PREFIX=magico.qa
+```
+
+El modo mock no realiza llamadas de red. Genera de forma determinista un CVU
+que comienza con `99`, un identificador externo `mock-*` y el alias normal de
+Preview. La respuesta pública informa `proveedor: cucuru_mock` y
+`simulado: true`; D1 también conserva `simulada = 1`. Repetir la misma reserva
+devuelve el mismo destino y no crea otra asignación.
+
+La doble activación es intencional: si falta `CUCURU_MOCK_ALLOWED=true`, el
+modo mock falla cerrado. Esta variable sólo se configura en desarrollo o en
+las variables de Preview de Cloudflare y nunca en producción. El backfill real
+queda bloqueado mientras el adaptador está en mock.
+
 ## Variables
 
 Sólo se documentan nombres, nunca valores:
@@ -91,6 +114,8 @@ Sólo se documentan nombres, nunca valores:
 - `CUCURU_WEBHOOK_SECRET`
 - `CUCURU_API_BASE_URL`
 - `CUCURU_TRANSFER_ENABLED`
+- `CUCURU_PROVIDER_MODE`
+- `CUCURU_MOCK_ALLOWED`
 - `CUCURU_ALIAS_PREFIX`
 
 Los secretos locales van en `.dev.vars`, que está ignorado por Git. Preview y

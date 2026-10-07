@@ -511,6 +511,7 @@ export interface RepositorioCuentasCobroReserva {
     reservaId: number;
     customerId: string;
     habilitada: boolean;
+    simulada?: boolean;
     operacionUid: string;
   }): Promise<CuentaCobroReserva>;
   reclamarProvisionamiento(cuentaId: number, operacionUid: string): Promise<CuentaCobroReserva | null>;

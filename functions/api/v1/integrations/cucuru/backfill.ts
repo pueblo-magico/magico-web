@@ -2,6 +2,7 @@ import { ejecutarBackfillCucuru } from '../../../../_application/reservas/ejecut
 import { procesarCollectionCucuru } from '../../../../_application/reservas/procesarCollectionCucuru.ts';
 import { cucuruHabilitado } from '../../../../_domain/reservas/collectionAccounts.ts';
 import { CucuruClienteHttp } from '../../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
+import { resolverModoCuentasCobro } from '../../../../_infrastructure/cucuru/CucuruProveedorCuentasCobroMock.ts';
 import { D1RepositorioBackfillCucuru } from '../../../../_infrastructure/d1/D1RepositorioBackfillCucuru.ts';
 import { D1RepositorioConciliacionCucuru } from '../../../../_infrastructure/d1/D1RepositorioConciliacionCucuru.ts';
 import { crearNotificadorManyChat } from '../../../../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
@@ -16,6 +17,9 @@ export async function onRequestPost({ request, env }: any) {
   }
   if (!cucuruHabilitado(env.CUCURU_TRANSFER_ENABLED)) {
     return json({ error: 'Cucuru está desactivado.' }, 409);
+  }
+  if (resolverModoCuentasCobro(env) !== 'real') {
+    return json({ error: 'El backfill real no está disponible en modo mock.' }, 409);
   }
   if (typeof env.CUCURU_COLLECTOR_ID !== 'string' || !env.CUCURU_COLLECTOR_ID.trim()) {
     return json({ error: 'Integración no configurada.' }, 503);

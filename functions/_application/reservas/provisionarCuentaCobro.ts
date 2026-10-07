@@ -36,7 +36,7 @@ function asegurarCustomerId(destino: DestinoCobroProveedor, esperado: string): D
 }
 
 export async function provisionarCuentaCobroReserva(
-  entrada: { reservaId: number; habilitada: boolean; aliasPrefix?: unknown },
+  entrada: { reservaId: number; habilitada: boolean; simulada?: boolean; aliasPrefix?: unknown },
   repositorio: RepositorioCuentasCobroReserva,
   proveedor: ProveedorCuentasCobro,
   ahora: () => Date = () => new Date(),
@@ -51,6 +51,7 @@ export async function provisionarCuentaCobroReserva(
     reservaId: contexto.reservaId,
     customerId,
     habilitada: entrada.habilitada,
+    simulada: entrada.simulada,
     operacionUid: crearUuid(),
   });
   if (!entrada.habilitada || preparada.estado === 'disabled') return { estado: 'disabled', cuenta: preparada };

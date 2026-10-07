@@ -27,11 +27,12 @@ function mapear(row: Record<string, unknown>): CuentaCobroReserva {
     operacionUid: String(row.ultima_operacion_uid),
     errorCodigo: row.ultimo_error_codigo == null ? null : String(row.ultimo_error_codigo),
     nextRetryAt: row.next_retry_at == null ? null : String(row.next_retry_at),
+    simulada: Number(row.simulada) === 1,
   };
 }
 
 const COLUMNAS = `id, reserva_id, proveedor, customer_id, estado, external_account_id,
-  cvu, alias, moneda, intentos, ultima_operacion_uid, ultimo_error_codigo, next_retry_at`;
+  cvu, alias, moneda, intentos, ultima_operacion_uid, ultimo_error_codigo, next_retry_at, simulada`;
 
 export class D1RepositorioCuentasCobroReserva implements RepositorioCuentasCobroReserva {
   private readonly db: Database;
@@ -58,8 +59,8 @@ export class D1RepositorioCuentasCobroReserva implements RepositorioCuentasCobro
     const estado = entrada.habilitada ? 'pending' : 'disabled';
     const row = await this.db.prepare(`
       INSERT INTO cuentas_cobro_reserva (
-        reserva_id, proveedor, customer_id, estado, ultima_operacion_uid
-      ) VALUES (?, 'cucuru', ?, ?, ?)
+        reserva_id, proveedor, customer_id, estado, ultima_operacion_uid, simulada
+      ) VALUES (?, 'cucuru', ?, ?, ?, ?)
       ON CONFLICT (reserva_id, proveedor) DO UPDATE SET
         estado = CASE
           WHEN excluded.estado = 'pending' AND (
@@ -77,6 +78,10 @@ export class D1RepositorioCuentasCobroReserva implements RepositorioCuentasCobro
             THEN excluded.ultima_operacion_uid
           ELSE cuentas_cobro_reserva.ultima_operacion_uid
         END,
+        simulada = CASE
+          WHEN cuentas_cobro_reserva.estado <> 'ready' THEN excluded.simulada
+          ELSE cuentas_cobro_reserva.simulada
+        END,
         updated_at = CASE
           WHEN excluded.estado = 'pending' AND (
             cuentas_cobro_reserva.estado = 'disabled' OR
@@ -86,7 +91,10 @@ export class D1RepositorioCuentasCobroReserva implements RepositorioCuentasCobro
           ELSE cuentas_cobro_reserva.updated_at
         END
       RETURNING ${COLUMNAS}
-    `).bind(entrada.reservaId, entrada.customerId, estado, entrada.operacionUid).first();
+    `).bind(
+      entrada.reservaId, entrada.customerId, estado, entrada.operacionUid,
+      entrada.simulada ? 1 : 0
+    ).first();
     if (!row) throw new Error('No se pudo preparar la cuenta de cobro.');
     return mapear(row);
   }
@@ -147,7 +155,7 @@ export class D1RepositorioCuentasCobroReserva implements RepositorioCuentasCobro
         )
         SELECT reserva_id, 'cuenta_cobro.lista', 'servicio', 'cucuru',
           'cuenta-cobro-ready:' || ultima_operacion_uid, 'integracion', CAST(id AS TEXT),
-          json_object('proveedor', proveedor, 'moneda', moneda)
+          json_object('proveedor', proveedor, 'moneda', moneda, 'simulada', simulada)
         FROM cuentas_cobro_reserva
         WHERE id = ? AND estado = 'ready' AND ultima_operacion_uid = ?
       `).bind(cuentaId, operacionUid),

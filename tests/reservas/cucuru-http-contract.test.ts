@@ -8,6 +8,10 @@ import {
   CucuruClienteHttp,
   normalizarCollectionCucuru,
 } from '../../functions/_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
+import {
+  CucuruProveedorCuentasCobroMock,
+  resolverModoCuentasCobro,
+} from '../../functions/_infrastructure/cucuru/CucuruProveedorCuentasCobroMock.ts';
 import { autenticarWebhookCucuru } from '../../functions/api/v1/integrations/cucuru/collection_received.ts';
 import { onRequestPost as webhookCucuru } from '../../functions/api/v1/integrations/cucuru/collection_received.ts';
 
@@ -16,6 +20,27 @@ const configuracion = {
   collectorId: 'collector-prueba',
   baseUrl: 'https://cucuru.test',
 };
+
+test('el modo mock requiere activación doble y genera un destino determinista marcado', async () => {
+  assert.equal(resolverModoCuentasCobro({}), 'disabled');
+  assert.equal(resolverModoCuentasCobro({ CUCURU_TRANSFER_ENABLED: 'true' }), 'real');
+  assert.throws(() => resolverModoCuentasCobro({
+    CUCURU_TRANSFER_ENABLED: 'true', CUCURU_PROVIDER_MODE: 'mock',
+  }), /CUCURU_MOCK_NO_PERMITIDO/);
+  assert.equal(resolverModoCuentasCobro({
+    CUCURU_TRANSFER_ENABLED: 'true', CUCURU_PROVIDER_MODE: 'mock', CUCURU_MOCK_ALLOWED: 'true',
+  }), 'mock');
+
+  const proveedor = new CucuruProveedorCuentasCobroMock();
+  const customerId = 'pm-reserva-11111111-1111-4111-8111-111111111111';
+  assert.equal(await proveedor.buscarPorCustomerId(customerId), null);
+  const primera = await proveedor.crear({ customerId, idempotencyKey: 'mock-1' });
+  const segunda = await proveedor.crear({ customerId, idempotencyKey: 'mock-2' });
+  assert.deepEqual(segunda, primera);
+  assert.match(primera.externalAccountId, /^mock-[0-9a-f]{16}$/);
+  assert.match(primera.cvu, /^99\d{20}$/);
+  assert.equal(primera.alias, null);
+});
 
 test('invoca el fetch global con el contexto requerido por Cloudflare Workers', async () => {
   const fetchOriginal = globalThis.fetch;
