@@ -79,8 +79,25 @@ D1 manualmente.
 
 ## Envío de arrepentimientos por email
 
-El webhook consumidor de `INTEGRATION_EVENTS_WEBHOOK_URL` debe derivar los eventos
-`arrepentimiento.notificacion_pendiente` a un subflujo de correo:
+Importar `docs/integrations/n8n-arrepentimientos-email.workflow.json`. El
+workflow queda inactivo, no contiene credenciales y no conserva datos de
+ejecuciones exitosas, fallidas ni manuales, porque durante la entrega procesa el
+email del huésped.
+
+Después de importar:
+
+1. Asignar una credencial SMTP al nodo **Enviar email**.
+2. Configurar `RESERVAS_API_BASE_URL` y `RESERVAS_EMAIL_FROM` como variables de
+   n8n. La URL no lleva `/` final.
+3. Configurar `INTEGRATION_EVENTS_WEBHOOK_SECRET` y `N8N_INBOUND_SECRET` como
+   secretos de proceso de n8n; deben coincidir con el ambiente Cloudflare.
+4. Para Preview, cambiar el path del Webhook a `reservas-eventos-preview`. No
+   activar dos workflows con el mismo path en una misma instancia n8n.
+5. Copiar la URL productiva del nodo Webhook (`/webhook/...`, no
+   `/webhook-test/...`) a `INTEGRATION_EVENTS_WEBHOOK_URL` del ambiente.
+
+El workflow autentica el Bearer enviado por Reservas, ignora con `202` los
+eventos que no sean `arrepentimiento.notificacion_pendiente` y procesa el email:
 
 1. Leer `notification_id` del evento. El evento no contiene PII.
 2. Reclamar la entrega con `POST /api/v1/integrations/arrepentimientos/notificaciones`,
@@ -93,10 +110,27 @@ El webhook consumidor de `INTEGRATION_EVENTS_WEBHOOK_URL` debe derivar los event
    `entregada`, `retry` o `dead_letter`. En una falla, enviar sólo un
    `error_code` estable como `SMTP_TIMEOUT`; nunca el mensaje crudo del proveedor.
 
-Un resultado repetido con el mismo `delivery_uid` es idempotente. `retry`
-reprograma también el evento del outbox; `dead_letter` queda visible para
-reproceso manual en Administración. Un `409 NOTIFICACION_NO_DISPONIBLE` significa
-que otro proceso conserva el lease o que la entrega ya terminó.
+Un resultado repetido con el mismo `delivery_uid` es idempotente. Ante una falla
+SMTP, los primeros intentos registran `retry` y el webhook responde `503` para
+que el dispatcher no marque el evento como entregado. Al llegar a
+`max_intentos`, registra `dead_letter` y responde `200`; queda visible para
+reproceso manual en Administración. Un `409 NOTIFICACION_NO_DISPONIBLE`
+significa que otro proceso conserva el lease o que la entrega ya terminó.
+
+### Validación manual del correo
+
+1. Mantener el workflow inactivo y usar **Listen for test event** en el Webhook.
+2. Configurar temporalmente `INTEGRATION_EVENTS_WEBHOOK_URL` con la URL
+   `/webhook-test/` mostrada por n8n y disparar manualmente un lote del outbox
+   desde Administración.
+3. Confirmar que llega el correo, la notificación queda `entregada` y la
+   ejecución no queda guardada en el historial al finalizar.
+4. Repetir en ES y EN con dos solicitudes nuevas.
+5. Probar la falla con una credencial SMTP inválida: los primeros intentos deben
+   quedar en `pendiente` y devolver `503`; el tercero debe quedar en
+   `dead_letter`. Restaurar SMTP y usar **Reintentar email** desde Administración.
+6. Reemplazar la URL de test por `/webhook/`, activar el workflow de Preview y
+   ejecutar nuevamente el recorrido antes de configurar Producción.
 
 ## Pausa, recuperación y cutover
 
