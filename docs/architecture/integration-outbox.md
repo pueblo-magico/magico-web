@@ -29,3 +29,16 @@ sin guardar cuerpos ni mensajes del proveedor. Los consumidores deduplican por
 Cloudflare Queues puede implementarse como transporte del puerto
 `EntregadorEventoIntegracion`. D1 permanece como fuente durable y recuperable;
 el envío externo nunca ocurre dentro de la transacción de reservas.
+
+## Dispatcher HTTP
+
+`POST /api/v1/integrations/outbox/dispatch` permite que un cron o Worker reclame
+un lote. Usa una identidad exclusiva mediante `OUTBOX_DISPATCH_SECRET` y además
+requiere `INTEGRATION_OUTBOX_ENABLED=true`; no reutiliza secretos entrantes de
+ManyChat, n8n ni pagos.
+
+El adaptador HTTP sólo acepta un destino HTTPS configurado en
+`INTEGRATION_EVENTS_WEBHOOK_URL`. Envía el secreto server-side como Bearer y el
+`event_id` estable en `Idempotency-Key`. Nunca registra el secreto ni el cuerpo
+de error del consumidor. Preview y producción deben usar secretos y destinos
+distintos.

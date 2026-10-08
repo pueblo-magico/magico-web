@@ -8,6 +8,11 @@ import {
   D1RepositorioDeduplicacionEventos,
   D1RepositorioOutboxIntegracion,
 } from '../../functions/_infrastructure/d1/D1RepositorioOutboxIntegracion.ts';
+import {
+  ErrorConfiguracionEntregaIntegracion,
+  HttpEntregadorEventosIntegracion,
+} from '../../functions/_infrastructure/integrations/HttpEntregadorEventosIntegracion.ts';
+import { onRequestPost as despacharOutbox } from '../../functions/api/v1/integrations/outbox/dispatch.ts';
 
 function baseCompleta(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
@@ -151,5 +156,69 @@ test('agota intentos en dead letter y permite deduplicar por consumidor', async 
   assert.equal(await deduplicacion.registrarProcesado('manychat', 'reserva:outbox-dlq'), true);
   assert.equal(await deduplicacion.registrarProcesado('manychat', 'reserva:outbox-dlq'), false);
   assert.equal(await deduplicacion.registrarProcesado('n8n', 'reserva:outbox-dlq'), true);
+  sqlite.close();
+});
+
+test('el adaptador HTTP envía un envelope mínimo con idempotencia y secreto server-side', async () => {
+  let request: { input: RequestInfo | URL; init?: RequestInit } | null = null;
+  const entregador = new HttpEntregadorEventosIntegracion({
+    url: 'https://n8n.example.test/webhook/reservas',
+    secret: 'webhook-secret-seguro-123456789',
+  }, async (input, init) => {
+    request = { input, init };
+    return new Response(null, { status: 204 });
+  });
+  await entregador.entregar({
+    eventId: 'reserva:http-1', eventType: 'reserva.creada', schemaVersion: 1,
+    aggregateType: 'reserva', aggregateId: '7',
+    payload: { event_id: 'reserva:http-1', reservation_id: 7 },
+    estado: 'processing', attempts: 1,
+    occurredAt: '2099-10-01T10:00:00.000Z', createdAt: '2099-10-01T10:00:00.000Z',
+  });
+  assert.equal(String(request?.input), 'https://n8n.example.test/webhook/reservas');
+  const headers = new Headers(request?.init?.headers);
+  assert.equal(headers.get('Authorization'), 'Bearer webhook-secret-seguro-123456789');
+  assert.equal(headers.get('Idempotency-Key'), 'reserva:http-1');
+  assert.deepEqual(JSON.parse(String(request?.init?.body)), {
+    event_id: 'reserva:http-1', reservation_id: 7,
+  });
+  assert.throws(
+    () => new HttpEntregadorEventosIntegracion({ url: 'http://inseguro.test', secret: 'x'.repeat(24) }),
+    ErrorConfiguracionEntregaIntegracion
+  );
+});
+
+test('el dispatcher HTTP falla cerrado y despacha sólo con identidad exclusiva', async () => {
+  const sqlite = baseCompleta();
+  crearEvento(sqlite, 'reserva:http-dispatch');
+  const secret = 'outbox-secret-seguro-123456789';
+  const env = {
+    DB: d1(sqlite), OUTBOX_DISPATCH_SECRET: secret,
+    INTEGRATION_OUTBOX_ENABLED: 'true',
+    INTEGRATION_EVENTS_WEBHOOK_URL: 'https://n8n.example.test/webhook/reservas',
+    INTEGRATION_EVENTS_WEBHOOK_SECRET: 'webhook-secret-seguro-123456789',
+  };
+  const sinAuth = await despacharOutbox({
+    request: new Request('https://test/api/v1/integrations/outbox/dispatch', { method: 'POST' }), env,
+  });
+  assert.equal(sinAuth.status, 401);
+
+  const originalFetch = globalThis.fetch;
+  let entregas = 0;
+  globalThis.fetch = async () => { entregas++; return new Response(null, { status: 204 }); };
+  try {
+    const response = await despacharOutbox({
+      request: new Request('https://test/api/v1/integrations/outbox/dispatch', {
+        method: 'POST', headers: { 'X-Service-Secret': secret },
+      }), env,
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ok: true, reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0,
+    });
+    assert.equal(entregas, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
   sqlite.close();
 });

@@ -4,6 +4,7 @@ export type AlcanceServicio =
   | 'reservas:expirar'
   | 'pagos:notificar'
   | 'pagos:conciliar'
+  | 'integraciones:despachar'
   | 'stock:leer';
 
 const IDENTIDADES = {
@@ -14,6 +15,7 @@ const IDENTIDADES = {
   },
   accounting: { env: 'ACCOUNTING_API_SECRET', alcances: ['reservas:leer'] },
   stock: { env: 'STOCK_API_SECRET', alcances: ['stock:leer'] },
+  outbox: { env: 'OUTBOX_DISPATCH_SECRET', alcances: ['integraciones:despachar'] },
 } as const;
 
 function igualesConstante(a: string, b: string): boolean {

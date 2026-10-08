@@ -58,11 +58,20 @@ test('la sesión firmada rechaza manipulación y CSRF ausente', async () => {
 });
 
 test('las identidades de servicio tienen secretos y alcances mínimos', () => {
-  const env = { MANYCHAT_INBOUND_SECRET: 'manychat-secret-seguro-123456' };
+  const env = {
+    MANYCHAT_INBOUND_SECRET: 'manychat-secret-seguro-123456',
+    OUTBOX_DISPATCH_SECRET: 'outbox-secret-seguro-123456789',
+  };
   assert.equal(autenticarServicio('manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:crear'), true);
   assert.equal(autenticarServicio('manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:leer'), false);
   assert.equal(autenticarServicio('manychat', 'incorrecto', env, 'reservas:crear'), false);
   assert.equal(autenticarServicio('manychat', '', {}, 'reservas:crear'), false);
+  assert.equal(autenticarServicio(
+    'outbox', env.OUTBOX_DISPATCH_SECRET, env, 'integraciones:despachar'
+  ), true);
+  assert.equal(autenticarServicio(
+    'outbox', env.OUTBOX_DISPATCH_SECRET, env, 'reservas:crear'
+  ), false);
 });
 
 test('la lectura JSON rechaza content type, arrays y cuerpos grandes', async () => {
