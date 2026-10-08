@@ -88,6 +88,11 @@ sus IDs internos coincidan. Un retry idempotente recupera la preferencia ya
 persistida; ante un resultado externo incierto, primero se busca por esa
 referencia antes de crear otra.
 
+Una selección explícita de Checkout Pro o transferencia pertenece al adaptador
+de Mercado Pago y no provisiona cuentas Cucuru. Las solicitudes legacy que aún
+omiten `pago.metodo` conservan temporalmente su comportamiento anterior para no
+romper integraciones existentes.
+
 Los retornos `/reserva-confirmada`, `/reserva-pendiente` y `/reserva-fallida`
 no confían en los parámetros del redirect. Consultan
 `GET /api/v1/public/reservas/:codigo`, que devuelve solamente código, estado,

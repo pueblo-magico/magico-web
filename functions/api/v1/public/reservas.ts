@@ -36,9 +36,12 @@ export async function onRequestPost({ request, env }: any) {
   const body: any = lectura.body;
   const cliente = body.cliente || {};
   const pagoSolicitado = body.pago || {};
+  const metodoExplicito = typeof pagoSolicitado.metodo === 'string';
   const metodoPago = pagoSolicitado.metodo || 'mercado_pago_checkout';
   const transferenciaConfigurada = configuracionTransferenciaMp(env);
+  const checkoutConfigurado = checkoutMercadoPagoHabilitado(env);
   if ((metodoPago === 'transferencia_mp' && !transferenciaConfigurada.habilitada) ||
+      (metodoPago === 'mercado_pago_checkout' && metodoExplicito && !checkoutConfigurado) ||
       !['mercado_pago_checkout', 'transferencia_mp'].includes(metodoPago)) {
     return jsonPublico(request, 'POST', {
       error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'El medio de pago seleccionado no está disponible.' },
@@ -78,47 +81,51 @@ export async function onRequestPost({ request, env }: any) {
     );
   }
   let cuentaCobro: Record<string, unknown> = { proveedor: 'cucuru', estado: 'no_disponible' };
-  try {
-    const modoCuentasCobro = resolverModoCuentasCobro(env);
-    const proveedor = modoCuentasCobro === 'mock'
-      ? new CucuruProveedorCuentasCobroMock()
-      : new CucuruClienteHttp({
-        apiKey: env.CUCURU_API_KEY,
-        collectorId: env.CUCURU_COLLECTOR_ID,
-        baseUrl: env.CUCURU_API_BASE_URL,
-      });
-    const provisionamiento = await provisionarCuentaCobroReserva({
-      reservaId: resultado.valor.reservaId,
-      habilitada: modoCuentasCobro !== 'disabled',
-      simulada: modoCuentasCobro === 'mock',
-      aliasPrefix: env.CUCURU_ALIAS_PREFIX,
-    }, new D1RepositorioCuentasCobroReserva(env.DB), proveedor);
-    cuentaCobro = {
-      proveedor: modoCuentasCobro === 'mock' ? 'cucuru_mock' : 'cucuru',
-      estado: provisionamiento.estado,
-      ...(modoCuentasCobro === 'mock' ? { simulado: true } : {}),
-      ...(provisionamiento.estado === 'ready' ? {
-        destino: {
-          cvu: provisionamiento.cuenta.cvu,
-          alias: provisionamiento.cuenta.alias,
-          moneda: provisionamiento.cuenta.moneda,
-        },
-      } : {}),
-    };
-  } catch (error) {
-    // La reserva durable conserva su respuesta aunque falle la integración externa.
-    const codigo = error && typeof error === 'object' && 'codigo' in error
-      ? String((error as { codigo?: unknown }).codigo || '')
-      : error instanceof Error ? error.name : 'ERROR_DESCONOCIDO';
-    console.error(JSON.stringify({
-      evento: 'cuenta_cobro_provisionamiento_error',
-      codigo: /^[A-Z0-9_]{3,80}$/.test(codigo) ? codigo : 'ERROR_PROVISIONAMIENTO',
-    }));
+  if (metodoExplicito) {
+    cuentaCobro = { proveedor: 'cucuru', estado: 'disabled' };
+  } else {
+    try {
+      const modoCuentasCobro = resolverModoCuentasCobro(env);
+      const proveedor = modoCuentasCobro === 'mock'
+        ? new CucuruProveedorCuentasCobroMock()
+        : new CucuruClienteHttp({
+          apiKey: env.CUCURU_API_KEY,
+          collectorId: env.CUCURU_COLLECTOR_ID,
+          baseUrl: env.CUCURU_API_BASE_URL,
+        });
+      const provisionamiento = await provisionarCuentaCobroReserva({
+        reservaId: resultado.valor.reservaId,
+        habilitada: modoCuentasCobro !== 'disabled',
+        simulada: modoCuentasCobro === 'mock',
+        aliasPrefix: env.CUCURU_ALIAS_PREFIX,
+      }, new D1RepositorioCuentasCobroReserva(env.DB), proveedor);
+      cuentaCobro = {
+        proveedor: modoCuentasCobro === 'mock' ? 'cucuru_mock' : 'cucuru',
+        estado: provisionamiento.estado,
+        ...(modoCuentasCobro === 'mock' ? { simulado: true } : {}),
+        ...(provisionamiento.estado === 'ready' ? {
+          destino: {
+            cvu: provisionamiento.cuenta.cvu,
+            alias: provisionamiento.cuenta.alias,
+            moneda: provisionamiento.cuenta.moneda,
+          },
+        } : {}),
+      };
+    } catch (error) {
+      // La reserva durable conserva su respuesta aunque falle la integración externa.
+      const codigo = error && typeof error === 'object' && 'codigo' in error
+        ? String((error as { codigo?: unknown }).codigo || '')
+        : error instanceof Error ? error.name : 'ERROR_DESCONOCIDO';
+      console.error(JSON.stringify({
+        evento: 'cuenta_cobro_provisionamiento_error',
+        codigo: /^[A-Z0-9_]{3,80}$/.test(codigo) ? codigo : 'ERROR_PROVISIONAMIENTO',
+      }));
+    }
   }
   let pago: Record<string, unknown> = { proveedor: 'mercado_pago', estado: 'disabled' };
   try {
     const checkoutHabilitado = resultado.valor.metodoPago === 'mercado_pago_checkout' &&
-      checkoutMercadoPagoHabilitado(env);
+      checkoutConfigurado;
     const checkout = await prepararCheckoutReservaPublica({
       reservaId: resultado.valor.reservaId,
       habilitado: checkoutHabilitado,
