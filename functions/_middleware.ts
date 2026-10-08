@@ -10,6 +10,7 @@ const OPERACIONES: Record<string, string> = {
   '/api/v1/public/disponibilidad': 'public.v1.availability',
   '/api/v1/public/cotizaciones': 'public.v1.quotes',
   '/api/v1/public/reservas': 'public.v1.reservations',
+  '/api/v1/public/arrepentimientos': 'public.v1.withdrawal_requests.create',
   '/api/v1/integrations/reservas/expirar-retenciones': 'integration.reservations.expire_holds',
   '/api/ical': 'public.calendar',
   '/api/manychat': 'integration.manychat.create_reservation',
@@ -55,6 +56,8 @@ export function handlerYaInstrumentado(request: Request): boolean {
   if (pathname === '/api/v1/admin/reservas/panel') return true;
   if (pathname === '/api/v1/admin/reservas/exportar') return true;
   if (pathname === '/api/v1/admin/configuracion-reservas') return true;
+  if (pathname === '/api/v1/admin/arrepentimientos') return true;
+  if (/^\/api\/v1\/admin\/arrepentimientos\/[^/]+$/.test(pathname)) return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+$/.test(pathname)) return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+\/estado$/.test(pathname)) return true;
   if (/^\/api\/v1\/admin\/reservas\/[^/]+\/asignaciones$/.test(pathname)) return true;

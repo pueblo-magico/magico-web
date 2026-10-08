@@ -19,7 +19,9 @@ export type PermisoAdmin =
   | 'usuarios.gestionar'
   | 'auditoria.leer'
   | 'datos_personales.exportar'
-  | 'datos_personales.anonimizar';
+  | 'datos_personales.anonimizar'
+  | 'arrepentimientos.leer'
+  | 'arrepentimientos.gestionar';
 
 const TODOS_LOS_PERMISOS: readonly PermisoAdmin[] = [
   'reservas.leer', 'reservas.crear', 'reservas.editar', 'reservas.cancelar',
@@ -30,6 +32,7 @@ const TODOS_LOS_PERMISOS: readonly PermisoAdmin[] = [
   'integraciones.airbnb.sincronizar', 'consultas.leer', 'metricas.leer',
   'usuarios.gestionar', 'auditoria.leer',
   'datos_personales.exportar', 'datos_personales.anonimizar',
+  'arrepentimientos.leer', 'arrepentimientos.gestionar',
 ];
 
 const PERMISOS_POR_ROL: Record<RolAdmin, readonly PermisoAdmin[]> = {
@@ -38,8 +41,9 @@ const PERMISOS_POR_ROL: Record<RolAdmin, readonly PermisoAdmin[]> = {
     'reservas.leer', 'reservas.crear', 'reservas.editar', 'reservas.cancelar',
     'reservas.asignar', 'reservas.capacidad.solicitar', 'reservas.bloqueos.gestionar',
     'reservas.configuracion.leer', 'integraciones.airbnb.sincronizar', 'consultas.leer', 'metricas.leer',
+    'arrepentimientos.leer', 'arrepentimientos.gestionar',
   ],
-  viewer: ['reservas.leer', 'reservas.configuracion.leer', 'consultas.leer', 'metricas.leer'],
+  viewer: ['reservas.leer', 'reservas.configuracion.leer', 'consultas.leer', 'metricas.leer', 'arrepentimientos.leer'],
 };
 
 export function rolTienePermiso(rol: RolAdmin, permiso: PermisoAdmin): boolean {
