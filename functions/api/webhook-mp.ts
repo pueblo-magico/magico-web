@@ -5,8 +5,10 @@
 // Requiere estas variables de entorno en Cloudflare Pages:
 //   MP_ACCESS_TOKEN               — access token de Mercado Pago (para GET /v1/payments/:id)
 //   MP_WEBHOOK_SECRET             — "Clave secreta" de la notificación webhook (MP > Tus integraciones > Webhooks)
-//   MANYCHAT_API_KEY              — API key de ManyChat (Bearer, para setCustomFields + sendFlow)
-//   MANYCHAT_CONFIRMATION_FLOW_NS — flow_ns del flow de confirmación a disparar en ManyChat
+//   MANYCHAT_API_KEY              — API key real de la cuenta de ManyChat (opcional).
+//   MANYCHAT_CONFIRMATION_FLOW_NS — flow_ns de confirmación (opcional). Si falta
+//                                   cualquiera de las dos, la confirmación de D1
+//                                   continúa y la notificación externa se omite.
 //
 // IMPORTANTE — esto no se pudo probar contra un webhook real de Mercado Pago
 // (no hay credenciales de test en este entorno). El esquema de x-signature
@@ -14,8 +16,13 @@
 // verificalo con el simulador de webhooks de MP o un pago de prueba real
 // antes de confiar en esto en producción.
 
-const CUSTOM_FIELD_CHECKIN = 'Fecha_Checkin';
-const CUSTOM_FIELD_CHECKOUT = 'Fecha_Checkout';
+import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMercadoPago.ts';
+import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
+import { crearNotificadorManyChat } from '../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
+import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
+import { ErrorProveedorPagosTransitorio } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
+import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
+import { observarSolicitud, type ContextoObservabilidad } from '../_interfaces/http/observability.ts';
 
 async function hmacSha256Hex(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder();
@@ -59,94 +66,51 @@ async function firmaValida(request: Request, env: any): Promise<{ ok: boolean; d
   return { ok: hashesIguales(hash, v1), dataId };
 }
 
-async function dispararGrowth(env: any, manychatUserId: string, fechaCheckin: string, fechaCheckout: string) {
-  const headers = {
-    Authorization: `Bearer ${env.MANYCHAT_API_KEY}`,
-    'Content-Type': 'application/json',
-  };
-
-  await fetch('https://api.manychat.com/fb/subscriber/setCustomFields', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      subscriber_id: manychatUserId,
-      fields: [
-        { field_name: CUSTOM_FIELD_CHECKIN, field_value: fechaCheckin },
-        { field_name: CUSTOM_FIELD_CHECKOUT, field_value: fechaCheckout },
-      ],
-    }),
-  });
-
-  await fetch('https://api.manychat.com/fb/sending/sendFlow', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      subscriber_id: manychatUserId,
-      flow_ns: env.MANYCHAT_CONFIRMATION_FLOW_NS,
-    }),
-  });
+export async function onRequestPost({ request, env }: any) {
+  return observarSolicitud(request, 'integration.mercadopago.webhook', contexto => ejecutar(request, env, contexto));
 }
 
-export async function onRequestPost({ request, env }: any) {
-  // CRÍTICO: una firma inválida se rechaza (401), no se procesa. Una vez que
-  // la firma es válida (es realmente Mercado Pago), cualquier error interno
-  // de acá en adelante (falla al consultar el pago, falla al llamar a
-  // ManyChat, etc.) se maneja sin romper el webhook: siempre 200, para que
-  // MP no reintente sobre algo que ya procesamos de nuestro lado.
+async function ejecutar(request: Request, env: any, contexto: ContextoObservabilidad) {
+  contexto.setEventId(request.headers.get('x-request-id'));
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'webhook.mercadopago', 120, 60));
+  if (limitada) {
+    contexto.signal('rate_limit.rejected', 'warn', { metric: 'reservas_rate_limit_rejections_total' });
+    return limitada;
+  }
+  // Una firma inválida se rechaza sin procesar. Las inconsistencias comerciales
+  // se registran y responden 200, mientras que una falla técnica responde 503
+  // para que Mercado Pago pueda reintentar el procesamiento idempotente.
   const { ok: firmaOk, dataId } = await firmaValida(request, env);
   if (!firmaOk || !dataId) {
-    console.warn('webhook-mp: firma inválida o datos faltantes — petición rechazada', { dataId });
+    contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
     return new Response('Firma inválida', { status: 401 });
   }
 
   try {
-    const paymentRes = await fetch(`https://api.mercadopago.com/v1/payments/${dataId}`, {
-      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}` },
-    });
-    if (!paymentRes.ok) {
-      console.error('webhook-mp: no se pudo obtener el pago', dataId, paymentRes.status);
-      return new Response('OK', { status: 200 });
+    const resultado = await procesarPagoMercadoPago(
+      dataId,
+      new MercadoPagoProveedorPagos(env.MP_ACCESS_TOKEN),
+      new D1RepositorioEstadoPagoReserva(env.DB),
+      crearNotificadorManyChat({
+        apiKey: env.MANYCHAT_API_KEY,
+        flowNs: env.MANYCHAT_CONFIRMATION_FLOW_NS,
+        habilitado: env.MANYCHAT_NOTIFICATIONS_ENABLED,
+      }),
+      request.headers.get('x-request-id') || `payment:${dataId}`,
+      contexto.requestId
+    );
+    if (resultado.estado === 'confirmada' && resultado.notificacionFallida) {
+      contexto.signal('notification.delivery_failed', 'error', { metric: 'reservas_notification_errors_total' });
     }
 
-    const payment: any = await paymentRes.json();
-    const reservaId = Number(payment.external_reference);
-    if (!reservaId) {
-      console.error('webhook-mp: pago sin external_reference válido', dataId);
-      return new Response('OK', { status: 200 });
-    }
-
-    const db = env.DB;
-
-    if (payment.status === 'approved') {
-      // El guard "estado != 'confirmada'" evita disparar el growth action dos
-      // veces si Mercado Pago reintenta el mismo webhook (algo frecuente).
-      const row: any = await db
-        .prepare(
-          `UPDATE reservas SET estado = 'confirmada', mp_payment_id = ?
-           WHERE id = ? AND estado != 'confirmada'
-           RETURNING manychat_user_id, fecha_checkin, fecha_checkout`
-        )
-        .bind(String(payment.id), reservaId)
-        .first();
-
-      if (row?.manychat_user_id) {
-        try {
-          await dispararGrowth(env, row.manychat_user_id, row.fecha_checkin, row.fecha_checkout);
-        } catch (growthErr) {
-          console.error('webhook-mp: growth action falló (pago igual quedó confirmado)', growthErr);
-        }
-      }
-    } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
-      await db
-        .prepare(`UPDATE reservas SET estado = 'cancelada', mp_payment_id = ? WHERE id = ? AND estado = 'pendiente'`)
-        .bind(String(payment.id), reservaId)
-        .run();
-    }
-    // Otros estados (in_process, pending, etc.) no tocan la reserva — sigue 'pendiente'.
+    contexto.signal('payment.webhook_processed', 'info', { metric: 'reservas_webhooks_processed_total' });
 
     return new Response('OK', { status: 200 });
-  } catch (err) {
-    console.error('webhook-mp: error inesperado', err);
-    return new Response('OK', { status: 200 });
+  } catch (error) {
+    contexto.signal('payment.webhook_processing_failed', 'error', { metric: 'reservas_webhook_errors_total' });
+    const mensaje = error instanceof ErrorProveedorPagosTransitorio
+      ? 'Proveedor temporalmente no disponible'
+      : 'Procesamiento temporalmente no disponible';
+    return new Response(mensaje, { status: 503 });
   }
 }

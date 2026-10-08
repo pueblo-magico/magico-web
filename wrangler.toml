@@ -4,5 +4,15 @@ compatibility_date = "2026-08-01"
 
 [[d1_databases]]
 binding = "DB"
+database_name = "magico-ensueno-db-preview"
+database_id = "d893fa4d-96d8-49f2-a9f5-d9feb55ab0d3"
+migrations_dir = "migrations"
+
+# Cloudflare Pages applies the top-level binding to preview deployments and
+# uses env.production only for production. Keep this shape aligned with the
+# Pages project configuration downloaded by Wrangler.
+[[env.production.d1_databases]]
+binding = "DB"
 database_name = "magico-ensueno-db"
 database_id = "4431f6d6-052c-4f35-8fd7-4805b2d7a858"
+migrations_dir = "migrations"

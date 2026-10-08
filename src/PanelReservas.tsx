@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2 } from 'lucide-react';
 
-// Dashboard interno de reservas — /admin/reservas. SIN LOGIN a propósito:
-// la protección es Cloudflare Zero Trust Access a nivel DNS sobre /admin.
-// Este componente asume que quien lo ve ya está autenticado de forma segura.
+// Dashboard interno de reservas — /admin/reservas. La API valida sesión,
+// permisos por rol y CSRF en cada mutación; la UI nunca decide autorización.
 //
 // Tres pestañas, pensadas para dos personas distintas que usan esto:
 //   Operativa — "¿quién llega hoy / esta semana?" — cards rápidas + la
@@ -23,8 +22,8 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio';
-type VistaActiva = 'operativa' | 'metricas' | 'historial' | 'consultas' | 'usuarios' | 'actividad';
-type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'configuracion' | 'usuarios' | 'actividad';
+type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
 
 type Alojamiento = {
   id: number;
@@ -35,6 +34,7 @@ type Alojamiento = {
 
 type Reserva = {
   id: number;
+  version: number;
   cliente_nombre: string;
   cliente_telefono: string | null;
   cliente_email: string | null;
@@ -51,7 +51,101 @@ type Reserva = {
   canal_origen: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  cuenta_cobro?: {
+    proveedor: 'cucuru' | 'cucuru_mock';
+    estado: 'pending' | 'provisioning' | 'ready' | 'failed' | 'disabled' | 'unknown_outcome';
+    simulada: boolean;
+    cvu: string | null;
+    alias: string | null;
+    moneda: string;
+    intentos: number;
+    ultimoErrorCodigo: string | null;
+    proximoReintentoAt: string | null;
+    ultimoIntentoAt: string | null;
+    listaAt: string | null;
+    revisionesPendientes: number;
+  } | null;
+  excepcion_capacidad?: {
+    id: number;
+    capacidad_autorizada: number;
+    motivo: string;
+    plan_camas: string;
+    fecha_desde: string | null;
+    fecha_hasta: string | null;
+    estado: 'solicitada' | 'aprobada' | 'rechazada' | 'revocada';
+    solicitada_por: string;
+    decidida_por: string | null;
+    solicitada_at: string;
+    decidida_at: string | null;
+  } | null;
 };
+
+type ReservaAdminV1 = {
+  id: number; version: number; titular: string;
+  clienteTelefono: string | null; clienteEmail: string | null;
+  fechaCheckin: string; fechaCheckout: string; cantidadPersonas: number;
+  estado: string; estadoFlujo: string; canalOrigen: string | null;
+  alojamientoId: number; alojamientoTipo: string;
+  espacioCodigo: string | null; espacioNombre: string | null; modalidad: string;
+  montoTotalCentavos: number; montoSenaCentavos: number | null;
+  unidadAsignada: string | null; manychatUserId: string | null; createdAt: string;
+  excepciones?: Array<Record<string, any>>;
+  cuentaCobro?: Reserva['cuenta_cobro'];
+};
+
+type MetaPaginaReservas = { pagina: number; limite: number; total: number; total_paginas: number };
+
+const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
+  const excepcion = item.excepciones?.[0];
+  return {
+    id: item.id,
+    version: item.version,
+    cliente_nombre: item.titular,
+    cliente_telefono: item.clienteTelefono,
+    cliente_email: item.clienteEmail,
+    alojamiento_id: item.alojamientoId,
+    alojamiento_nombre: item.espacioNombre || (item.alojamientoId === 1 ? 'Domo 1' : item.alojamientoId === 2 ? 'Domo 2' : 'Refugio'),
+    alojamiento_tipo: item.alojamientoTipo as TipoAlojamiento,
+    fecha_checkin: item.fechaCheckin,
+    fecha_checkout: item.fechaCheckout,
+    cantidad_personas: item.cantidadPersonas,
+    monto_total: item.montoTotalCentavos / 100,
+    monto_sena: item.montoSenaCentavos == null ? null : item.montoSenaCentavos / 100,
+    estado: item.estadoFlujo as EstadoReserva,
+    unidad_asignada: item.unidadAsignada,
+    canal_origen: item.canalOrigen,
+    manychat_user_id: item.manychatUserId,
+    created_at: item.createdAt,
+    cuenta_cobro: item.cuentaCobro ?? null,
+    excepcion_capacidad: excepcion ? {
+      id: Number(excepcion.id), capacidad_autorizada: Number(excepcion.capacidad_autorizada),
+      motivo: String(excepcion.motivo), plan_camas: String(excepcion.plan_camas),
+      fecha_desde: excepcion.fecha_desde ?? null, fecha_hasta: excepcion.fecha_hasta ?? null,
+      estado: excepcion.estado, solicitada_por: String(excepcion.solicitada_por),
+      decidida_por: excepcion.decidida_por ?? null, solicitada_at: String(excepcion.solicitada_at),
+      decidida_at: excepcion.decidida_at ?? null,
+    } : null,
+  };
+};
+
+async function paginaReservasV1(params: URLSearchParams): Promise<{ reservas: Reserva[]; meta: MetaPaginaReservas }> {
+  const res = await adminFetch(`/api/v1/admin/reservas?${params.toString()}`);
+  if (res.status === 401) throw new Error('__unauthorized__');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const body: any = await res.json();
+  return { reservas: (body.data || []).map(reservaDesdeV1), meta: body.meta };
+}
+
+async function todasLasReservasV1(params: URLSearchParams): Promise<Reserva[]> {
+  const primera = await paginaReservasV1(params);
+  const paginas = [primera.reservas];
+  for (let pagina = 2; pagina <= primera.meta.total_paginas; pagina++) {
+    const siguientes = new URLSearchParams(params);
+    siguientes.set('pagina', String(pagina));
+    paginas.push((await paginaReservasV1(siguientes)).reservas);
+  }
+  return paginas.flat();
+}
 
 type Consulta = {
   id: number;
@@ -80,8 +174,37 @@ type RegistroActividad = {
   id: number;
   email: string;
   accion: string;
-  detalle: string | null;
+  entidad_tipo: string | null;
+  entidad_id: string | null;
+  motivo: string | null;
+  metadata_json: string | null;
   created_at: string;
+};
+
+type RegistroOcupacionOperativa = {
+  id: number;
+  codigo: string;
+  clase: 'bloqueo' | 'estadia_no_comercial';
+  tipo: string;
+  estado: 'activo' | 'cancelado' | 'activa' | 'cancelada';
+  espacioId: number | null;
+  unidadInventarioId: number | null;
+  fechaDesde: string;
+  fechaHasta: string;
+  detalle: string;
+  cantidadPersonas: number;
+  creadoPor: string;
+  createdAt: string;
+};
+
+type EspacioOcupacion = {
+  id: number; codigo: string; nombre: string; tipo: string; parentId: number | null;
+  capacidadOperativaMaxima: number; estado: string;
+};
+
+type UnidadOcupacion = {
+  id: number; espacioId: number; codigo: string; nombre: string; tipo: string;
+  capacidad: number; estado: string;
 };
 
 const ROL_LABEL: Record<Rol, string> = {
@@ -113,6 +236,22 @@ type Metricas = {
 
 const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
 const toISODate = (d: Date) => d.toISOString().slice(0, 10);
+const fechaOperativaLocal = (instante: Date) => {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Cordoba', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(instante);
+  const valor = (tipo: Intl.DateTimeFormatPartTypes) => partes.find(p => p.type === tipo)?.value || '';
+  return `${valor('year')}-${valor('month')}-${valor('day')}`;
+};
+const csrfToken = () => decodeURIComponent(
+  document.cookie.split('; ').find(value => value.startsWith('pm_admin_csrf='))?.split('=').slice(1).join('=') || ''
+);
+const adminFetch = (input: RequestInfo | URL, init: RequestInit = {}) => {
+  const method = (init.method || 'GET').toUpperCase();
+  const headers = new Headers(init.headers);
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) headers.set('X-CSRF-Token', csrfToken());
+  return fetch(input, { ...init, headers });
+};
 const addDays = (iso: string, days: number) => {
   const d = new Date(iso + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
@@ -126,7 +265,11 @@ const fmtDateLong = (iso: string) => {
   const d = new Date(iso + 'T00:00:00Z');
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
 };
-const diasDesde = (iso: string) => Math.floor((Date.now() - new Date(iso.replace(' ', 'T') + 'Z').getTime()) / 86400000);
+const diasDesde = (iso: string) => {
+  const normalizado = iso.includes('T') ? iso : iso.replace(' ', 'T');
+  const instante = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalizado) ? normalizado : `${normalizado}Z`;
+  return Math.floor((Date.now() - Date.parse(instante)) / 86400000);
+};
 
 const VENTANA_DIAS = 14;
 const CANALES_SUGERIDOS = ['ManyChat', 'WhatsApp', 'Instagram', 'Airbnb', 'Teléfono', 'Manual'];
@@ -137,24 +280,6 @@ const ocupaFecha = (r: Reserva, fecha: string) => r.fecha_checkin <= fecha && fe
 const FOCUS_RING = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2';
 
 const waLink = (telefono: string) => `https://wa.me/${telefono.replace(/\D/g, '')}`;
-
-function csvEscape(v: unknown): string {
-  const s = v === null || v === undefined ? '' : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
-function descargarCsv(reservas: Reserva[]) {
-  const columnas = ['cliente_nombre', 'cliente_telefono', 'alojamiento_nombre', 'fecha_checkin', 'fecha_checkout', 'cantidad_personas', 'estado', 'canal_origen', 'monto_total', 'monto_sena', 'unidad_asignada'];
-  const filas = reservas.map(r => columnas.map(c => csvEscape((r as any)[c])).join(','));
-  const csv = [columnas.join(','), ...filas].join('\n');
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `reservas_${toISODate(new Date())}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 const MetricCard: React.FC<{ label: string; value: string; accent?: 'brand' | 'gold' | 'red'; hint?: string; compact?: boolean; icon?: React.ReactNode }> = ({
   label, value, accent = 'brand', hint, compact, icon,
@@ -219,7 +344,6 @@ type FormReserva = {
   estado: EstadoReserva;
   canal_origen: string;
   unidad_asignada: string;
-  tipo_estadia: string;
 };
 
 const TIPOS_ESTADIA = [
@@ -229,14 +353,33 @@ const TIPOS_ESTADIA = [
   { value: 'residente', label: 'Residente' },
 ];
 
+const ESPACIO_POR_ALOJAMIENTO: Record<number, string> = {
+  1: 'domo-1',
+  2: 'domo-2',
+  3: 'refugio',
+};
+
+const modalidadPara = (alojamiento: Alojamiento | undefined): 'privada' | 'compartida' =>
+  alojamiento?.tipo === 'domo' ? 'privada' : 'compartida';
+
+const ETIQUETAS_ESTADO_CUENTA = {
+  pending: 'Pendiente',
+  provisioning: 'Creando cuenta',
+  ready: 'Lista',
+  failed: 'Fallida',
+  disabled: 'Desactivada',
+  unknown_outcome: 'Resultado desconocido',
+} as const;
+
 const ModalReserva: React.FC<{
   modo: 'crear' | 'editar';
   reserva: Reserva | null;
   alojamientos: Alojamiento[];
   soloLectura?: boolean;
+  rol?: Rol;
   onClose: () => void;
   onGuardado: () => void;
-}> = ({ modo, reserva, alojamientos, soloLectura, onClose, onGuardado }) => {
+}> = ({ modo, reserva, alojamientos, soloLectura, rol, onClose, onGuardado }) => {
   const [form, setForm] = useState<FormReserva>(() => ({
     cliente_nombre: reserva?.cliente_nombre || '',
     cliente_telefono: reserva?.cliente_telefono || '',
@@ -250,32 +393,33 @@ const ModalReserva: React.FC<{
     estado: reserva?.estado || 'confirmada',
     canal_origen: reserva?.canal_origen || 'Manual',
     unidad_asignada: reserva?.unidad_asignada || '',
-    tipo_estadia: 'huesped',
   }));
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
   const [error, setError] = useState('');
-  const [aviso, setAviso] = useState('');
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
   const [cancelando, setCancelando] = useState(false);
+  const [motivoCancelacion, setMotivoCancelacion] = useState('');
+  const [confirmandoReserva, setConfirmandoReserva] = useState(false);
+  const [motivoConfirmacion, setMotivoConfirmacion] = useState('');
+  const [excepcion, setExcepcion] = useState(reserva?.excepcion_capacidad || null);
+  const [capacidadExcepcional, setCapacidadExcepcional] = useState('8');
+  const [motivoExcepcion, setMotivoExcepcion] = useState('');
+  const [planCamas, setPlanCamas] = useState('');
+  const [gestionandoCapacidad, setGestionandoCapacidad] = useState(false);
+  const [destinoCopiado, setDestinoCopiado] = useState<'alias' | 'cvu' | null>(null);
 
   const setCampo = (campo: keyof FormReserva, valor: string) => setForm(f => ({ ...f, [campo]: valor }));
 
-  // Staff/voluntario/residente no pagan estadía — al elegir cualquier tipo
-  // distinto de "Huésped" forzamos $0 y bloqueamos los montos para que nadie
-  // tipee un número ahí por error.
-  const esHuesped = form.tipo_estadia === 'huesped';
-  const cambiarTipoEstadia = (valor: string) => {
-    setForm(f => ({
-      ...f,
-      tipo_estadia: valor,
-      monto_total: valor === 'huesped' ? f.monto_total : '0',
-      monto_sena: valor === 'huesped' ? f.monto_sena : '0',
-    }));
+  const copiarDestinoCobro = async (tipo: 'alias' | 'cvu', valor: string) => {
+    await navigator.clipboard.writeText(valor);
+    setDestinoCopiado(tipo);
+    window.setTimeout(() => setDestinoCopiado(actual => actual === tipo ? null : actual), 1600);
   };
 
   const validar = (): string | null => {
     if (!form.cliente_nombre.trim()) return 'Falta el nombre del huésped.';
+    if (modo === 'editar') return null;
     if (!form.alojamiento_id) return 'Elegí un alojamiento.';
     if (!form.fecha_checkin || !form.fecha_checkout) return 'Faltan las fechas.';
     if (form.fecha_checkout <= form.fecha_checkin) return 'El check-out debe ser posterior al check-in.';
@@ -290,50 +434,42 @@ const ModalReserva: React.FC<{
 
     setGuardando(true);
     setError('');
-    setAviso('');
     try {
       if (modo === 'crear') {
-        const res = await fetch('/api/admin/crear', {
+        const alojamiento = alojamientos.find(item => item.id === Number(form.alojamiento_id));
+        const espacioCodigo = ESPACIO_POR_ALOJAMIENTO[Number(form.alojamiento_id)];
+        if (!alojamiento || !espacioCodigo) throw new Error('El alojamiento no tiene un espacio operativo configurado.');
+        const res = await adminFetch('/api/v1/admin/reservas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             cliente_nombre: form.cliente_nombre.trim(),
             cliente_telefono: form.cliente_telefono.trim() || null,
             cliente_email: form.cliente_email.trim() || null,
-            alojamiento_id: Number(form.alojamiento_id),
+            espacio_codigo: espacioCodigo,
+            modalidad: modalidadPara(alojamiento),
             fecha_checkin: form.fecha_checkin,
             fecha_checkout: form.fecha_checkout,
             cantidad_personas: Number(form.cantidad_personas),
-            monto_total: Number(form.monto_total),
-            monto_sena: form.monto_sena !== '' ? Number(form.monto_sena) : null,
-            estado: form.estado,
+            monto_total_centavos: Math.round(Number(form.monto_total) * 100),
+            monto_sena_centavos: form.monto_sena !== '' ? Math.round(Number(form.monto_sena) * 100) : null,
             canal_origen: form.canal_origen.trim() || 'Manual',
-            tipo_estadia: form.tipo_estadia,
           }),
         });
         const data: any = await res.json();
         if (!res.ok) throw new Error(data.error || 'No se pudo crear.');
-        if (data.disponible === false) {
-          setAviso('Se cargó igual, pero esas fechas se solapan con otra reserva en ese alojamiento — revisalo.');
-        }
       } else if (reserva) {
-        const res = await fetch('/api/admin/editar', {
-          method: 'POST',
+        const res = await adminFetch(`/api/v1/admin/reservas/${reserva.id}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            reserva_id: reserva.id,
-            cliente_nombre: form.cliente_nombre.trim(),
-            cliente_telefono: form.cliente_telefono.trim() || null,
-            cliente_email: form.cliente_email.trim() || null,
-            alojamiento_id: Number(form.alojamiento_id),
-            fecha_checkin: form.fecha_checkin,
-            fecha_checkout: form.fecha_checkout,
-            cantidad_personas: Number(form.cantidad_personas),
-            monto_total: Number(form.monto_total),
-            monto_sena: form.monto_sena !== '' ? Number(form.monto_sena) : null,
-            estado: form.estado,
-            canal_origen: form.canal_origen.trim() || null,
-            unidad_asignada: form.unidad_asignada.trim() || null,
+            expected_version: reserva.version,
+            cambios: {
+              cliente_nombre: form.cliente_nombre.trim(),
+              cliente_telefono: form.cliente_telefono.trim() || null,
+              cliente_email: form.cliente_email.trim() || null,
+              canal_origen: form.canal_origen.trim() || 'Admin',
+            },
           }),
         });
         const data: any = await res.json();
@@ -341,7 +477,7 @@ const ModalReserva: React.FC<{
       }
       setGuardado(true);
       onGuardado();
-      setTimeout(onClose, aviso ? 1600 : 700);
+      setTimeout(onClose, 700);
     } catch (e: any) {
       setError(e.message || 'Ocurrió un error.');
     } finally {
@@ -351,19 +487,87 @@ const ModalReserva: React.FC<{
 
   const cancelarReserva = async () => {
     if (!reserva) return;
+    if (motivoCancelacion.trim().length < 5) {
+      setError('Indicá un motivo de al menos 5 caracteres para cancelar.');
+      return;
+    }
     setCancelando(true);
+    setError('');
     try {
-      const res = await fetch('/api/admin/editar', {
+      const res = await adminFetch(`/api/v1/admin/reservas/${reserva.id}/estado`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reserva_id: reserva.id, estado: 'cancelada' }),
+        body: JSON.stringify({
+          expected_version: reserva.version,
+          accion: 'cancelar',
+          motivo: motivoCancelacion.trim(),
+        }),
       });
-      if (!res.ok) throw new Error('failed');
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo cancelar.');
       onGuardado();
       onClose();
-    } catch {
+    } catch (e: any) {
       setCancelando(false);
-      setError('No se pudo cancelar. Probá de nuevo.');
+      setError(e.message || 'No se pudo cancelar. Probá de nuevo.');
+    }
+  };
+
+  const confirmarReserva = async () => {
+    if (!reserva) return;
+    if (motivoConfirmacion.trim().length < 5) {
+      setError('Indicá un motivo de al menos 5 caracteres para confirmar.');
+      return;
+    }
+    setConfirmandoReserva(true);
+    setError('');
+    try {
+      const res = await adminFetch(`/api/v1/admin/reservas/${reserva.id}/estado`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expected_version: reserva.version,
+          accion: 'confirmar',
+          motivo: motivoConfirmacion.trim(),
+        }),
+      });
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo confirmar.');
+      onGuardado();
+      onClose();
+    } catch (e: any) {
+      setConfirmandoReserva(false);
+      setError(e.message || 'No se pudo confirmar. Probá de nuevo.');
+    }
+  };
+
+  const gestionarCapacidad = async (accion: 'solicitar' | 'aprobar' | 'rechazar' | 'revocar') => {
+    if (!reserva) return;
+    setGestionandoCapacidad(true);
+    setError('');
+    try {
+      const body = accion === 'solicitar'
+        ? {
+            accion,
+            reserva_id: reserva.id,
+            capacidad_autorizada: Number(capacidadExcepcional),
+            motivo: motivoExcepcion.trim(),
+            plan_camas: planCamas.trim(),
+          }
+        : { accion, excepcion_id: excepcion?.id };
+      const res = await adminFetch('/api/admin/excepciones-capacidad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo gestionar la capacidad.');
+      setExcepcion(data.excepcion);
+      onGuardado();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo gestionar la capacidad.');
+    } finally {
+      setGestionandoCapacidad(false);
     }
   };
 
@@ -374,7 +578,13 @@ const ModalReserva: React.FC<{
     <ModalBase titulo={modo === 'crear' ? 'Nueva reserva' : 'Editar reserva'} onClose={onClose} ancho="sm:max-w-lg">
       {modo === 'crear' && (
         <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-          Para cargar reservas que no vinieron por ManyChat: falló el bot, se cerró por teléfono, vino de Airbnb, etc.
+          Para cargar reservas comerciales confirmadas que se cerraron por teléfono u otro canal. Las estadías de staff, voluntariado o residentes se registran en Ocupación.
+        </p>
+      )}
+
+      {modo === 'editar' && (
+        <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+          Acá podés corregir datos del huésped y el canal. Las fechas, importes y asignaciones se conservan para no alterar inventario ni trazabilidad.
         </p>
       )}
 
@@ -404,47 +614,37 @@ const ModalReserva: React.FC<{
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_aloj">Alojamiento *</label>
-            <select id="f_aloj" className={inputCls} value={form.alojamiento_id} onChange={e => setCampo('alojamiento_id', e.target.value)}>
+            <select id="f_aloj" disabled={modo === 'editar'} className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.alojamiento_id} onChange={e => setCampo('alojamiento_id', e.target.value)}>
               {alojamientos.map(a => <option key={a.id} value={a.id}>{a.nombre}</option>)}
             </select>
           </div>
           <div>
             <label className={labelCls} htmlFor="f_estado">Estado *</label>
-            <select id="f_estado" className={inputCls} value={form.estado} onChange={e => setCampo('estado', e.target.value)}>
-              <option value="pendiente">Pendiente</option>
+            <select id="f_estado" disabled className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.estado} onChange={e => setCampo('estado', e.target.value)}>
               <option value="confirmada">Confirmada</option>
+              <option value="pendiente_pago">Pendiente de pago</option>
               <option value="cancelada">Cancelada</option>
+              <option value="vencida">Vencida</option>
+              <option value="rechazada">Rechazada</option>
             </select>
           </div>
         </div>
 
-        {modo === 'crear' && (
-          <div>
-            <label className={labelCls} htmlFor="f_tipo_estadia">Tipo de estadía *</label>
-            <select id="f_tipo_estadia" className={inputCls} value={form.tipo_estadia} onChange={e => cambiarTipoEstadia(e.target.value)}>
-              {TIPOS_ESTADIA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-            {!esHuesped && (
-              <p className="text-[11px] text-gray-400 mt-1">Staff/voluntario/residente no pagan estadía — el monto queda en $0.</p>
-            )}
-          </div>
-        )}
-
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_in">Check-in *</label>
-            <input id="f_in" type="date" className={`${inputCls} tabular-nums`} value={form.fecha_checkin} onChange={e => setCampo('fecha_checkin', e.target.value)} />
+            <input id="f_in" type="date" disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-500`} value={form.fecha_checkin} onChange={e => setCampo('fecha_checkin', e.target.value)} />
           </div>
           <div>
             <label className={labelCls} htmlFor="f_out">Check-out *</label>
-            <input id="f_out" type="date" className={`${inputCls} tabular-nums`} value={form.fecha_checkout} onChange={e => setCampo('fecha_checkout', e.target.value)} />
+            <input id="f_out" type="date" disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-500`} value={form.fecha_checkout} onChange={e => setCampo('fecha_checkout', e.target.value)} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_personas">Personas *</label>
-            <input id="f_personas" type="number" inputMode="numeric" min={1} className={inputCls} value={form.cantidad_personas} onChange={e => setCampo('cantidad_personas', e.target.value)} />
+            <input id="f_personas" type="number" inputMode="numeric" min={1} disabled={modo === 'editar'} className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.cantidad_personas} onChange={e => setCampo('cantidad_personas', e.target.value)} />
           </div>
           <div>
             <label className={labelCls} htmlFor="f_canal">Canal</label>
@@ -458,18 +658,18 @@ const ModalReserva: React.FC<{
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelCls} htmlFor="f_total">Monto total *</label>
-            <input id="f_total" type="number" inputMode="decimal" min={0} disabled={modo === 'crear' && !esHuesped} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_total} onChange={e => setCampo('monto_total', e.target.value)} />
+            <input id="f_total" type="number" inputMode="decimal" min={0} disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_total} onChange={e => setCampo('monto_total', e.target.value)} />
           </div>
           <div>
             <label className={labelCls} htmlFor="f_sena">Seña</label>
-            <input id="f_sena" type="number" inputMode="decimal" min={0} disabled={modo === 'crear' && !esHuesped} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_sena} onChange={e => setCampo('monto_sena', e.target.value)} />
+            <input id="f_sena" type="number" inputMode="decimal" min={0} disabled={modo === 'editar'} className={`${inputCls} tabular-nums disabled:bg-gray-100 disabled:text-gray-400`} value={form.monto_sena} onChange={e => setCampo('monto_sena', e.target.value)} />
           </div>
         </div>
 
         {modo === 'editar' && (
           <div>
             <label className={labelCls} htmlFor="f_unidad">Cama / unidad asignada</label>
-            <input id="f_unidad" className={inputCls} value={form.unidad_asignada} onChange={e => setCampo('unidad_asignada', e.target.value)} placeholder="Ej. Cama 3 Habitación 1" />
+            <input id="f_unidad" disabled className={`${inputCls} disabled:bg-gray-100 disabled:text-gray-500`} value={form.unidad_asignada} onChange={e => setCampo('unidad_asignada', e.target.value)} placeholder="Se gestiona desde la asignación de inventario" />
           </div>
         )}
 
@@ -480,9 +680,115 @@ const ModalReserva: React.FC<{
         )}
       </fieldset>
 
-      {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
-      {aviso && !error && <p className="text-xs text-amber-600 mb-3" role="alert">{aviso}</p>}
+      {modo === 'editar' && (
+        <section className="mb-4 rounded-lg border border-gray-200 bg-white p-3" aria-label="Destino de transferencia">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">Destino de transferencia</p>
+            {reserva?.cuenta_cobro?.simulada && (
+              <span className="rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                Simulado · no usar para cobros reales
+              </span>
+            )}
+          </div>
 
+          {!reserva?.cuenta_cobro ? (
+            <p className="mt-2 text-xs text-gray-500">Esta reserva no tiene una cuenta de cobro asignada.</p>
+          ) : (
+            <div className="mt-2 space-y-2 text-xs text-gray-700">
+              <p>
+                Estado: <strong>{ETIQUETAS_ESTADO_CUENTA[reserva.cuenta_cobro.estado]}</strong>
+                {' · '}Intentos: {reserva.cuenta_cobro.intentos}
+              </p>
+
+              {reserva.cuenta_cobro.alias && (
+                <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
+                  <span className="min-w-0"><span className="text-gray-500">Alias:</span> <strong className="break-all">{reserva.cuenta_cobro.alias}</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => copiarDestinoCobro('alias', reserva.cuenta_cobro!.alias!)}
+                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
+                  >
+                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'alias' ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              )}
+
+              {reserva.cuenta_cobro.cvu && (
+                <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
+                  <span className="min-w-0"><span className="text-gray-500">CVU:</span> <strong className="break-all tabular-nums">{reserva.cuenta_cobro.cvu}</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => copiarDestinoCobro('cvu', reserva.cuenta_cobro!.cvu!)}
+                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
+                  >
+                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'cvu' ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              )}
+
+              {reserva.cuenta_cobro.ultimoErrorCodigo && (
+                <p className="rounded-md bg-red-50 px-2.5 py-2 text-red-700">
+                  Último error: <strong>{reserva.cuenta_cobro.ultimoErrorCodigo}</strong>
+                  {reserva.cuenta_cobro.proximoReintentoAt && <> · próximo intento {reserva.cuenta_cobro.proximoReintentoAt}</>}
+                </p>
+              )}
+
+              {reserva.cuenta_cobro.revisionesPendientes > 0 && (
+                <p className="rounded-md bg-amber-50 px-2.5 py-2 font-semibold text-amber-800">
+                  {reserva.cuenta_cobro.revisionesPendientes} pago(s) requieren revisión manual.
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {modo === 'editar' && reserva?.alojamiento_tipo === 'domo' && (
+        <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3" aria-label="Capacidad excepcional">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-800">Capacidad excepcional</p>
+          {excepcion ? (
+            <div className="mt-2 space-y-1 text-xs text-amber-900">
+              <p><strong>{excepcion.capacidad_autorizada} personas</strong> · {excepcion.estado}</p>
+              <p>Motivo: {excepcion.motivo}</p>
+              <p>Plan de camas: {excepcion.plan_camas}</p>
+              <p className="text-amber-700">Solicitada por {excepcion.solicitada_por}</p>
+              {rol === 'super_admin' && excepcion.estado === 'solicitada' && (
+                <div className="flex gap-2 pt-2">
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('aprobar')} className={`text-xs font-semibold rounded-lg bg-brand px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Aprobar</button>
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('rechazar')} className={`text-xs font-semibold rounded-lg border border-red-300 px-3 py-2 text-red-700 disabled:opacity-60 ${FOCUS_RING}`}>Rechazar</button>
+                </div>
+              )}
+              {rol === 'super_admin' && excepcion.estado === 'aprobada' && (
+                <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('revocar')} className={`mt-2 text-xs font-semibold text-red-700 hover:underline disabled:opacity-60 ${FOCUS_RING}`}>Revocar excepción</button>
+              )}
+              {!soloLectura && (excepcion.estado === 'rechazada' || excepcion.estado === 'revocada') && (
+                <div className="mt-3 grid gap-2 border-t border-amber-200 pt-3">
+                  <p className="text-xs font-semibold text-amber-800">Nueva solicitud</p>
+                  <div className="grid grid-cols-[7rem_1fr] gap-2">
+                    <input aria-label="Nueva capacidad solicitada" type="number" min={8} max={10} className={inputCls} value={capacidadExcepcional} onChange={e => setCapacidadExcepcional(e.target.value)} />
+                    <input aria-label="Nuevo motivo de la excepción" className={inputCls} placeholder="Motivo obligatorio" value={motivoExcepcion} onChange={e => setMotivoExcepcion(e.target.value)} />
+                  </div>
+                  <textarea aria-label="Nuevo plan de camas" className={inputCls} rows={2} placeholder="Plan de camas obligatorio" value={planCamas} onChange={e => setPlanCamas(e.target.value)} />
+                  <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('solicitar')} className={`justify-self-start text-xs font-semibold rounded-lg bg-amber-700 px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Solicitar nueva excepción</button>
+                </div>
+              )}
+            </div>
+          ) : !soloLectura ? (
+            <div className="mt-2 grid gap-2">
+              <div className="grid grid-cols-[7rem_1fr] gap-2">
+                <input aria-label="Capacidad solicitada" type="number" min={8} max={10} className={inputCls} value={capacidadExcepcional} onChange={e => setCapacidadExcepcional(e.target.value)} />
+                <input aria-label="Motivo de la excepción" className={inputCls} placeholder="Motivo obligatorio" value={motivoExcepcion} onChange={e => setMotivoExcepcion(e.target.value)} />
+              </div>
+              <textarea aria-label="Plan de camas" className={inputCls} rows={2} placeholder="Plan de camas obligatorio" value={planCamas} onChange={e => setPlanCamas(e.target.value)} />
+              <button disabled={gestionandoCapacidad} onClick={() => gestionarCapacidad('solicitar')} className={`justify-self-start text-xs font-semibold rounded-lg bg-amber-700 px-3 py-2 text-white disabled:opacity-60 ${FOCUS_RING}`}>Solicitar excepción</button>
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-amber-700">No hay una excepción registrada.</p>
+          )}
+        </section>
+      )}
+
+      {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
       <div className="flex justify-end gap-2">
         <button onClick={onClose} className={`text-sm font-semibold px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 ${FOCUS_RING}`}>
           Cerrar
@@ -500,6 +806,30 @@ const ModalReserva: React.FC<{
         )}
       </div>
 
+      {!soloLectura && modo === 'editar' && reserva?.estado === 'pendiente_pago' && (
+        <div className="mt-5 pt-4 border-t border-gray-100 grid gap-2 rounded-lg bg-emerald-50 px-3 py-2.5">
+          <p className="text-xs font-semibold text-emerald-800">Confirmar reserva pendiente</p>
+          <label className="text-xs text-emerald-800" htmlFor="f_motivo_confirmacion">Motivo de confirmación *</label>
+          <textarea
+            id="f_motivo_confirmacion"
+            rows={2}
+            maxLength={500}
+            value={motivoConfirmacion}
+            onChange={e => setMotivoConfirmacion(e.target.value)}
+            placeholder="Ej. Pago verificado manualmente"
+            className={`${inputCls} border-emerald-200`}
+          />
+          <button
+            type="button"
+            onClick={confirmarReserva}
+            disabled={confirmandoReserva}
+            className={`justify-self-end text-xs font-semibold text-white bg-emerald-700 rounded-lg px-3 py-2 disabled:opacity-60 ${FOCUS_RING}`}
+          >
+            {confirmandoReserva ? 'Confirmando…' : 'Confirmar reserva'}
+          </button>
+        </div>
+      )}
+
       {!soloLectura && modo === 'editar' && reserva && reserva.estado !== 'cancelada' && (
         <div className="mt-5 pt-4 border-t border-gray-100">
           {!confirmandoCancelar ? (
@@ -507,9 +837,19 @@ const ModalReserva: React.FC<{
               Cancelar esta reserva
             </button>
           ) : (
-            <div className="flex items-center justify-between gap-2 bg-red-50 rounded-lg px-3 py-2.5">
+            <div className="grid gap-2 bg-red-50 rounded-lg px-3 py-2.5">
               <p className="text-xs text-red-700">¿Seguro? No se borra — queda registrada como "cancelada".</p>
-              <div className="flex gap-2 flex-shrink-0">
+              <label className="text-xs font-semibold text-red-700" htmlFor="f_motivo_cancelacion">Motivo de cancelación *</label>
+              <textarea
+                id="f_motivo_cancelacion"
+                rows={2}
+                maxLength={500}
+                value={motivoCancelacion}
+                onChange={e => setMotivoCancelacion(e.target.value)}
+                placeholder="Ej. Solicitud expresa del huésped"
+                className={`${inputCls} border-red-200`}
+              />
+              <div className="flex justify-end gap-2">
                 <button onClick={() => setConfirmandoCancelar(false)} className={`text-xs font-semibold text-gray-500 hover:text-gray-700 rounded ${FOCUS_RING}`}>
                   No
                 </button>
@@ -592,13 +932,20 @@ const PendientesViejasAlerta: React.FC<{ data: Metricas['pendientes_viejas']; on
 
 const ESTADO_BADGE: Record<string, string> = {
   confirmada: 'bg-green-100 text-green-800',
-  pendiente: 'bg-amber-100 text-amber-800',
+  pendiente_pago: 'bg-amber-100 text-amber-800',
   cancelada: 'bg-gray-100 text-gray-500',
+  vencida: 'bg-gray-100 text-gray-500',
+  rechazada: 'bg-red-100 text-red-700',
+};
+
+const ESTADO_LABEL: Record<string, string> = {
+  confirmada: 'Confirmada', pendiente_pago: 'Pendiente de pago', cancelada: 'Cancelada',
+  vencida: 'Vencida', rechazada: 'Rechazada',
 };
 
 const EstadoBadge: React.FC<{ estado: string }> = ({ estado }) => (
   <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold ${ESTADO_BADGE[estado] || 'bg-gray-100 text-gray-600'}`}>
-    {estado}
+    {ESTADO_LABEL[estado] || estado}
   </span>
 );
 
@@ -777,7 +1124,7 @@ const SeccionAirbnb: React.FC<{ alojamientos: Alojamiento[]; onSincronizado: () 
     setError('');
     setResumen(null);
     try {
-      const res = await fetch('/api/admin/sync-airbnb', { method: 'POST' });
+      const res = await adminFetch('/api/admin/sync-airbnb', { method: 'POST' });
       const data: any = await res.json();
       if (!res.ok) throw new Error(data.error || 'No se pudo sincronizar.');
       setResumen(data.resumen);
@@ -1006,7 +1353,7 @@ const ModalCredencial: React.FC<{
 
   const guardar = async () => {
     if (pedirEmail && !email.trim()) { setError('Falta el email.'); return; }
-    if (password.length < 8) { setError('La contraseña debe tener al menos 8 caracteres.'); return; }
+    if (password.length < 12) { setError('La contraseña debe tener al menos 12 caracteres.'); return; }
     setGuardando(true);
     setError('');
     try {
@@ -1039,7 +1386,7 @@ const ModalCredencial: React.FC<{
         )}
         <div>
           <label className={LABEL_CLS} htmlFor="cred_password">{pedirEmail ? 'Contraseña' : 'Nueva contraseña'}</label>
-          <input id="cred_password" type="password" autoFocus={!pedirEmail} className={INPUT_CLS} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" />
+          <input id="cred_password" type="password" autoFocus={!pedirEmail} className={INPUT_CLS} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 12 caracteres" />
         </div>
       </div>
       {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
@@ -1060,7 +1407,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
   const [modalReset, setModalReset] = useState<Usuario | null>(null);
 
   const cargar = () => {
-    fetch('/api/admin/usuarios')
+    adminFetch('/api/admin/usuarios')
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(data => setUsuarios(data.usuarios || []))
       .catch(err => setError(err.message || 'Error al cargar usuarios'));
@@ -1069,7 +1416,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
   useEffect(() => { cargar(); }, []);
 
   const cambiarEstado = async (u: Usuario) => {
-    const res = await fetch('/api/admin/usuarios', {
+    const res = await adminFetch('/api/admin/usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: u.activo ? 'desactivar' : 'reactivar', id: u.id }),
@@ -1081,7 +1428,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
   };
 
   const cambiarRol = async (u: Usuario, rol: Rol) => {
-    const res = await fetch('/api/admin/usuarios', {
+    const res = await adminFetch('/api/admin/usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accion: 'cambiar_rol', id: u.id, rol }),
@@ -1155,7 +1502,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
           pedirEmail
           onClose={() => setModalNuevo(false)}
           onGuardar={async (email, password, rol) => {
-            const res = await fetch('/api/admin/usuarios', {
+            const res = await adminFetch('/api/admin/usuarios', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accion: 'crear', email, password, rol }),
@@ -1172,7 +1519,7 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
           titulo={`Resetear contraseña — ${modalReset.email}`}
           onClose={() => setModalReset(null)}
           onGuardar={async (_email, password) => {
-            const res = await fetch('/api/admin/usuarios', {
+            const res = await adminFetch('/api/admin/usuarios', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ accion: 'resetear_password', id: modalReset.id, password }),
@@ -1182,6 +1529,195 @@ const SeccionUsuarios: React.FC<{ emailActual: string }> = ({ emailActual }) => 
           }}
         />
       )}
+    </div>
+  );
+};
+
+type ConfiguracionBaseApi = {
+  parametros: Array<{
+    codigo: 'payment_hold_minutes'; valor: number; unidad: string; version: number;
+    minimo: number; maximo: number; editable: boolean; fuente: string; actualizadoAt: string;
+  }>;
+  inventario: Array<{
+    codigo: string; nombre: string; tipo: string; capacidadComercial: number;
+    capacidadOperativaMaxima: number; estado: string;
+    modalidades: Array<{ modalidad: string; contexto: string; unidadVenta: string }>;
+  }>;
+  tarifa: null | {
+    codigo: string; nombre: string; moneda: string; version: number;
+    reglasPrecio: number; reglasSena: number; publicadoAt: string;
+  };
+  politicaCancelacion: null | {
+    codigo: string; nombre: string; version: number; estado: string; vigenciaDesde: string | null;
+  };
+  alimentacion: Array<{
+    codigo: string; moneda: string; version: number; precioComidaCentavos: number;
+    comidasAdicionalesPorPersonaNoche: number;
+  }>;
+};
+
+const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEditar }) => {
+  const [configuracion, setConfiguracion] = useState<ConfiguracionBaseApi | null>(null);
+  const [valor, setValor] = useState('15');
+  const [motivo, setMotivo] = useState('');
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
+  const [mensaje, setMensaje] = useState('');
+
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const res = await adminFetch('/api/v1/admin/configuracion-reservas');
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setConfiguracion(body.data);
+      setValor(String(body.data?.parametros?.[0]?.valor ?? 15));
+    } catch (e: any) {
+      setError(e.message || 'No se pudo cargar la configuración.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => { cargar(); }, []);
+
+  const parametro = configuracion?.parametros.find(item => item.codigo === 'payment_hold_minutes');
+  const guardar = async () => {
+    if (!parametro) return;
+    setGuardando(true);
+    setError('');
+    setMensaje('');
+    try {
+      const res = await adminFetch('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          codigo: parametro.codigo,
+          valor: Number(valor),
+          expected_version: parametro.version,
+          motivo: motivo.trim(),
+        }),
+      });
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setMotivo('');
+      setMensaje('Configuración actualizada. Sólo afecta reservas nuevas.');
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo actualizar la configuración.');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  if (cargando && !configuracion) {
+    return <div className="flex justify-center py-16"><RefreshCw className="animate-spin text-gray-400" aria-label="Cargando configuración" /></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Configuración base</h2>
+        <p className="mt-1 text-xs text-gray-500">
+          Valores efectivos usados por reservas. No se muestran secretos. Los cambios afectan sólo operaciones futuras.
+        </p>
+      </div>
+
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
+      {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
+
+      {parametro && (
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Retención de pago</p>
+              <p className="mt-1 text-2xl font-bold text-brand">{parametro.valor} minutos</p>
+              <p className="mt-1 text-xs text-gray-400">
+                Versión {parametro.version} · unidad: {parametro.unidad} · fuente: {parametro.fuente}
+                {parametro.actualizadoAt ? ` · vigente desde ${fmtFechaHora(parametro.actualizadoAt)}` : ''}
+              </p>
+            </div>
+            {puedeEditar && <div className="grid w-full gap-2 sm:max-w-md">
+              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_minutes">
+                Nuevo plazo ({parametro.minimo}–{parametro.maximo} minutos)
+              </label>
+              <input
+                id="config_hold_minutes" type="number" min={parametro.minimo} max={parametro.maximo}
+                value={valor} onChange={event => setValor(event.target.value)}
+                disabled={!parametro.editable || guardando}
+                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
+              />
+              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_reason">Motivo del cambio</label>
+              <textarea
+                id="config_hold_reason" rows={2} maxLength={500} value={motivo}
+                onChange={event => setMotivo(event.target.value)} disabled={!parametro.editable || guardando}
+                placeholder="Ej. Ajuste operativo aprobado"
+                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
+              />
+              <button
+                type="button" onClick={guardar}
+                disabled={!parametro.editable || guardando || motivo.trim().length < 5 || Number(valor) === parametro.valor}
+                className={`justify-self-end rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}
+              >
+                {guardando ? 'Guardando…' : 'Guardar plazo'}
+              </button>
+            </div>}
+          </div>
+        </section>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Tarifa publicada</p>
+          {configuracion?.tarifa ? (
+            <><p className="mt-2 font-semibold text-gray-800">{configuracion.tarifa.nombre}</p>
+            <p className="text-xs text-gray-500">{configuracion.tarifa.codigo} · v{configuracion.tarifa.version} · {configuracion.tarifa.moneda}</p>
+            <p className="mt-2 text-xs text-gray-500">{configuracion.tarifa.reglasPrecio} reglas de precio · {configuracion.tarifa.reglasSena} reglas de seña</p></>
+          ) : <p className="mt-2 text-sm text-amber-700">Sin tarifa publicada.</p>}
+        </section>
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Política de cancelación</p>
+          {configuracion?.politicaCancelacion ? (
+            <><p className="mt-2 font-semibold text-gray-800">{configuracion.politicaCancelacion.nombre}</p>
+            <p className="text-xs text-gray-500">{configuracion.politicaCancelacion.codigo} · v{configuracion.politicaCancelacion.version}</p>
+            <p className="mt-2 text-xs text-gray-500">Estado: {configuracion.politicaCancelacion.estado}
+              {configuracion.politicaCancelacion.vigenciaDesde ? ` · vigente desde ${fmtDateLong(configuracion.politicaCancelacion.vigenciaDesde.slice(0, 10))}` : ''}
+            </p></>
+          ) : <p className="mt-2 text-sm text-amber-700">Sin política configurada.</p>}
+        </section>
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Alimentación</p>
+          <ul className="mt-2 space-y-2 text-xs text-gray-600">
+            {(configuracion?.alimentacion || []).map(item => (
+              <li key={item.codigo}><strong>{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</strong><br />
+                v{item.version} · {fmtMoney(item.precioComidaCentavos / 100)} por comida · {item.comidasAdicionalesPorPersonaNoche} adicionales</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Inventario y modalidades efectivas</p>
+        </div>
+        <ul className="divide-y divide-gray-100">
+          {(configuracion?.inventario || []).map(espacio => (
+            <li key={espacio.codigo} className="px-5 py-3 text-sm">
+              <div className="flex flex-col justify-between gap-1 sm:flex-row">
+                <span className="font-semibold text-gray-800">{espacio.nombre} <span className="font-normal text-gray-400">({espacio.codigo})</span></span>
+                <span className="text-xs text-gray-500">Comercial {espacio.capacidadComercial} · máximo {espacio.capacidadOperativaMaxima} · {espacio.estado}</span>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                {espacio.modalidades.length > 0
+                  ? espacio.modalidades.map(item => `${item.modalidad}/${item.contexto} por ${item.unidadVenta}`).join(' · ')
+                  : 'Sin modalidades habilitadas'}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 };
@@ -1200,7 +1736,7 @@ const SeccionMetricasOperativas: React.FC = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/metricas')
+    adminFetch('/api/admin/metricas')
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(data => setGrupos(data.grupos || []))
       .catch(err => setError(err.message || 'Error al cargar métricas operativas'));
@@ -1242,6 +1778,15 @@ const ACCION_LABEL: Record<string, string> = {
   cambiar_rol: 'Cambió rol',
   desactivar_usuario: 'Desactivó usuario',
   reactivar_usuario: 'Reactivó usuario',
+  solicitar_excepcion_capacidad: 'Solicitó una excepción de capacidad',
+  aprobar_excepcion_capacidad: 'Aprobó una excepción de capacidad',
+  rechazar_excepcion_capacidad: 'Rechazó una excepción de capacidad',
+  revocar_excepcion_capacidad: 'Revocó una excepción de capacidad',
+  crear_bloqueo_inventario: 'Creó un bloqueo operativo',
+  cancelar_bloqueo_inventario: 'Canceló un bloqueo operativo',
+  crear_estadia_no_comercial: 'Registró una estadía no comercial',
+  cancelar_estadia_no_comercial: 'Canceló una estadía no comercial',
+  actualizar_configuracion_reservas: 'Actualizó configuración de reservas',
 };
 
 const fmtFechaHora = (iso: string) => {
@@ -1249,12 +1794,200 @@ const fmtFechaHora = (iso: string) => {
   return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
 };
 
+const TIPO_OCUPACION_LABEL: Record<string, string> = {
+  mantenimiento: 'Mantenimiento',
+  cierre: 'Cierre operativo',
+  uso_interno: 'Uso interno',
+  bloqueo_propietario: 'Bloqueo del propietario',
+  staff: 'Staff',
+  voluntario: 'Voluntariado',
+  residente: 'Residencia',
+};
+
+const SeccionOcupacionOperativa: React.FC = () => {
+  const hoy = fechaOperativaLocal(new Date());
+  const [registros, setRegistros] = useState<RegistroOcupacionOperativa[]>([]);
+  const [espacios, setEspacios] = useState<EspacioOcupacion[]>([]);
+  const [unidades, setUnidades] = useState<UnidadOcupacion[]>([]);
+  const [clase, setClase] = useState<'bloqueo' | 'estadia_no_comercial'>('bloqueo');
+  const [objetivo, setObjetivo] = useState('');
+  const [fechaDesde, setFechaDesde] = useState(hoy);
+  const [fechaHasta, setFechaHasta] = useState(addDays(hoy, 1));
+  const [tipo, setTipo] = useState('mantenimiento');
+  const [detalle, setDetalle] = useState('');
+  const [cantidadPersonas, setCantidadPersonas] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
+
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const res = await adminFetch('/api/admin/ocupacion-operativa');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setRegistros(data.registros || []);
+      setEspacios(data.espacios || []);
+      setUnidades(data.unidades || []);
+      if (!objetivo && data.espacios?.length) setObjetivo(`espacio:${data.espacios[0].id}`);
+    } catch (e: any) {
+      setError(e.message || 'No se pudo cargar la ocupación operativa.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cambiarClase = (nuevaClase: 'bloqueo' | 'estadia_no_comercial') => {
+    setClase(nuevaClase);
+    setTipo(nuevaClase === 'bloqueo' ? 'mantenimiento' : 'staff');
+    setDetalle('');
+  };
+
+  const guardar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setGuardando(true);
+    setError('');
+    const [objetivoTipo, objetivoId] = objetivo.split(':');
+    const comun = {
+      espacio_id: objetivoTipo === 'espacio' ? Number(objetivoId) : null,
+      unidad_inventario_id: objetivoTipo === 'unidad' ? Number(objetivoId) : null,
+      tipo,
+    };
+    const body = clase === 'bloqueo'
+      ? { accion: 'crear_bloqueo', ...comun, fecha_desde: fechaDesde, fecha_hasta: fechaHasta, motivo: detalle }
+      : {
+          accion: 'crear_estadia_no_comercial', ...comun, fecha_checkin: fechaDesde,
+          fecha_checkout: fechaHasta, referencia_operativa: detalle, cantidad_personas: cantidadPersonas,
+        };
+    try {
+      const res = await adminFetch('/api/admin/ocupacion-operativa', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      setDetalle('');
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo registrar la ocupación.');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const cancelar = async (registro: RegistroOcupacionOperativa) => {
+    if (!window.confirm(`¿Cancelar ${registro.codigo}? El inventario volverá a quedar disponible.`)) return;
+    setError('');
+    try {
+      const res = await adminFetch('/api/admin/ocupacion-operativa', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: registro.clase === 'bloqueo' ? 'cancelar_bloqueo' : 'cancelar_estadia_no_comercial',
+          id: registro.id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo cancelar el registro.');
+    }
+  };
+
+  const nombreObjetivo = (registro: RegistroOcupacionOperativa) => {
+    if (registro.espacioId) return espacios.find(item => item.id === registro.espacioId)?.nombre || `Espacio #${registro.espacioId}`;
+    const unidad = unidades.find(item => item.id === registro.unidadInventarioId);
+    const espacio = espacios.find(item => item.id === unidad?.espacioId);
+    return unidad ? `${espacio?.nombre || 'Espacio'} · ${unidad.nombre}` : `Unidad #${registro.unidadInventarioId}`;
+  };
+
+  return (
+    <div className="grid lg:grid-cols-[minmax(0,360px)_1fr] gap-5 items-start">
+      <form onSubmit={guardar} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 space-y-4">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Nueva ocupación</h2>
+          <p className="text-xs text-gray-500 mt-1">Bloqueá inventario o registrá una estadía sin ingreso comercial.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Clase de ocupación">
+          {([['bloqueo', 'Bloqueo'], ['estadia_no_comercial', 'Estadía interna']] as const).map(([value, label]) => (
+            <button key={value} type="button" onClick={() => cambiarClase(value)} className={`text-sm font-semibold rounded-lg px-3 py-2 border ${FOCUS_RING} ${clase === value ? 'bg-brand text-white border-brand' : 'border-gray-300 text-gray-600'}`}>{label}</button>
+          ))}
+        </div>
+        <label className="block text-xs font-semibold text-gray-600">Inventario
+          <select required className={`${INPUT_CLS} mt-1`} value={objetivo} onChange={e => setObjetivo(e.target.value)}>
+            <option value="" disabled>Elegir espacio o unidad</option>
+            <optgroup label="Espacios">
+              {espacios.map(item => <option key={`e-${item.id}`} value={`espacio:${item.id}`}>{item.nombre} · capacidad {item.capacidadOperativaMaxima}</option>)}
+            </optgroup>
+            <optgroup label="Unidades">
+              {unidades.map(item => <option key={`u-${item.id}`} value={`unidad:${item.id}`}>{espacios.find(e => e.id === item.espacioId)?.nombre} · {item.nombre}</option>)}
+            </optgroup>
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-xs font-semibold text-gray-600">Desde (inclusive)
+            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+          </label>
+          <label className="block text-xs font-semibold text-gray-600">Hasta (checkout)
+            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+          </label>
+        </div>
+        <label className="block text-xs font-semibold text-gray-600">Tipo
+          <select className={`${INPUT_CLS} mt-1`} value={tipo} onChange={e => setTipo(e.target.value)}>
+            {(clase === 'bloqueo'
+              ? ['mantenimiento', 'cierre', 'uso_interno', 'bloqueo_propietario']
+              : ['staff', 'voluntario', 'residente']).map(value => <option key={value} value={value}>{TIPO_OCUPACION_LABEL[value]}</option>)}
+          </select>
+        </label>
+        {clase === 'estadia_no_comercial' && (
+          <label className="block text-xs font-semibold text-gray-600">Personas
+            <input required min={1} type="number" className={`${INPUT_CLS} mt-1`} value={cantidadPersonas} onChange={e => setCantidadPersonas(Number(e.target.value))} />
+          </label>
+        )}
+        <label className="block text-xs font-semibold text-gray-600">{clase === 'bloqueo' ? 'Motivo' : 'Referencia operativa'}
+          <textarea required minLength={3} rows={3} className={`${INPUT_CLS} mt-1`} value={detalle} onChange={e => setDetalle(e.target.value)} placeholder={clase === 'bloqueo' ? 'Ej. reparación de techo' : 'Ej. voluntariado de huerta'} />
+        </label>
+        <button disabled={guardando || cargando} className={`w-full text-sm font-semibold rounded-lg px-4 py-2.5 text-white bg-brand disabled:opacity-60 ${FOCUS_RING}`}>{guardando ? 'Guardando…' : 'Registrar ocupación'}</button>
+      </form>
+
+      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-4 sm:px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+          <div><h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Bloqueos y estadías internas</h2><p className="text-xs text-gray-400 mt-1">El historial cancelado se conserva para auditoría.</p></div>
+          <button onClick={cargar} disabled={cargando} aria-label="Actualizar ocupación" className={`p-2 rounded-lg border border-gray-300 disabled:opacity-60 ${FOCUS_RING}`}><RefreshCw size={15} className={cargando ? 'animate-spin' : ''} /></button>
+        </div>
+        {error && <p className="m-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">{error}</p>}
+        <ul className="divide-y divide-gray-100">
+          {registros.map(registro => {
+            const activo = registro.estado === 'activo' || registro.estado === 'activa';
+            return (
+              <li key={`${registro.clase}-${registro.id}`} className={`px-4 sm:px-5 py-4 ${activo ? '' : 'opacity-60'}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap"><span className="font-semibold text-sm text-gray-800">{nombreObjetivo(registro)}</span><span className={`text-[10px] uppercase font-bold tracking-wide rounded-full px-2 py-0.5 ${activo ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-500'}`}>{activo ? 'Activo' : 'Cancelado'}</span></div>
+                    <p className="text-xs text-gray-600 mt-1">{TIPO_OCUPACION_LABEL[registro.tipo] || registro.tipo} · {fmtDateLong(registro.fechaDesde)} → {fmtDateLong(registro.fechaHasta)}{registro.cantidadPersonas > 0 ? ` · ${registro.cantidadPersonas} personas` : ''}</p>
+                    <p className="text-xs text-gray-500 mt-1">{registro.detalle}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">{registro.codigo} · {registro.creadoPor} · {fmtFechaHora(registro.createdAt)}</p>
+                  </div>
+                  {activo && <button type="button" onClick={() => cancelar(registro)} className={`text-xs font-semibold text-red-700 border border-red-200 rounded-lg px-2.5 py-1.5 hover:bg-red-50 ${FOCUS_RING}`}>Cancelar</button>}
+                </div>
+              </li>
+            );
+          })}
+          {!cargando && registros.length === 0 && <li className="px-5 py-10 text-center text-sm text-gray-400">No hay ocupaciones operativas registradas.</li>}
+        </ul>
+      </section>
+    </div>
+  );
+};
+
 const SeccionActividad: React.FC = () => {
   const [registros, setRegistros] = useState<RegistroActividad[] | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/actividad')
+    adminFetch('/api/admin/actividad')
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(data => setRegistros(data.registros || []))
       .catch(err => setError(err.message || 'Error al cargar la actividad'));
@@ -1272,7 +2005,8 @@ const SeccionActividad: React.FC = () => {
             <p className="text-sm text-gray-800">
               <span className="font-semibold">{r.email}</span> — {ACCION_LABEL[r.accion] || r.accion}
             </p>
-            {r.detalle && <p className="text-xs text-gray-500 mt-0.5">{r.detalle}</p>}
+            {r.entidad_tipo && <p className="text-xs text-gray-500 mt-0.5">{r.entidad_tipo}{r.entidad_id ? ` #${r.entidad_id}` : ''}</p>}
+            {r.motivo && <p className="text-xs text-gray-500 mt-0.5">Motivo: {r.motivo}</p>}
             <p className="text-[11px] text-gray-400 mt-0.5 tabular-nums">{fmtFechaHora(r.created_at)}</p>
           </li>
         ))}
@@ -1290,12 +2024,15 @@ const PanelReservas: React.FC = () => {
   const [vistaActiva, setVistaActiva] = useState<VistaActiva>('operativa');
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [reservasHistorial, setReservasHistorial] = useState<Reserva[] | null>(null);
+  const [historialPagina, setHistorialPagina] = useState(1);
+  const [historialTotalPaginas, setHistorialTotalPaginas] = useState(1);
+  const [historialTotal, setHistorialTotal] = useState(0);
   const [consultas, setConsultas] = useState<Consulta[] | null>(null);
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [ventanaInicio, setVentanaInicio] = useState(() => toISODate(new Date()));
+  const [ventanaInicio, setVentanaInicio] = useState(() => fechaOperativaLocal(new Date()));
   const [busqueda, setBusqueda] = useState('');
 
   const [celdaMultiple, setCeldaMultiple] = useState<{ alojamiento: Alojamiento; fecha: string; reservas: Reserva[] } | null>(null);
@@ -1311,39 +2048,54 @@ const PanelReservas: React.FC = () => {
   const cargarOperativa = () => {
     setLoading(true);
     setError(null);
-    fetch('/api/admin/reservas')
-      .then(res => {
-        if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    const parametros = (estado: string) => new URLSearchParams({
+      pagina: '1', limite: '100', fecha_desde: fechaOperativaLocal(new Date()), estado,
+    });
+    Promise.all([
+      todasLasReservasV1(parametros('confirmada')),
+      todasLasReservasV1(parametros('pendiente_pago')),
+      adminFetch('/api/v1/admin/reservas/panel'),
+    ])
+      .then(async ([confirmadas, pendientes, contextoResponse]) => {
+        if (contextoResponse.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
+        if (!contextoResponse.ok) throw new Error(`HTTP ${contextoResponse.status}`);
+        const contexto: any = await contextoResponse.json();
+        setReservas([...confirmadas, ...pendientes]);
+        setAlojamientos(contexto.data?.alojamientos || []);
+        setMetricas(contexto.data?.metricas || null);
       })
-      .then(data => {
-        setReservas(data.reservas || []);
-        setAlojamientos(data.alojamientos || []);
-        setMetricas(data.metricas || null);
+      .catch(err => {
+        if (err.message === '__unauthorized__') manejarNoAutenticado();
+        else setError(err.message || 'Error al cargar las reservas');
       })
-      .catch(err => { if (err.message !== '__unauthorized__') setError(err.message || 'Error al cargar las reservas'); })
       .finally(() => setLoading(false));
   };
 
-  const cargarHistorial = () => {
+  const cargarHistorial = (pagina = historialPagina, titular = busqueda) => {
     setLoading(true);
     setError(null);
-    return fetch('/api/admin/reservas?vista=historial')
-      .then(res => {
-        if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    const params = new URLSearchParams({ pagina: String(pagina), limite: '25' });
+    if (titular.trim()) params.set('titular', titular.trim());
+    return paginaReservasV1(params)
+      .then(({ reservas: items, meta }) => {
+        setReservasHistorial(items);
+        setHistorialPagina(meta.pagina);
+        setHistorialTotalPaginas(Math.max(meta.total_paginas, 1));
+        setHistorialTotal(meta.total);
+        return items;
       })
-      .then(data => { setReservasHistorial(data.reservas || []); return data.reservas || []; })
-      .catch(err => { if (err.message !== '__unauthorized__') setError(err.message || 'Error al cargar el historial'); return []; })
+      .catch(err => {
+        if (err.message === '__unauthorized__') manejarNoAutenticado();
+        else setError(err.message || 'Error al cargar el historial');
+        return [];
+      })
       .finally(() => setLoading(false));
   };
 
   const cargarConsultas = () => {
     setLoading(true);
     setError(null);
-    fetch('/api/admin/consultas')
+    adminFetch('/api/admin/consultas')
       .then(res => {
         if (res.status === 401) { manejarNoAutenticado(); throw new Error('__unauthorized__'); }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1355,7 +2107,7 @@ const PanelReservas: React.FC = () => {
   };
 
   useEffect(() => {
-    fetch('/api/admin/me')
+    adminFetch('/api/admin/me')
       .then(res => { if (!res.ok) throw new Error('401'); return res.json(); })
       .then(data => setAuth({ email: data.email, rol: data.rol }))
       .catch(() => setAuth(null));
@@ -1369,27 +2121,30 @@ const PanelReservas: React.FC = () => {
   }, [auth]);
 
   const cerrarSesion = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await adminFetch('/api/admin/logout', { method: 'POST' });
     setSesionExpirada(false);
     setAuth(null);
   };
 
   const [descargandoReporte, setDescargandoReporte] = useState(false);
 
-  // Reporte financiero para la contadora — a diferencia de descargarCsv()
-  // (que arma el CSV en el navegador con lo ya cargado en esta vista), este
-  // le pide al servidor el reporte completo vía /api/admin/exportar.
-  const descargarReporteServidor = async () => {
+  // Reporte financiero minimizado: el servidor aplica permisos y filtros y
+  // no incluye PII salvo solicitud explícita de un flujo autorizado.
+  const descargarReporteServidor = async (filtros?: { titular?: string }) => {
     setDescargandoReporte(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/exportar');
+      const params = new URLSearchParams();
+      if (filtros?.titular) params.set('titular', filtros.titular);
+      const query = params.size > 0 ? `?${params.toString()}` : '';
+      const res = await adminFetch(`/api/v1/admin/reservas/exportar${query}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte_reservas_${toISODate(new Date())}.csv`;
+      const sugerido = res.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1];
+      a.download = sugerido || `reservas_${fechaOperativaLocal(new Date())}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e: any) {
@@ -1400,29 +2155,38 @@ const PanelReservas: React.FC = () => {
   };
 
   useEffect(() => {
-    if (vistaActiva === 'historial' && reservasHistorial === null) cargarHistorial();
+    if (vistaActiva === 'historial' && reservasHistorial === null) cargarHistorial(1, busqueda);
     if (vistaActiva === 'consultas' && consultas === null) cargarConsultas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vistaActiva]);
 
-  const actualizar = () => (vistaActiva === 'historial' ? cargarHistorial() : cargarOperativa());
+  useEffect(() => {
+    if (vistaActiva !== 'historial' || reservasHistorial === null) return;
+    const timeout = window.setTimeout(() => cargarHistorial(1, busqueda), 300);
+    return () => window.clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busqueda]);
+
+  const actualizar = () => (vistaActiva === 'historial' ? cargarHistorial(historialPagina, busqueda) : cargarOperativa());
 
   // Después de crear/editar/cancelar, refrescamos desde el servidor en vez de
   // parchear el estado a mano — los cambios pueden tocar fechas, alojamiento,
   // montos, todo lo que alimenta la grilla y las métricas.
   const handleGuardado = () => {
     cargarOperativa();
-    if (reservasHistorial !== null) cargarHistorial();
+    if (reservasHistorial !== null) cargarHistorial(historialPagina, busqueda);
   };
 
   const abrirPorId = async (id: number) => {
     let r = reservas.find(x => x.id === id) || (reservasHistorial || []).find(x => x.id === id);
-    if (!r) {
-      // No estaba en lo ya cargado — típico de una pendiente vieja para
-      // fechas ya pasadas, que no entra en la vista operativa. La buscamos
-      // en el historial completo.
-      const historial = await cargarHistorial();
-      r = historial.find((x: Reserva) => x.id === id);
+    try {
+      const res = await adminFetch(`/api/v1/admin/reservas/${id}`);
+      if (res.status === 401) { manejarNoAutenticado(); return; }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body: any = await res.json();
+      r = reservaDesdeV1(body.data.reserva);
+    } catch (e: any) {
+      if (!r) setError(e.message || 'No se pudo cargar la reserva.');
     }
     if (r) setModalReserva({ modo: 'editar', reserva: r });
   };
@@ -1453,16 +2217,11 @@ const PanelReservas: React.FC = () => {
   const abrirCelda = (alojamiento: Alojamiento, fecha: string) => {
     const enEsaCelda = reservas.filter(r => r.alojamiento_id === alojamiento.id && ocupaFecha(r, fecha));
     if (enEsaCelda.length === 0) return;
-    if (enEsaCelda.length === 1) setModalReserva({ modo: 'editar', reserva: enEsaCelda[0] });
+    if (enEsaCelda.length === 1) abrirPorId(enEsaCelda[0].id);
     else setCeldaMultiple({ alojamiento, fecha, reservas: enEsaCelda });
   };
 
-  const reservasHistorialFiltradas = useMemo(() => {
-    const base = reservasHistorial || [];
-    const q = busqueda.trim().toLowerCase();
-    if (!q) return base;
-    return base.filter(r => r.cliente_nombre.toLowerCase().includes(q) || (r.cliente_telefono || '').includes(q));
-  }, [reservasHistorial, busqueda]);
+  const reservasHistorialFiltradas = reservasHistorial || [];
 
   if (auth === 'cargando') {
     return (
@@ -1487,10 +2246,15 @@ const PanelReservas: React.FC = () => {
 
   const TABS: { key: VistaActiva; label: string }[] = [
     { key: 'operativa', label: 'Operativa' },
+    ...(puedeEditar ? [{ key: 'ocupacion' as VistaActiva, label: 'Bloqueos' }] : []),
     { key: 'metricas', label: 'Métricas' },
     { key: 'historial', label: 'Historial' },
     { key: 'consultas', label: 'Consultas' },
-    ...(esSuperAdmin ? [{ key: 'usuarios' as VistaActiva, label: 'Usuarios' }, { key: 'actividad' as VistaActiva, label: 'Actividad' }] : []),
+    { key: 'configuracion', label: 'Configuración' },
+    ...(esSuperAdmin ? [
+      { key: 'usuarios' as VistaActiva, label: 'Usuarios' },
+      { key: 'actividad' as VistaActiva, label: 'Actividad' },
+    ] : []),
   ];
 
   return (
@@ -1512,15 +2276,17 @@ const PanelReservas: React.FC = () => {
               <h1 className="text-lg sm:text-xl font-bold text-brand">Dashboard de Reservas</h1>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={descargarReporteServidor}
-                disabled={descargandoReporte}
-                aria-label="Descargar Reporte (CSV)"
-                className={`inline-flex items-center gap-1.5 text-sm font-semibold rounded-lg px-3 sm:px-4 py-2.5 text-white bg-brand hover:opacity-90 transition-opacity disabled:opacity-60 ${FOCUS_RING}`}
-              >
-                <Download size={15} className={descargandoReporte ? 'animate-pulse' : ''} aria-hidden="true" />
-                <span className="hidden sm:inline">{descargandoReporte ? 'Descargando…' : 'Descargar Reporte (CSV)'}</span>
-              </button>
+              {esSuperAdmin && (
+                <button
+                  onClick={() => descargarReporteServidor()}
+                  disabled={descargandoReporte}
+                  aria-label="Descargar Reporte (CSV)"
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold rounded-lg px-3 sm:px-4 py-2.5 text-white bg-brand hover:opacity-90 transition-opacity disabled:opacity-60 ${FOCUS_RING}`}
+                >
+                  <Download size={15} className={descargandoReporte ? 'animate-pulse' : ''} aria-hidden="true" />
+                  <span className="hidden sm:inline">{descargandoReporte ? 'Descargando…' : 'Descargar Reporte (CSV)'}</span>
+                </button>
+              )}
               {puedeEditar && (
                 <button
                   onClick={() => setModalReserva({ modo: 'crear', reserva: null })}
@@ -1598,7 +2364,7 @@ const PanelReservas: React.FC = () => {
                 <button onClick={() => setVentanaInicio(prev => addDays(prev, -7))} className={`inline-flex items-center gap-1 text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
                   <ChevronLeft size={14} aria-hidden="true" /> <span className="hidden xs:inline">Anterior</span>
                 </button>
-                <button onClick={() => setVentanaInicio(toISODate(new Date()))} className={`text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
+                <button onClick={() => setVentanaInicio(fechaOperativaLocal(new Date()))} className={`text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
                   Hoy
                 </button>
                 <button onClick={() => setVentanaInicio(prev => addDays(prev, 7))} className={`inline-flex items-center gap-1 text-xs font-semibold border border-gray-300 rounded-lg px-3 py-2 hover:bg-gray-100 ${FOCUS_RING}`}>
@@ -1646,7 +2412,7 @@ const PanelReservas: React.FC = () => {
                           {dias.map(fecha => {
                             const enCelda = reservas.filter(r => r.alojamiento_id === aloj.id && ocupaFecha(r, fecha));
                             const vacia = enCelda.length === 0;
-                            const hayPendiente = enCelda.some(r => r.estado === 'pendiente');
+                            const hayPendiente = enCelda.some(r => r.estado === 'pendiente_pago');
 
                             let contenido: string;
                             let colorClases: string;
@@ -1705,6 +2471,8 @@ const PanelReservas: React.FC = () => {
           </>
         )}
 
+        {vistaActiva === 'ocupacion' && puedeEditar && <SeccionOcupacionOperativa />}
+
         {vistaActiva === 'metricas' && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <MetricCard label="Reservas confirmadas" value={metricas ? String(metricas.total_confirmadas) : '—'} />
@@ -1717,15 +2485,15 @@ const PanelReservas: React.FC = () => {
               value={metricas?.conversion_manychat.pct !== null && metricas ? `${metricas.conversion_manychat.pct}%` : 'Sin datos'}
               hint={metricas ? `${metricas.conversion_manychat.confirmadas} de ${metricas.conversion_manychat.total} pagaron` : undefined}
             />
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
+            {esSuperAdmin && <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Exportar</p>
               <button
-                onClick={() => descargarCsv(reservas)}
+                onClick={() => descargarReporteServidor()}
                 className={`inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}
               >
-                <Download size={15} aria-hidden="true" /> Descargar CSV (vista operativa)
+                <Download size={15} aria-hidden="true" /> Descargar reporte minimizado
               </button>
-            </div>
+            </div>}
             {puedeEditar && <SeccionAirbnb alojamientos={alojamientos} onSincronizado={handleGuardado} />}
           </div>
         )}
@@ -1743,22 +2511,41 @@ const PanelReservas: React.FC = () => {
                     type="search"
                     value={busqueda}
                     onChange={e => setBusqueda(e.target.value)}
-                    placeholder="Buscar por nombre o teléfono…"
+                    placeholder="Buscar por nombre…"
                     aria-label="Buscar reservas"
                     className={`text-sm border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 sm:py-2 w-full sm:w-64 ${FOCUS_RING}`}
                   />
                 </div>
-                <button
-                  onClick={() => descargarCsv(reservasHistorialFiltradas)}
-                  aria-label="Descargar CSV"
-                  className={`inline-flex items-center gap-1.5 text-sm font-semibold border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 hover:bg-gray-100 flex-shrink-0 ${FOCUS_RING}`}
-                >
-                  <Download size={15} aria-hidden="true" />
-                </button>
+                {esSuperAdmin && (
+                  <button
+                    onClick={() => descargarReporteServidor(busqueda.trim() ? { titular: busqueda.trim() } : undefined)}
+                    aria-label="Descargar CSV filtrado"
+                    className={`inline-flex items-center gap-1.5 text-sm font-semibold border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 hover:bg-gray-100 flex-shrink-0 ${FOCUS_RING}`}
+                  >
+                    <Download size={15} aria-hidden="true" />
+                  </button>
+                )}
               </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <TablaHistorial reservas={reservasHistorialFiltradas} onSeleccionar={r => setModalReserva({ modo: 'editar', reserva: r })} />
+              <TablaHistorial reservas={reservasHistorialFiltradas} onSeleccionar={r => abrirPorId(r.id)} />
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
+              <span>{historialTotal} reserva{historialTotal === 1 ? '' : 's'} · página {historialPagina} de {historialTotalPaginas}</span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={loading || historialPagina <= 1}
+                  onClick={() => cargarHistorial(historialPagina - 1, busqueda)}
+                  className={`rounded-lg border border-gray-300 px-3 py-2 font-semibold disabled:opacity-40 ${FOCUS_RING}`}
+                >Anterior</button>
+                <button
+                  type="button"
+                  disabled={loading || historialPagina >= historialTotalPaginas}
+                  onClick={() => cargarHistorial(historialPagina + 1, busqueda)}
+                  className={`rounded-lg border border-gray-300 px-3 py-2 font-semibold disabled:opacity-40 ${FOCUS_RING}`}
+                >Siguiente</button>
+              </div>
             </div>
           </>
         )}
@@ -1777,6 +2564,7 @@ const PanelReservas: React.FC = () => {
           </>
         )}
 
+        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase puedeEditar={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}
       </main>
@@ -1787,7 +2575,7 @@ const PanelReservas: React.FC = () => {
           fecha={celdaMultiple.fecha}
           reservas={celdaMultiple.reservas}
           onClose={() => setCeldaMultiple(null)}
-          onSeleccionar={r => { setCeldaMultiple(null); setModalReserva({ modo: 'editar', reserva: r }); }}
+          onSeleccionar={r => { setCeldaMultiple(null); abrirPorId(r.id); }}
         />
       )}
 
@@ -1797,6 +2585,7 @@ const PanelReservas: React.FC = () => {
           reserva={modalReserva.reserva}
           alojamientos={alojamientos}
           soloLectura={!puedeEditar}
+          rol={auth.rol}
           onClose={() => setModalReserva(null)}
           onGuardado={handleGuardado}
         />
