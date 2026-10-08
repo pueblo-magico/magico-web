@@ -64,6 +64,7 @@ import type {
   ConfiguracionBaseReservas,
   ParametroOperativoReserva,
 } from '../../_domain/reservas/baseConfiguration.ts';
+import type { EventoOutboxIntegracion } from '../../_domain/reservas/integrationOutbox.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -619,4 +620,36 @@ export interface RepositorioDatosPersonalesReserva {
     motivo: string;
     correlationId: string;
   }): Promise<void>;
+}
+
+export interface RepositorioOutboxIntegracion {
+  reclamarLote(entrada: {
+    claimUid: string;
+    limite: number;
+    ahora: string;
+    claimExpiresAt: string;
+  }): Promise<EventoOutboxIntegracion[]>;
+  marcarEntregado(entrada: {
+    eventId: string;
+    claimUid: string;
+    consumer: string;
+    completedAt: string;
+  }): Promise<void>;
+  marcarFalla(entrada: {
+    eventId: string;
+    claimUid: string;
+    consumer: string;
+    errorCode: string;
+    deadLetter: boolean;
+    nextAttemptAt: string | null;
+    completedAt: string;
+  }): Promise<void>;
+}
+
+export interface EntregadorEventoIntegracion {
+  entregar(evento: EventoOutboxIntegracion): Promise<void>;
+}
+
+export interface RepositorioDeduplicacionEventos {
+  registrarProcesado(consumer: string, eventId: string): Promise<boolean>;
 }
