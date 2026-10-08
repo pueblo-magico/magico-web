@@ -68,6 +68,7 @@ export async function onRequestPost({ request, env }: any) {
     metodoPago,
     pagadorDocumentoHash: documentoHash,
     pagadorDocumentoUltimos4: dni ? dni.slice(-4) : null,
+    idioma: body.idioma === undefined ? undefined : String(body.idioma) as 'es' | 'en',
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
   }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB),
   new D1RepositorioConfiguracionBaseReservas(env.DB));

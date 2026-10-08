@@ -343,7 +343,6 @@ test('concilia una Collection válida exactamente una vez sin usar campos legacy
       'pueblo.reserva.4', 'ARS', 'ready-operation-4', '2026-10-06T12:00:00.000Z')
   `).run(reservaId, `pm-reserva-${uid}`);
   const repositorio = new D1RepositorioConciliacionCucuru(d1(sqlite));
-  let notificaciones = 0;
   const collection = {
     collectionId: 'collection-ready-1', collectorId: 'collector-qa',
     customerId: `pm-reserva-${uid}`, externalAccountId: 'acct-ready-1',
@@ -352,11 +351,9 @@ test('concilia una Collection válida exactamente una vez sin usar campos legacy
   };
   const primera = await procesarCollectionCucuru(
     collection, 'collector-qa', repositorio,
-    { async notificar() { notificaciones++; } }, 'request-cucuru-1'
+    'request-cucuru-1'
   );
   assert.equal(primera.estado, 'aplicado');
-  assert.equal(primera.notificacionFallida, false);
-  assert.equal(notificaciones, 0);
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT estado, estado_flujo, mp_payment_id FROM reservas WHERE id = ?
   `).get(reservaId) }, { estado: 'confirmada', estado_flujo: 'confirmada', mp_payment_id: null });
@@ -368,12 +365,12 @@ test('concilia una Collection válida exactamente una vez sin usar campos legacy
 
   const duplicada = await procesarCollectionCucuru(
     collection, 'collector-qa', repositorio,
-    { async notificar() { notificaciones++; } }, 'request-cucuru-duplicate'
+    'request-cucuru-duplicate'
   );
   assert.equal(duplicada.estado, 'duplicado');
   const inconsistente = await procesarCollectionCucuru(
     { ...collection, payloadHash: 'd'.repeat(64) }, 'collector-qa', repositorio,
-    { async notificar() { notificaciones++; } }, 'request-cucuru-inconsistent'
+    'request-cucuru-inconsistent'
   );
   assert.equal(inconsistente.estado, 'revision_manual');
   assert.equal(inconsistente.motivoCodigo, 'DUPLICADO_INCONSISTENTE');
@@ -406,9 +403,7 @@ test('marca como mock toda la trazabilidad de un cobro sobre una cuenta simulada
     moneda: 'ARS',
     occurredAt: '2026-10-07T12:05:00.000Z',
     payloadHash: '8'.repeat(64),
-  }, 'collector-qa', new D1RepositorioConciliacionCucuru(d1(sqlite)), {
-    async notificar() {},
-  }, 'request-mock-8');
+  }, 'collector-qa', new D1RepositorioConciliacionCucuru(d1(sqlite)), 'request-mock-8');
 
   assert.equal(resultado.estado, 'aplicado');
   assert.equal(sqlite.prepare(`
@@ -454,7 +449,7 @@ test('la prueba cero no concilia y los importes incorrectos van a revisión manu
   };
   const cero = await procesarCollectionCucuru(
     { ...base, collectionId: 'collection-zero-5', montoCentavos: 0 },
-    'collector-qa', repositorio, { async notificar() {} }, 'request-zero-5'
+    'collector-qa', repositorio, 'request-zero-5'
   );
   assert.equal(cero.estado, 'prueba_cero');
   assert.equal(cero.motivoCodigo, 'PRUEBA_IMPORTE_CERO');
@@ -469,13 +464,13 @@ test('la prueba cero no concilia y los importes incorrectos van a revisión manu
       montoCentavos: 0,
       payloadHash: 'e'.repeat(64),
     },
-    'collector-qa', repositorio, { async notificar() {} }, 'request-zero-sin-cuenta'
+    'collector-qa', repositorio, 'request-zero-sin-cuenta'
   );
   assert.equal(ceroSinCuenta.estado, 'prueba_cero');
 
   const incorrecta = await procesarCollectionCucuru(
     { ...base, collectionId: 'collection-wrong-5', montoCentavos: 29_999, payloadHash: 'c'.repeat(64) },
-    'collector-qa', repositorio, { async notificar() {} }, 'request-wrong-5'
+    'collector-qa', repositorio, 'request-wrong-5'
   );
   assert.equal(incorrecta.estado, 'revision_manual');
   assert.equal(incorrecta.motivoCodigo, 'MONTO_INCORRECTO');
@@ -485,7 +480,7 @@ test('la prueba cero no concilia y los importes incorrectos van a revisión manu
   await assert.rejects(
     procesarCollectionCucuru(
       { ...base, collectionId: 'collection-bad-collector', montoCentavos: 30_000 },
-      'collector-real', repositorio, { async notificar() {} }, 'request-invalid'
+      'collector-real', repositorio, 'request-invalid'
     ),
     /observación de Cucuru es inválida/
   );
@@ -515,9 +510,7 @@ test('el backfill usa la fecha del cobro y no la hora tardía de procesamiento',
     moneda: 'ARS',
     occurredAt: '1999-12-31T23:59:59.000Z',
     payloadHash: 'f'.repeat(64),
-  }, 'collector-qa', new D1RepositorioConciliacionCucuru(d1(sqlite)), {
-    async notificar() {},
-  }, 'request-timely-backfill');
+  }, 'collector-qa', new D1RepositorioConciliacionCucuru(d1(sqlite)), 'request-timely-backfill');
 
   assert.equal(resultado.estado, 'aplicado');
   assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas WHERE id = ?').get(reservaId)?.estado_flujo, 'confirmada');

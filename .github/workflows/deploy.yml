@@ -1,15 +1,33 @@
 name: Deploy to Cloudflare Pages
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      release_reason:
+        description: Reason and approval reference for this production release
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-pages-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
       - uses: actions/checkout@v4
+
+      - name: Show approved production commit
+        run: |
+          echo "Deploying commit ${GITHUB_SHA}"
+          echo "Release reason: ${{ inputs.release_reason }}"
+          git show --no-patch --format='%H %s' HEAD
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

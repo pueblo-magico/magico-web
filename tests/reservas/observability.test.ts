@@ -129,6 +129,13 @@ test('el middleware evita logs duplicados y cubre métodos no instrumentados', a
   });
   assert.ok(preflight.headers.get('X-Request-ID'));
   assert.equal(eventos[0].operation, 'public.availability');
+
+  assert.equal(handlerYaInstrumentado(new Request(
+    'https://test/api/v1/integrations/reservas/expirar-retenciones', { method: 'POST' }
+  )), true);
+  assert.equal(handlerYaInstrumentado(new Request(
+    'https://test/api/v1/integrations/outbox/dispatch', { method: 'POST' }
+  )), true);
 });
 
 test('el middleware usa una operación neutra para rutas desconocidas', () => {
