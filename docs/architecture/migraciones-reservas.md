@@ -58,3 +58,10 @@ leyendo el mismo esquema. Si fuera necesario retirar físicamente la migración,
 restaurar el backup capturado antes de `0002` en vez de escribir un `down` que
 borre datos. El cutover y la eliminación de columnas legacy pertenecen a
 WRESERV-29 y requieren reconciliación aprobada.
+
+WRESERV-29 agrega `scripts/reservas/reconciliar-cutover.sql`, que toma un
+snapshot agregado y sin PII antes y después de migrar. El verificador bloquea
+el deploy si cambian conteos, estados o importes legacy, o si aparecen filas
+inválidas o identificadores de pago duplicados. El workflow guarda además el
+bookmark Time Travel previo como evidencia recuperable; nunca restaura de
+forma automática.

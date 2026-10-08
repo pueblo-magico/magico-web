@@ -8,6 +8,15 @@ database_name = "magico-ensueno-db"
 database_id = "4431f6d6-052c-4f35-8fd7-4805b2d7a858"
 migrations_dir = "migrations"
 
+# Production commands always select this environment explicitly. Repeating the
+# binding prevents Wrangler from resolving the preview database or no binding
+# when `--env production` is used during the guarded cutover workflow.
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "magico-ensueno-db"
+database_id = "4431f6d6-052c-4f35-8fd7-4805b2d7a858"
+migrations_dir = "migrations"
+
 # Every Cloudflare Pages preview uses the shared non-production database.
 # Pages supports production and preview overrides; branch-specific D1 bindings
 # are intentionally not used here.
