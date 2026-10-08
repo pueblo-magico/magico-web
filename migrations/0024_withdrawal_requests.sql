@@ -27,5 +27,5 @@ CREATE INDEX idx_solicitudes_arrepentimiento_reserva
   ON solicitudes_arrepentimiento (reserva_id, created_at);
 
 INSERT INTO schema_migrations (version, descripcion, checksum_ref)
-VALUES ('0021', 'solicitudes públicas auditables de arrepentimiento',
-        'migrations/0021_withdrawal_requests.sql');
+VALUES ('0024', 'solicitudes públicas auditables de arrepentimiento',
+        'migrations/0024_withdrawal_requests.sql');
