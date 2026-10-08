@@ -97,6 +97,11 @@ export type DetalleReservaAdmin = ResumenReservaAdmin & {
   estadias: Array<Record<string, unknown>>;
   excepciones: Array<Record<string, unknown>>;
   cuentaCobro: CuentaCobroReservaAdmin | null;
+  metodoPago: {
+    metodo: 'mercado_pago_checkout' | 'transferencia_mp';
+    documentoUltimos4: string | null;
+    estado: 'pendiente' | 'confirmado' | 'revision_manual';
+  } | null;
 };
 
 export type NuevaReservaAdmin = {

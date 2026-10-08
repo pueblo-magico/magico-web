@@ -1,6 +1,7 @@
 export type AccommodationType = 'domo' | 'refugio';
 export type BookingMode = 'compartida' | 'privada';
 export type MealPlan = 'desayuno_incluido' | 'pension_completa';
+export type PaymentMethod = 'mercado_pago_checkout' | 'transferencia_mp';
 
 export interface PublicAccommodation {
   codigo: string;
@@ -25,6 +26,7 @@ export interface QuoteResponse {
   motivo_codigo: string;
   opcion: null | { espacio_codigo: string; modalidad: BookingMode; capacidad_disponible: number };
   cotizacion: { id: number; codigo: string; expiresAt: string };
+  metodos_pago: PaymentMethod[];
   precio: {
     moneda: string;
     regimen_alimentacion: MealPlan;
@@ -41,12 +43,28 @@ export interface QuoteResponse {
 export interface ReservationResponse {
   reserva: { codigo: string; estado: string; expires_at: string };
   cotizacion_codigo: string;
+  pago?: {
+    proveedor: 'mercado_pago';
+    estado: 'disabled' | 'pending' | 'expired' | 'failed' | 'ready';
+    checkout_url?: string;
+  };
+  transferencia?: {
+    proveedor: 'mercado_pago_cuenta';
+    estado: 'disabled' | 'ready';
+    confirmacion?: 'webhook_dni';
+    destino?: { cvu?: string; alias?: string; titular?: string; moneda: 'ARS' };
+  };
   cuenta_cobro: {
     proveedor: string;
     estado: string;
     simulado?: boolean;
     destino?: { cvu?: string; alias?: string; moneda?: string };
   };
+}
+
+export interface PublicReservationStatus {
+  reserva: { codigo: string; estado: string; expires_at: string | null };
+  pago: { proveedor: 'mercado_pago'; estado: string };
 }
 
 export class BookingApiError extends Error {
@@ -117,6 +135,8 @@ export async function createPublicReservation(input: {
   quoteCode: string;
   spaceCode: string;
   guest: { name: string; phone: string; email?: string };
+  paymentMethod: PaymentMethod;
+  payerDni?: string;
   idempotencyKey: string;
 }): Promise<{ data: ReservationResponse; idempotent: boolean }> {
   const response = await requestJson<{ data: ReservationResponse; meta: { idempotente: boolean } }>('/api/v1/public/reservas', {
@@ -126,9 +146,22 @@ export async function createPublicReservation(input: {
       cotizacion_codigo: input.quoteCode,
       espacio_codigo: input.spaceCode,
       cliente: { nombre: input.guest.name, telefono: input.guest.phone, email: input.guest.email || null },
+      pago: {
+        metodo: input.paymentMethod,
+        ...(input.paymentMethod === 'transferencia_mp' ? {
+          pagador: { documento_tipo: 'DNI', documento_numero: input.payerDni || '' },
+        } : {}),
+      },
     }),
   });
   return { data: response.data, idempotent: response.meta.idempotente };
+}
+
+export async function getPublicReservationStatus(code: string): Promise<PublicReservationStatus> {
+  const response = await requestJson<{ data: PublicReservationStatus }>(
+    `/api/v1/public/reservas/${encodeURIComponent(code)}`
+  );
+  return response.data;
 }
 
 export function createBookingAttemptKey(): string {

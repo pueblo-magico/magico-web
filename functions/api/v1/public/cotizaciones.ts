@@ -2,6 +2,7 @@ import { cotizarEstadia } from '../../../_lib/cotizador.ts';
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
 import { esRegimenAlimentacion } from '../../../_domain/reservas/alimentacion.ts';
+import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../../../_lib/paymentMethods.ts';
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
@@ -37,6 +38,11 @@ export async function onRequestPost({ request, env }: any) {
     return jsonPublico(request, 'POST', { error: resultado.error }, 400);
   }
   const cotizacion = resultado.valor;
+  const transferencia = configuracionTransferenciaMp(env);
+  const metodosPago = [
+    ...(checkoutMercadoPagoHabilitado(env) ? ['mercado_pago_checkout' as const] : []),
+    ...(transferencia.habilitada ? ['transferencia_mp' as const] : []),
+  ];
   return jsonPublico(request, 'POST', {
     data: {
       estado: cotizacion.disponibilidad.estado,
@@ -47,6 +53,7 @@ export async function onRequestPost({ request, env }: any) {
         capacidad_disponible: cotizacion.disponibilidad.capacidad_disponible,
       } : null,
       cotizacion: cotizacion.referencia,
+      metodos_pago: metodosPago,
       precio: {
         moneda: cotizacion.desglose.moneda,
         regimen_alimentacion: cotizacion.desglose.regimen_alimentacion,

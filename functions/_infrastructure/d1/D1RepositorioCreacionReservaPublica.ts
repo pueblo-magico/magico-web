@@ -121,6 +121,21 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
         SELECT id, ? FROM reservas WHERE reserva_uid = ?
       `).bind(entrada.holdExpiresAt, entrada.reservaUid),
       this.db.prepare(`
+        INSERT INTO reserva_metodos_pago (
+          reserva_id, metodo, pagador_documento_tipo, pagador_documento_hash,
+          pagador_documento_ultimos4, monto_esperado_centavos, moneda
+        )
+        SELECT id, ?, ?, ?, ?, ?, ? FROM reservas WHERE reserva_uid = ?
+      `).bind(
+        solicitud.metodoPago,
+        solicitud.metodoPago === 'transferencia_mp' ? 'DNI' : null,
+        solicitud.pagadorDocumentoHash,
+        solicitud.pagadorDocumentoUltimos4,
+        cotizacion.senaCentavos,
+        cotizacion.moneda,
+        entrada.reservaUid
+      ),
+      this.db.prepare(`
         INSERT INTO reserva_politica_snapshots (
           reserva_id, politica_id, codigo, version, estado_configuracion,
           reglas_json, aceptada_at
@@ -176,12 +191,13 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
         SET reserva_id = r.id, status_code = 201,
             response_json = json_object(
               'reservaId', r.id, 'codigo', r.codigo, 'estado', 'pendiente_pago',
-              'expiresAt', r.hold_expires_at, 'cotizacionCodigo', ?, 'idempotente', json('false')
+              'expiresAt', r.hold_expires_at, 'cotizacionCodigo', ?,
+              'metodoPago', ?, 'idempotente', json('false')
             ),
             estado = 'completada', completed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         FROM reservas r
         WHERE alcance = 'crear_reserva_publica' AND clave = ? AND r.reserva_uid = ?
-      `).bind(cotizacion.codigo, solicitud.idempotencyKey, entrada.reservaUid),
+      `).bind(cotizacion.codigo, solicitud.metodoPago, solicitud.idempotencyKey, entrada.reservaUid),
     ];
 
     await this.db.batch(statements);

@@ -89,7 +89,7 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
   try {
     const resultado = await procesarPagoMercadoPago(
       dataId,
-      new MercadoPagoProveedorPagos(env.MP_ACCESS_TOKEN),
+      new MercadoPagoProveedorPagos(env.MP_ACCESS_TOKEN, env.PAYMENT_RECONCILIATION_SECRET || ''),
       new D1RepositorioEstadoPagoReserva(env.DB),
       crearNotificadorManyChat({
         apiKey: env.MANYCHAT_API_KEY,

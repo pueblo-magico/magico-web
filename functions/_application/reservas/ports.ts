@@ -34,6 +34,7 @@ import type {
 import type {
   CotizacionAceptada,
   ReservaPublicaCreada,
+  SolicitudCrearReservaPublica,
 } from '../../_domain/reservas/reservationCreation.ts';
 import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundPolicies.ts';
 import type { EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
@@ -198,13 +199,10 @@ export interface RepositorioCreacionReservaPublica {
   buscarIdempotencia(clave: string): Promise<SolicitudIdempotenteGuardada | null>;
   obtenerCotizacion(codigo: string): Promise<CotizacionAceptada | null>;
   crearAtomica(entrada: {
-    solicitud: {
-      cotizacionCodigo: string;
-      espacioCodigo: string;
-      clienteNombre: string;
-      clienteTelefono: string | null;
-      clienteEmail: string | null;
-      idempotencyKey: string;
+    solicitud: SolicitudCrearReservaPublica & {
+      metodoPago: 'mercado_pago_checkout' | 'transferencia_mp';
+      pagadorDocumentoHash: string | null;
+      pagadorDocumentoUltimos4: string | null;
     };
     cotizacion: CotizacionAceptada;
     requestHash: string;
@@ -391,15 +389,55 @@ export interface RepositorioReservasManyChat {
 
 export type SolicitudPreferenciaPago = {
   reservaId: number;
+  reservaCodigo?: string;
   tipoAlojamiento: 'domo' | 'refugio';
   montoSena: number;
 };
 
 export interface ProveedorCheckoutReserva {
+  buscarPreferenciaPorReferencia?(referencia: string | number): Promise<{
+    preferenciaId: string;
+    checkoutUrl: string | null;
+  } | null>;
   crearPreferencia(solicitud: SolicitudPreferenciaPago): Promise<{
     preferenciaId: string;
     checkoutUrl: string | null;
   }>;
+}
+
+export type CheckoutReservaPublica = {
+  reservaId: number;
+  reservaCodigo: string;
+  tipoAlojamiento: 'domo' | 'refugio';
+  montoSenaCentavos: number;
+  moneda: string;
+  estadoFlujo: string;
+  expiresAt: string | null;
+  preferenciaId: string | null;
+  checkoutUrl: string | null;
+};
+
+export interface RepositorioCheckoutReservaPublica {
+  obtener(reservaId: number): Promise<CheckoutReservaPublica | null>;
+  reclamarProvisionamiento(reservaId: number): Promise<boolean>;
+  guardarPreferencia(
+    reservaId: number,
+    preferenciaId: string,
+    checkoutUrl: string,
+    correlationId: string
+  ): Promise<void>;
+  registrarFallo(reservaId: number, codigo: string): Promise<void>;
+}
+
+export type EstadoReservaPublica = {
+  codigo: string;
+  estado: string;
+  expiresAt: string | null;
+  pagoEstado: string | null;
+};
+
+export interface RepositorioConsultaEstadoReservaPublica {
+  obtenerPorCodigo(codigo: string): Promise<EstadoReservaPublica | null>;
 }
 
 export type PagoExternoReserva = {
@@ -408,6 +446,8 @@ export type PagoExternoReserva = {
   referenciaExterna: unknown;
   montoCentavos: number | null;
   moneda: string | null;
+  pagadorDocumentoHash?: string | null;
+  pagadorDocumentoUltimos4?: string | null;
 };
 
 export type PagoEsperadoReserva = {
@@ -440,6 +480,12 @@ export interface ProveedorPagosReserva {
 
 export interface RepositorioEstadoPagoReserva {
   obtenerEsperado(reservaId: number): Promise<PagoEsperadoReserva | null>;
+  obtenerEsperadoPorCodigo?(codigo: string): Promise<PagoEsperadoReserva | null>;
+  obtenerEsperadosPorTransferencia?(
+    documentoHash: string,
+    montoCentavos: number,
+    moneda: string
+  ): Promise<PagoEsperadoReserva[]>;
   obtenerEstadoPago(proveedor: string, externalPaymentId: string): Promise<EstadoPagoReserva | null>;
   registrarObservacion(observacion: ObservacionPagoReserva): Promise<boolean>;
   registrarPago(observacion: ObservacionPagoReserva, estado: EstadoPagoReserva): Promise<void>;

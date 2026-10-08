@@ -6,6 +6,9 @@ export type SolicitudCrearReservaPublica = {
   clienteNombre: string;
   clienteTelefono: string | null;
   clienteEmail: string | null;
+  metodoPago?: 'mercado_pago_checkout' | 'transferencia_mp';
+  pagadorDocumentoHash?: string | null;
+  pagadorDocumentoUltimos4?: string | null;
   idempotencyKey: string;
 };
 
@@ -31,6 +34,7 @@ export type ReservaPublicaCreada = {
   estado: 'pendiente_pago';
   expiresAt: string;
   cotizacionCodigo: string;
+  metodoPago: 'mercado_pago_checkout' | 'transferencia_mp';
   idempotente: boolean;
 };
 
