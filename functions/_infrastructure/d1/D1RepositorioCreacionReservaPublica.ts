@@ -76,6 +76,26 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
     };
   }
 
+  async buscarConsultaIntegracion(entrada: {
+    codigo: string;
+    integracion: 'n8n';
+    contactoRef: string;
+    conversacionRef: string | null;
+  }): Promise<number | null> {
+    const row = await this.db.prepare(`
+      SELECT c.id
+      FROM consultas c
+      JOIN consulta_integracion_referencias cir ON cir.consulta_id = c.id
+      WHERE c.codigo = ? AND cir.integracion = ? AND cir.contacto_ref = ?
+        AND (cir.conversacion_ref = ? OR (cir.conversacion_ref IS NULL AND ? IS NULL))
+      LIMIT 1
+    `).bind(
+      entrada.codigo, entrada.integracion, entrada.contactoRef,
+      entrada.conversacionRef, entrada.conversacionRef
+    ).first();
+    return row ? Number(row.id) : null;
+  }
+
   async crearAtomica(entrada: Parameters<RepositorioCreacionReservaPublica['crearAtomica']>[0]) {
     const { solicitud, cotizacion } = entrada;
     const alcanceIdempotencia = solicitud.referenciaIntegracion
@@ -109,14 +129,15 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
       ),
       this.db.prepare(`
         INSERT INTO reserva_integracion_referencias (
-          reserva_id, integracion, contacto_ref, conversacion_ref
+          reserva_id, integracion, contacto_ref, conversacion_ref, consulta_id
         )
-        SELECT id, ?, ?, ? FROM reservas
+        SELECT id, ?, ?, ?, ? FROM reservas
         WHERE reserva_uid = ? AND ? IS NOT NULL
       `).bind(
         solicitud.referenciaIntegracion?.integracion || null,
         solicitud.referenciaIntegracion?.contactoRef || null,
         solicitud.referenciaIntegracion?.conversacionRef || null,
+        entrada.consultaId,
         entrada.reservaUid,
         solicitud.referenciaIntegracion?.integracion || null
       ),
@@ -181,7 +202,8 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
         SELECT id, 'reserva.creada', ?, ?, ?,
                json_object(
                  'cotizacion_codigo', ?, 'espacio_codigo', ?,
-                 'integracion', ?, 'contacto_ref', ?, 'conversacion_ref', ?
+                 'integracion', ?, 'contacto_ref', ?, 'conversacion_ref', ?,
+                 'consulta_codigo', ?
                )
         FROM reservas WHERE reserva_uid = ?
       `).bind(
@@ -191,6 +213,7 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
         solicitud.referenciaIntegracion?.integracion || null,
         solicitud.referenciaIntegracion?.contactoRef || null,
         solicitud.referenciaIntegracion?.conversacionRef || null,
+        solicitud.referenciaIntegracion?.consultaCodigo || null,
         entrada.reservaUid
       ),
       this.db.prepare(`

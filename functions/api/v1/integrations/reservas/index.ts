@@ -16,6 +16,7 @@ const statusPorCodigo: Record<string, number> = {
   SOLICITUD_INVALIDA: 400,
   IDEMPOTENCY_KEY_REQUERIDA: 400,
   IDEMPOTENCY_KEY_REUTILIZADA: 409,
+  CONSULTA_NO_ENCONTRADA: 404,
   COTIZACION_NO_ENCONTRADA: 404,
   COTIZACION_VENCIDA: 410,
   INVENTARIO_NO_DISPONIBLE: 409,
@@ -53,6 +54,7 @@ async function crear(request: Request, env: any): Promise<Response> {
       integracion: 'n8n',
       contactoRef,
       conversacionRef,
+      consultaCodigo: body.consulta_codigo ? String(body.consulta_codigo) : null,
     },
   }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB),
   new D1RepositorioConfiguracionBaseReservas(env.DB));

@@ -25,6 +25,7 @@ async function hashSolicitud(solicitud: SolicitudCrearReservaPublica): Promise<s
       integracion: solicitud.referenciaIntegracion.integracion,
       contactoRef: solicitud.referenciaIntegracion.contactoRef.trim(),
       conversacionRef: solicitud.referenciaIntegracion.conversacionRef?.trim() || null,
+      consultaCodigo: solicitud.referenciaIntegracion.consultaCodigo?.trim() || null,
     } : null,
   });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonica));
@@ -47,7 +48,8 @@ export async function crearReservaPublica(
   }
   const referencia = solicitud.referenciaIntegracion;
   if ((referencia && (!referencia.contactoRef.trim() || referencia.contactoRef.trim().length > 200 ||
-      (referencia.conversacionRef?.trim().length ?? 0) > 200)) ||
+      (referencia.conversacionRef?.trim().length ?? 0) > 200 ||
+      (referencia.consultaCodigo?.trim().length ?? 0) > 100)) ||
       (solicitud.canalOrigen?.trim().length ?? 0) > 80) {
     return error('SOLICITUD_INVALIDA', 'Las referencias de origen tienen un formato o longitud inválidos.');
   }
@@ -73,6 +75,23 @@ export async function crearReservaPublica(
   if (!cotizacion) return error('COTIZACION_NO_ENCONTRADA', 'La cotización no existe.');
   if (Date.parse(cotizacion.expiresAt) <= ahora().getTime()) {
     return error('COTIZACION_VENCIDA', 'La cotización venció; solicitá una nueva.');
+  }
+
+  let consultaId: number | null = null;
+  const consultaCodigo = referencia?.consultaCodigo?.trim() || null;
+  if (referencia && consultaCodigo) {
+    consultaId = await repositorio.buscarConsultaIntegracion({
+      codigo: consultaCodigo,
+      integracion: referencia.integracion,
+      contactoRef: referencia.contactoRef.trim(),
+      conversacionRef: referencia.conversacionRef?.trim() || null,
+    });
+    if (consultaId === null) {
+      return error(
+        'CONSULTA_NO_ENCONTRADA',
+        'La consulta no existe o no corresponde al contacto y conversación indicados.'
+      );
+    }
   }
 
   const estado = await disponibilidad.consultar({
@@ -103,8 +122,10 @@ export async function crearReservaPublica(
           integracion: referencia.integracion,
           contactoRef: referencia.contactoRef.trim(),
           conversacionRef: referencia.conversacionRef?.trim() || null,
+          consultaCodigo,
         } : undefined,
       },
+      consultaId,
       cotizacion,
       requestHash,
       reservaUid: uuid,

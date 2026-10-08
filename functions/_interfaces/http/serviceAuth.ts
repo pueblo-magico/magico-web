@@ -2,6 +2,7 @@ export type AlcanceServicio =
   | 'reservas:disponibilidad'
   | 'reservas:cotizar'
   | 'reservas:crear'
+  | 'consultas:crear'
   | 'reservas:leer'
   | 'reservas:expirar'
   | 'pagos:notificar'
@@ -18,7 +19,7 @@ const IDENTIDADES = {
     env: 'N8N_INBOUND_SECRET',
     alcances: [
       'reservas:disponibilidad', 'reservas:cotizar', 'reservas:crear',
-      'reservas:leer', 'reservas:expirar', 'pagos:conciliar',
+      'reservas:leer', 'reservas:expirar', 'consultas:crear', 'pagos:conciliar',
     ],
   },
   accounting: { env: 'ACCOUNTING_API_SECRET', alcances: ['reservas:leer'] },

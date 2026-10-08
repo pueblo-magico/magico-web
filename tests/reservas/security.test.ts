@@ -78,6 +78,7 @@ test('las identidades de servicio tienen secretos y alcances mínimos', () => {
   ), true);
   assert.equal(autenticarServicio('n8n', env.N8N_INBOUND_SECRET, env, 'reservas:cotizar'), true);
   assert.equal(autenticarServicio('n8n', env.N8N_INBOUND_SECRET, env, 'reservas:crear'), true);
+  assert.equal(autenticarServicio('n8n', env.N8N_INBOUND_SECRET, env, 'consultas:crear'), true);
   assert.equal(autenticarServicio(
     'outbox', env.OUTBOX_DISPATCH_SECRET, env, 'integraciones:despachar'
   ), true);

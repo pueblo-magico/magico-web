@@ -22,11 +22,16 @@ export async function onRequestGet({ request, env }: any) {
 
   const { results } = await db
     .prepare(
-      `SELECT id, cliente_nombre, cliente_telefono, alojamiento_interes,
-              fecha_desde, fecha_hasta, cantidad_personas, monto_estimado,
-              subscriber_id, fecha_consulta, created_at
-       FROM consultas
-       ORDER BY fecha_consulta DESC`
+      `SELECT c.id, c.codigo, c.cliente_nombre, c.cliente_telefono, c.cliente_email,
+              c.alojamiento_interes, c.fecha_desde, c.fecha_hasta, c.cantidad_personas,
+              c.monto_estimado, c.monto_estimado_centavos, c.subscriber_id,
+              c.canal_origen, c.fecha_consulta, c.created_at,
+              cot.codigo cotizacion_codigo,
+              cir.contacto_ref, cir.conversacion_ref
+       FROM consultas c
+       LEFT JOIN cotizaciones cot ON cot.id = c.cotizacion_id
+       LEFT JOIN consulta_integracion_referencias cir ON cir.consulta_id = c.id
+       ORDER BY c.fecha_consulta DESC`
     )
     .all();
 

@@ -6,6 +6,7 @@ import test from 'node:test';
 import { onRequestGet as disponibilidad } from '../../functions/api/v1/integrations/reservas/disponibilidad.ts';
 import { onRequestPost as cotizaciones } from '../../functions/api/v1/integrations/reservas/cotizaciones.ts';
 import { onRequestPost as crearReserva } from '../../functions/api/v1/integrations/reservas/index.ts';
+import { onRequestPost as crearConsulta } from '../../functions/api/v1/integrations/consultas.ts';
 
 function baseCompleta(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
@@ -129,6 +130,107 @@ test('manychat no puede usar el secreto de n8n y los errores son consumibles', a
   const body = await response.json() as any;
   assert.equal(body.error.codigo, 'NO_AUTORIZADO');
   assert.equal(body.error.reintentable, false);
+  sqlite.close();
+});
+
+test('n8n registra una consulta idempotente sin bloquear inventario y la vincula a la reserva', async () => {
+  const sqlite = baseCompleta();
+  const env = {
+    DB: d1(sqlite), N8N_INBOUND_SECRET: SECRET_N8N,
+    RATE_LIMIT_SALT: 'rate-limit-salt-seguro', CUCURU_TRANSFER_ENABLED: 'false',
+  };
+  const cotizacionResponse = await cotizaciones({
+    request: new Request('https://test/api/v1/integrations/reservas/cotizaciones', {
+      method: 'POST', headers: headers('n8n', SECRET_N8N, true),
+      body: JSON.stringify({
+        check_in: '2028-02-10', check_out: '2028-02-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
+      }),
+    }), env,
+  });
+  const cotizacion = await cotizacionResponse.json() as any;
+  const consultaPayload = {
+    cliente: { nombre: 'Consulta desde n8n', telefono: '+5493515550101', email: 'CONSULTA@Example.Test' },
+    alojamiento_interes: 'domo privado',
+    fecha_desde: '2028-02-10', fecha_hasta: '2028-02-12', cantidad_personas: 2,
+    monto_estimado_centavos: cotizacion.data.precio.subtotal_centavos,
+    cotizacion_codigo: cotizacion.data.cotizacion.codigo,
+    contacto_id: 'contacto-consulta-42', conversacion_id: 'conversacion-consulta-99',
+  };
+  const solicitudConsulta = (payload = consultaPayload) => new Request(
+    'https://test/api/v1/integrations/consultas', {
+      method: 'POST',
+      headers: { ...headers('n8n', SECRET_N8N, true), 'Idempotency-Key': 'n8n-consulta-0001' },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const creada = await crearConsulta({ request: solicitudConsulta(), env });
+  assert.equal(creada.status, 201);
+  const bodyCreada = await creada.json() as any;
+  assert.match(bodyCreada.data.consulta.codigo, /^CON-/);
+  assert.equal(bodyCreada.data.consulta.id, undefined);
+  assert.equal(bodyCreada.meta.idempotente, false);
+  assert.equal(bodyCreada.meta.bloquea_inventario, false);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM reservas').get()?.cantidad, 0);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM retenciones_reserva').get()?.cantidad, 0);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM ocupacion_reserva_noches').get()?.cantidad, 0);
+
+  const repetida = await crearConsulta({ request: solicitudConsulta(), env });
+  assert.equal(repetida.status, 200);
+  const bodyRepetida = await repetida.json() as any;
+  assert.equal(bodyRepetida.data.consulta.codigo, bodyCreada.data.consulta.codigo);
+  assert.equal(bodyRepetida.meta.idempotente, true);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM consultas').get()?.cantidad, 1);
+
+  const conflicto = await crearConsulta({
+    request: solicitudConsulta({ ...consultaPayload, cantidad_personas: 3 }), env,
+  });
+  assert.equal(conflicto.status, 409);
+  assert.equal((await conflicto.json() as any).error.codigo, 'IDEMPOTENCY_KEY_REUTILIZADA');
+
+  const vinculoAjeno = await crearReserva({
+    request: new Request('https://test/api/v1/integrations/reservas', {
+      method: 'POST',
+      headers: { ...headers('n8n', SECRET_N8N, true), 'Idempotency-Key': 'n8n-reserva-consulta-ajena' },
+      body: JSON.stringify({
+        cotizacion_codigo: cotizacion.data.cotizacion.codigo,
+        espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        consulta_codigo: bodyCreada.data.consulta.codigo,
+        contacto_id: 'otro-contacto',
+        conversacion_id: consultaPayload.conversacion_id,
+        cliente: consultaPayload.cliente,
+      }),
+    }), env,
+  });
+  assert.equal(vinculoAjeno.status, 404);
+  assert.equal((await vinculoAjeno.json() as any).error.codigo, 'CONSULTA_NO_ENCONTRADA');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM reservas').get()?.cantidad, 0);
+
+  const reservaResponse = await crearReserva({
+    request: new Request('https://test/api/v1/integrations/reservas', {
+      method: 'POST',
+      headers: { ...headers('n8n', SECRET_N8N, true), 'Idempotency-Key': 'n8n-reserva-consulta-0001' },
+      body: JSON.stringify({
+        cotizacion_codigo: cotizacion.data.cotizacion.codigo,
+        espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        consulta_codigo: bodyCreada.data.consulta.codigo,
+        contacto_id: consultaPayload.contacto_id,
+        conversacion_id: consultaPayload.conversacion_id,
+        cliente: consultaPayload.cliente,
+      }),
+    }), env,
+  });
+  assert.equal(reservaResponse.status, 201);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT c.codigo consulta_codigo, r.codigo reserva_codigo
+    FROM reserva_integracion_referencias rir
+    JOIN consultas c ON c.id = rir.consulta_id
+    JOIN reservas r ON r.id = rir.reserva_id
+  `).get() }, {
+    consulta_codigo: bodyCreada.data.consulta.codigo,
+    reserva_codigo: (await reservaResponse.clone().json() as any).data.reserva.codigo,
+  });
   sqlite.close();
 });
 

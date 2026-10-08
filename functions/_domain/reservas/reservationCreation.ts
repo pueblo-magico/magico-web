@@ -12,6 +12,7 @@ export type SolicitudCrearReservaPublica = {
     integracion: 'n8n';
     contactoRef: string;
     conversacionRef: string | null;
+    consultaCodigo?: string | null;
   };
 };
 
@@ -44,6 +45,7 @@ export type ErrorCreacionReserva =
   | 'SOLICITUD_INVALIDA'
   | 'IDEMPOTENCY_KEY_REQUERIDA'
   | 'IDEMPOTENCY_KEY_REUTILIZADA'
+  | 'CONSULTA_NO_ENCONTRADA'
   | 'COTIZACION_NO_ENCONTRADA'
   | 'COTIZACION_VENCIDA'
   | 'INVENTARIO_NO_DISPONIBLE';
