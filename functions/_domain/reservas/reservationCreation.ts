@@ -7,6 +7,12 @@ export type SolicitudCrearReservaPublica = {
   clienteTelefono: string | null;
   clienteEmail: string | null;
   idempotencyKey: string;
+  canalOrigen?: string;
+  referenciaIntegracion?: {
+    integracion: 'n8n';
+    contactoRef: string;
+    conversacionRef: string | null;
+  };
 };
 
 export type CotizacionAceptada = {

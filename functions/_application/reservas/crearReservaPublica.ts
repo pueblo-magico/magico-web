@@ -20,6 +20,12 @@ async function hashSolicitud(solicitud: SolicitudCrearReservaPublica): Promise<s
     clienteNombre: solicitud.clienteNombre.trim(),
     clienteTelefono: solicitud.clienteTelefono?.trim() || null,
     clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
+    canalOrigen: solicitud.canalOrigen?.trim() || 'Web',
+    referenciaIntegracion: solicitud.referenciaIntegracion ? {
+      integracion: solicitud.referenciaIntegracion.integracion,
+      contactoRef: solicitud.referenciaIntegracion.contactoRef.trim(),
+      conversacionRef: solicitud.referenciaIntegracion.conversacionRef?.trim() || null,
+    } : null,
   });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonica));
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
@@ -39,6 +45,12 @@ export async function crearReservaPublica(
   if (!solicitud.cotizacionCodigo || !solicitud.espacioCodigo || !solicitud.clienteNombre.trim()) {
     return error('SOLICITUD_INVALIDA', 'Cotización, espacio y nombre son obligatorios.');
   }
+  const referencia = solicitud.referenciaIntegracion;
+  if ((referencia && (!referencia.contactoRef.trim() || referencia.contactoRef.trim().length > 200 ||
+      (referencia.conversacionRef?.trim().length ?? 0) > 200)) ||
+      (solicitud.canalOrigen?.trim().length ?? 0) > 80) {
+    return error('SOLICITUD_INVALIDA', 'Las referencias de origen tienen un formato o longitud inválidos.');
+  }
   if (solicitud.cotizacionCodigo.length > 100 || solicitud.espacioCodigo.length > 100 ||
       solicitud.clienteNombre.trim().length > 120 ||
       (solicitud.clienteTelefono?.trim().length ?? 0) > 40 ||
@@ -47,8 +59,9 @@ export async function crearReservaPublica(
     return error('SOLICITUD_INVALIDA', 'Los datos del titular tienen un formato o longitud inválidos.');
   }
 
+  const alcanceIdempotencia = referencia ? `crear_reserva_${referencia.integracion}` : 'crear_reserva_publica';
   const requestHash = await hashSolicitud(solicitud);
-  const anterior = await repositorio.buscarIdempotencia(solicitud.idempotencyKey);
+  const anterior = await repositorio.buscarIdempotencia(solicitud.idempotencyKey, alcanceIdempotencia);
   if (anterior) {
     if (anterior.requestHash !== requestHash) {
       return error('IDEMPOTENCY_KEY_REUTILIZADA', 'La clave idempotente ya fue usada con otros datos.');
@@ -85,6 +98,12 @@ export async function crearReservaPublica(
         clienteNombre: solicitud.clienteNombre.trim(),
         clienteTelefono: solicitud.clienteTelefono?.trim() || null,
         clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
+        canalOrigen: solicitud.canalOrigen?.trim() || 'Web',
+        referenciaIntegracion: referencia ? {
+          integracion: referencia.integracion,
+          contactoRef: referencia.contactoRef.trim(),
+          conversacionRef: referencia.conversacionRef?.trim() || null,
+        } : undefined,
       },
       cotizacion,
       requestHash,
@@ -94,7 +113,7 @@ export async function crearReservaPublica(
     });
     return { ok: true, valor: creada };
   } catch {
-    const recuperada = await repositorio.buscarIdempotencia(solicitud.idempotencyKey);
+    const recuperada = await repositorio.buscarIdempotencia(solicitud.idempotencyKey, alcanceIdempotencia);
     if (recuperada?.requestHash === requestHash && recuperada.respuesta) {
       return { ok: true, valor: { ...recuperada.respuesta, idempotente: true } };
     }

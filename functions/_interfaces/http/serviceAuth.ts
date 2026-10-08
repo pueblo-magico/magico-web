@@ -12,7 +12,7 @@ export type AlcanceServicio =
 const IDENTIDADES = {
   manychat: {
     env: 'MANYCHAT_INBOUND_SECRET',
-    alcances: ['reservas:disponibilidad', 'reservas:cotizar', 'reservas:crear'],
+    alcances: ['reservas:crear'],
   },
   n8n: {
     env: 'N8N_INBOUND_SECRET',

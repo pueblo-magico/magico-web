@@ -33,13 +33,16 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
     this.db = db;
   }
 
-  async buscarIdempotencia(clave: string): Promise<SolicitudIdempotenteGuardada | null> {
+  async buscarIdempotencia(
+    clave: string,
+    alcance = 'crear_reserva_publica'
+  ): Promise<SolicitudIdempotenteGuardada | null> {
     const row = await this.db.prepare(`
       SELECT request_hash, response_json
       FROM solicitudes_idempotentes
-      WHERE alcance = 'crear_reserva_publica' AND clave = ?
+      WHERE alcance = ? AND clave = ?
       LIMIT 1
-    `).bind(clave).first();
+    `).bind(alcance, clave).first();
     return row ? {
       requestHash: String(row.request_hash),
       respuesta: parseRespuesta(row.response_json),
@@ -75,6 +78,9 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
 
   async crearAtomica(entrada: Parameters<RepositorioCreacionReservaPublica['crearAtomica']>[0]) {
     const { solicitud, cotizacion } = entrada;
+    const alcanceIdempotencia = solicitud.referenciaIntegracion
+      ? `crear_reserva_${solicitud.referenciaIntegracion.integracion}`
+      : 'crear_reserva_publica';
     const alojamientoLegacyId = solicitud.espacioCodigo === 'domo-1' ? 1
       : solicitud.espacioCodigo === 'domo-2' ? 2
         : solicitud.espacioCodigo.startsWith('refugio') ? 3 : null;
@@ -83,8 +89,8 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
     const statements = [
       this.db.prepare(`
         INSERT INTO solicitudes_idempotentes (alcance, clave, request_hash)
-        VALUES ('crear_reserva_publica', ?, ?)
-      `).bind(solicitud.idempotencyKey, entrada.requestHash),
+        VALUES (?, ?, ?)
+      `).bind(alcanceIdempotencia, solicitud.idempotencyKey, entrada.requestHash),
       this.db.prepare(`
         INSERT INTO reservas (
           cliente_nombre, cliente_telefono, cliente_email, alojamiento_id,
@@ -92,14 +98,27 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
           estado, canal_origen, tipo_estadia, reserva_uid, codigo, moneda,
           monto_total_centavos, monto_sena_centavos, updated_at, cotizacion_id,
           estado_flujo, hold_expires_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', 'Web', 'huesped', ?, ?, ?, ?, ?,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, 'huesped', ?, ?, ?, ?, ?,
           strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), ?, 'pendiente_pago', ?)
       `).bind(
         solicitud.clienteNombre, solicitud.clienteTelefono, solicitud.clienteEmail,
         alojamientoLegacyId, cotizacion.fechaCheckin, cotizacion.fechaCheckout,
         cotizacion.personas, cotizacion.totalCentavos / 100, cotizacion.senaCentavos / 100,
-        entrada.reservaUid, entrada.reservaCodigo, cotizacion.moneda,
+        solicitud.canalOrigen || 'Web', entrada.reservaUid, entrada.reservaCodigo, cotizacion.moneda,
         cotizacion.totalCentavos, cotizacion.senaCentavos, cotizacion.id, entrada.holdExpiresAt
+      ),
+      this.db.prepare(`
+        INSERT INTO reserva_integracion_referencias (
+          reserva_id, integracion, contacto_ref, conversacion_ref
+        )
+        SELECT id, ?, ?, ? FROM reservas
+        WHERE reserva_uid = ? AND ? IS NOT NULL
+      `).bind(
+        solicitud.referenciaIntegracion?.integracion || null,
+        solicitud.referenciaIntegracion?.contactoRef || null,
+        solicitud.referenciaIntegracion?.conversacionRef || null,
+        entrada.reservaUid,
+        solicitud.referenciaIntegracion?.integracion || null
       ),
       this.db.prepare(`
         UPDATE reserva_estadias
@@ -159,10 +178,21 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
         INSERT INTO reserva_eventos (
           reserva_id, tipo, actor_tipo, actor_ref, correlation_id, payload_json
         )
-        SELECT id, 'reserva.creada', 'usuario', 'publico', ?,
-               json_object('cotizacion_codigo', ?, 'espacio_codigo', ?)
+        SELECT id, 'reserva.creada', ?, ?, ?,
+               json_object(
+                 'cotizacion_codigo', ?, 'espacio_codigo', ?,
+                 'integracion', ?, 'contacto_ref', ?, 'conversacion_ref', ?
+               )
         FROM reservas WHERE reserva_uid = ?
-      `).bind(entrada.requestHash, cotizacion.codigo, solicitud.espacioCodigo, entrada.reservaUid),
+      `).bind(
+        solicitud.referenciaIntegracion ? 'servicio' : 'usuario',
+        solicitud.referenciaIntegracion?.integracion || 'publico',
+        entrada.requestHash, cotizacion.codigo, solicitud.espacioCodigo,
+        solicitud.referenciaIntegracion?.integracion || null,
+        solicitud.referenciaIntegracion?.contactoRef || null,
+        solicitud.referenciaIntegracion?.conversacionRef || null,
+        entrada.reservaUid
+      ),
       this.db.prepare(`
         INSERT INTO reserva_eventos (
           reserva_id, tipo, actor_tipo, actor_ref, correlation_id, payload_json
@@ -180,12 +210,12 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
             ),
             estado = 'completada', completed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         FROM reservas r
-        WHERE alcance = 'crear_reserva_publica' AND clave = ? AND r.reserva_uid = ?
-      `).bind(cotizacion.codigo, solicitud.idempotencyKey, entrada.reservaUid),
+        WHERE alcance = ? AND clave = ? AND r.reserva_uid = ?
+      `).bind(cotizacion.codigo, alcanceIdempotencia, solicitud.idempotencyKey, entrada.reservaUid),
     ];
 
     await this.db.batch(statements);
-    const guardada = await this.buscarIdempotencia(solicitud.idempotencyKey);
+    const guardada = await this.buscarIdempotencia(solicitud.idempotencyKey, alcanceIdempotencia);
     if (!guardada?.respuesta) throw new Error('No se pudo recuperar la reserva creada.');
     return guardada.respuesta;
   }

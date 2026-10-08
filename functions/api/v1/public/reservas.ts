@@ -1,16 +1,10 @@
 import { crearReservaPublica } from '../../../_application/reservas/crearReservaPublica.ts';
-import { provisionarCuentaCobroReserva } from '../../../_application/reservas/provisionarCuentaCobro.ts';
-import { CucuruClienteHttp } from '../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
-import {
-  CucuruProveedorCuentasCobroMock,
-  resolverModoCuentasCobro,
-} from '../../../_infrastructure/cucuru/CucuruProveedorCuentasCobroMock.ts';
-import { D1RepositorioCuentasCobroReserva } from '../../../_infrastructure/d1/D1RepositorioCuentasCobroReserva.ts';
 import { D1RepositorioCreacionReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
 import { D1RepositorioDisponibilidad } from '../../../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { D1RepositorioConfiguracionBaseReservas } from '../../../_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
+import { prepararCuentaCobroReservaHttp } from '../../../_interfaces/http/reservationCollectionAccount.ts';
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
@@ -49,44 +43,7 @@ export async function onRequestPost({ request, env }: any) {
       statusPorCodigo[resultado.error.codigo] || 400
     );
   }
-  let cuentaCobro: Record<string, unknown> = { proveedor: 'cucuru', estado: 'no_disponible' };
-  try {
-    const modoCuentasCobro = resolverModoCuentasCobro(env);
-    const proveedor = modoCuentasCobro === 'mock'
-      ? new CucuruProveedorCuentasCobroMock()
-      : new CucuruClienteHttp({
-        apiKey: env.CUCURU_API_KEY,
-        collectorId: env.CUCURU_COLLECTOR_ID,
-        baseUrl: env.CUCURU_API_BASE_URL,
-      });
-    const provisionamiento = await provisionarCuentaCobroReserva({
-      reservaId: resultado.valor.reservaId,
-      habilitada: modoCuentasCobro !== 'disabled',
-      simulada: modoCuentasCobro === 'mock',
-      aliasPrefix: env.CUCURU_ALIAS_PREFIX,
-    }, new D1RepositorioCuentasCobroReserva(env.DB), proveedor);
-    cuentaCobro = {
-      proveedor: modoCuentasCobro === 'mock' ? 'cucuru_mock' : 'cucuru',
-      estado: provisionamiento.estado,
-      ...(modoCuentasCobro === 'mock' ? { simulado: true } : {}),
-      ...(provisionamiento.estado === 'ready' ? {
-        destino: {
-          cvu: provisionamiento.cuenta.cvu,
-          alias: provisionamiento.cuenta.alias,
-          moneda: provisionamiento.cuenta.moneda,
-        },
-      } : {}),
-    };
-  } catch (error) {
-    // La reserva durable conserva su respuesta aunque falle la integración externa.
-    const codigo = error && typeof error === 'object' && 'codigo' in error
-      ? String((error as { codigo?: unknown }).codigo || '')
-      : error instanceof Error ? error.name : 'ERROR_DESCONOCIDO';
-    console.error(JSON.stringify({
-      evento: 'cuenta_cobro_provisionamiento_error',
-      codigo: /^[A-Z0-9_]{3,80}$/.test(codigo) ? codigo : 'ERROR_PROVISIONAMIENTO',
-    }));
-  }
+  const cuentaCobro = await prepararCuentaCobroReservaHttp(env, resultado.valor.reservaId);
   return jsonPublico(request, 'POST', {
     data: {
       reserva: {

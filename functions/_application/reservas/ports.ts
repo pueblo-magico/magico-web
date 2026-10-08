@@ -199,7 +199,7 @@ export type SolicitudIdempotenteGuardada = {
 };
 
 export interface RepositorioCreacionReservaPublica {
-  buscarIdempotencia(clave: string): Promise<SolicitudIdempotenteGuardada | null>;
+  buscarIdempotencia(clave: string, alcance?: string): Promise<SolicitudIdempotenteGuardada | null>;
   obtenerCotizacion(codigo: string): Promise<CotizacionAceptada | null>;
   crearAtomica(entrada: {
     solicitud: {
@@ -209,6 +209,12 @@ export interface RepositorioCreacionReservaPublica {
       clienteTelefono: string | null;
       clienteEmail: string | null;
       idempotencyKey: string;
+      canalOrigen?: string;
+      referenciaIntegracion?: {
+        integracion: 'n8n';
+        contactoRef: string;
+        conversacionRef: string | null;
+      };
     };
     cotizacion: CotizacionAceptada;
     requestHash: string;

@@ -1,7 +1,7 @@
 import { autenticarServicio, type AlcanceServicio } from './serviceAuth.ts';
 import { jsonReserva } from './reservasHttp.ts';
 
-export type IdentidadIntegracionReservas = 'manychat' | 'n8n';
+export type IdentidadIntegracionReservas = 'n8n';
 
 export function autenticarIntegracionReservas(
   request: Request,
@@ -11,7 +11,7 @@ export function autenticarIntegracionReservas(
   const identidad = request.headers.get('X-Integration-Id')?.trim().toLowerCase();
   const secreto = request.headers.get('X-Service-Secret') ||
     request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '') || null;
-  if ((identidad !== 'manychat' && identidad !== 'n8n') ||
+  if (identidad !== 'n8n' ||
       !autenticarServicio(identidad, secreto, env, alcance)) {
     return errorIntegracion('NO_AUTORIZADO', 'La identidad o credencial no es válida.', 401, false);
   }
