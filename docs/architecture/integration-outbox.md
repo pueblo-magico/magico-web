@@ -55,3 +55,8 @@ Un super admin puede recuperar un evento agotado con
 `motivo`. La acción reinicia el presupuesto de intentos, vuelve el evento a
 `pending` y deja una entrada en `auditoria_admin`. Editores y viewers sólo
 pueden consultar el estado operativo.
+
+Para validaciones o intervención operativa, un super admin puede iniciar un
+lote desde la interfaz mediante `POST /api/v1/admin/integraciones/outbox/despachar`.
+La acción respeta la misma feature flag y el mismo destino server-side; ningún
+secreto se envía al navegador.

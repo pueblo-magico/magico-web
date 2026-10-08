@@ -18,6 +18,7 @@ import {
 } from '../../functions/_infrastructure/integrations/HttpEntregadorEventosIntegracion.ts';
 import { onRequestPost as despacharOutbox } from '../../functions/api/v1/integrations/outbox/dispatch.ts';
 import { onRequestGet as consultarOutboxAdmin } from '../../functions/api/v1/admin/integraciones/outbox/index.ts';
+import { onRequestPost as despacharOutboxAdmin } from '../../functions/api/v1/admin/integraciones/outbox/despachar.ts';
 import { onRequestPost as reprocesarOutboxAdmin } from '../../functions/api/v1/admin/integraciones/outbox/reprocesar.ts';
 import { createSessionToken } from '../../functions/_lib/session.ts';
 
@@ -233,7 +234,12 @@ test('el contrato admin permite observar y reserva el reproceso al super admin',
   const tokenAdmin = await createSessionToken('admin@test', secret, csrf);
   const tokenViewer = await createSessionToken('viewer@test', secret, csrf);
   const cookie = (token: string) => `pm_admin_session=${encodeURIComponent(token)}; pm_admin_csrf=${csrf}`;
-  const env = { DB: d1(sqlite), SESSION_SECRET: secret };
+  const env = {
+    DB: d1(sqlite), SESSION_SECRET: secret,
+    INTEGRATION_OUTBOX_ENABLED: 'true',
+    INTEGRATION_EVENTS_WEBHOOK_URL: 'https://n8n.example.test/webhook/reservas',
+    INTEGRATION_EVENTS_WEBHOOK_SECRET: 'webhook-secret-seguro-123456789',
+  };
 
   const lectura = await consultarOutboxAdmin({
     request: new Request('https://test/api/v1/admin/integraciones/outbox', {
@@ -243,6 +249,8 @@ test('el contrato admin permite observar y reserva el reproceso al super admin',
   assert.equal(lectura.status, 200);
   const lecturaBody = await lectura.json() as any;
   assert.equal(lecturaBody.meta.contiene_pii, false);
+  assert.equal(lecturaBody.meta.despacho_habilitado, true);
+  assert.equal(lecturaBody.meta.destino_configurado, true);
   assert.equal(lecturaBody.data.eventos[0].eventId, 'reserva:outbox-admin');
   assert.equal('payload' in lecturaBody.data.eventos[0], false);
 
@@ -263,6 +271,27 @@ test('el contrato admin permite observar y reserva el reproceso al super admin',
   const exitoso = await reprocesarOutboxAdmin({ request: requestReproceso(tokenAdmin), env });
   assert.equal(exitoso.status, 200);
   assert.equal((await exitoso.json() as any).estado, 'pending');
+
+  const requestDespacho = (token: string) => new Request(
+    'https://test/api/v1/admin/integraciones/outbox/despachar', {
+      method: 'POST', headers: { 'X-CSRF-Token': csrf, Cookie: cookie(token) },
+    }
+  );
+  const despachoProhibido = await despacharOutboxAdmin({
+    request: requestDespacho(tokenViewer), env,
+  });
+  assert.equal(despachoProhibido.status, 403);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(null, { status: 204 });
+  try {
+    const despacho = await despacharOutboxAdmin({ request: requestDespacho(tokenAdmin), env });
+    assert.equal(despacho.status, 200);
+    assert.deepEqual((await despacho.json() as any).data, {
+      reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0,
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
   sqlite.close();
 });
 

@@ -12,7 +12,18 @@ async function consultar(request: Request, env: any): Promise<Response> {
     const estado = await consultarEstadoOutbox(
       new D1RepositorioOutboxIntegracion(env.DB), limite
     );
-    return json({ data: estado, meta: { version: 'v1', contiene_pii: false } });
+    return json({
+      data: estado,
+      meta: {
+        version: 'v1',
+        contiene_pii: false,
+        despacho_habilitado: String(env.INTEGRATION_OUTBOX_ENABLED || '').toLowerCase() === 'true',
+        destino_configurado: typeof env.INTEGRATION_EVENTS_WEBHOOK_URL === 'string' &&
+          env.INTEGRATION_EVENTS_WEBHOOK_URL.startsWith('https://') &&
+          typeof env.INTEGRATION_EVENTS_WEBHOOK_SECRET === 'string' &&
+          env.INTEGRATION_EVENTS_WEBHOOK_SECRET.trim().length >= 24,
+      },
+    });
   } catch (error) {
     return respuestaErrorReserva(error, {
       codigo: 'ERROR_INTERNO', mensaje: 'No se pudo consultar el outbox.', status: 500,
