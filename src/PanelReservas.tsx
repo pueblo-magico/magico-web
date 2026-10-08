@@ -22,7 +22,7 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio';
-type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'configuracion' | 'usuarios' | 'actividad';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'usuarios' | 'actividad';
 type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
 
 type Alojamiento = {
@@ -186,6 +186,21 @@ type RegistroActividad = {
   motivo: string | null;
   metadata_json: string | null;
   created_at: string;
+};
+
+type SolicitudArrepentimientoAdmin = {
+  id: number;
+  codigo: string;
+  reserva_id: number | null;
+  reserva_codigo: string | null;
+  email: string;
+  detalle: string;
+  estado: 'recibida' | 'en_revision' | 'resuelta' | 'rechazada';
+  created_at: string;
+  acknowledged_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  resolution_note: string | null;
 };
 
 type RegistroOcupacionOperativa = {
@@ -2044,6 +2059,112 @@ const SeccionActividad: React.FC = () => {
   );
 };
 
+const ESTADO_ARREPENTIMIENTO_LABEL: Record<SolicitudArrepentimientoAdmin['estado'], string> = {
+  recibida: 'Recibida',
+  en_revision: 'En revisión',
+  resuelta: 'Resuelta',
+  rechazada: 'Rechazada',
+};
+
+const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeGestionar }) => {
+  const [items, setItems] = useState<SolicitudArrepentimientoAdmin[] | null>(null);
+  const [estado, setEstado] = useState('');
+  const [error, setError] = useState('');
+  const [procesando, setProcesando] = useState<number | null>(null);
+
+  const cargar = async () => {
+    setError('');
+    try {
+      const query = estado ? `?estado=${encodeURIComponent(estado)}` : '';
+      const response = await adminFetch(`/api/v1/admin/arrepentimientos${query}`);
+      const body: any = await response.json();
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      setItems(body.data || []);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudieron cargar las solicitudes.');
+    }
+  };
+
+  useEffect(() => { cargar(); }, [estado]);
+
+  const cambiarEstado = async (
+    item: SolicitudArrepentimientoAdmin,
+    nuevoEstado: SolicitudArrepentimientoAdmin['estado']
+  ) => {
+    const motivo = window.prompt(
+      nuevoEstado === 'en_revision'
+        ? 'Nota de seguimiento (mínimo 5 caracteres)'
+        : 'Motivo o resolución (mínimo 5 caracteres)'
+    );
+    if (!motivo || motivo.trim().length < 5) return;
+    setProcesando(item.id);
+    setError('');
+    try {
+      const response = await adminFetch(`/api/v1/admin/arrepentimientos/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado_actual: item.estado, estado: nuevoEstado, motivo }),
+      });
+      const body: any = await response.json();
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      await cargar();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudo actualizar la solicitud.');
+    } finally {
+      setProcesando(null);
+    }
+  };
+
+  return (
+    <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="px-4 sm:px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Solicitudes de arrepentimiento</h2>
+          <p className="text-xs text-gray-400 mt-1">La recepción no cancela reservas ni ejecuta devoluciones automáticas.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select value={estado} onChange={event => setEstado(event.target.value)} aria-label="Filtrar por estado" className={`text-sm border border-gray-300 rounded-lg px-3 py-2 ${FOCUS_RING}`}>
+            <option value="">Todos los estados</option>
+            {Object.entries(ESTADO_ARREPENTIMIENTO_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+          <button type="button" onClick={cargar} aria-label="Actualizar solicitudes" className={`rounded-lg border border-gray-300 p-2 ${FOCUS_RING}`}><RefreshCw size={15} /></button>
+        </div>
+      </div>
+      {error && <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      <ul className="divide-y divide-gray-100">
+        {(items || []).map(item => {
+          const abierta = item.estado === 'recibida' || item.estado === 'en_revision';
+          return (
+            <li key={item.id} className="px-4 sm:px-5 py-4">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <strong className="text-sm text-gray-800">{item.codigo}</strong>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${abierta ? 'bg-amber-100 text-amber-800' : item.estado === 'resuelta' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{ESTADO_ARREPENTIMIENTO_LABEL[item.estado]}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-600">{item.email}{item.reserva_codigo ? ` · ${item.reserva_codigo}` : ' · sin código declarado'}{item.reserva_id ? ` · reserva vinculada #${item.reserva_id}` : ''}</p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{item.detalle}</p>
+                  <p className="mt-2 text-[11px] text-gray-400 tabular-nums">Recibida: {fmtFechaHora(item.acknowledged_at)}</p>
+                  {item.resolution_note && <p className="mt-1 text-xs text-gray-500">Última nota: {item.resolution_note}{item.resolved_by ? ` — ${item.resolved_by}` : ''}</p>}
+                </div>
+                {puedeGestionar && abierta && (
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    {item.estado === 'recibida' && <button disabled={procesando === item.id} onClick={() => cambiarEstado(item, 'en_revision')} className={`rounded-lg border border-amber-300 px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-50 ${FOCUS_RING}`}>Tomar</button>}
+                    <button disabled={procesando === item.id} onClick={() => cambiarEstado(item, 'resuelta')} className={`rounded-lg border border-green-300 px-3 py-2 text-xs font-semibold text-green-800 hover:bg-green-50 disabled:opacity-50 ${FOCUS_RING}`}>Resolver</button>
+                    <button disabled={procesando === item.id} onClick={() => cambiarEstado(item, 'rechazada')} className={`rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 ${FOCUS_RING}`}>Rechazar</button>
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+        {items !== null && items.length === 0 && <li className="px-5 py-10 text-center text-sm text-gray-400">No hay solicitudes para este filtro.</li>}
+        {items === null && <li className="px-5 py-10 text-center text-sm text-gray-400">Cargando solicitudes…</li>}
+      </ul>
+    </section>
+  );
+};
+
 const PanelReservas: React.FC = () => {
   const [auth, setAuth] = useState<{ email: string; rol: Rol } | null | 'cargando'>('cargando');
   const [sesionExpirada, setSesionExpirada] = useState(false);
@@ -2276,6 +2397,7 @@ const PanelReservas: React.FC = () => {
     { key: 'metricas', label: 'Métricas' },
     { key: 'historial', label: 'Historial' },
     { key: 'consultas', label: 'Consultas' },
+    { key: 'arrepentimientos', label: 'Arrepentimientos' },
     { key: 'configuracion', label: 'Configuración' },
     ...(esSuperAdmin ? [
       { key: 'usuarios' as VistaActiva, label: 'Usuarios' },
@@ -2589,6 +2711,8 @@ const PanelReservas: React.FC = () => {
             </div>
           </>
         )}
+
+        {vistaActiva === 'arrepentimientos' && <SeccionArrepentimientos puedeGestionar={puedeEditar} />}
 
         {vistaActiva === 'configuracion' && <SeccionConfiguracionBase puedeEditar={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
