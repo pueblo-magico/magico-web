@@ -223,5 +223,5 @@ BEGIN
 END;
 
 INSERT INTO schema_migrations (version, descripcion, checksum_ref)
-VALUES ('0024', 'intenciones de comunicacion independientes del canal',
-        'migrations/0024_channel_neutral_communications.sql');
+VALUES ('0026', 'intenciones de comunicacion independientes del canal',
+        'migrations/0026_channel_neutral_communications.sql');
