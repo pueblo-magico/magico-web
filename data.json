@@ -36,14 +36,14 @@
       },
       "groupTeaser": "👥 ¿Van 3 o más? Hay tarifas especiales para grupos.",
       "perPersonPerNight": "persona/noche",
-      "discountApplied": "🎉 Precio promocional: ahorrás ${ahorro} por persona por noche.",
-      "privacySurcharge": "Privacidad: +${extra} por persona por noche.",
+      "discountApplied": "🎉 Precio promocional: ahorrás {ahorro} por persona por noche.",
+      "privacySurcharge": "Privacidad: +{extra} por persona por noche.",
       "privacyIncluded": "✓ Privacidad incluida, sin cargo extra.",
       "monthUrgency": {
         "pocosLugares": "⚡ Pocos lugares para {month}",
         "ultimosLugares": "🔥 Últimos lugares para {month}"
       },
-      "senaNote": "Seña para congelar la tarifa: ${monto} ({pct}% del total) · el resto se abona al llegar",
+      "senaNote": "Seña para congelar la tarifa: {monto} ({pct}% del total) · el resto se abona al llegar",
       "clear": "limpiar",
       "confirmWhatsapp": "Confirmar por WhatsApp",
       "checkAvailability": "Consultar disponibilidad",
@@ -2621,7 +2621,7 @@
       "roomType": "Room type",
       "sharedRoom": "Shared",
       "privateRoom": "Private",
-      "mealPlan": "Meals", "mealBreakfast": "With breakfast", "mealFullBoard": "Full board", "mealBreakfastNote": "Accommodation + breakfast. Lunch or dinner can be added (+$20,000 each).", "mealFullBoardNote": "Breakfast, lunch and dinner included — fixed total price per person/night.", "privateDomoNote": "Private dome: up to 7 people ($50,000 per person/night with breakfast; solo traveler $100,000)",
+      "mealPlan": "Meals", "mealBreakfast": "With breakfast", "mealFullBoard": "Full board", "mealBreakfastNote": "Accommodation + breakfast. Lunch or dinner can be added (+USD 15 each).", "mealFullBoardNote": "Breakfast, lunch and dinner included — fixed total price per person/night.", "privateDomoNote": "Private dome: up to 7 people (USD 35 per person/night with breakfast; solo traveler USD 70)",
       "retiroNote": "🗓️ On weekends the domes may host retreats or events — ask us about availability: we'll confirm on WhatsApp before finalizing the booking.",
       "unavailableForDates": "That option has no availability for the dates you picked — try different dates.",
       "capacityExceeded": "The {tipo} has room for up to {max} people — for bigger groups, message us on WhatsApp.",
@@ -2631,14 +2631,14 @@
       },
       "groupTeaser": "👥 Going as 3 or more? Ask about our group rates.",
       "perPersonPerNight": "person/night",
-      "discountApplied": "🎉 Special price: you save ${ahorro} per person per night.",
-      "privacySurcharge": "Privacy: +${extra} per person per night.",
+      "discountApplied": "🎉 Special price: you save {ahorro} per person per night.",
+      "privacySurcharge": "Privacy: +{extra} per person per night.",
       "privacyIncluded": "✓ Privacy included, no extra charge.",
       "monthUrgency": {
         "pocosLugares": "⚡ Limited spots left for {month}",
         "ultimosLugares": "🔥 Last spots left for {month}"
       },
-      "senaNote": "Deposit to lock in the rate: ${monto} ({pct}% of the total) · balance due on arrival",
+      "senaNote": "Deposit to lock in the rate: {monto} ({pct}% of the total) · balance due on arrival",
       "clear": "clear",
       "confirmWhatsapp": "Confirm via WhatsApp",
       "checkAvailability": "Check availability",
@@ -2740,7 +2740,7 @@
             "number": "Phase 1",
             "status": "Active goal",
             "title": "Fund the down payment",
-            "goal": "Initial goal: ARS 1,500,000",
+            "goal": "Initial goal: USD 1,000",
             "description": "The first goal is to raise the down payment required to confirm all 10,000 trees and formally begin the project."
           },
           {
@@ -2754,8 +2754,8 @@
             "number": "Phase 3",
             "status": "During implementation",
             "title": "Complete the funding",
-            "goal": "Total amount: ARS 15,000,000",
-            "description": "As implementation progresses, we will raise the remaining amount needed to complete payment for all 10,000 trees, valued at ARS 1,500 each."
+            "goal": "Total amount: USD 10,000",
+            "description": "As implementation progresses, we will raise the remaining amount needed to complete payment for all 10,000 trees, valued at USD 1 each."
           },
           {
             "number": "Phase 4",
@@ -2992,7 +2992,7 @@
       "badge_accommodation": "Accommodation",
       "personalizeStay": "CUSTOMIZE YOUR STAY",
       "coworkingBadge": "Coworking & Coliving",
-      "card_extra_text": "You can also just book accommodation if you wish — from $20,000/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
+      "card_extra_text": "You can also just book accommodation if you wish — from USD 15/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
       "btn": "Book my spot", 
       "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
       "cards": [
@@ -3350,7 +3350,7 @@
           "date": "SEP 25-27",
           "title": "Killa Raymi · Spring & Full Moon",
           "desc": "A weekend in the mountains to welcome spring under the light of the full moon. Temazcal, full moon ceremony, trekking to the Los Gigantes massif and music in community.",
-          "price": "From $96,000",
+          "price": "From USD 65",
           "btn": "See More",
           "image": "/uploads/killa-raymi-hero-mobile.webp",
           "link": "/killa-raymi",
@@ -3359,7 +3359,7 @@
         {
           "date": "OCT 2-4",
           "title": "Alma de Lobo · Men's Gathering",
-          "desc": "A men's mountain retreat under the full moon: talking circles, temazcal, fire and nature to inhabit the masculine from a conscious, true place. From $465,000.",
+          "desc": "A men's mountain retreat under the full moon: talking circles, temazcal, fire and nature to inhabit the masculine from a conscious, true place. From USD 310.",
           "btn": "See More",
           "image": "/uploads/alma-de-lobo.webp",
           "link": "/alma-de-lobo",
@@ -3369,7 +3369,7 @@
         {
           "date": "OCT 17-18",
           "title": "Pueblo Mágico Retreat · Los Gigantes",
-          "desc": "Two days to slow down, breathe fresh air and reconnect with what matters: yoga, meditation, walks to the river, bonfire and a cacao ceremony. From $280,000.",
+          "desc": "Two days to slow down, breathe fresh air and reconnect with what matters: yoga, meditation, walks to the river, bonfire and a cacao ceremony. From USD 190.",
           "btn": "Sign me up",
           "image": "/uploads/yoga_salon.webp",
           "link": "https://wa.me/5493516765820?text=Hi!%20I%27m%20interested%20in%20the%20Pueblo%20M%C3%A1gico%20Retreat%20on%20October%2017-18.%20Can%20you%20give%20me%20more%20info%3F",
@@ -3451,7 +3451,7 @@
       "stats_years": "+25,000 Trees Planted",
       "stats_trees": "Guests from +20 Countries",
       "stats_land": "+200ha cared for · 25 years",
-      "stats_sus": "From $20,000 / person / night",
+      "stats_sus": "From USD 15 / person / night",
       "stats_google": "5.0★ · 64 Google Reviews",
       "bgImage": "/uploads/img_8475.webp",
       "bgImages": [
@@ -3468,7 +3468,7 @@
       "reservationKicker": "MOUNTAIN ECOLODGE",
       "reservationCta": "Check availability",
       "reservationTitle": "Book your unforgettable mountain experience",
-      "reservationPricing": "From $20,000/person/night (tent, with breakfast) · add meals as you like"
+      "reservationPricing": "From USD 15/person/night (tent, with breakfast) · add meals as you like"
     },
     "video": {
       "title": "Live our mountain <span class='italic text-gold'>experience</span>",
@@ -3708,12 +3708,12 @@
         "subtitle": "2 nights · full board · everything included. Each member has their own spot — no family group fees.",
         "badge": "Winter special",
         "adulto_label": "Adults",
-        "adulto_noche": "50,000",
-        "adulto_efectivo": "100,000",
-        "adulto_lista": "120,000",
-        "adulto_cuotas": "3 installments of $40,000",
-        "adulto_ahorro": "Save $20,000 paying cash",
-        "adulto_2n": "2 nights = $100,000 per person",
+        "adulto_noche": "35",
+        "adulto_efectivo": "70",
+        "adulto_lista": "80",
+        "adulto_cuotas": "3 installments totaling USD 80",
+        "adulto_ahorro": "Save USD 10 paying cash",
+        "adulto_2n": "2 nights = USD 70 per person",
         "por_noche": "per night · full board",
         "kids_title": "Children's rates",
         "kids_subtitle": "Little ones are always welcome.",
@@ -4199,8 +4199,8 @@
         "cards": [
           {
             "title": "Eco-Base Camp",
-            "price": "$85,000",
-            "unit": "per student · Argentine pesos",
+            "price": "USD 60",
+            "unit": "per student · US dollars",
             "tag": "Minimum 20 students",
             "badge": null,
             "features": [
@@ -4214,8 +4214,8 @@
           },
           {
             "title": "Educational Immersion",
-            "price": "$125,000",
-            "unit": "per student · Argentine pesos",
+            "price": "USD 85",
+            "unit": "per student · US dollars",
             "tag": "Minimum 20 students",
             "badge": "MOST POPULAR",
             "features": [
@@ -4243,7 +4243,7 @@
             "btn": "Build a proposal"
           }
         ],
-        "note": "Prices are in Argentine pesos (ARS), indicative and adjusted based on group size and chosen modules. Every proposal is tailored — at no cost.",
+        "note": "Prices are fixed in US dollars (USD), indicative and adjusted based on group size and chosen modules. Every proposal is tailored — at no cost.",
         "global_btn": "REQUEST FREE QUOTE"
       },
       "testimonios": {
@@ -4666,9 +4666,9 @@
         "title": "Different formats depending on the goal",
         "items": [
           { "title": "Corporate day", "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences.",
-            "price": "From ARS 35,000 per person" },
+            "price": "From USD 25 per person" },
           { "title": "Day + overnight", "text": "More immersive: adds shared living, a bonfire, nature and complementary activities.",
-            "price": "From ARS 75,000 per person" },
+            "price": "From USD 50 per person" },
           { "title": "Multi-day program", "text": "For teams looking to go deeper on leadership, culture, coordination and strategy.",
             "price": "On request" }
         ],
@@ -4781,7 +4781,7 @@
           },
           {
             "q": "How much does it cost?",
-            "a": "One-day program: from ARS 35,000 per person. Day + one night: from ARS 75,000 per person. Multi-day programs: on request. Open reforestation days are free."
+            "a": "One-day program: from USD 25 per person. Day + one night: from USD 50 per person. Multi-day programs: on request. Open reforestation days are free."
           },
           {
             "q": "How do we get there from Córdoba? Is transport available?",
@@ -5110,7 +5110,7 @@
       "price_solo_label": "Camping",
       "price_solo_sub": "Accommodation + breakfast, price per person",
       "price_pension_label": "Private Dome",
-      "price_pension_sub": "With breakfast · solo traveler $100,000",
+      "price_pension_sub": "With breakfast · solo traveler USD 70",
       "price_unit": "/ person / night",
       "price_pension_unit": "/ person / night",
       "cta": "View all accommodations"

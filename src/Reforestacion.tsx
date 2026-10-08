@@ -122,9 +122,13 @@ const Reforestacion: React.FC = () => {
     : 0;
   const progressPercentage = Math.min(100, (raisedAmount / phaseOneGoal) * 100);
   const displayedPercentage = Math.round((raisedAmount / phaseOneGoal) * 100);
+  const displayedRaisedAmount = language === 'en'
+    ? Math.max(0, REFORESTATION_CONTRIBUTION.raisedAmountUsd)
+    : raisedAmount;
+  const displayedPhaseOneGoal = language === 'en' ? 1_000 : phaseOneGoal;
   const currencyFormatter = new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
     style: 'currency',
-    currency: 'ARS',
+    currency: language === 'es' ? 'ARS' : 'USD',
     maximumFractionDigits: 0,
   });
   const contributionMethodLabels: Record<ContributionMethod, string> = {
@@ -518,11 +522,11 @@ const Reforestacion: React.FC = () => {
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-7">
                 <div>
                   <p className="text-gold text-xs uppercase tracking-[0.2em] font-bold mb-2">{content.funding.currentLabel}</p>
-                  <p className="font-serif text-4xl md:text-5xl">{currencyFormatter.format(raisedAmount)}</p>
+                  <p className="font-serif text-4xl md:text-5xl">{currencyFormatter.format(displayedRaisedAmount)}</p>
                 </div>
                 <div className="md:text-right">
                   <p className="text-3xl font-semibold text-gold">{displayedPercentage}%</p>
-                  <p className="text-white/65 text-sm">{content.funding.ofGoal} {currencyFormatter.format(phaseOneGoal)}</p>
+                  <p className="text-white/65 text-sm">{content.funding.ofGoal} {currencyFormatter.format(displayedPhaseOneGoal)}</p>
                 </div>
               </div>
               <div
@@ -920,7 +924,7 @@ const Reforestacion: React.FC = () => {
                 </div>
                 <div>
                   <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-brand">
-                    <p><span className="font-serif text-3xl md:text-4xl">{currencyFormatter.format(raisedAmount)}</span> <span className="text-sm text-gray-500">{content.funding.currentLabel.toLowerCase()}</span></p>
+                    <p><span className="font-serif text-3xl md:text-4xl">{currencyFormatter.format(displayedRaisedAmount)}</span> <span className="text-sm text-gray-500">{content.funding.currentLabel.toLowerCase()}</span></p>
                     <p className="text-sm font-semibold">{displayedPercentage}% · {currencyFormatter.format(phaseOneGoal)}</p>
                   </div>
                   <div className="h-4 overflow-hidden rounded-full bg-brand/10" role="progressbar" aria-label={content.funding.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, displayedPercentage)}>

@@ -1,10 +1,19 @@
 import React, { useState } from 'react';
 import { CaretDownIcon, MoonIcon, FireIcon, UsersThreeIcon, HouseIcon, HeartIcon, PawPrintIcon, WheelchairIcon } from '@phosphor-icons/react';
-import { RETREATS_DATA } from '../data/retreats';
+import { formatPrice, RETREATS_DATA, type PricingLanguage } from '../data/retreats';
+import { useLanguage } from '../../contexts/LanguageContext';
 
-const { priceSola, priceAcompanada, senia, segundoPago, segundoPagoFecha, cupos, fechaLimiteInscripcion } = RETREATS_DATA.cicloVitalFemenino;
-
-const faqs = [
+function getFaqs(language: PricingLanguage) {
+  const data = RETREATS_DATA.cicloVitalFemenino;
+  const prices = language === 'en'
+    ? data.pricesUsd
+    : {
+        priceSola: data.priceSola,
+        priceAcompanada: data.priceAcompanada,
+        senia: data.senia,
+        segundoPago: data.segundoPago,
+      };
+  return [
   {
     Icon: UsersThreeIcon,
     question: '¿Necesito experiencia previa en retiros o círculos de mujeres?',
@@ -28,7 +37,7 @@ const faqs = [
   {
     Icon: HeartIcon,
     question: '¿Cómo reservo mi lugar y qué formas de pago hay?',
-    answer: `La experiencia cuesta $${priceSola.toLocaleString('es-AR')} si venís sola, o $${priceAcompanada.toLocaleString('es-AR')} por persona si venís acompañada. Reservás con una seña recomendada de $${senia.toLocaleString('es-AR')}, otros $${segundoPago.toLocaleString('es-AR')} antes del ${segundoPagoFecha}, y el saldo se cancela durante el retiro. Quedan ${cupos} lugares y las inscripciones cierran el ${fechaLimiteInscripcion}, así que te recomendamos escribirnos por WhatsApp cuanto antes.`,
+    answer: `La experiencia cuesta ${formatPrice(prices.priceSola, language)} si venís sola, o ${formatPrice(prices.priceAcompanada, language)} por persona si venís acompañada. Reservás con una seña recomendada de ${formatPrice(prices.senia, language)}, otros ${formatPrice(prices.segundoPago, language)} antes del ${data.segundoPagoFecha}, y el saldo se cancela durante el retiro. Quedan ${data.cupos} lugares y las inscripciones cierran el ${data.fechaLimiteInscripcion}, así que te recomendamos escribirnos por WhatsApp cuanto antes.`,
   },
   {
     Icon: PawPrintIcon,
@@ -40,10 +49,13 @@ const faqs = [
     question: '¿Tienen accesibilidad para sillas de ruedas?',
     answer: 'Por el momento no contamos con rampas ni espacios especialmente preparados para sillas de ruedas. Si tenés dudas puntuales sobre accesibilidad, escribinos por WhatsApp y lo vemos juntos.',
   },
-];
+  ];
+}
 
 const CicloVitalFemeninoFAQ: React.FC = () => {
+  const { language } = useLanguage();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const faqs = getFaqs(language);
 
   const toggle = (index: number) => setActiveIndex(activeIndex === index ? null : index);
 

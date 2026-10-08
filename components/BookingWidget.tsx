@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { WA_MAGICO } from '../src/data/config';
 import { BLOCKED_DATES_DOMO, BLOCKED_DATES_REFUGIO, RETIRO_DATES_DOMO, RETIRO_DATES_REFUGIO, DOMO_DISPONIBLE_DESDE, DOMO_FINDES_A_CONSULTAR, MONTHLY_URGENCY } from '../src/data/availability';
-import { ESTADIA_PRICES } from '../src/data/retreats';
+import { formatPrice, getEstadiaPrices } from '../src/data/retreats';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 // Las etiquetas salen de booking.months en data.json (mismo orden y largo).
@@ -72,7 +72,7 @@ function fillTemplate(tpl: string, vars: Record<string, string>) {
 
 // ── Widget ────────────────────────────────────────────────────────────────────
 export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const b = (t as any).booking;
   const MONTHS = MONTH_DATES.map((d, i) => ({ ...d, label: b.months[i].label, short: b.months[i].short }));
 
@@ -187,7 +187,7 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
   // Pensión completa = tarifa con desayuno + almuerzo y cena a precio cerrado
   // (mismo extra en todas las tarifas de ESTADIA_PRICES).
   const conPension = comidas === 'pension';
-  const P = ESTADIA_PRICES;
+  const P = getEstadiaPrices(language);
   const EXTRA_PENSION = P.pensionCompletaEcoRefugio - P.ecoRefugioDesde;
   function precioPorPersona(): number {
     if (esCarpa) return conPension ? P.pensionCompletaCarpa : P.carpaDesde;
@@ -198,7 +198,8 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
       return conPension ? P.pensionCompletaDomoPrivado : P.domoPrivado;
     }
     // Refugio privado: sin costo extra de 3 hasta el tope real (15); recargo solo para 1-2.
-    return (personas >= 3 && personas <= CAPACIDAD_REFUGIO) ? compartida : 75_000 + (conPension ? EXTRA_PENSION : 0);
+    const refugioPrivadoBase = language === 'en' ? 50 : 75_000;
+    return (personas >= 3 && personas <= CAPACIDAD_REFUGIO) ? compartida : refugioPrivadoBase + (conPension ? EXTRA_PENSION : 0);
   }
 
   // Si la estadía elegida cae en fechas de retiro/evento (ver RETIRO_DATES_*),
@@ -216,7 +217,8 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
   const diferenciaPorPersona = pxNoche - PRECIO_BASE_COMPARTIDA;
   const total        = nights * pxNoche * personas;
   // Seña para congelar tarifa: 50% si el total es ≤ $100.000, 30% si es mayor.
-  const senaPct      = total > 0 && total <= 100_000 ? 50 : 30;
+  const limiteSenaAlta = language === 'en' ? 70 : 100_000;
+  const senaPct      = total > 0 && total <= limiteSenaAlta ? 50 : 30;
   const senaMonto    = Math.round(total * senaPct / 100);
   const tipoLabel    = tipoEfectivo === 'domo' ? b.domoFull : tipoEfectivo === 'refugio' ? b.refugioFull : b.carpaFull;
   // Camping no tiene compartida/privada: solo se indica el régimen de comidas
@@ -439,17 +441,17 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
             <div>
               <p style={{ fontSize: 11, color: G.muted, margin: 0 }}>{plural(nights, b.nightWord)} · {plural(personas, b.guestWord)}</p>
               <p style={{ fontSize: 11, color: '#94a3b8', margin: '2px 0 0' }}>
-                {habitacionLabel.toLowerCase()} · ${pxNoche.toLocaleString('es-AR')}/{b.perPersonPerNight}
+                {habitacionLabel.toLowerCase()} · {formatPrice(pxNoche, language)}/{b.perPersonPerNight}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontWeight: 700, fontSize: 17, color: G.green, margin: 0 }}>${total.toLocaleString('es-AR')}</p>
+              <p style={{ fontWeight: 700, fontSize: 17, color: G.green, margin: 0 }}>{formatPrice(total, language)}</p>
               <button onClick={clear} style={{ fontSize: 11, color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>{b.clear}</button>
             </div>
           </div>
           {!esCarpa && diferenciaPorPersona < 0 && (
             <p style={{ fontSize: 10, fontWeight: 700, color: G.green, margin: '6px 0 0' }}>
-              {fillTemplate(b.discountApplied, { ahorro: Math.abs(diferenciaPorPersona).toLocaleString('es-AR') })}
+              {fillTemplate(b.discountApplied, { ahorro: formatPrice(Math.abs(diferenciaPorPersona), language) })}
             </p>
           )}
           {!esCarpa && diferenciaPorPersona === 0 && habitacionEfectiva === 'privada' && (
@@ -457,11 +459,11 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
           )}
           {!esCarpa && diferenciaPorPersona > 0 && (
             <p style={{ fontSize: 10, fontWeight: 600, color: G.muted, margin: '6px 0 0' }}>
-              {fillTemplate(b.privacySurcharge, { extra: diferenciaPorPersona.toLocaleString('es-AR') })}
+              {fillTemplate(b.privacySurcharge, { extra: formatPrice(diferenciaPorPersona, language) })}
             </p>
           )}
           <p style={{ fontSize: 10, color: '#94a3b8', margin: '6px 0 0', paddingTop: 6, borderTop: '1px solid rgba(0,83,51,0.08)' }}>
-            {fillTemplate(b.senaNote, { monto: senaMonto.toLocaleString('es-AR'), pct: String(senaPct) })}
+            {fillTemplate(b.senaNote, { monto: formatPrice(senaMonto, language), pct: String(senaPct) })}
           </p>
         </div>
       )}

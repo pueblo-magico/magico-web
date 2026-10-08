@@ -45,6 +45,7 @@ export const REFORESTATION_CONTRIBUTION = {
     isSample: false,
   },
   raisedAmount: Number(import.meta.env.VITE_REFORESTATION_RAISED_AMOUNT ?? 230000),
+  raisedAmountUsd: Number(import.meta.env.VITE_REFORESTATION_RAISED_AMOUNT_USD ?? 150),
 };
 
 // Reemplaza los envíos de Netlify Forms (no disponible en Cloudflare Pages).

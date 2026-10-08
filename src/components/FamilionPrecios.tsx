@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TrendingDown, Plus, Minus, X } from 'lucide-react';
 import { WA_MAGICO } from '../data/config';
-import { RETREATS_DATA } from '../data/retreats';
+import { formatPrice, RETREATS_DATA, type PricingLanguage } from '../data/retreats';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const C = {
@@ -13,14 +13,11 @@ const C = {
   fire:  '#AA3E11',
 };
 
-const PRECIO_ADULTO  = 50_000;
-const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
-
-function precioNino(age: number): number {
+function precioNino(age: number, precioAdulto: number): number {
   if (age <= 3)  return 0;
-  if (age <= 7)  return PRECIO_ADULTO * 0.70;
-  if (age <= 12) return PRECIO_ADULTO * 0.85;
-  return PRECIO_ADULTO;
+  if (age <= 7)  return precioAdulto * 0.70;
+  if (age <= 12) return precioAdulto * 0.85;
+  return precioAdulto;
 }
 
 function labelNino(age: number): string {
@@ -66,7 +63,7 @@ const Counter: React.FC<{
 );
 
 // ── Calculadora ───────────────────────────────────────────────────────────────
-const Calculadora: React.FC = () => {
+const Calculadora: React.FC<{ language: PricingLanguage }> = ({ language }) => {
   const [noches, setNoches]   = useState(2);
   const [adultos, setAdultos] = useState(2);
   const [ninos, setNinos]     = useState<{ id: number; age: number }[]>([]);
@@ -78,8 +75,10 @@ const Calculadora: React.FC = () => {
     setNinos(prev => prev.map(n => n.id === id ? { ...n, age } : n));
   };
 
-  const totalAdultos = adultos * PRECIO_ADULTO * noches;
-  const totalNinos   = ninos.reduce((s, n) => s + precioNino(n.age) * noches, 0);
+  const precioAdulto = language === 'en' ? 35 : 50_000;
+  const fmt = (amount: number) => formatPrice(Math.round(amount), language);
+  const totalAdultos = adultos * precioAdulto * noches;
+  const totalNinos   = ninos.reduce((s, n) => s + precioNino(n.age, precioAdulto) * noches, 0);
   const totalEfectivo = totalAdultos + totalNinos;
   const cuotaValor    = Math.round(totalEfectivo * 1.2 / 3);
 
@@ -130,7 +129,7 @@ const Calculadora: React.FC = () => {
                 {labelNino(n.age)}
                 {n.age > 3 && (
                   <span className="ml-1 text-white/50 font-normal">
-                    · {fmt(precioNino(n.age))}/noche
+                    · {fmt(precioNino(n.age, precioAdulto))}/noche
                   </span>
                 )}
               </span>
@@ -150,13 +149,13 @@ const Calculadora: React.FC = () => {
       {totalEfectivo > 0 && (
         <div className="border-t border-white/15 pt-4 space-y-1.5 mb-4">
           <div className="flex justify-between text-sm text-white/60">
-            <span>{adultos} adulto{adultos !== 1 ? 's' : ''} × {fmt(PRECIO_ADULTO)}/noche × {noches} noche{noches !== 1 ? 's' : ''}</span>
+            <span>{adultos} adulto{adultos !== 1 ? 's' : ''} × {fmt(precioAdulto)}/noche × {noches} noche{noches !== 1 ? 's' : ''}</span>
             <span>{fmt(totalAdultos)}</span>
           </div>
           {ninos.map(n => n.age > 3 && (
             <div key={n.id} className="flex justify-between text-sm text-white/60">
-              <span>Niño/a {n.age} años × {fmt(precioNino(n.age))}/noche × {noches}</span>
-              <span>{fmt(precioNino(n.age) * noches)}</span>
+              <span>Niño/a {n.age} años × {fmt(precioNino(n.age, precioAdulto))}/noche × {noches}</span>
+              <span>{fmt(precioNino(n.age, precioAdulto) * noches)}</span>
             </div>
           ))}
           {ninos.some(n => n.age <= 3) && (
@@ -180,7 +179,7 @@ const Calculadora: React.FC = () => {
         </div>
         {noches !== 2 && (
           <p className="text-white/30 text-[10px] mt-2">
-            Base: {fmt(PRECIO_ADULTO)}/noche adulto · Niños con descuento según edad
+            Base: {fmt(precioAdulto)}/noche adulto · Niños con descuento según edad
           </p>
         )}
       </div>
@@ -190,7 +189,7 @@ const Calculadora: React.FC = () => {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 const FamilionPrecios: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const p = (t.familion as any).precios;
   const waLink = 'https://wa.me/' + WA_MAGICO + '?text=' + encodeURIComponent(RETREATS_DATA.familion.message);
 
@@ -232,7 +231,7 @@ const FamilionPrecios: React.FC = () => {
             </p>
 
             <div className="flex items-baseline gap-2 mb-1">
-              <p className="text-5xl font-bold serif-title" style={{ color: C.green }}>${p.adulto_noche}</p>
+              <p className="text-5xl font-bold serif-title" style={{ color: C.green }}>{language === 'en' ? `USD ${p.adulto_noche}` : `$${p.adulto_noche}`}</p>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                 style={{ backgroundColor: 'rgba(170,62,17,0.12)', color: C.fire }}>
                 🌨 invierno
@@ -252,7 +251,7 @@ const FamilionPrecios: React.FC = () => {
                 {p.adulto_cuotas}
               </p>
               <p className="text-[10px] mb-3 font-semibold" style={{ color: C.muted }}>
-                Total en cuotas: ${p.adulto_lista}
+                Total en cuotas: {language === 'en' ? `USD ${p.adulto_lista}` : `$${p.adulto_lista}`}
               </p>
 
               <p className="text-[11px] font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
@@ -277,9 +276,9 @@ const FamilionPrecios: React.FC = () => {
                     {kid.noche ? (
                       <>
                         <p className="font-bold text-white">
-                          ${kid.noche}<span className="text-[10px] font-normal text-white/50">/noche</span>
+                          {language === 'en' ? `USD ${kid.noche}` : `$${kid.noche}`}<span className="text-[10px] font-normal text-white/50">/noche</span>
                         </p>
-                        <p className="text-[10px] text-white/50">2 noches: ${kid.price}</p>
+                        <p className="text-[10px] text-white/50">2 noches: {language === 'en' ? `USD ${kid.price}` : `$${kid.price}`}</p>
                       </>
                     ) : (
                       <span className="text-white/60 text-[10px]">{kid.desc}</span>
@@ -292,7 +291,7 @@ const FamilionPrecios: React.FC = () => {
         </div>
 
         {/* ── Calculadora ── */}
-        <Calculadora />
+        <Calculadora language={language} />
 
         {/* Incluye */}
         <div className="bg-white/10 border border-white/20 rounded-2xl p-6 md:p-8 mb-8">

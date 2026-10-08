@@ -1,6 +1,7 @@
 import React from 'react';
 import { WA_GONDOR } from '../data/config';
-import { RETREATS_DATA } from '../data/retreats';
+import { formatPrice, RETREATS_DATA } from '../data/retreats';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const INCLUYE = [
   'Arco funcional que te llevás a casa',
@@ -12,6 +13,8 @@ const INCLUYE = [
 ];
 
 const GondorbowsPrecios: React.FC = () => {
+  const { language } = useLanguage();
+  const price = language === 'en' ? RETREATS_DATA.gondorbows.priceUsd : RETREATS_DATA.gondorbows.price;
   const waMain = 'https://wa.me/' + WA_GONDOR + '?text=' +
     encodeURIComponent(RETREATS_DATA.gondorbows.message);
 
@@ -83,9 +86,9 @@ const GondorbowsPrecios: React.FC = () => {
           <div className="bg-white rounded-2xl p-10 md:p-14 text-center mb-10 mx-auto" style={{ maxWidth: '480px' }}>
             <p className="text-brand font-bold text-sm uppercase tracking-widest mb-5">Valor total de la experiencia</p>
             <p className="font-serif text-brand leading-none mb-5" style={{ fontSize: 'clamp(2.5rem, 8vw, 4rem)' }}>
-              ${RETREATS_DATA.gondorbows.price.toLocaleString('es-AR')}
+              {formatPrice(price, language)}
             </p>
-            <p className="text-brand/50 text-xs uppercase tracking-widest mb-6">{RETREATS_DATA.gondorbows.currency}</p>
+            <p className="text-brand/50 text-xs uppercase tracking-widest mb-6">{language === 'en' ? 'USD' : RETREATS_DATA.gondorbows.currency}</p>
             <p className="text-brand/70 text-sm">Todo incluido · 3 días de inmersión completa</p>
           </div>
 
