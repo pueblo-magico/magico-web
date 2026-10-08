@@ -1,269 +1,121 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const DATA_FISCAL_URL = '/uploads/F960.pdf';
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="mb-10">
+  <section className="mb-10">
     <h2 className="text-xl font-serif text-brand mb-4 pb-2 border-b border-brand/10">{title}</h2>
     <div className="text-dark/80 font-light leading-relaxed space-y-3 text-sm">{children}</div>
-  </div>
+  </section>
 );
 
 export const TerminosYCondiciones: React.FC = () => {
-  useEffect(() => {
-    document.title = 'Términos y Condiciones — Pueblo Mágico';
-    window.scrollTo(0, 0);
-  }, []);
+  const { language, toggleLanguage } = useLanguage();
+  const en = language === 'en';
 
-  const fecha = '27 de abril de 2025';
+  useEffect(() => {
+    document.title = en ? 'Terms and Conditions — Pueblo Mágico' : 'Términos y Condiciones — Pueblo Mágico';
+    window.scrollTo(0, 0);
+  }, [en]);
 
   return (
     <div className="min-h-screen bg-bone font-sans antialiased">
-      {/* Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
-          <a
-            href="/"
-            className="flex items-center gap-2 text-sm text-dark/60 hover:text-brand transition-colors"
-          >
+          <a href="/" className="flex items-center gap-2 text-sm text-dark/60 hover:text-brand transition-colors">
             <ArrowLeft size={16} />
-            Volver al inicio
+            {en ? 'Back to home' : 'Volver al inicio'}
           </a>
           <span className="text-gray-200">|</span>
-          <img
-            src="/uploads/pueblo_magico_logo_marron.svg"
-            alt="Pueblo Mágico"
-            className="h-7 opacity-80"
-          />
+          <img src="/uploads/pueblo_magico_logo_marron.svg" alt="Pueblo Mágico" className="h-7 opacity-80" />
+          <button type="button" onClick={toggleLanguage} className="ml-auto text-xs font-bold text-brand underline underline-offset-4">
+            {en ? 'ES' : 'EN'}
+          </button>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-16">
-        {/* Título */}
         <div className="mb-12">
-          <p className="text-brand/60 text-xs uppercase tracking-widest font-semibold mb-3">Documento legal</p>
-          <h1 className="text-4xl md:text-5xl font-serif text-brand mb-4">
-            Términos y Condiciones
-          </h1>
-          <p className="text-dark/50 text-sm font-light">
-            Última actualización: {fecha}
-          </p>
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-            <strong>Nota:</strong> Este sitio web es de carácter informativo. Las reservas y contrataciones se formalizan a través de WhatsApp o correo electrónico, no mediante carrito de compras.
+          <p className="text-brand/60 text-xs uppercase tracking-widest font-semibold mb-3">{en ? 'Legal document' : 'Documento legal'}</p>
+          <h1 className="text-4xl md:text-5xl font-serif text-brand mb-4">{en ? 'Terms and Conditions' : 'Términos y Condiciones'}</h1>
+          <p className="text-dark/50 text-sm font-light">{en ? 'Last updated: October 8, 2026' : 'Última actualización: 8 de octubre de 2026'}</p>
+          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+            <strong>{en ? 'Pre-launch legal review:' : 'Revisión legal previa al lanzamiento:'}</strong>{' '}
+            {en
+              ? 'this draft reflects the online booking flow currently implemented. It requires human legal and commercial approval before production reservations are enabled.'
+              : 'este borrador refleja el flujo de reservas online implementado. Requiere aprobación humana legal y comercial antes de habilitar reservas productivas.'}
           </div>
         </div>
 
-        <Section title="1. Identificación de la empresa">
+        <Section title={en ? '1. Service provider' : '1. Identificación del prestador'}>
+          <p><strong>{en ? 'Legal name:' : 'Razón social:'}</strong> HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA</p>
+          <p><strong>{en ? 'Trade name:' : 'Nombre comercial:'}</strong> Pueblo Mágico — Eco-Refugio & Glamping</p>
+          <p><strong>{en ? 'Registered address:' : 'Domicilio legal:'}</strong> Calle Aconquija 635, Villa Allende, Departamento Colón, Córdoba, Argentina.</p>
+          <p><strong>CUIT:</strong> 30-71875586-3</p>
           <p>
-            <strong>Razón social:</strong> HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
+            <strong>{en ? 'Customer service:' : 'Atención al consumidor:'}</strong>{' '}
+            <a href="mailto:experienciamagico@gmail.com" className="text-brand hover:underline">experienciamagico@gmail.com</a>{' · '}
+            <a href="https://wa.me/5493516765820" className="text-brand hover:underline" target="_blank" rel="noopener noreferrer">+54 9 351 676 5820</a>
           </p>
-          <p>
-            <strong>Nombre comercial:</strong> Pueblo Mágico — Eco-Refugio & Glamping
-          </p>
-          <p>
-            <strong>Domicilio legal:</strong> Calle Aconquija 635, Villa Allende, Departamento Colón, Provincia de Córdoba, República Argentina.
-          </p>
-          <p>
-            <strong>CUIT:</strong> 30-71875586-3
-          </p>
-          <p>
-            <strong>Email de atención al consumidor:</strong>{' '}
-            <a href="mailto:experienciamagico@gmail.com" className="text-brand hover:underline">
-              experienciamagico@gmail.com
-            </a>
-          </p>
-          <p>
-            <strong>WhatsApp:</strong>{' '}
-            <a href="https://wa.me/5493516765820" className="text-brand hover:underline" target="_blank" rel="noopener noreferrer">
-              +54 9 351 676 5820
-            </a>
-          </p>
-          <p>
-            <strong>Formulario N° 960/D — Data Fiscal (AFIP):</strong>{' '}
-            <a href={DATA_FISCAL_URL} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-              Ver constancia F960/D (PDF)
-            </a>
-          </p>
+          <p><a href={DATA_FISCAL_URL} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">{en ? 'View F960/D tax certificate (PDF)' : 'Ver constancia F960/D — Data Fiscal (PDF)'}</a></p>
         </Section>
 
-        <Section title="2. Naturaleza de la relación y del sitio web">
-          <p>
-            El sitio web <em>experienciamagico.com</em> es un canal informativo. No cuenta con carrito de compras ni pasarela de pago en línea. La información publicada tiene por fin describir las experiencias, alojamientos y retiros que ofrece Pueblo Mágico.
-          </p>
-          <p>
-            El contrato de reserva o prestación de servicio se perfecciona Desde que el/la consumidor/a confirma la aceptación de la propuesta remitida por WhatsApp o correo electrónico, y el prestador confirma la disponibilidad.
-          </p>
-          <p>
-            Toda la información básica del proveedor y de los servicios es previa y fácilmente accesible en el sitio, conforme a la Resolución 270/2020 de la Secretaría de Comercio Interior.
-          </p>
+        <Section title={en ? '2. Online booking process' : '2. Proceso de reserva online'}>
+          <p>{en ? 'The website allows you to check availability, request a price quote and create a booking. A quote is an informative, time-limited offer: it does not hold inventory and is not a confirmed booking.' : 'El sitio permite consultar disponibilidad, solicitar una cotización y crear una reserva. La cotización es una propuesta informativa con vigencia limitada: no retiene inventario ni constituye una reserva confirmada.'}</p>
+          <p>{en ? 'When the guest accepts a valid quote and submits the required contact details, the system creates a booking pending payment and temporarily holds the selected inventory for the period displayed on screen.' : 'Cuando el huésped acepta una cotización vigente y envía los datos de contacto requeridos, el sistema crea una reserva pendiente de pago y retiene temporalmente el inventario elegido durante el plazo mostrado en pantalla.'}</p>
+          <p>{en ? 'The booking is only confirmed after Pueblo Mágico verifies receipt of the required deposit. A booking code beginning with RES identifies the request, but does not by itself prove payment or confirmation.' : 'La reserva se confirma únicamente cuando Pueblo Mágico verifica la recepción de la seña requerida. El código que comienza con RES identifica la solicitud, pero por sí solo no acredita el pago ni la confirmación.'}</p>
         </Section>
 
-        <Section title="3. Oferta, precios e impuestos">
-          <p>
-            Los precios publicados en el sitio o informados por WhatsApp se expresan en pesos argentinos (ARS) e incluyen IVA cuando corresponda, salvo indicación en contrario.
-          </p>
-          <p>
-            Los precios pueden variar por temporada, tipo de experiencia o paquete contratado. El precio definitivo será el que se informe en la propuesta de reserva confirmada por escrito.
-          </p>
-          <p>
-            <strong>Medios de pago aceptados:</strong> efectivo, transferencia bancaria, tarjeta de crédito y tarjeta de débito (terminal física en destino). Los medios de pago vigentes también se encuentran declarados en el Formulario N° 960/D (Data Fiscal) ante AFIP.
-          </p>
+        <Section title={en ? '3. Prices, quote and payment' : '3. Precios, cotización y pago'}>
+          <p>{en ? 'The quote shows the currency, total price, deposit, balance, selected meal plan and validity period. The accepted quote is stored as a versioned snapshot so later tariff changes do not alter that booking.' : 'La cotización muestra moneda, precio total, seña, saldo, régimen de alimentación elegido y vigencia. La propuesta aceptada se conserva como snapshot versionado para que cambios posteriores de tarifa no modifiquen esa reserva.'}</p>
+          <p>{en ? 'The amount and proportion of the deposit are those shown in the quote. The remaining balance is payable on arrival unless the accepted offer expressly states a different deadline.' : 'El importe y la proporción de la seña son los indicados en la cotización. El saldo restante se abona al llegar, salvo que la propuesta aceptada informe expresamente otro vencimiento.'}</p>
+          <p>{en ? 'When an automatic payment destination is unavailable, the booking may still be registered as pending payment and the team will send manual instructions. No booking is confirmed until the payment is verified.' : 'Si el destino de pago automático no está disponible, la reserva puede quedar registrada como pendiente de pago y el equipo enviará instrucciones manuales. Ninguna reserva se confirma hasta verificar el pago.'}</p>
         </Section>
 
-        <Section title="4. Reservas y condiciones de pago">
-          <p>
-            Para iniciar una reserva, el/la interesado/a debe contactarse por WhatsApp (+54 9 351 676 5820) o correo electrónico (experienciamagico@gmail.com) indicando:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Fechas deseadas de check-in y check-out.</li>
-            <li>Número de personas (adultos y menores).</li>
-            <li>Tipo de alojamiento o experiencia de interés.</li>
-            <li>Datos de contacto.</li>
-          </ul>
-          <p>
-            El prestador responderá dentro de las 24 a 48 horas hábiles con disponibilidad y propuesta de precio. La reserva quedará confirmada una vez abonado el anticipo requerido (cuando corresponda) dentro del plazo indicado en la propuesta.
-          </p>
-          <p>
-            El check-in se realiza a partir de las 13:00 hs y el check-out hasta las 11:00 hs, salvo acuerdo previo.
-          </p>
-          <p>
-            <strong>Horarios de comidas:</strong> desayuno de 09:00 a 10:00 hs, almuerzo de 14:00 a 15:00 hs y cena de 20:00 a 21:00 hs. Fuera de esos horarios no se presta servicio de cocina; quienes ingresen a partir de las 19:00 hs cuentan con el servicio de cena en su horario habitual. Las comidas no consumidas por llegadas tardías sin aviso previo no son acumulables ni reembolsables.
-          </p>
-          <p>
-            En caso de haber abonado un anticipo, el saldo pendiente deberá cancelarse a más tardar al momento del check-out.
-          </p>
+        <Section title={en ? '4. Holds, expiration and late payments' : '4. Retención, vencimiento y pagos tardíos'}>
+          <p>{en ? 'The payment hold begins when the pending booking is created. Its exact duration is configurable and is displayed as a countdown. If it expires before verification, the inventory is released and availability must be checked again.' : 'La retención de pago comienza al crear la reserva pendiente. Su duración exacta es configurable y se muestra como cuenta regresiva. Si vence antes de la verificación, el inventario se libera y se debe consultar disponibilidad nuevamente.'}</p>
+          <p>{en ? 'A transfer made after the hold expires does not automatically reinstate or confirm the booking. Pueblo Mágico will reconcile the payment and contact the guest to confirm availability, offer an alternative or arrange the applicable refund.' : 'Una transferencia realizada después del vencimiento no reactiva ni confirma automáticamente la reserva. Pueblo Mágico conciliará el pago y contactará al huésped para confirmar disponibilidad, ofrecer una alternativa o gestionar la devolución que corresponda.'}</p>
         </Section>
 
-        <Section title="5. Derecho de arrepentimiento (Res. 424/2020 — Art. 34, Ley 24.240)">
-          <p>
-            En los términos de la Ley 24.240 de Defensa del Consumidor y la Resolución 424/2020, todo/a consumidor/a tiene derecho a revocar la aceptación de la reserva o servicio contratado a distancia —incluyendo reservas realizadas por WhatsApp— dentro de los <strong>10 (diez) días corridos</strong> posteriores a la fecha de celebración del contrato, siempre que el servicio no haya sido iniciado.
-          </p>
-          <p>
-            <strong>Cómo ejercer el derecho de arrepentimiento:</strong>
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Comunicarse al WhatsApp +54 9 351 676 5820 o al correo experienciamagico@gmail.com.</li>
-            <li>Indicar nombre completo, fecha de la reserva y el número o referencia de la misma.</li>
-            <li>Solicitar expresamente la revocación de la reserva.</li>
-          </ul>
-          <p>
-            Dentro de las 24 horas hábiles de recibida la solicitud, confirmaremos la cancelación por escrito (WhatsApp o email) con un número de referencia para que quede constancia. No se cobrarán costos adicionales, salvo gastos vinculados a servicios ya prestados.
-          </p>
-          <p>
-            Una vez iniciado el servicio (check-in realizado), el derecho de arrepentimiento no se aplica en su totalidad; solo podrá solicitarse la devolución proporcional a la parte del servicio no utilizada, conforme a la política de cancelación vigente.
-          </p>
+        <Section title={en ? '5. Cancellation, changes and refunds' : '5. Cancelaciones, cambios y devoluciones'}>
+          <p>{en ? 'Cancellation, rescheduling and refund rules must be communicated before acceptance and are stored with the booking when a versioned policy is published. Statutory consumer rights always prevail.' : 'Las reglas de cancelación, reprogramación y devolución deben informarse antes de la aceptación y quedan asociadas a la reserva cuando existe una política versionada publicada. Los derechos legales de consumo siempre prevalecen.'}</p>
+          <p>{en ? 'The reservation system currently marks the commercial cancellation policy as pending configuration. Until a policy receives commercial and legal approval, the site does not apply automatic refund percentages. Each request is reviewed manually, without limiting rights granted by law.' : 'Actualmente el sistema de reservas marca la política comercial de cancelación como pendiente de configuración. Hasta que una versión reciba aprobación comercial y legal, el sitio no aplica porcentajes automáticos de devolución. Cada solicitud se revisa manualmente, sin limitar los derechos otorgados por la ley.'}</p>
+          <p>{en ? 'To request a cancellation or date change, contact customer service and include the booking code. Changes remain subject to availability.' : 'Para solicitar cancelación o cambio de fechas, contactá a atención al consumidor e indicá el código de reserva. Los cambios quedan sujetos a disponibilidad.'}</p>
         </Section>
 
-        <Section title="6. Política de cancelaciones y no-show">
-          <p>
-            <strong>Cancelación por parte del cliente:</strong>
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Con más de 10 días corridos de anticipación: cancelación sin cargo o reprogramación sin costo.</li>
-            <li>Entre 5 y 10 días corridos de anticipación: se retiene el 50% del anticipo abonado.</li>
-            <li>Con menos de 5 días corridos de anticipación: se retiene el 100% del anticipo abonado.</li>
-          </ul>
-          <p>
-            <strong>Ausencia sin aviso previo:</strong> Si el/la huésped no se presenta en la fecha pactada sin haber comunicado cancelación o demora, se perderá el anticipo abonado y la reserva quedará cancelada automáticamente.
-          </p>
-          <p>
-            <strong>Modificación de fechas:</strong> sujeta a disponibilidad y sin costo adicional si se solicita con más de 10 días de anticipación. En todos los casos, las reprogramaciones de fecha o ajustes en las comidas deben solicitarse con un mínimo de 24 horas de anticipación; vencido ese plazo, la reserva no podrá modificarse.
-          </p>
-          <p>
-            Las políticas anteriores no afectan el derecho de arrepentimiento regulado en la Sección 5, que prevalece en su plazo legal.
-          </p>
+        <Section title={en ? '6. Right of withdrawal' : '6. Derecho de arrepentimiento'}>
+          <p>{en ? 'Distance contracts are subject to the right of withdrawal under Law 24,240, the Civil and Commercial Code and Disposición 954/2025. For tourism services on a specific date, the request within the statutory ten-day period must also be submitted at least 24 hours before the service begins.' : 'Las contrataciones a distancia están alcanzadas por el derecho de arrepentimiento previsto en la Ley 24.240, el Código Civil y Comercial y la Disposición 954/2025. Para servicios turísticos con fecha determinada, la solicitud dentro del plazo legal de diez días también debe realizarse con al menos 24 horas de anticipación al inicio del servicio.'}</p>
+          <p>{en ? 'A dedicated, visible withdrawal flow must be enabled before production launch. Until then, requests may be sent through the customer-service channels above; Pueblo Mágico must provide a request code within 24 hours.' : 'Antes del lanzamiento productivo debe habilitarse un flujo específico y visible de arrepentimiento. Hasta entonces, la solicitud puede enviarse por los canales de atención indicados arriba; Pueblo Mágico debe informar un código de la petición dentro de las 24 horas.'}</p>
         </Section>
 
-        <Section title="7. Normativa turística — Ley 25.997 y provincia de Córdoba">
-          <p>
-            Pueblo Mágico opera conforme a la Ley Nacional de Turismo N° 25.997 y su reglamentación, así como a la normativa provincial y municipal de hospedaje turístico de la Provincia de Córdoba.
-          </p>
-          <p>
-            <strong>Inscripción ante autoridad de turismo:</strong> Resolución N° 000258 — Agencia Córdoba Turismo (14 ABR 2025). Clase: Alojamiento Alternativo. 3 Habitaciones Compartidas, 3 Domos, 1 Yurta — 48 plazas.
-          </p>
-          <p>
-            El/la turista tiene derecho a:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Recibir información clara, veraz y completa sobre los servicios contratados antes de celebrar el contrato.</li>
-            <li>Recibir los servicios en las condiciones acordadas y conforme a la oferta publicada.</li>
-            <li>Acceder a mecanismos de reclamo ante la autoridad de turismo de la provincia de Córdoba (cordobaturismo.gov.ar).</li>
-            <li>Recurrir ante la Subsecretaría de Defensa del Consumidor de la Nación en caso de conflicto.</li>
-          </ul>
-          <p>
-            Los servicios básicos del establecimiento incluyen: alojamiento, alimentación según el paquete contratado, acceso a espacios naturales y actividades indicadas en la oferta. Las condiciones específicas de cada experiencia (check-in/check-out, capacidad, uso de espacios comunes, políticas de mascotas) serán informadas al momento de confirmar la reserva.
-          </p>
+        <Section title={en ? '7. Stay conditions' : '7. Condiciones de la estadía'}>
+          <p>{en ? 'Check-in is from 1:00 pm and check-out is by 11:00 am, unless otherwise agreed in writing.' : 'El check-in se realiza a partir de las 13:00 y el check-out hasta las 11:00, salvo acuerdo escrito diferente.'}</p>
+          <p>{en ? 'Breakfast is served from 9:00 to 10:00 am, lunch from 2:00 to 3:00 pm and dinner from 8:00 to 9:00 pm. Meals missed due to late arrival without prior notice are not cumulative.' : 'El desayuno se sirve de 09:00 a 10:00, el almuerzo de 14:00 a 15:00 y la cena de 20:00 a 21:00. Las comidas no consumidas por llegadas tardías sin aviso previo no son acumulables.'}</p>
+          <p>{en ? 'Accommodation and bathrooms may be shared as described in the accepted offer. Guests must respect safety, coexistence and environmental-care rules communicated for the property.' : 'Los alojamientos y baños pueden ser compartidos según lo descrito en la propuesta aceptada. Los huéspedes deben respetar las reglas de seguridad, convivencia y cuidado ambiental comunicadas para el establecimiento.'}</p>
         </Section>
 
-        <Section title="8. Limitaciones de responsabilidad">
-          <p>
-            HERMANOS MÁGICOS S.A.S. no asume responsabilidad por:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Daños causados a terceros por el/la huésped durante su estadía.</li>
-            <li>Daños materiales ocasionados por el/la huésped dentro del alojamiento, los cuales serán cobrados al responsable de la reserva.</li>
-            <li>Situaciones de fuerza mayor: condiciones climáticas extremas, emergencias sanitarias, cortes de servicios públicos, desastres naturales u otras causas ajenas a la voluntad del prestador que impidan o alteren la prestación del servicio. En estos casos se ofrecerá reprogramación o devolución proporcional según corresponda.</li>
-            <li>Pérdida o daño de bienes personales del/la huésped dentro del establecimiento, salvo dolo o culpa grave del prestador.</li>
-          </ul>
+        <Section title={en ? '8. Personal data and communications' : '8. Datos personales y comunicaciones'}>
+          <p>{en ? 'Booking details are processed to provide the service, verify payments, meet legal obligations and send transactional communications. Marketing communications require a separate legal basis or consent and may be unsubscribed from without affecting the booking.' : 'Los datos de la reserva se tratan para prestar el servicio, verificar pagos, cumplir obligaciones legales y enviar comunicaciones transaccionales. Las comunicaciones comerciales requieren una base legal o consentimiento separado y pueden darse de baja sin afectar la reserva.'}</p>
+          <p><a href="/politica-de-privacidad/" className="text-brand hover:underline">{en ? 'Read the Privacy Policy' : 'Consultar la Política de Privacidad'}</a>.</p>
         </Section>
 
-        <Section title="9. Política de compensación y garantía de servicio">
-          <p>
-            En caso de que el establecimiento no pueda cumplir con alguno de los servicios esenciales pactados por causas imputables a la organización:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Inconvenientes operativos o fallas menores de servicio:</strong> se ofrecerá como compensación noches de estadía sin cargo para ser utilizadas en una futura fecha, sujeto a disponibilidad.</li>
-            <li><strong>Contingencias graves o imposibilidad total de prestación del servicio:</strong> se procederá al reintegro o devolución proporcional o total del importe abonado, según corresponda.</li>
-          </ul>
-          <p>
-            Quedan excluidas de esta garantía las interrupciones de servicios derivadas de fuerza mayor o condiciones climáticas extremas propias del entorno de montaña (ver Sección 8).
-          </p>
+        <Section title={en ? '9. Liability and force majeure' : '9. Responsabilidad y fuerza mayor'}>
+          <p>{en ? 'Guests are responsible for damage they cause and for following the property’s safety instructions. Pueblo Mágico remains responsible as required by applicable law.' : 'Los huéspedes responden por los daños que causen y deben seguir las indicaciones de seguridad del establecimiento. Pueblo Mágico conserva la responsabilidad que corresponda conforme a la ley aplicable.'}</p>
+          <p>{en ? 'If severe weather, public emergencies or another force-majeure event prevents all or part of the service, the parties will coordinate rescheduling, an alternative or the applicable refund according to law and the accepted conditions.' : 'Si condiciones climáticas severas, emergencias públicas u otro caso de fuerza mayor impiden total o parcialmente el servicio, las partes coordinarán una reprogramación, alternativa o devolución aplicable conforme a la ley y las condiciones aceptadas.'}</p>
         </Section>
 
-        <Section title="10. Ley aplicable y foro">
-          <p>
-            Los presentes Términos y Condiciones se rigen por las leyes de la República Argentina, en particular:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Ley N° 24.240 de Defensa del Consumidor y normas complementarias.</li>
-            <li>Ley N° 25.997 Nacional de Turismo.</li>
-            <li>Código Civil y Comercial de la Nación.</li>
-            <li>Normativa provincial y municipal de la Provincia de Córdoba.</li>
-          </ul>
-          <p>
-            Para cualquier controversia, las partes acuerdan someterse a la jurisdicción de los Tribunales Ordinarios de la Ciudad de Córdoba, Provincia de Córdoba, República Argentina, renunciando a cualquier otro fuero que pudiera corresponder.
-          </p>
-          <p>
-            Ante consultas o reclamos de consumidores: Dirección Nacional de Defensa del Consumidor —{' '}
-            <a href="https://www.argentina.gob.ar/produccion/defensadelconsumidor" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-              www.argentina.gob.ar/produccion/defensadelconsumidor
-            </a>
-            .
-          </p>
+        <Section title={en ? '10. Applicable law and claims' : '10. Ley aplicable y reclamos'}>
+          <p>{en ? 'These terms are governed by the laws of the Argentine Republic, including consumer, tourism and personal-data regulations. Any jurisdiction clause is subject to the mandatory rights and competent venue available to consumers.' : 'Estos términos se rigen por las leyes de la República Argentina, incluida la normativa de defensa del consumidor, turismo y datos personales. Cualquier previsión de jurisdicción queda sujeta a los derechos imperativos y al fuero competente disponible para consumidores.'}</p>
+          <p>{en ? 'Consumer claims may also be filed through the official Argentine consumer-protection service: ' : 'Los reclamos también pueden presentarse ante el servicio oficial de defensa del consumidor: '}<a href="https://www.argentina.gob.ar/produccion/defensadelconsumidor" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">argentina.gob.ar/defensadelconsumidor</a>.</p>
         </Section>
 
-        <div className="mt-12 pt-8 border-t border-gray-200 text-xs text-dark/40 text-center flex flex-col items-center gap-4">
-          <a
-            href="https://www.afip.gob.ar/fe/qr/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:opacity-80 transition-opacity"
-            title="Ver Data Fiscal AFIP"
-          >
-            <img 
-              src="/uploads/qr-arca.png" 
-              alt="Data Fiscal AFIP" 
-              className="h-16 w-auto object-contain"
-            />
-          </a>
-          <div>
-            © {new Date().getFullYear()} HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA — Todos los derechos reservados.
-            <br />
-            <a href="/politica-de-privacidad" className="hover:text-brand transition-colors">Política de Privacidad</a>
-            {' · '}
-            <a href="/" className="hover:text-brand transition-colors">Volver al inicio</a>
-          </div>
+        <div className="mt-12 pt-8 border-t border-gray-200 text-xs text-dark/40 text-center">
+          © {new Date().getFullYear()} HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
+          <br />
+          <a href="/politica-de-privacidad/" className="hover:text-brand transition-colors">{en ? 'Privacy Policy' : 'Política de Privacidad'}</a>{' · '}
+          <a href="/" className="hover:text-brand transition-colors">{en ? 'Back to home' : 'Volver al inicio'}</a>
         </div>
       </main>
     </div>

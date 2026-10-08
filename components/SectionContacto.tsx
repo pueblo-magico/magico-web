@@ -110,9 +110,9 @@ export const SectionContacto = () => {
               />
               <span className="text-xs text-dark/60 leading-relaxed">
                 {t.contact.consent.prefix}{' '}
-                <a href="/terminos-y-condiciones" target="_blank" className="text-brand hover:underline">{t.contact.consent.termsLink}</a>{' '}
+                <a href="/terminos-y-condiciones/" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">{t.contact.consent.termsLink}</a>{' '}
                 {t.contact.consent.middle}{' '}
-                <a href="/politica-de-privacidad" target="_blank" className="text-brand hover:underline">{t.contact.consent.privacyLink}</a>.
+                <a href="/politica-de-privacidad/" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">{t.contact.consent.privacyLink}</a>.
                 {' '}{t.contact.consent.suffix}
               </span>
             </label>
