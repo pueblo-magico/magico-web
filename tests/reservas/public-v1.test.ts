@@ -489,6 +489,12 @@ test('exige clave idempotente y rechaza cotizaciones vencidas', async () => {
 
 test('vence retenciones de forma idempotente y libera la disponibilidad', async () => {
   const { sqlite, db } = baseMigrada();
+  const eventos: Record<string, unknown>[] = [];
+  const logger = {
+    info: (evento: Record<string, unknown>) => eventos.push(evento),
+    warn: (evento: Record<string, unknown>) => eventos.push(evento),
+    error: (evento: Record<string, unknown>) => eventos.push(evento),
+  };
   const quote = await cotizarDomo(db);
   const creada = await crearReserva({
     request: requestReserva(quote.data.cotizacion.codigo, 'qa-create-0005'), env: env(db),
@@ -506,18 +512,33 @@ test('vence retenciones de forma idempotente y libera la disponibilidad', async 
   assert.equal(noAutorizada.status, 401);
 
   const request = () => new Request('https://test/api/v1/integrations/reservas/expirar-retenciones', {
-    method: 'POST', headers: { 'X-Service-Secret': 'n8n-secret-seguro-de-pruebas-123' },
+    method: 'POST', headers: {
+      'X-Service-Secret': 'n8n-secret-seguro-de-pruebas-123',
+      'X-Request-ID': 'job-expirar-qa',
+    },
   });
   const expirada = await expirarRetenciones({
-    request: request(), env: { ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123' },
+    request: request(), env: {
+      ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123',
+      OBSERVABILITY_LOGGER: logger,
+    },
   });
   assert.equal(expirada.status, 200);
+  assert.equal(expirada.headers.get('X-Request-ID'), 'job-expirar-qa');
   assert.equal((await expirada.json() as any).expiradas, 1);
 
   const retry = await expirarRetenciones({
-    request: request(), env: { ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123' },
+    request: request(), env: {
+      ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123',
+      OBSERVABILITY_LOGGER: logger,
+    },
   });
   assert.equal((await retry.json() as any).expiradas, 0);
+  assert.deepEqual(
+    eventos.filter(evento => evento.event === 'reservation.holds_expired')
+      .map(evento => evento.outcome),
+    ['expired', 'noop']
+  );
   assert.deepEqual({ ...sqlite.prepare('SELECT estado, estado_flujo FROM reservas').get() }, {
     estado: 'cancelada', estado_flujo: 'vencida',
   });
@@ -531,4 +552,28 @@ test('vence retenciones de forma idempotente y libera la disponibilidad', async 
   });
   assert.equal((await disponible.json() as any).data.estado, 'disponible');
   sqlite.close();
+});
+
+test('el job de vencimientos responde 503 y emite una señal segura si D1 falla', async () => {
+  const eventos: Record<string, unknown>[] = [];
+  const guardar = (evento: Record<string, unknown>) => eventos.push(evento);
+  const response = await expirarRetenciones({
+    request: new Request('https://test/api/v1/integrations/reservas/expirar-retenciones', {
+      method: 'POST',
+      headers: {
+        'X-Service-Secret': 'n8n-secret-seguro-de-pruebas-123',
+        'X-Request-ID': 'job-expirar-falla',
+      },
+    }),
+    env: {
+      N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123',
+      DB: { prepare() { throw new Error('dato sensible que no debe registrarse'); } },
+      OBSERVABILITY_LOGGER: { info: guardar, warn: guardar, error: guardar },
+    },
+  });
+
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('X-Request-ID'), 'job-expirar-falla');
+  assert.equal(eventos.some(evento => evento.event === 'reservation.hold_expiration_failed'), true);
+  assert.doesNotMatch(JSON.stringify(eventos), /dato sensible/);
 });

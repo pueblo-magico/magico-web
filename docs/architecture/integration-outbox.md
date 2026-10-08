@@ -43,6 +43,11 @@ El adaptador HTTP sólo acepta un destino HTTPS configurado en
 de error del consumidor. Preview y producción deben usar secretos y destinos
 distintos.
 
+El scheduler operativo recomendado es n8n. El workflow versionado en
+`docs/integrations/n8n-jobs-operativos.workflow.json` invoca el dispatcher cada
+minuto; no contiene lógica de negocio ni secretos. Su configuración, validación
+y pausa se documentan en `docs/operations/n8n-jobs-reservas.md`.
+
 ## Operación administrativa
 
 `GET /api/v1/admin/integraciones/outbox` expone conteos por estado, edad del
@@ -60,3 +65,7 @@ Para validaciones o intervención operativa, un super admin puede iniciar un
 lote desde la interfaz mediante `POST /api/v1/admin/integraciones/outbox/despachar`.
 La acción respeta la misma feature flag y el mismo destino server-side; ningún
 secreto se envía al navegador.
+
+Cada corrida emite `outbox.batch_dispatched` con un resultado acotado y sin PII.
+Las fallas de configuración o entrega emiten `outbox.dispatch_failed`; ambos
+eventos comparten el `X-Request-ID` enviado por el scheduler.
