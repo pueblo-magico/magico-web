@@ -48,6 +48,7 @@ async function crear(request: Request, env: any): Promise<Response> {
     clienteNombre: String(cliente.nombre || ''),
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
     clienteEmail: cliente.email ? String(cliente.email) : null,
+    idioma: body.idioma === undefined ? undefined : String(body.idioma) as 'es' | 'en',
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
     canalOrigen: 'n8n',
     referenciaIntegracion: {

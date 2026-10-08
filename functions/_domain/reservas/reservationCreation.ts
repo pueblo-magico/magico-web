@@ -6,6 +6,7 @@ export type SolicitudCrearReservaPublica = {
   clienteNombre: string;
   clienteTelefono: string | null;
   clienteEmail: string | null;
+  idioma?: 'es' | 'en';
   idempotencyKey: string;
   canalOrigen?: string;
   referenciaIntegracion?: {

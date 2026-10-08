@@ -1,14 +1,11 @@
 // Cloudflare Pages Function — webhook de Mercado Pago. Valida la firma HMAC,
 // confirma el pago contra la API de MP (nunca confiamos en el body a ciegas),
-// marca la reserva 'confirmada' en D1 y dispara la acción de Growth en ManyChat.
+// marca la reserva 'confirmada' en D1. La comunicación se genera como intención
+// durable e independiente del canal mediante los eventos de dominio.
 //
 // Requiere estas variables de entorno en Cloudflare Pages:
 //   MP_ACCESS_TOKEN               — access token de Mercado Pago (para GET /v1/payments/:id)
 //   MP_WEBHOOK_SECRET             — "Clave secreta" de la notificación webhook (MP > Tus integraciones > Webhooks)
-//   MANYCHAT_API_KEY              — API key real de la cuenta de ManyChat (opcional).
-//   MANYCHAT_CONFIRMATION_FLOW_NS — flow_ns de confirmación (opcional). Si falta
-//                                   cualquiera de las dos, la confirmación de D1
-//                                   continúa y la notificación externa se omite.
 //
 // IMPORTANTE — esto no se pudo probar contra un webhook real de Mercado Pago
 // (no hay credenciales de test en este entorno). El esquema de x-signature
@@ -18,7 +15,6 @@
 
 import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMercadoPago.ts';
 import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
-import { crearNotificadorManyChat } from '../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { ErrorProveedorPagosTransitorio } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
@@ -87,21 +83,13 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
   }
 
   try {
-    const resultado = await procesarPagoMercadoPago(
+    await procesarPagoMercadoPago(
       dataId,
       new MercadoPagoProveedorPagos(env.MP_ACCESS_TOKEN),
       new D1RepositorioEstadoPagoReserva(env.DB),
-      crearNotificadorManyChat({
-        apiKey: env.MANYCHAT_API_KEY,
-        flowNs: env.MANYCHAT_CONFIRMATION_FLOW_NS,
-        habilitado: env.MANYCHAT_NOTIFICATIONS_ENABLED,
-      }),
       request.headers.get('x-request-id') || `payment:${dataId}`,
       contexto.requestId
     );
-    if (resultado.estado === 'confirmada' && resultado.notificacionFallida) {
-      contexto.signal('notification.delivery_failed', 'error', { metric: 'reservas_notification_errors_total' });
-    }
 
     contexto.signal('payment.webhook_processed', 'info', { metric: 'reservas_webhooks_processed_total' });
 

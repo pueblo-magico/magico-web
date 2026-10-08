@@ -117,15 +117,16 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
           fecha_checkin, fecha_checkout, cantidad_personas, monto_total, monto_sena,
           estado, canal_origen, tipo_estadia, reserva_uid, codigo, moneda,
           monto_total_centavos, monto_sena_centavos, updated_at, cotizacion_id,
-          estado_flujo, hold_expires_at
+          estado_flujo, hold_expires_at, idioma_comunicacion
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, 'huesped', ?, ?, ?, ?, ?,
-          strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), ?, 'pendiente_pago', ?)
+          strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), ?, 'pendiente_pago', ?, ?)
       `).bind(
         solicitud.clienteNombre, solicitud.clienteTelefono, solicitud.clienteEmail,
         alojamientoLegacyId, cotizacion.fechaCheckin, cotizacion.fechaCheckout,
         cotizacion.personas, cotizacion.totalCentavos / 100, cotizacion.senaCentavos / 100,
         solicitud.canalOrigen || 'Web', entrada.reservaUid, entrada.reservaCodigo, cotizacion.moneda,
-        cotizacion.totalCentavos, cotizacion.senaCentavos, cotizacion.id, entrada.holdExpiresAt
+        cotizacion.totalCentavos, cotizacion.senaCentavos, cotizacion.id, entrada.holdExpiresAt,
+        solicitud.idioma || 'es'
       ),
       this.db.prepare(`
         INSERT INTO reserva_integracion_referencias (

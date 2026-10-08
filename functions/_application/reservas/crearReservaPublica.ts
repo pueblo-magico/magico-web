@@ -20,6 +20,7 @@ async function hashSolicitud(solicitud: SolicitudCrearReservaPublica): Promise<s
     clienteNombre: solicitud.clienteNombre.trim(),
     clienteTelefono: solicitud.clienteTelefono?.trim() || null,
     clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
+    idioma: solicitud.idioma || 'es',
     canalOrigen: solicitud.canalOrigen?.trim() || 'Web',
     referenciaIntegracion: solicitud.referenciaIntegracion ? {
       integracion: solicitud.referenciaIntegracion.integracion,
@@ -45,6 +46,9 @@ export async function crearReservaPublica(
   }
   if (!solicitud.cotizacionCodigo || !solicitud.espacioCodigo || !solicitud.clienteNombre.trim()) {
     return error('SOLICITUD_INVALIDA', 'Cotización, espacio y nombre son obligatorios.');
+  }
+  if (solicitud.idioma !== undefined && solicitud.idioma !== 'es' && solicitud.idioma !== 'en') {
+    return error('SOLICITUD_INVALIDA', 'El idioma de comunicación es inválido.');
   }
   const referencia = solicitud.referenciaIntegracion;
   if ((referencia && (!referencia.contactoRef.trim() || referencia.contactoRef.trim().length > 200 ||
@@ -117,6 +121,7 @@ export async function crearReservaPublica(
         clienteNombre: solicitud.clienteNombre.trim(),
         clienteTelefono: solicitud.clienteTelefono?.trim() || null,
         clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
+        idioma: solicitud.idioma || 'es',
         canalOrigen: solicitud.canalOrigen?.trim() || 'Web',
         referenciaIntegracion: referencia ? {
           integracion: referencia.integracion,
