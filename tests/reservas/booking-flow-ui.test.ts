@@ -26,6 +26,18 @@ test('mantiene el flujo dentro del widget en escritorio y protege los datos de p
   assert.match(styles, /\.booking-payment__identifier\s*\{[^}]*white-space:\s*nowrap/s);
 });
 
+test('oculta el encabezado promocional mientras el checkout está abierto', () => {
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+
+  assert.match(widget, /onOpenChange\?\.\(open\)/);
+  assert.match(home, /!desktopBookingOpen && <div/);
+  assert.match(home, /<BookingWidget onOpenChange=\{setDesktopBookingOpen\}/);
+  assert.match(stay, /!bookingOpen && <div/);
+  assert.match(stay, /<BookingWidget onOpenChange=\{setBookingOpen\}/);
+});
+
 test('genera una clave idempotente distinta por intento de reserva web', () => {
   const first = createBookingAttemptKey();
   const second = createBookingAttemptKey();

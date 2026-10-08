@@ -109,7 +109,10 @@ function apiErrorMessage(error: unknown, fallback: string, language: 'es' | 'en'
   return language === 'es' && error instanceof BookingApiError ? error.message : fallback;
 }
 
-export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+export const BookingWidget: React.FC<{
+  compact?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}> = ({ compact = false, onOpenChange }) => {
   const { language } = useLanguage();
   const c = COPY[language];
   const today = localTodayIso();
@@ -138,6 +141,10 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
   const idempotencyKey = useRef(createBookingAttemptKey());
   const launcherRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [onOpenChange, open]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 640px)');
