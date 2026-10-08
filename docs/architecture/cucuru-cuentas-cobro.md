@@ -99,6 +99,11 @@ Preview. La respuesta pública informa `proveedor: cucuru_mock` y
 `simulado: true`; D1 también conserva `simulada = 1`. Repetir la misma reserva
 devuelve el mismo destino y no crea otra asignación.
 
+Si Preview procesa una Collection de prueba contra una cuenta simulada, la
+observación, el pago externo y el evento conservan el marcador y usan
+`cucuru_mock` como proveedor. De esta forma una confirmación end to end de QA
+no puede confundirse con una transferencia real de Cucuru.
+
 La doble activación es intencional: si falta `CUCURU_MOCK_ALLOWED=true`, el
 modo mock falla cerrado. Esta variable sólo se configura en desarrollo o en
 las variables de Preview de Cloudflare y nunca en producción. El backfill real

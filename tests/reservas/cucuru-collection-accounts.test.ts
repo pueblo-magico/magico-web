@@ -383,6 +383,58 @@ test('concilia una Collection válida exactamente una vez sin usar campos legacy
   sqlite.close();
 });
 
+test('marca como mock toda la trazabilidad de un cobro sobre una cuenta simulada', async () => {
+  const sqlite = baseCompleta();
+  const uid = '88888888-8888-4888-8888-888888888888';
+  const reservaId = crearReserva(sqlite, uid);
+  sqlite.prepare(`
+    INSERT INTO cuentas_cobro_reserva (
+      reserva_id, proveedor, customer_id, estado, external_account_id, cvu,
+      alias, moneda, ultima_operacion_uid, ready_at, simulada
+    ) VALUES (?, 'cucuru', ?, 'ready', 'mock-8888888888888888',
+      '9900000000000000000008', 'magico.qa.reserva8', 'ARS',
+      'ready-operation-mock-8', '2026-10-07T12:00:00.000Z', 1)
+  `).run(reservaId, `pm-reserva-${uid}`);
+
+  const resultado = await procesarCollectionCucuru({
+    collectionId: 'collection-mock-8',
+    collectorId: 'collector-qa',
+    customerId: `pm-reserva-${uid}`,
+    externalAccountId: 'mock-8888888888888888',
+    cvu: '9900000000000000000008',
+    montoCentavos: 30_000,
+    moneda: 'ARS',
+    occurredAt: '2026-10-07T12:05:00.000Z',
+    payloadHash: '8'.repeat(64),
+  }, 'collector-qa', new D1RepositorioConciliacionCucuru(d1(sqlite)), {
+    async notificar() {},
+  }, 'request-mock-8');
+
+  assert.equal(resultado.estado, 'aplicado');
+  assert.equal(sqlite.prepare(`
+    SELECT simulada FROM cucuru_observaciones_transferencia
+    WHERE collection_id = 'collection-mock-8'
+  `).get()?.simulada, 1);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT proveedor, estado, metadata_json FROM pagos WHERE reserva_id = ?
+  `).get(reservaId) }, {
+    proveedor: 'cucuru_mock',
+    estado: 'aprobado',
+    metadata_json: '{"collection_id":"collection-mock-8","simulada":1}',
+  });
+  assert.equal(sqlite.prepare(`
+    SELECT proveedor FROM pago_eventos_externos
+    WHERE evento_externo_id = 'collection-mock-8'
+  `).get()?.proveedor, 'cucuru_mock');
+  const evento = sqlite.prepare(`
+    SELECT actor_ref, evento_uid, payload_json FROM reserva_eventos
+    WHERE evento_uid = 'pago:cucuru_mock:collection-mock-8:aprobado'
+  `).get();
+  assert.equal(evento?.actor_ref, 'cucuru_mock');
+  assert.match(String(evento?.payload_json), /"simulada":1/);
+  sqlite.close();
+});
+
 test('la prueba cero no concilia y los importes incorrectos van a revisión manual', async () => {
   const sqlite = baseCompleta();
   const uid = '55555555-5555-4555-8555-555555555555';
