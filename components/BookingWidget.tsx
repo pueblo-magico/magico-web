@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   AlertCircle, ArrowLeft, BedDouble, CalendarDays, CheckCircle2, Clock3,
-  Copy, Loader2, MessageCircle, ShieldCheck, Users, Utensils, X,
+  Copy, Loader2, MessageCircle, Minus, Plus, ShieldCheck, Users, Utensils, X,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { WA_MAGICO } from '../src/data/config';
@@ -32,6 +32,10 @@ const COPY = {
     launcherEyebrow: 'Reserva online', launcherTitle: 'Encontrá tu lugar en la montaña',
     launcherCopy: 'Consultá disponibilidad y precio real antes de reservar.', launcherButton: 'Comenzar reserva',
     title: 'Reservá tu estadía', steps: ['Fechas', 'Estadía', 'Resumen'], close: 'Cerrar reserva',
+    heroDates: 'Tu experiencia en la montaña', heroDatesCopy: 'Elegí tus fechas y quiénes vienen.',
+    heroStay: 'Elegí cómo querés quedarte', heroStayCopy: 'Seleccioná alojamiento, modalidad y comidas.',
+    heroReview: 'Revisá tu reserva', heroReviewCopy: 'Comprobá los datos antes de crear la reserva.',
+    startingAt: 'Precio y disponibilidad en tiempo real', nights: 'noches',
     datesTitle: 'Fechas y personas', checkIn: 'Llegada', checkOut: 'Salida', people: 'Personas',
     dateHelp: 'La salida debe ser posterior a la llegada.', continue: 'Continuar', back: 'Volver',
     stayTitle: 'Elegí cómo querés quedarte', accommodation: 'Alojamiento', domo: 'Domo',
@@ -40,6 +44,7 @@ const COPY = {
     breakfastHelp: 'El desayuno está incluido.', fullBoardHelp: 'Desayuno, almuerzo y cena incluidos.',
     quote: 'Consultar disponibilidad', loadingOptions: 'Cargando opciones disponibles…',
     noOptions: 'No pudimos cargar los alojamientos.',
+    domeCopy: 'Dormí rodeado de naturaleza.', refugeCopy: 'Calidez simple en el refugio.',
     unavailable: 'No hay disponibilidad para esa combinación. Probá con otras fechas u opciones.',
     contactSupport: 'Consultar por WhatsApp', reviewTitle: 'Revisá y completá tus datos',
     name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email', optional: 'Opcional',
@@ -61,6 +66,10 @@ const COPY = {
     launcherEyebrow: 'Book online', launcherTitle: 'Find your place in the mountains',
     launcherCopy: 'Check real availability and pricing before booking.', launcherButton: 'Start booking',
     title: 'Book your stay', steps: ['Dates', 'Stay', 'Summary'], close: 'Close booking',
+    heroDates: 'Your mountain experience', heroDatesCopy: 'Choose your dates and who is coming.',
+    heroStay: 'Choose how you want to stay', heroStayCopy: 'Select accommodation, room type and meals.',
+    heroReview: 'Review your booking', heroReviewCopy: 'Check the details before creating your reservation.',
+    startingAt: 'Live pricing and availability', nights: 'nights',
     datesTitle: 'Dates and guests', checkIn: 'Arrival', checkOut: 'Departure', people: 'Guests',
     dateHelp: 'Departure must be after arrival.', continue: 'Continue', back: 'Back',
     stayTitle: 'Choose how you want to stay', accommodation: 'Accommodation', domo: 'Dome',
@@ -69,6 +78,7 @@ const COPY = {
     breakfastHelp: 'Breakfast is included.', fullBoardHelp: 'Breakfast, lunch and dinner included.',
     quote: 'Check availability', loadingOptions: 'Loading available options…',
     noOptions: 'We could not load accommodation options.',
+    domeCopy: 'Sleep surrounded by nature.', refugeCopy: 'Simple warmth in the stone shelter.',
     unavailable: 'There is no availability for that combination. Try other dates or options.',
     contactSupport: 'Ask on WhatsApp', reviewTitle: 'Review and complete your details',
     name: 'Full name', phone: 'WhatsApp', email: 'Email', optional: 'Optional',
@@ -305,6 +315,17 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
     ? `${language === 'es' ? 'Hola, necesito ayuda con mi reserva' : 'Hi, I need help with my reservation'} ${reservation.reserva.codigo}.`
     : language === 'es' ? 'Hola, necesito ayuda para reservar una estadía.' : 'Hi, I need help booking a stay.';
   const whatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(whatsappText)}`;
+  const stayNights = checkIn && checkOut
+    ? Math.max(0, Math.round((Date.parse(`${checkOut}T12:00:00Z`) - Date.parse(`${checkIn}T12:00:00Z`)) / 86_400_000))
+    : 0;
+  const headerTitle = reservation ? c.pendingTitle : step === 1 ? c.heroDates : step === 2 ? c.heroStay : c.heroReview;
+  const headerCopy = reservation
+    ? c.pendingCopy
+    : step === 1
+      ? c.heroDatesCopy
+      : step === 2
+        ? c.heroStayCopy
+        : c.heroReviewCopy;
 
   return (
     <>
@@ -322,7 +343,9 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
           <section ref={dialogRef} className="booking-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-title" tabIndex={-1}>
             <header className="booking-flow__header">
               <p className="booking-flow__eyebrow">{c.launcherEyebrow}</p>
-              <h2 id="booking-title">{reservation ? c.pendingTitle : c.title}</h2>
+              <h2 id="booking-title">{headerTitle}</h2>
+              {!reservation && step === 1 && <strong className="booking-flow__price-lead">{c.startingAt}</strong>}
+              <p className="booking-flow__intro">{headerCopy}</p>
               <button className="booking-icon-button booking-flow__close" type="button" onClick={() => setOpen(false)} aria-label={c.close}><X aria-hidden="true" /></button>
             </header>
 
@@ -346,6 +369,15 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
                   {reservationSeconds > 0
                     ? <div className="booking-countdown"><Clock3 size={18} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</div>
                     : <div className="booking-notice booking-notice--error"><AlertCircle size={20} aria-hidden="true" /> {c.expired}</div>}
+
+                  {quote && (
+                    <div className="booking-summary booking-summary--result">
+                      <div className="booking-summary__row"><span>{checkIn} → {checkOut} · {people} {c.people.toLowerCase()}</span><strong>{c[type]} · {c[mode]}</strong></div>
+                      <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
+                      <div className="booking-summary__row"><span>{c.deposit}</span><strong>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</strong></div>
+                      <div className="booking-summary__row"><span>{c.balance}</span><strong>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</strong></div>
+                    </div>
+                  )}
 
                   {reservation.cuenta_cobro.estado === 'ready' && reservation.cuenta_cobro.destino ? (
                     <div className="booking-payment">
@@ -374,10 +406,18 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
               ) : step === 1 ? (
                 <div className="booking-panel">
                   <p className="booking-section-title"><CalendarDays size={16} /> {c.datesTitle}</p>
-                  <div className="booking-grid">
-                    <label className="booking-field">{c.checkIn}<input type="date" min={today} value={checkIn} onChange={event => { setCheckIn(event.target.value); if (checkOut && event.target.value >= checkOut) setCheckOut(''); resetQuote(); }} required /></label>
-                    <label className="booking-field">{c.checkOut}<input type="date" min={checkIn || today} value={checkOut} onChange={event => { setCheckOut(event.target.value); resetQuote(); }} required /></label>
-                    <label className="booking-field booking-field--full">{c.people}<input type="number" min="1" inputMode="numeric" value={people} onChange={event => { setPeople(Math.max(1, Number(event.target.value) || 1)); resetQuote(); }} /></label>
+                  <div className="booking-date-grid">
+                    <label className="booking-date-card"><CalendarDays size={28} /><span><small>{c.checkIn}</small><input aria-label={c.checkIn} type="date" min={today} value={checkIn} onChange={event => { setCheckIn(event.target.value); if (checkOut && event.target.value >= checkOut) setCheckOut(''); resetQuote(); }} required /></span></label>
+                    <label className="booking-date-card"><CalendarDays size={28} /><span><small>{c.checkOut}</small><input aria-label={c.checkOut} type="date" min={checkIn || today} value={checkOut} onChange={event => { setCheckOut(event.target.value); resetQuote(); }} required /></span></label>
+                  </div>
+                  {stayNights > 0 && <div className="booking-night-count"><BedDouble size={20} /> {stayNights} {c.nights}</div>}
+                  <div className="booking-guests-row">
+                    <span><Users size={27} /> <strong>{c.people}</strong></span>
+                    <div className="booking-counter" aria-label={c.people}>
+                      <button type="button" aria-label={`${c.people} -`} onClick={() => { setPeople(value => Math.max(1, value - 1)); resetQuote(); }}><Minus /></button>
+                      <output aria-live="polite">{people}</output>
+                      <button type="button" aria-label={`${c.people} +`} onClick={() => { setPeople(value => value + 1); resetQuote(); }}><Plus /></button>
+                    </div>
                   </div>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
                   <div className="booking-actions"><button className="booking-button" type="button" onClick={goToStay}>{c.continue}</button></div>
@@ -388,7 +428,13 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
                   {loadingOptions ? <div className="booking-notice"><Loader2 className="booking-loading" size={20} /> {c.loadingOptions}</div> : (
                     <>
                       <p className="booking-section-title" style={{ marginTop: 20 }}>{c.accommodation}</p>
-                      <div className="booking-choice-grid">{availableTypes.map(option => <button key={option} type="button" className={`booking-choice ${type === option ? 'booking-choice--selected' : ''}`} aria-pressed={type === option} onClick={() => { setType(option); resetQuote(); }}><BedDouble size={22} /> {c[option]}</button>)}</div>
+                      <div className="booking-stay-grid">{availableTypes.map(option => (
+                        <button key={option} type="button" className={`booking-stay-card ${type === option ? 'booking-choice--selected' : ''}`} aria-pressed={type === option} onClick={() => { setType(option); resetQuote(); }}>
+                          <img src={option === 'domo' ? '/uploads/domos_2.jpg' : '/uploads/habitaciones.webp'} alt="" />
+                          <span><strong>{c[option]}</strong><small>{option === 'domo' ? c.domeCopy : c.refugeCopy}</small></span>
+                          <CheckCircle2 className="booking-stay-card__check" size={25} aria-hidden="true" />
+                        </button>
+                      ))}</div>
                       <p className="booking-section-title">{c.mode}</p>
                       <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={22} /> {c[option]}</button>)}</div>
                       <p className="booking-section-title">{c.meals}</p>
