@@ -39,10 +39,13 @@ son iniciales y deben ajustarse con tráfico real, conservando el evento estable
 | P2 | `event=payment.webhook_rejected`, 10 eventos | 10 min | revisar secreto, firma y origen; no copiar payloads a Jira |
 | P2 | `event=reservation.conflict`, 10 eventos | 10 min | revisar disponibilidad y concurrencia |
 | P2 | `event=notification.delivery_failed`, 5 eventos | 15 min | revisar canal; la reserva confirmada no se revierte |
+| P2 | `event=reservation.hold_expiration_failed`, 1 evento | inmediata | revisar el job y reintentar; una retención vencida deja de bloquear disponibilidad por fecha |
+| P2 | `event=outbox.dispatch_failed`, 3 eventos | 5 min | revisar flag, destino y conectividad usando `request_id` |
+| P2 | `event=outbox.batch_dispatched outcome=dead_letter`, 1 evento | inmediata | revisar el evento en el panel y reprocesar sólo con motivo auditado |
 
 Los eventos `outbox.pending`, `dlq.growing` y `calendar.conflict` quedan
-reservados para los tickets que incorporen esos componentes. No configurar una
-alerta que aparente cobertura antes de que exista su productor.
+reservados para productores futuros. No configurar una alerta que aparente
+cobertura antes de que exista su productor.
 
 ## Verificación de recuperación sin D1 remoto
 

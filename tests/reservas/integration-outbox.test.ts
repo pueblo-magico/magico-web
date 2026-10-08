@@ -328,11 +328,14 @@ test('el dispatcher HTTP falla cerrado y despacha sólo con identidad exclusiva'
   const sqlite = baseCompleta();
   crearEvento(sqlite, 'reserva:http-dispatch');
   const secret = 'outbox-secret-seguro-123456789';
+  const eventos: Record<string, unknown>[] = [];
+  const guardar = (evento: Record<string, unknown>) => eventos.push(evento);
   const env = {
     DB: d1(sqlite), OUTBOX_DISPATCH_SECRET: secret,
     INTEGRATION_OUTBOX_ENABLED: 'true',
     INTEGRATION_EVENTS_WEBHOOK_URL: 'https://n8n.example.test/webhook/reservas',
     INTEGRATION_EVENTS_WEBHOOK_SECRET: 'webhook-secret-seguro-123456789',
+    OBSERVABILITY_LOGGER: { info: guardar, warn: guardar, error: guardar },
   };
   const sinAuth = await despacharOutbox({
     request: new Request('https://test/api/v1/integrations/outbox/dispatch', { method: 'POST' }), env,
@@ -345,14 +348,21 @@ test('el dispatcher HTTP falla cerrado y despacha sólo con identidad exclusiva'
   try {
     const response = await despacharOutbox({
       request: new Request('https://test/api/v1/integrations/outbox/dispatch', {
-        method: 'POST', headers: { 'X-Service-Secret': secret },
+        method: 'POST', headers: {
+          'X-Service-Secret': secret,
+          'X-Request-ID': 'job-outbox-qa',
+        },
       }), env,
     });
     assert.equal(response.status, 200);
+    assert.equal(response.headers.get('X-Request-ID'), 'job-outbox-qa');
     assert.deepEqual(await response.json(), {
       ok: true, reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0,
     });
     assert.equal(entregas, 1);
+    assert.equal(eventos.some(evento =>
+      evento.event === 'outbox.batch_dispatched' && evento.outcome === 'delivered'
+    ), true);
   } finally {
     globalThis.fetch = originalFetch;
   }

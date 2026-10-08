@@ -1,0 +1,119 @@
+{
+  "name": "Reservas - jobs operativos",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-expirar-retenciones",
+      "name": "Cada minuto - vencer retenciones",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/reservas/expirar-retenciones' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Service-Secret",
+              "value": "={{ $env.N8N_INBOUND_SECRET }}"
+            },
+            {
+              "name": "X-Request-ID",
+              "value": "={{ 'n8n-expirar-' + $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-expirar-retenciones",
+      "name": "Vencer retenciones",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [300, 0],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-despachar-outbox",
+      "name": "Cada minuto - despachar eventos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/outbox/dispatch' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Service-Secret",
+              "value": "={{ $env.OUTBOX_DISPATCH_SECRET }}"
+            },
+            {
+              "name": "X-Request-ID",
+              "value": "={{ 'n8n-outbox-' + $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-despachar-outbox",
+      "name": "Despachar outbox",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [300, 220],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "stopWorkflow"
+    }
+  ],
+  "connections": {
+    "Cada minuto - vencer retenciones": {
+      "main": [[{"node": "Vencer retenciones", "type": "main", "index": 0}]]
+    },
+    "Cada minuto - despachar eventos": {
+      "main": [[{"node": "Despachar outbox", "type": "main", "index": 0}]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "timezone": "America/Argentina/Cordoba",
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "versionId": "87711bc4-b33b-44d2-8704-0ab73ca52041",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
