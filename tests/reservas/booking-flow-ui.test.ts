@@ -16,6 +16,16 @@ test('la carga de alojamientos no se cancela al activar su propio indicador', ()
   assert.doesNotMatch(source, /\[open, optionsLoaded, loadingOptions/);
 });
 
+test('mantiene el flujo dentro del widget en escritorio y protege los datos de pago', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(source, /open && !mobileFlow && <div className="booking-inline">/);
+  assert.match(source, /open && mobileFlow && createPortal/);
+  assert.match(source, /className="booking-payment__identifier"/);
+  assert.match(styles, /\.booking-result a\.booking-button\s*\{[^}]*color:\s*#fff/s);
+  assert.match(styles, /\.booking-payment__identifier\s*\{[^}]*white-space:\s*nowrap/s);
+});
+
 test('genera una clave idempotente distinta por intento de reserva web', () => {
   const first = createBookingAttemptKey();
   const second = createBookingAttemptKey();

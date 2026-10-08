@@ -114,6 +114,7 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
   const c = COPY[language];
   const today = localTodayIso();
   const [open, setOpen] = useState(false);
+  const [mobileFlow, setMobileFlow] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -137,6 +138,14 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
   const idempotencyKey = useRef(createBookingAttemptKey());
   const launcherRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 640px)');
+    const update = () => setMobileFlow(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   const availableTypes = useMemo(() => {
     const unique = new Set(accommodations.map(item => item.tipo));
@@ -179,7 +188,7 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (mobileFlow) document.body.style.overflow = 'hidden';
     const focusTimer = window.setTimeout(() => {
       dialogRef.current?.querySelector<HTMLElement>('button, input, a[href], [tabindex]:not([tabindex="-1"])')?.focus();
     }, 0);
@@ -188,7 +197,7 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
         setOpen(false);
         return;
       }
-      if (event.key !== 'Tab' || !dialogRef.current) return;
+      if (!mobileFlow || event.key !== 'Tab' || !dialogRef.current) return;
       const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
         'button:not(:disabled), input:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])',
       ));
@@ -206,11 +215,11 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
     window.addEventListener('keydown', onKeyDown);
     return () => {
       window.clearTimeout(focusTimer);
-      document.body.style.overflow = previous;
+      if (mobileFlow) document.body.style.overflow = previous;
       window.removeEventListener('keydown', onKeyDown);
       launcherRef.current?.focus();
     };
-  }, [open]);
+  }, [open, mobileFlow]);
 
   useEffect(() => {
     if (!quote?.cotizacion.expiresAt) return;
@@ -327,20 +336,8 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
         ? c.heroStayCopy
         : c.heroReviewCopy;
 
-  return (
-    <>
-      <div className="booking-launcher" style={compact ? { padding: 14 } : undefined}>
-        <p className="booking-launcher__eyebrow">{c.launcherEyebrow}</p>
-        <h3 className="booking-launcher__title">{c.launcherTitle}</h3>
-        <p className="booking-launcher__copy">{c.launcherCopy}</p>
-        <button ref={launcherRef} className="booking-button" type="button" onClick={() => setOpen(true)}>
-          <CalendarDays size={18} aria-hidden="true" /> {c.launcherButton}
-        </button>
-      </div>
-
-      {open && createPortal(
-        <div className="booking-overlay" role="presentation" onMouseDown={event => event.target === event.currentTarget && setOpen(false)}>
-          <section ref={dialogRef} className="booking-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-title" tabIndex={-1}>
+  const bookingFlow = (
+    <section ref={dialogRef} className="booking-dialog" role="dialog" aria-modal={mobileFlow || undefined} aria-labelledby="booking-title" tabIndex={-1}>
             <header className="booking-flow__header">
               <p className="booking-flow__eyebrow">{c.launcherEyebrow}</p>
               <h2 id="booking-title">{headerTitle}</h2>
@@ -385,13 +382,13 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
                       {reservation.cuenta_cobro.simulado && <span className="booking-notice">{c.mockWarning}</span>}
                       {reservation.cuenta_cobro.destino.alias && (
                         <div className="booking-payment__value">
-                          <span>{c.alias}: <strong>{reservation.cuenta_cobro.destino.alias}</strong></span>
+                          <span className="booking-payment__text"><span>{c.alias}:</span><strong>{reservation.cuenta_cobro.destino.alias}</strong></span>
                           <button className="booking-copy-button" type="button" onClick={() => copyValue('alias', reservation.cuenta_cobro.destino?.alias)} aria-label={`${c.copy} ${c.alias}`}>{copied === 'alias' ? c.copied : <Copy size={18} />}</button>
                         </div>
                       )}
                       {reservation.cuenta_cobro.destino.cvu && (
                         <div className="booking-payment__value">
-                          <span>{c.cvu}: <strong>{reservation.cuenta_cobro.destino.cvu}</strong></span>
+                          <span className="booking-payment__text"><span>{c.cvu}:</span><strong className="booking-payment__identifier">{reservation.cuenta_cobro.destino.cvu}</strong></span>
                           <button className="booking-copy-button" type="button" onClick={() => copyValue('cvu', reservation.cuenta_cobro.destino?.cvu)} aria-label={`${c.copy} ${c.cvu}`}>{copied === 'cvu' ? c.copied : <Copy size={18} />}</button>
                         </div>
                       )}
@@ -481,7 +478,28 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
                 </div>
               )}
             </div>
-          </section>
+    </section>
+  );
+
+  return (
+    <>
+      <div className={`booking-widget ${open ? 'booking-widget--open' : ''}`}>
+        {!open && (
+          <div className="booking-launcher" style={compact ? { padding: 14 } : undefined}>
+            <p className="booking-launcher__eyebrow">{c.launcherEyebrow}</p>
+            <h3 className="booking-launcher__title">{c.launcherTitle}</h3>
+            <p className="booking-launcher__copy">{c.launcherCopy}</p>
+            <button ref={launcherRef} className="booking-button" type="button" onClick={() => setOpen(true)}>
+              <CalendarDays size={18} aria-hidden="true" /> {c.launcherButton}
+            </button>
+          </div>
+        )}
+        {open && !mobileFlow && <div className="booking-inline">{bookingFlow}</div>}
+      </div>
+
+      {open && mobileFlow && createPortal(
+        <div className="booking-overlay" role="presentation" onMouseDown={event => event.target === event.currentTarget && setOpen(false)}>
+          {bookingFlow}
         </div>,
         document.body,
       )}
