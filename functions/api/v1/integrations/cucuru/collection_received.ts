@@ -5,7 +5,6 @@ import {
   normalizarCollectionCucuru,
 } from '../../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
 import { D1RepositorioConciliacionCucuru } from '../../../../_infrastructure/d1/D1RepositorioConciliacionCucuru.ts';
-import { crearNotificadorManyChat } from '../../../../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { observarSolicitud, type ContextoObservabilidad } from '../../../../_interfaces/http/observability.ts';
 import { consumirLimite, respuestaLimite } from '../../../../_interfaces/http/rateLimit.ts';
 import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../_interfaces/http/requestSecurity.ts';
@@ -87,16 +86,8 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
       collection,
       env.CUCURU_COLLECTOR_ID.trim(),
       new D1RepositorioConciliacionCucuru(env.DB),
-      crearNotificadorManyChat({
-        apiKey: env.MANYCHAT_API_KEY,
-        flowNs: env.MANYCHAT_CONFIRMATION_FLOW_NS,
-        habilitado: env.MANYCHAT_NOTIFICATIONS_ENABLED,
-      }),
       contexto.requestId
     );
-    if (resultado.notificacionFallida) {
-      contexto.signal('notification.delivery_failed', 'error', { metric: 'reservas_notification_errors_total' });
-    }
     contexto.signal('payment.webhook_processed', 'info', {
       outcome: resultado.estado,
       metric: 'reservas_webhooks_processed_total',

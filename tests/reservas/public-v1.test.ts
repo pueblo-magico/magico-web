@@ -270,7 +270,12 @@ async function cotizarDomo(db: unknown) {
   return response.json() as Promise<any>;
 }
 
-function requestReserva(cotizacionCodigo: string, clave: string, nombre = 'Huésped QA') {
+function requestReserva(
+  cotizacionCodigo: string,
+  clave: string,
+  nombre = 'Huésped QA',
+  idioma?: string
+) {
   return new Request('https://test/api/v1/public/reservas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Idempotency-Key': clave },
@@ -278,6 +283,7 @@ function requestReserva(cotizacionCodigo: string, clave: string, nombre = 'Hués
       cotizacion_codigo: cotizacionCodigo,
       espacio_codigo: 'domo-1',
       cliente: { nombre, email: 'QA@Example.Test' },
+      ...(idioma === undefined ? {} : { idioma }),
     }),
   });
 }
@@ -519,12 +525,11 @@ test('confirma de punta a punta una transferencia por DNI, importe y moneda', as
       };
     } },
     new D1RepositorioEstadoPagoReserva(db),
-    { async notificar() {} },
     'webhook-transfer-e2e-1',
     'request-transfer-e2e-1',
   );
 
-  assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
+  assert.deepEqual(resultado, { estado: 'confirmada' });
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT r.estado_flujo, rpm.estado metodo_estado, p.estado pago_estado
     FROM reservas r
@@ -534,6 +539,29 @@ test('confirma de punta a punta una transferencia por DNI, importe y moneda', as
   `).get(creada.data.reserva.codigo) }, {
     estado_flujo: 'confirmada', metodo_estado: 'confirmado', pago_estado: 'aprobado',
   });
+  sqlite.close();
+});
+
+test('persiste el idioma y selecciona plantillas versionadas para la reserva pública', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const response = await crearReserva({
+    request: requestReserva(quote.data.cotizacion.codigo, 'qa-language-en-0001', 'English Guest', 'en'),
+    env: env(db),
+  });
+  assert.equal(response.status, 201);
+  assert.equal(sqlite.prepare('SELECT idioma_comunicacion FROM reservas').get()?.idioma_comunicacion, 'en');
+  assert.deepEqual(sqlite.prepare(`
+    SELECT DISTINCT idioma, plantilla_version FROM comunicacion_intenciones ORDER BY idioma
+  `).all().map(row => ({ ...row })), [{ idioma: 'en', plantilla_version: 1 }]);
+
+  const invalidQuote = await cotizarDomo(db);
+  const invalid = await crearReserva({
+    request: requestReserva(invalidQuote.data.cotizacion.codigo, 'qa-language-invalid-0001', 'Guest', 'pt'),
+    env: env(db),
+  });
+  assert.equal(invalid.status, 400);
+  assert.equal((await invalid.json() as any).error.codigo, 'SOLICITUD_INVALIDA');
   sqlite.close();
 });
 
@@ -712,6 +740,12 @@ test('exige clave idempotente y rechaza cotizaciones vencidas', async () => {
 
 test('vence retenciones de forma idempotente y libera la disponibilidad', async () => {
   const { sqlite, db } = baseMigrada();
+  const eventos: Record<string, unknown>[] = [];
+  const logger = {
+    info: (evento: Record<string, unknown>) => eventos.push(evento),
+    warn: (evento: Record<string, unknown>) => eventos.push(evento),
+    error: (evento: Record<string, unknown>) => eventos.push(evento),
+  };
   const quote = await cotizarDomo(db);
   const creada = await crearReserva({
     request: requestReserva(quote.data.cotizacion.codigo, 'qa-create-0005'), env: env(db),
@@ -729,18 +763,33 @@ test('vence retenciones de forma idempotente y libera la disponibilidad', async 
   assert.equal(noAutorizada.status, 401);
 
   const request = () => new Request('https://test/api/v1/integrations/reservas/expirar-retenciones', {
-    method: 'POST', headers: { 'X-Service-Secret': 'n8n-secret-seguro-de-pruebas-123' },
+    method: 'POST', headers: {
+      'X-Service-Secret': 'n8n-secret-seguro-de-pruebas-123',
+      'X-Request-ID': 'job-expirar-qa',
+    },
   });
   const expirada = await expirarRetenciones({
-    request: request(), env: { ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123' },
+    request: request(), env: {
+      ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123',
+      OBSERVABILITY_LOGGER: logger,
+    },
   });
   assert.equal(expirada.status, 200);
+  assert.equal(expirada.headers.get('X-Request-ID'), 'job-expirar-qa');
   assert.equal((await expirada.json() as any).expiradas, 1);
 
   const retry = await expirarRetenciones({
-    request: request(), env: { ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123' },
+    request: request(), env: {
+      ...env(db), N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123',
+      OBSERVABILITY_LOGGER: logger,
+    },
   });
   assert.equal((await retry.json() as any).expiradas, 0);
+  assert.deepEqual(
+    eventos.filter(evento => evento.event === 'reservation.holds_expired')
+      .map(evento => evento.outcome),
+    ['expired', 'noop']
+  );
   assert.deepEqual({ ...sqlite.prepare('SELECT estado, estado_flujo FROM reservas').get() }, {
     estado: 'cancelada', estado_flujo: 'vencida',
   });
@@ -754,4 +803,28 @@ test('vence retenciones de forma idempotente y libera la disponibilidad', async 
   });
   assert.equal((await disponible.json() as any).data.estado, 'disponible');
   sqlite.close();
+});
+
+test('el job de vencimientos responde 503 y emite una señal segura si D1 falla', async () => {
+  const eventos: Record<string, unknown>[] = [];
+  const guardar = (evento: Record<string, unknown>) => eventos.push(evento);
+  const response = await expirarRetenciones({
+    request: new Request('https://test/api/v1/integrations/reservas/expirar-retenciones', {
+      method: 'POST',
+      headers: {
+        'X-Service-Secret': 'n8n-secret-seguro-de-pruebas-123',
+        'X-Request-ID': 'job-expirar-falla',
+      },
+    }),
+    env: {
+      N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-pruebas-123',
+      DB: { prepare() { throw new Error('dato sensible que no debe registrarse'); } },
+      OBSERVABILITY_LOGGER: { info: guardar, warn: guardar, error: guardar },
+    },
+  });
+
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('X-Request-ID'), 'job-expirar-falla');
+  assert.equal(eventos.some(evento => evento.event === 'reservation.hold_expiration_failed'), true);
+  assert.doesNotMatch(JSON.stringify(eventos), /dato sensible/);
 });

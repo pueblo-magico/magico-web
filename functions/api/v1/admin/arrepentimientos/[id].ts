@@ -30,7 +30,8 @@ async function actualizar(request: Request, env: any, params: any, requestId: st
       estadoActual,
       estado,
       actorEmail: auth.email,
-      motivo: String(body.motivo || ''),
+      notaInterna: String(body.nota_interna || ''),
+      mensajeCliente: String(body.mensaje_cliente || ''),
       correlationId: requestId,
     }, new D1RepositorioSolicitudesArrepentimiento(env.DB), new D1RegistroAuditoriaReservas(env.DB));
     if (!item) return json({ error: 'La solicitud cambió o ya fue resuelta.' }, 409);

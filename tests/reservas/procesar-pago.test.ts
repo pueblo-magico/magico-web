@@ -3,7 +3,6 @@ import test from 'node:test';
 
 import { procesarPagoMercadoPago } from '../../functions/_application/reservas/procesarPagoMercadoPago.ts';
 import type {
-  NotificadorReservaConfirmada,
   ProveedorPagosReserva,
   RepositorioEstadoPagoReserva,
 } from '../../functions/_application/reservas/ports.ts';
@@ -17,8 +16,6 @@ import {
   MercadoPagoProveedorPagos,
 } from '../../functions/_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { hashDni } from '../../functions/_lib/paymentIdentity.ts';
-
-const notificadorNulo: NotificadorReservaConfirmada = { async notificar() {} };
 
 function pagos(
   estado: string,
@@ -45,25 +42,19 @@ function repositorio(overrides: Partial<RepositorioEstadoPagoReserva> = {}): Rep
   };
 }
 
-test('confirma y notifica una sola vez ante entregas duplicadas', async () => {
-  let notificaciones = 0;
+test('confirma una sola vez ante entregas duplicadas sin invocar un canal', async () => {
   let primera = true;
   const repository = repositorio({
     async registrarObservacion() { const insertada = primera; primera = false; return insertada; },
   });
-  const notificador = {
-    async notificar() { notificaciones += 1; },
-  };
-
   assert.deepEqual(
-    await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, notificador, 'delivery-1'),
-    { estado: 'confirmada', notificacionFallida: false }
+    await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, 'delivery-1'),
+    { estado: 'confirmada' }
   );
   assert.deepEqual(
-    await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, notificador, 'delivery-1'),
+    await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, 'delivery-1'),
     { estado: 'duplicado' }
   );
-  assert.equal(notificaciones, 1);
 });
 
 test('resuelve la referencia pública RES sin mezclar ids de preview y producción', async () => {
@@ -81,10 +72,8 @@ test('resuelve la referencia pública RES sin mezclar ids de preview y producci�
     },
   });
 
-  const resultado = await procesarPagoMercadoPago(
-    'pay-public', pagos('approved', codigo), repository, notificadorNulo
-  );
-  assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
+  const resultado = await procesarPagoMercadoPago('pay-public', pagos('approved', codigo), repository);
+  assert.deepEqual(resultado, { estado: 'confirmada' });
   assert.equal(confirmada, 77);
 });
 
@@ -113,8 +102,8 @@ test('concilia una transferencia aprobada por DNI, importe y moneda cuando la co
     },
   };
 
-  const resultado = await procesarPagoMercadoPago('transfer-81', provider, repository, notificadorNulo);
-  assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
+  const resultado = await procesarPagoMercadoPago('transfer-81', provider, repository);
+  assert.deepEqual(resultado, { estado: 'confirmada' });
   assert.equal(confirmada, 81);
 });
 
@@ -136,28 +125,23 @@ test('no confirma una transferencia cuando DNI e importe coinciden con más de u
     },
   };
 
-  assert.equal((await procesarPagoMercadoPago('transfer-ambigua', provider, repository, notificadorNulo)).estado, 'pago_inconsistente');
+  assert.equal((await procesarPagoMercadoPago('transfer-ambigua', provider, repository)).estado, 'pago_inconsistente');
   assert.equal(confirmaciones, 0);
 });
 
-test('mantiene confirmación aunque falle la notificación y omite usuarios ausentes', async () => {
-  const fallida = await procesarPagoMercadoPago(
-    'pay-7', pagos('approved'),
-    repositorio(),
-    { async notificar() { throw new Error('ManyChat caído'); } }
-  );
+test('la confirmación no depende de que exista una identidad de mensajería', async () => {
+  const conUsuario = await procesarPagoMercadoPago('pay-7', pagos('approved'), repositorio());
   const sinUsuario = await procesarPagoMercadoPago(
     'pay-8', pagos('approved', 8),
     repositorio({
       async confirmar() {
         return { manyChatUserId: null, fechaCheckin: '2026-10-10', fechaCheckout: '2026-10-12' };
       },
-    }),
-    { async notificar() { throw new Error('no debe ejecutarse'); } }
+    })
   );
 
-  assert.deepEqual(fallida, { estado: 'confirmada', notificacionFallida: true });
-  assert.deepEqual(sinUsuario, { estado: 'confirmada', notificacionFallida: false });
+  assert.deepEqual(conUsuario, { estado: 'confirmada' });
+  assert.deepEqual(sinUsuario, { estado: 'confirmada' });
 });
 
 test('registra rechazos, cancelaciones, devoluciones y estados intermedios', async () => {
@@ -169,10 +153,10 @@ test('registra rechazos, cancelaciones, devoluciones y estados intermedios', asy
     async cancelarPendiente(...valores) { canceladas.push(valores); operaciones.push('cancelar'); },
   });
 
-  const rechazada = await procesarPagoMercadoPago('1', pagos('rejected'), repository, notificadorNulo);
-  const cancelada = await procesarPagoMercadoPago('2', pagos('cancelled'), repository, notificadorNulo);
-  const pendiente = await procesarPagoMercadoPago('3', pagos('pending'), repository, notificadorNulo);
-  const devuelta = await procesarPagoMercadoPago('4', pagos('refunded'), repository, notificadorNulo);
+  const rechazada = await procesarPagoMercadoPago('1', pagos('rejected'), repository);
+  const cancelada = await procesarPagoMercadoPago('2', pagos('cancelled'), repository);
+  const pendiente = await procesarPagoMercadoPago('3', pagos('pending'), repository);
+  const devuelta = await procesarPagoMercadoPago('4', pagos('refunded'), repository);
 
   assert.equal(rechazada.estado, 'cancelada');
   assert.equal(cancelada.estado, 'cancelada');
@@ -189,11 +173,11 @@ test('conserva inconsistencias sin confirmar monto, moneda o referencia incorrec
     async confirmar() { confirmaciones += 1; return null; },
   });
   const ausente = await procesarPagoMercadoPago(
-    'x', { async obtenerPago() { return null; } }, repository, notificadorNulo
+    'x', { async obtenerPago() { return null; } }, repository
   );
-  const invalida = await procesarPagoMercadoPago('x', pagos('approved', 'abc'), repository, notificadorNulo);
-  const monto = await procesarPagoMercadoPago('x', pagos('approved', '7', 2600), repository, notificadorNulo, 'monto');
-  const moneda = await procesarPagoMercadoPago('x', pagos('approved', '7', 2500, 'USD'), repository, notificadorNulo, 'moneda');
+  const invalida = await procesarPagoMercadoPago('x', pagos('approved', 'abc'), repository);
+  const monto = await procesarPagoMercadoPago('x', pagos('approved', '7', 2600), repository, 'monto');
+  const moneda = await procesarPagoMercadoPago('x', pagos('approved', '7', 2500, 'USD'), repository, 'moneda');
 
   assert.equal(ausente.estado, 'pago_no_disponible');
   assert.equal(invalida.estado, 'referencia_invalida');
@@ -210,7 +194,7 @@ test('rechaza regresiones de un intento de pago ya aprobado', async () => {
   });
 
   const resultado = await procesarPagoMercadoPago(
-    'pay-7', pagos('pending'), repository, notificadorNulo, 'delivery-regresiva'
+    'pay-7', pagos('pending'), repository, 'delivery-regresiva'
   );
 
   assert.equal(resultado.estado, 'pago_inconsistente');

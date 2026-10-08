@@ -36,6 +36,10 @@ import type {
   ReservaPublicaCreada,
   SolicitudCrearReservaPublica,
 } from '../../_domain/reservas/reservationCreation.ts';
+import type {
+  ConsultaIntegracionCreada,
+  SolicitudCrearConsultaIntegracion,
+} from '../../_domain/reservas/inquiryCreation.ts';
 import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundPolicies.ts';
 import type { EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
 import type {
@@ -65,6 +69,11 @@ import type {
   ConfiguracionBaseReservas,
   ParametroOperativoReserva,
 } from '../../_domain/reservas/baseConfiguration.ts';
+import type {
+  EstadoOperativoOutbox,
+  EventoOutboxIntegracion,
+} from '../../_domain/reservas/integrationOutbox.ts';
+import type { IntencionComunicacion } from '../../_domain/reservas/communicationIntents.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -196,20 +205,44 @@ export type SolicitudIdempotenteGuardada = {
 };
 
 export interface RepositorioCreacionReservaPublica {
-  buscarIdempotencia(clave: string): Promise<SolicitudIdempotenteGuardada | null>;
+  buscarIdempotencia(clave: string, alcance?: string): Promise<SolicitudIdempotenteGuardada | null>;
   obtenerCotizacion(codigo: string): Promise<CotizacionAceptada | null>;
+  buscarConsultaIntegracion(entrada: {
+    codigo: string;
+    integracion: 'n8n';
+    contactoRef: string;
+    conversacionRef: string | null;
+  }): Promise<number | null>;
   crearAtomica(entrada: {
     solicitud: SolicitudCrearReservaPublica & {
       metodoPago: 'mercado_pago_checkout' | 'transferencia_mp';
       pagadorDocumentoHash: string | null;
       pagadorDocumentoUltimos4: string | null;
     };
+    consultaId: number | null;
     cotizacion: CotizacionAceptada;
     requestHash: string;
     reservaUid: string;
     reservaCodigo: string;
     holdExpiresAt: string;
   }): Promise<ReservaPublicaCreada>;
+}
+
+export type ConsultaIdempotenteGuardada = {
+  requestHash: string;
+  respuesta: ConsultaIntegracionCreada | null;
+};
+
+export interface RepositorioCreacionConsultaIntegracion {
+  buscarIdempotencia(clave: string): Promise<ConsultaIdempotenteGuardada | null>;
+  buscarCotizacionId(codigo: string): Promise<number | null>;
+  crearAtomica(entrada: {
+    solicitud: SolicitudCrearConsultaIntegracion;
+    cotizacionId: number | null;
+    requestHash: string;
+    consultaUid: string;
+    consultaCodigo: string;
+  }): Promise<ConsultaIntegracionCreada>;
 }
 
 export interface RepositorioConfiguracionBaseReservas {
@@ -665,4 +698,89 @@ export interface RepositorioDatosPersonalesReserva {
     motivo: string;
     correlationId: string;
   }): Promise<void>;
+}
+
+export interface RepositorioOutboxIntegracion {
+  consultarEstado(entrada: { limite: number; ahora: string }): Promise<EstadoOperativoOutbox>;
+  reprocesarDeadLetter(entrada: {
+    eventId: string;
+    actorEmail: string;
+    motivo: string;
+    correlationId: string;
+    ahora: string;
+  }): Promise<boolean>;
+  reclamarLote(entrada: {
+    claimUid: string;
+    limite: number;
+    ahora: string;
+    claimExpiresAt: string;
+  }): Promise<EventoOutboxIntegracion[]>;
+  marcarEntregado(entrada: {
+    eventId: string;
+    claimUid: string;
+    consumer: string;
+    completedAt: string;
+  }): Promise<void>;
+  marcarFalla(entrada: {
+    eventId: string;
+    claimUid: string;
+    consumer: string;
+    errorCode: string;
+    deadLetter: boolean;
+    nextAttemptAt: string | null;
+    completedAt: string;
+  }): Promise<void>;
+}
+
+export interface EntregadorEventoIntegracion {
+  entregar(evento: EventoOutboxIntegracion): Promise<void>;
+}
+
+export interface RepositorioDeduplicacionEventos {
+  registrarProcesado(consumer: string, eventId: string): Promise<boolean>;
+}
+
+export interface RepositorioIntencionesComunicacion {
+  consultarEstado(entrada: {
+    limite: number;
+    ahora: string;
+  }): Promise<import('../../_domain/reservas/communicationIntents.ts').EstadoOperativoComunicaciones>;
+  reclamarLote(entrada: {
+    claimUid: string;
+    limite: number;
+    ahora: string;
+    claimExpiresAt: string;
+  }): Promise<IntencionComunicacion[]>;
+  marcarEntregada(entrada: {
+    intencionUid: string;
+    claimUid: string;
+    canal: string;
+    completedAt: string;
+  }): Promise<void>;
+  marcarSinCanal(entrada: {
+    intencionUid: string;
+    claimUid: string;
+    completedAt: string;
+  }): Promise<void>;
+  marcarFalla(entrada: {
+    intencionUid: string;
+    claimUid: string;
+    canal: string;
+    errorCode: string;
+    deadLetter: boolean;
+    nextAttemptAt: string | null;
+    completedAt: string;
+  }): Promise<void>;
+  reprocesar(entrada: {
+    intencionUid: string;
+    actorEmail: string;
+    motivo: string;
+    correlationId: string;
+    ahora: string;
+  }): Promise<boolean>;
+}
+
+export interface CanalComunicacion {
+  readonly codigo: string;
+  entregar(intencion: IntencionComunicacion): Promise<void>;
 }

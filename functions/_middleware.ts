@@ -38,6 +38,8 @@ const INSTRUMENTADAS_EN_HANDLER = new Set([
   'GET /api/disponibilidad',
   'POST /api/manychat',
   'POST /api/webhook-mp',
+  'POST /api/v1/integrations/outbox/dispatch',
+  'POST /api/v1/integrations/reservas/expirar-retenciones',
   'GET /api/admin/me',
 ]);
 

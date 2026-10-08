@@ -5,7 +5,6 @@ import { CucuruClienteHttp } from '../../../../_infrastructure/cucuru/CucuruProv
 import { resolverModoCuentasCobro } from '../../../../_infrastructure/cucuru/CucuruProveedorCuentasCobroMock.ts';
 import { D1RepositorioBackfillCucuru } from '../../../../_infrastructure/d1/D1RepositorioBackfillCucuru.ts';
 import { D1RepositorioConciliacionCucuru } from '../../../../_infrastructure/d1/D1RepositorioConciliacionCucuru.ts';
-import { crearNotificadorManyChat } from '../../../../_infrastructure/manychat/ManyChatNotificadorReserva.ts';
 import { jsonReserva as json } from '../../../../_interfaces/http/reservasHttp.ts';
 import { autenticarServicio } from '../../../../_interfaces/http/serviceAuth.ts';
 
@@ -31,11 +30,6 @@ export async function onRequestPost({ request, env }: any) {
     baseUrl: env.CUCURU_API_BASE_URL,
   });
   const conciliacion = new D1RepositorioConciliacionCucuru(env.DB);
-  const notificador = crearNotificadorManyChat({
-    apiKey: env.MANYCHAT_API_KEY,
-    flowNs: env.MANYCHAT_CONFIRMATION_FLOW_NS,
-    habilitado: env.MANYCHAT_NOTIFICATIONS_ENABLED,
-  });
 
   try {
     const resultado = await ejecutarBackfillCucuru(
@@ -46,7 +40,6 @@ export async function onRequestPost({ request, env }: any) {
           collection,
           env.CUCURU_COLLECTOR_ID.trim(),
           conciliacion,
-          notificador,
           `cucuru-backfill:${collection.collectionId}`
         ).then(() => undefined),
       }

@@ -1,5 +1,4 @@
 import type {
-  NotificadorReservaConfirmada,
   ProveedorPagosReserva,
   RepositorioEstadoPagoReserva,
 } from './ports.ts';
@@ -7,13 +6,12 @@ import { transicionPagoValida, type EstadoPagoReserva } from '../../_domain/rese
 
 export type ResultadoProcesamientoPago =
   | { estado: 'pago_no_disponible' | 'referencia_invalida' | 'reserva_desconocida' | 'pago_inconsistente' | 'duplicado' | 'sin_cambios' | 'cancelada' }
-  | { estado: 'confirmada'; notificacionFallida: boolean };
+  | { estado: 'confirmada' };
 
 export async function procesarPagoMercadoPago(
   pagoId: string,
   pagos: ProveedorPagosReserva,
   reservas: RepositorioEstadoPagoReserva,
-  notificador: NotificadorReservaConfirmada,
   eventoExternoId = `payment:${pagoId}`,
   correlationId = eventoExternoId
 ): Promise<ResultadoProcesamientoPago> {
@@ -96,14 +94,7 @@ export async function procesarPagoMercadoPago(
     });
     if (!registrada) return { estado: 'duplicado' };
     if (!reserva) return { estado: 'sin_cambios' };
-    if (!reserva.manyChatUserId) return { estado: 'confirmada', notificacionFallida: false };
-
-    try {
-      await notificador.notificar(reserva);
-      return { estado: 'confirmada', notificacionFallida: false };
-    } catch {
-      return { estado: 'confirmada', notificacionFallida: true };
-    }
+    return { estado: 'confirmada' };
   }
 
   if (pago.estado === 'rejected' || pago.estado === 'cancelled') {

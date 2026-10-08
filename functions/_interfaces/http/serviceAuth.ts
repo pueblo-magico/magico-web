@@ -1,19 +1,32 @@
 export type AlcanceServicio =
+  | 'reservas:disponibilidad'
+  | 'reservas:cotizar'
   | 'reservas:crear'
+  | 'consultas:crear'
   | 'reservas:leer'
   | 'reservas:expirar'
   | 'pagos:notificar'
   | 'pagos:conciliar'
+  | 'integraciones:despachar'
+  | 'comunicaciones:entregar'
   | 'stock:leer';
 
 const IDENTIDADES = {
-  manychat: { env: 'MANYCHAT_INBOUND_SECRET', alcances: ['reservas:crear'] },
+  manychat: {
+    env: 'MANYCHAT_INBOUND_SECRET',
+    alcances: ['reservas:crear'],
+  },
   n8n: {
     env: 'N8N_INBOUND_SECRET',
-    alcances: ['reservas:crear', 'reservas:leer', 'reservas:expirar', 'pagos:conciliar'],
+    alcances: [
+      'reservas:disponibilidad', 'reservas:cotizar', 'reservas:crear',
+      'reservas:leer', 'reservas:expirar', 'consultas:crear', 'pagos:conciliar',
+      'comunicaciones:entregar',
+    ],
   },
   accounting: { env: 'ACCOUNTING_API_SECRET', alcances: ['reservas:leer'] },
   stock: { env: 'STOCK_API_SECRET', alcances: ['stock:leer'] },
+  outbox: { env: 'OUTBOX_DISPATCH_SECRET', alcances: ['integraciones:despachar'] },
 } as const;
 
 function igualesConstante(a: string, b: string): boolean {

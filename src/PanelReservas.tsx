@@ -22,7 +22,7 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio';
-type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'usuarios' | 'actividad';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'integraciones' | 'usuarios' | 'actividad';
 type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
 
 type Alojamiento = {
@@ -196,6 +196,12 @@ type SolicitudArrepentimientoAdmin = {
   email: string;
   detalle: string;
   estado: 'recibida' | 'en_revision' | 'resuelta' | 'rechazada';
+  idioma: 'es' | 'en';
+  mensaje_cliente: string | null;
+  version: number;
+  notificacion_estado: string | null;
+  notificacion_uid: string | null;
+  notificacion_error_codigo: string | null;
   created_at: string;
   acknowledged_at: string;
   resolved_at: string | null;
@@ -2091,25 +2097,54 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
     item: SolicitudArrepentimientoAdmin,
     nuevoEstado: SolicitudArrepentimientoAdmin['estado']
   ) => {
-    const motivo = window.prompt(
+    const notaInterna = window.prompt(
       nuevoEstado === 'en_revision'
         ? 'Nota de seguimiento (mínimo 5 caracteres)'
         : 'Motivo o resolución (mínimo 5 caracteres)'
     );
-    if (!motivo || motivo.trim().length < 5) return;
+    if (!notaInterna || notaInterna.trim().length < 5) return;
+    const mensajeCliente = window.prompt('Mensaje visible para el huésped (mínimo 5 caracteres)');
+    if (!mensajeCliente || mensajeCliente.trim().length < 5) return;
     setProcesando(item.id);
     setError('');
     try {
       const response = await adminFetch(`/api/v1/admin/arrepentimientos/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado_actual: item.estado, estado: nuevoEstado, motivo }),
+        body: JSON.stringify({
+          estado_actual: item.estado,
+          estado: nuevoEstado,
+          nota_interna: notaInterna,
+          mensaje_cliente: mensajeCliente,
+        }),
       });
       const body: any = await response.json();
       if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
       await cargar();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo actualizar la solicitud.');
+    } finally {
+      setProcesando(null);
+    }
+  };
+
+  const reprocesarNotificacion = async (item: SolicitudArrepentimientoAdmin) => {
+    if (!item.notificacion_uid) return;
+    const motivo = window.prompt('Motivo del reintento (mínimo 8 caracteres)');
+    if (!motivo || motivo.trim().length < 8) return;
+    setProcesando(item.id);
+    setError('');
+    try {
+      const response = await adminFetch('/api/v1/admin/arrepentimientos/notificaciones/reprocesar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificacion_uid: item.notificacion_uid, motivo }),
+      });
+      const body: any = await response.json();
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      await cargar();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudo reprocesar la notificación.');
     } finally {
       setProcesando(null);
     }
@@ -2146,6 +2181,8 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
                   <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{item.detalle}</p>
                   <p className="mt-2 text-[11px] text-gray-400 tabular-nums">Recibida: {fmtFechaHora(item.acknowledged_at)}</p>
                   {item.resolution_note && <p className="mt-1 text-xs text-gray-500">Última nota: {item.resolution_note}{item.resolved_by ? ` — ${item.resolved_by}` : ''}</p>}
+                  {item.mensaje_cliente && <p className="mt-1 text-xs text-gray-600">Mensaje al huésped: {item.mensaje_cliente}</p>}
+                  {item.notificacion_estado && <p className="mt-1 text-xs text-gray-500">Email: {item.notificacion_estado.replace('_', ' ')}{item.notificacion_error_codigo ? ` · ${item.notificacion_error_codigo}` : ''}</p>}
                 </div>
                 {puedeGestionar && abierta && (
                   <div className="flex shrink-0 flex-wrap gap-2">
@@ -2153,6 +2190,9 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
                     <button disabled={procesando === item.id} onClick={() => cambiarEstado(item, 'resuelta')} className={`rounded-lg border border-green-300 px-3 py-2 text-xs font-semibold text-green-800 hover:bg-green-50 disabled:opacity-50 ${FOCUS_RING}`}>Resolver</button>
                     <button disabled={procesando === item.id} onClick={() => cambiarEstado(item, 'rechazada')} className={`rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 ${FOCUS_RING}`}>Rechazar</button>
                   </div>
+                )}
+                {puedeGestionar && item.notificacion_estado === 'dead_letter' && (
+                  <button disabled={procesando === item.id} onClick={() => reprocesarNotificacion(item)} className={`shrink-0 rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50 ${FOCUS_RING}`}>Reintentar email</button>
                 )}
               </div>
             </li>
@@ -2162,6 +2202,388 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
         {items === null && <li className="px-5 py-10 text-center text-sm text-gray-400">Cargando solicitudes…</li>}
       </ul>
     </section>
+  );
+};
+
+type EstadoEventoIntegracion = 'pending' | 'processing' | 'delivered' | 'dead_letter';
+type EventoIntegracionOperativo = {
+  eventId: string;
+  eventType: string;
+  aggregateType: string;
+  aggregateId: string;
+  estado: EstadoEventoIntegracion;
+  attempts: number;
+  nextAttemptAt: string;
+  lastErrorCode: string | null;
+  occurredAt: string;
+  createdAt: string;
+  deliveredAt: string | null;
+  ageSeconds: number;
+  deliveryLatencySeconds: number | null;
+};
+type EstadoIntegracionesApi = {
+  resumen: Record<EstadoEventoIntegracion, number>;
+  oldestPendingAgeSeconds: number | null;
+  deliveryLast24h: { attempts: number; failures: number; failureRate: number };
+  eventos: EventoIntegracionOperativo[];
+};
+type EstadoComunicacionOperativa = 'pendiente' | 'procesando' | 'entregada' | 'sin_canal' | 'dead_letter';
+type EstadoOperacionesMvpApi = {
+  reservas: {
+    pendientesPago: number;
+    retencionesVencidasSinProcesar: number;
+    oldestPendingAgeSeconds: number | null;
+  };
+  pagos: {
+    webhooksLast24h: number;
+    aplicadosLast24h: number;
+    inconsistentesLast24h: number;
+    eventos: Array<{
+      proveedor: string; reservaId: number | null; resultado: string;
+      motivoCodigo: string | null; correlationId: string | null;
+      createdAt: string; processedAt: string | null;
+    }>;
+  };
+  comunicaciones: {
+    resumen: Record<EstadoComunicacionOperativa, number>;
+    oldestPendingAgeSeconds: number | null;
+    deliveryLast24h: { attempts: number; failures: number; failureRate: number };
+    intenciones: Array<{
+      intencionUid: string; reservaId: number; tipo: string; idioma: string;
+      estado: EstadoComunicacionOperativa; attempts: number; canal: string | null;
+      lastErrorCode: string | null; createdAt: string;
+    }>;
+  };
+  tendenciaColas: {
+    outbox: { creadosPendientesUltimos15m: number; creadosPendientes15mAnteriores: number; crecimiento: number };
+    comunicaciones: { creadosPendientesUltimos15m: number; creadosPendientes15mAnteriores: number; crecimiento: number };
+  };
+  alertas: Array<{ codigo: string; nivel: 'info' | 'warning' | 'critical'; mensaje: string; cantidad: number }>;
+};
+
+const ESTADO_EVENTO_LABEL: Record<EstadoEventoIntegracion, string> = {
+  pending: 'Pendiente', processing: 'Procesando', delivered: 'Entregado', dead_letter: 'Requiere atención',
+};
+
+const fmtDuracion = (segundos: number | null) => {
+  if (segundos == null) return '—';
+  if (segundos < 60) return `${segundos} s`;
+  if (segundos < 3600) return `${Math.floor(segundos / 60)} min`;
+  if (segundos < 86400) return `${Math.floor(segundos / 3600)} h`;
+  return `${Math.floor(segundos / 86400)} d`;
+};
+
+const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmin }) => {
+  const [estado, setEstado] = useState<EstadoIntegracionesApi | null>(null);
+  const [operaciones, setOperaciones] = useState<EstadoOperacionesMvpApi | null>(null);
+  const [meta, setMeta] = useState({ despachoHabilitado: false, destinoConfigurado: false });
+  const [cargando, setCargando] = useState(true);
+  const [procesando, setProcesando] = useState(false);
+  const [error, setError] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const [eventoReproceso, setEventoReproceso] = useState<string | null>(null);
+  const [intencionReproceso, setIntencionReproceso] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState('');
+
+  const cargar = async () => {
+    setCargando(true);
+    setError('');
+    try {
+      const res = await adminFetch('/api/v1/admin/integraciones/estado?limite=100');
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setEstado(body.data.outbox);
+      setOperaciones(body.data);
+      setMeta({
+        despachoHabilitado: body.meta?.despacho_habilitado === true,
+        destinoConfigurado: body.meta?.destino_configurado === true,
+      });
+    } catch (e: any) {
+      setError(e.message || 'No se pudo consultar la entrega de eventos.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const despachar = async () => {
+    setProcesando(true);
+    setError('');
+    setMensaje('');
+    try {
+      const res = await adminFetch('/api/v1/admin/integraciones/outbox/despachar', { method: 'POST' });
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      const resultado = body.data;
+      setMensaje(`Lote procesado: ${resultado.entregados} entregados, ${resultado.reprogramados} reprogramados y ${resultado.deadLetter} con atención requerida.`);
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo procesar la cola.');
+    } finally {
+      setProcesando(false);
+    }
+  };
+
+  const reprocesar = async (eventId: string) => {
+    setProcesando(true);
+    setError('');
+    setMensaje('');
+    try {
+      const res = await adminFetch('/api/v1/admin/integraciones/outbox/reprocesar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_id: eventId, motivo: motivo.trim() }),
+      });
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setEventoReproceso(null);
+      setMotivo('');
+      setMensaje('El evento volvió a Pendiente y el cambio quedó auditado.');
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo reintentar el evento.');
+    } finally {
+      setProcesando(false);
+    }
+  };
+
+  const reprocesarComunicacion = async (intencionUid: string) => {
+    setProcesando(true);
+    setError('');
+    setMensaje('');
+    try {
+      const res = await adminFetch('/api/v1/admin/integraciones/comunicaciones/reprocesar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intencion_uid: intencionUid, motivo: motivo.trim() }),
+      });
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setIntencionReproceso(null);
+      setMotivo('');
+      setMensaje('La comunicación volvió a Pendiente y el cambio quedó auditado.');
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo reintentar la comunicación.');
+    } finally {
+      setProcesando(false);
+    }
+  };
+
+  const configuracionLista = meta.despachoHabilitado && meta.destinoConfigurado;
+  const tasa = estado ? Math.round(estado.deliveryLast24h.failureRate * 1000) / 10 : 0;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Entrega de eventos</h2>
+          <p className="mt-1 max-w-2xl text-xs text-gray-500">
+            Cambios de reservas que se entregan a otros sistemas. La reserva nunca depende de que el sistema externo esté disponible.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button type="button" onClick={cargar} disabled={cargando || procesando}
+            className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50 ${FOCUS_RING}`}>
+            <RefreshCw size={14} className={cargando ? 'animate-spin' : ''} aria-hidden="true" /> Actualizar
+          </button>
+          {esSuperAdmin && <button type="button" onClick={despachar}
+            disabled={procesando || !configuracionLista}
+            title={!configuracionLista ? 'Primero hay que habilitar y configurar el destino en este ambiente.' : undefined}
+            className={`rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>
+            {procesando ? 'Procesando…' : 'Procesar pendientes ahora'}
+          </button>}
+        </div>
+      </div>
+
+      <div className={`rounded-lg border px-4 py-3 text-sm ${configuracionLista ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+        <p className="font-semibold">{configuracionLista ? 'Entrega configurada en este ambiente' : 'Entrega todavía no habilitada'}</p>
+        <p className="mt-0.5 text-xs">
+          {configuracionLista
+            ? 'Podés procesar eventos pendientes y verificar su recepción en el sistema conectado.'
+            : `Despacho: ${meta.despachoHabilitado ? 'habilitado' : 'desactivado'} · destino: ${meta.destinoConfigurado ? 'configurado' : 'sin configurar'}.`}
+        </p>
+      </div>
+
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
+      {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
+
+      {(operaciones?.alertas || []).length > 0 && (
+        <section className="space-y-2" aria-label="Alertas operativas">
+          {operaciones!.alertas.map(alerta => (
+            <div key={alerta.codigo} className={`rounded-lg border px-4 py-3 text-sm ${
+              alerta.nivel === 'critical'
+                ? 'border-red-200 bg-red-50 text-red-800'
+                : 'border-amber-200 bg-amber-50 text-amber-800'
+            }`}>
+              <p className="font-semibold">{alerta.mensaje}</p>
+              <p className="mt-0.5 text-xs">{alerta.cantidad} elemento{alerta.cantidad === 1 ? '' : 's'} · código {alerta.codigo}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricCard compact label="Reservas pendientes" value={operaciones ? String(operaciones.reservas.pendientesPago) : '—'}
+          hint={operaciones?.reservas.oldestPendingAgeSeconds != null ? `Más antigua: ${fmtDuracion(operaciones.reservas.oldestPendingAgeSeconds)}` : undefined} />
+        <MetricCard compact label="Retenciones vencidas" value={operaciones ? String(operaciones.reservas.retencionesVencidasSinProcesar) : '—'} />
+        <MetricCard compact label="Webhooks MP 24 h" value={operaciones ? String(operaciones.pagos.webhooksLast24h) : '—'}
+          hint={operaciones ? `${operaciones.pagos.aplicadosLast24h} aplicados` : undefined} />
+        <MetricCard compact label="Pagos a conciliar" value={operaciones ? String(operaciones.pagos.inconsistentesLast24h) : '—'} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <MetricCard compact label="Pendientes" value={estado ? String(estado.resumen.pending) : '—'} />
+        <MetricCard compact label="Procesando" value={estado ? String(estado.resumen.processing) : '—'} />
+        <MetricCard compact label="Entregados" value={estado ? String(estado.resumen.delivered) : '—'} />
+        <MetricCard compact label="Con atención" value={estado ? String(estado.resumen.dead_letter) : '—'} />
+        <MetricCard compact label="Fallas 24 h" value={estado ? `${tasa}%` : '—'}
+          hint={estado ? `${estado.deliveryLast24h.failures} de ${estado.deliveryLast24h.attempts} intentos` : undefined} />
+      </div>
+
+      {estado?.oldestPendingAgeSeconds != null && (
+        <p className="text-xs text-gray-500">Pendiente más antiguo: hace {fmtDuracion(estado.oldestPendingAgeSeconds)}.</p>
+      )}
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Eventos recientes</h3>
+        </div>
+        {cargando && !estado ? (
+          <div className="flex justify-center py-12"><RefreshCw className="animate-spin text-gray-300" aria-label="Cargando eventos" /></div>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {(estado?.eventos || []).map(evento => {
+              const necesitaAtencion = evento.estado === 'dead_letter';
+              return <li key={evento.eventId} className="px-4 py-4 sm:px-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                        evento.estado === 'delivered' ? 'bg-green-100 text-green-800' :
+                        necesitaAtencion ? 'bg-red-100 text-red-800' :
+                        evento.estado === 'processing' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                      }`}>{ESTADO_EVENTO_LABEL[evento.estado]}</span>
+                      <span className="text-sm font-semibold text-gray-800">{evento.eventType}</span>
+                    </div>
+                    <p className="mt-1 break-all text-xs text-gray-500">Evento: {evento.eventId}</p>
+                    <p className="mt-1 text-[11px] text-gray-400">
+                      Reserva {evento.aggregateId} · {evento.attempts} intento{evento.attempts === 1 ? '' : 's'} · creado {fmtFechaHora(evento.createdAt)}
+                      {evento.deliveryLatencySeconds != null ? ` · entregado en ${fmtDuracion(evento.deliveryLatencySeconds)}` : ''}
+                    </p>
+                    {evento.lastErrorCode && <p className="mt-1 text-xs font-medium text-red-700">Código: {evento.lastErrorCode}</p>}
+                  </div>
+                  {esSuperAdmin && necesitaAtencion && eventoReproceso !== evento.eventId && (
+                    <button type="button" onClick={() => { setEventoReproceso(evento.eventId); setIntencionReproceso(null); setMotivo(''); }}
+                      className={`self-start rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 ${FOCUS_RING}`}>
+                      Preparar reintento
+                    </button>
+                  )}
+                </div>
+                {esSuperAdmin && necesitaAtencion && eventoReproceso === evento.eventId && (
+                  <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-3">
+                    <label htmlFor={`motivo_${evento.eventId}`} className="text-xs font-semibold text-red-800">Motivo del reintento</label>
+                    <textarea id={`motivo_${evento.eventId}`} rows={2} maxLength={500} value={motivo}
+                      onChange={e => setMotivo(e.target.value)} placeholder="Ej. Destino recuperado y validado"
+                      className={`mt-1 w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm ${FOCUS_RING}`} />
+                    <div className="mt-2 flex justify-end gap-2">
+                      <button type="button" onClick={() => { setEventoReproceso(null); setMotivo(''); }}
+                        className={`rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 ${FOCUS_RING}`}>Cancelar</button>
+                      <button type="button" onClick={() => reprocesar(evento.eventId)}
+                        disabled={procesando || motivo.trim().length < 8}
+                        className={`rounded-lg bg-red-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>
+                        Volver a Pendiente
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>;
+            })}
+            {!cargando && estado?.eventos.length === 0 && (
+              <li className="px-5 py-10 text-center text-sm text-gray-400">Todavía no hay eventos de integración.</li>
+            )}
+          </ul>
+        )}
+      </section>
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Comunicaciones de reservas</h3>
+          <p className="mt-1 text-xs text-gray-500">Intenciones durables, sin datos personales. El canal de correo se habilita por separado.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 border-b border-gray-100 p-4 lg:grid-cols-5">
+          <MetricCard compact label="Pendientes" value={operaciones ? String(operaciones.comunicaciones.resumen.pendiente) : '—'} />
+          <MetricCard compact label="Procesando" value={operaciones ? String(operaciones.comunicaciones.resumen.procesando) : '—'} />
+          <MetricCard compact label="Entregadas" value={operaciones ? String(operaciones.comunicaciones.resumen.entregada) : '—'} />
+          <MetricCard compact label="Sin canal" value={operaciones ? String(operaciones.comunicaciones.resumen.sin_canal) : '—'} />
+          <MetricCard compact label="Con atención" value={operaciones ? String(operaciones.comunicaciones.resumen.dead_letter) : '—'} />
+        </div>
+        <ul className="divide-y divide-gray-100">
+          {(operaciones?.comunicaciones.intenciones || []).slice(0, 20).map(intencion => (
+            <li key={intencion.intencionUid} className="px-4 py-3 sm:px-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      intencion.estado === 'entregada' ? 'bg-green-100 text-green-800' :
+                      intencion.estado === 'dead_letter' ? 'bg-red-100 text-red-800' :
+                      intencion.estado === 'sin_canal' ? 'bg-amber-100 text-amber-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>{intencion.estado.replace('_', ' ')}</span>
+                    <span className="text-sm font-semibold text-gray-800">{intencion.tipo.replaceAll('_', ' ')}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">Reserva {intencion.reservaId} · {intencion.idioma.toUpperCase()} · {intencion.attempts} intento{intencion.attempts === 1 ? '' : 's'}</p>
+                  <p className="mt-1 break-all text-[11px] text-gray-400">{intencion.intencionUid}</p>
+                  {intencion.lastErrorCode && <p className="mt-1 text-xs font-medium text-red-700">Código: {intencion.lastErrorCode}</p>}
+                </div>
+                {esSuperAdmin && ['sin_canal', 'dead_letter'].includes(intencion.estado) && intencionReproceso !== intencion.intencionUid && (
+                  <button type="button" onClick={() => { setIntencionReproceso(intencion.intencionUid); setEventoReproceso(null); setMotivo(''); }}
+                    className={`rounded-lg border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-50 ${FOCUS_RING}`}>Preparar reintento</button>
+                )}
+              </div>
+              {esSuperAdmin && intencionReproceso === intencion.intencionUid && (
+                <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3">
+                  <label htmlFor={`motivo_com_${intencion.intencionUid}`} className="text-xs font-semibold text-amber-900">Motivo del reintento</label>
+                  <textarea id={`motivo_com_${intencion.intencionUid}`} rows={2} maxLength={500} value={motivo}
+                    onChange={e => setMotivo(e.target.value)} placeholder="Ej. Canal habilitado y configuración validada"
+                    className={`mt-1 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm ${FOCUS_RING}`} />
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button type="button" onClick={() => { setIntencionReproceso(null); setMotivo(''); }} className={`rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 ${FOCUS_RING}`}>Cancelar</button>
+                    <button type="button" onClick={() => reprocesarComunicacion(intencion.intencionUid)} disabled={procesando || motivo.trim().length < 8}
+                      className={`rounded-lg bg-amber-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>Volver a Pendiente</button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+          {!cargando && operaciones?.comunicaciones.intenciones.length === 0 && (
+            <li className="px-5 py-8 text-center text-sm text-gray-400">Todavía no hay comunicaciones registradas.</li>
+          )}
+        </ul>
+      </section>
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Mercado Pago reciente</h3>
+        </div>
+        <ul className="divide-y divide-gray-100">
+          {(operaciones?.pagos.eventos || []).map((evento, index) => (
+            <li key={`${evento.correlationId || 'sin-correlacion'}-${index}`} className="px-4 py-3 sm:px-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${evento.resultado === 'inconsistente' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{evento.resultado}</span>
+                <span className="text-sm text-gray-700">Reserva {evento.reservaId ?? 'sin vincular'}</span>
+              </div>
+              <p className="mt-1 break-all text-xs text-gray-500">Solicitud: {evento.correlationId || 'sin correlación'}</p>
+              {evento.motivoCodigo && <p className="mt-1 text-xs font-medium text-red-700">Código: {evento.motivoCodigo}</p>}
+              <p className="mt-1 text-[11px] text-gray-400">{fmtFechaHora(evento.createdAt)}</p>
+            </li>
+          ))}
+          {!cargando && operaciones?.pagos.eventos.length === 0 && (
+            <li className="px-5 py-8 text-center text-sm text-gray-400">No hay webhooks de Mercado Pago registrados.</li>
+          )}
+        </ul>
+      </section>
+    </div>
   );
 };
 
@@ -2399,6 +2821,7 @@ const PanelReservas: React.FC = () => {
     { key: 'consultas', label: 'Consultas' },
     { key: 'arrepentimientos', label: 'Arrepentimientos' },
     { key: 'configuracion', label: 'Configuración' },
+    { key: 'integraciones', label: 'Integraciones' },
     ...(esSuperAdmin ? [
       { key: 'usuarios' as VistaActiva, label: 'Usuarios' },
       { key: 'actividad' as VistaActiva, label: 'Actividad' },
@@ -2465,14 +2888,14 @@ const PanelReservas: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex bg-gray-100 rounded-lg p-1 sm:inline-flex sm:mt-3" role="tablist" aria-label="Vista">
+          <div className="flex overflow-x-auto bg-gray-100 rounded-lg p-1 sm:inline-flex sm:mt-3" role="tablist" aria-label="Vista">
             {TABS.map(t => (
               <button
                 key={t.key}
                 role="tab"
                 aria-selected={vistaActiva === t.key}
                 onClick={() => setVistaActiva(t.key)}
-                className={`flex-1 sm:flex-none text-sm font-semibold px-3 sm:px-4 py-2 rounded-md transition-colors ${FOCUS_RING} ${
+                className={`flex-1 flex-shrink-0 sm:flex-none text-sm font-semibold px-3 sm:px-4 py-2 rounded-md transition-colors ${FOCUS_RING} ${
                   vistaActiva === t.key ? 'bg-brand text-white' : 'text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -2715,6 +3138,7 @@ const PanelReservas: React.FC = () => {
         {vistaActiva === 'arrepentimientos' && <SeccionArrepentimientos puedeGestionar={puedeEditar} />}
 
         {vistaActiva === 'configuracion' && <SeccionConfiguracionBase puedeEditar={esSuperAdmin} />}
+        {vistaActiva === 'integraciones' && <SeccionIntegraciones esSuperAdmin={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}
       </main>
