@@ -5,6 +5,10 @@ import test from 'node:test';
 
 import { despacharEventosIntegracion } from '../../functions/_application/reservas/despacharEventosIntegracion.ts';
 import {
+  consultarEstadoOutbox,
+  reprocesarEventoOutbox,
+} from '../../functions/_application/reservas/gestionarOutboxIntegracion.ts';
+import {
   D1RepositorioDeduplicacionEventos,
   D1RepositorioOutboxIntegracion,
 } from '../../functions/_infrastructure/d1/D1RepositorioOutboxIntegracion.ts';
@@ -13,6 +17,9 @@ import {
   HttpEntregadorEventosIntegracion,
 } from '../../functions/_infrastructure/integrations/HttpEntregadorEventosIntegracion.ts';
 import { onRequestPost as despacharOutbox } from '../../functions/api/v1/integrations/outbox/dispatch.ts';
+import { onRequestGet as consultarOutboxAdmin } from '../../functions/api/v1/admin/integraciones/outbox/index.ts';
+import { onRequestPost as reprocesarOutboxAdmin } from '../../functions/api/v1/admin/integraciones/outbox/reprocesar.ts';
+import { createSessionToken } from '../../functions/_lib/session.ts';
 
 function baseCompleta(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
@@ -156,6 +163,106 @@ test('agota intentos en dead letter y permite deduplicar por consumidor', async 
   assert.equal(await deduplicacion.registrarProcesado('manychat', 'reserva:outbox-dlq'), true);
   assert.equal(await deduplicacion.registrarProcesado('manychat', 'reserva:outbox-dlq'), false);
   assert.equal(await deduplicacion.registrarProcesado('n8n', 'reserva:outbox-dlq'), true);
+  sqlite.close();
+});
+
+test('observa latencia y permite recuperación auditada sólo de dead letter', async () => {
+  const sqlite = baseCompleta();
+  crearEvento(sqlite, 'reserva:outbox-operacion');
+  const database = d1(sqlite);
+  const repositorio = new D1RepositorioOutboxIntegracion(database);
+  await despacharEventosIntegracion(
+    repositorio,
+    { async entregar() { throw Object.assign(new Error('externo'), { codigo: 'N8N_TIMEOUT' }); } },
+    {
+      consumer: 'n8n', maxIntentos: 1,
+      ahora: () => new Date('2099-10-01T12:00:00.000Z'),
+      generarClaimUid: () => 'claim-operacion',
+    }
+  );
+
+  const estado = await consultarEstadoOutbox(
+    repositorio, 20, () => new Date('2099-10-01T12:05:00.000Z')
+  );
+  assert.equal(estado.resumen.dead_letter, 1);
+  assert.deepEqual(estado.deliveryLast24h, { attempts: 1, failures: 1, failureRate: 1 });
+  assert.equal(estado.eventos[0]?.eventId, 'reserva:outbox-operacion');
+  assert.equal(estado.eventos[0]?.attempts, 1);
+  assert.equal(estado.eventos[0]?.lastErrorCode, 'N8N_TIMEOUT');
+  assert.equal(estado.eventos[0]?.deliveryLatencySeconds, null);
+
+  assert.equal(await reprocesarEventoOutbox({
+    eventId: 'reserva:outbox-operacion', motivo: 'Recuperación aprobada por operaciones',
+    actorEmail: 'admin@test', correlationId: 'req-reprocess-1',
+  }, repositorio, () => new Date('2099-10-01T12:06:00.000Z')), true);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT estado, attempts, next_attempt_at, last_error_code
+    FROM integration_outbox WHERE event_id = 'reserva:outbox-operacion'
+  `).get() }, {
+    estado: 'pending', attempts: 0,
+    next_attempt_at: '2099-10-01T12:06:00.000Z', last_error_code: null,
+  });
+  const auditoria = sqlite.prepare(`
+    SELECT email, accion, motivo, entidad_id, metadata_json FROM auditoria_admin
+    WHERE accion = 'reprocesar_evento_outbox'
+  `).get() as Record<string, unknown>;
+  assert.equal(auditoria.email, 'admin@test');
+  assert.equal(auditoria.motivo, 'Recuperación aprobada por operaciones');
+  assert.equal(auditoria.entidad_id, 'reserva:outbox-operacion');
+  assert.deepEqual(JSON.parse(String(auditoria.metadata_json)), {
+    intentos_anteriores: 1, error_anterior: 'N8N_TIMEOUT',
+  });
+  assert.equal(await reprocesarEventoOutbox({
+    eventId: 'reserva:outbox-operacion', motivo: 'Segundo intento no permitido',
+    actorEmail: 'admin@test', correlationId: 'req-reprocess-2',
+  }, repositorio), false);
+  sqlite.close();
+});
+
+test('el contrato admin permite observar y reserva el reproceso al super admin', async () => {
+  const sqlite = baseCompleta();
+  crearEvento(sqlite, 'reserva:outbox-admin');
+  sqlite.exec(`
+    UPDATE integration_outbox SET estado = 'dead_letter', attempts = 8,
+      last_error_code = 'N8N_TIMEOUT' WHERE event_id = 'reserva:outbox-admin';
+    INSERT INTO usuarios_admin (email, password_hash, rol) VALUES
+      ('admin@test', 'x', 'super_admin'), ('viewer@test', 'x', 'viewer');
+  `);
+  const secret = 'session-secret-seguro-de-al-menos-32-caracteres';
+  const csrf = 'csrf-outbox-admin';
+  const tokenAdmin = await createSessionToken('admin@test', secret, csrf);
+  const tokenViewer = await createSessionToken('viewer@test', secret, csrf);
+  const cookie = (token: string) => `pm_admin_session=${encodeURIComponent(token)}; pm_admin_csrf=${csrf}`;
+  const env = { DB: d1(sqlite), SESSION_SECRET: secret };
+
+  const lectura = await consultarOutboxAdmin({
+    request: new Request('https://test/api/v1/admin/integraciones/outbox', {
+      headers: { Cookie: cookie(tokenViewer) },
+    }), env,
+  });
+  assert.equal(lectura.status, 200);
+  const lecturaBody = await lectura.json() as any;
+  assert.equal(lecturaBody.meta.contiene_pii, false);
+  assert.equal(lecturaBody.data.eventos[0].eventId, 'reserva:outbox-admin');
+  assert.equal('payload' in lecturaBody.data.eventos[0], false);
+
+  const requestReproceso = (token: string) => new Request(
+    'https://test/api/v1/admin/integraciones/outbox/reprocesar', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json', 'X-CSRF-Token': csrf,
+        Cookie: cookie(token),
+      },
+      body: JSON.stringify({
+        event_id: 'reserva:outbox-admin', motivo: 'Recuperación manual autorizada',
+      }),
+    }
+  );
+  const prohibido = await reprocesarOutboxAdmin({ request: requestReproceso(tokenViewer), env });
+  assert.equal(prohibido.status, 403);
+  const exitoso = await reprocesarOutboxAdmin({ request: requestReproceso(tokenAdmin), env });
+  assert.equal(exitoso.status, 200);
+  assert.equal((await exitoso.json() as any).estado, 'pending');
   sqlite.close();
 });
 

@@ -13,6 +13,33 @@ export type EventoOutboxIntegracion = {
   createdAt: string;
 };
 
+export type EventoOutboxOperativo = {
+  eventId: string;
+  eventType: string;
+  aggregateType: string;
+  aggregateId: string;
+  estado: EstadoEventoOutbox;
+  attempts: number;
+  nextAttemptAt: string;
+  lastErrorCode: string | null;
+  occurredAt: string;
+  createdAt: string;
+  deliveredAt: string | null;
+  ageSeconds: number;
+  deliveryLatencySeconds: number | null;
+};
+
+export type EstadoOperativoOutbox = {
+  resumen: Record<EstadoEventoOutbox, number>;
+  oldestPendingAgeSeconds: number | null;
+  deliveryLast24h: {
+    attempts: number;
+    failures: number;
+    failureRate: number;
+  };
+  eventos: EventoOutboxOperativo[];
+};
+
 export function codigoErrorEntregaSeguro(error: unknown): string {
   const codigo = typeof error === 'object' && error !== null && 'codigo' in error
     ? String((error as { codigo?: unknown }).codigo || '')

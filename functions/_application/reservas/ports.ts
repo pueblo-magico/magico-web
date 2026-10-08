@@ -64,7 +64,10 @@ import type {
   ConfiguracionBaseReservas,
   ParametroOperativoReserva,
 } from '../../_domain/reservas/baseConfiguration.ts';
-import type { EventoOutboxIntegracion } from '../../_domain/reservas/integrationOutbox.ts';
+import type {
+  EstadoOperativoOutbox,
+  EventoOutboxIntegracion,
+} from '../../_domain/reservas/integrationOutbox.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -623,6 +626,14 @@ export interface RepositorioDatosPersonalesReserva {
 }
 
 export interface RepositorioOutboxIntegracion {
+  consultarEstado(entrada: { limite: number; ahora: string }): Promise<EstadoOperativoOutbox>;
+  reprocesarDeadLetter(entrada: {
+    eventId: string;
+    actorEmail: string;
+    motivo: string;
+    correlationId: string;
+    ahora: string;
+  }): Promise<boolean>;
   reclamarLote(entrada: {
     claimUid: string;
     limite: number;

@@ -42,3 +42,16 @@ El adaptador HTTP sólo acepta un destino HTTPS configurado en
 `event_id` estable en `Idempotency-Key`. Nunca registra el secreto ni el cuerpo
 de error del consumidor. Preview y producción deben usar secretos y destinos
 distintos.
+
+## Operación administrativa
+
+`GET /api/v1/admin/integraciones/outbox` expone conteos por estado, edad del
+pendiente más antiguo, tasa de fallas de entrega de las últimas 24 horas y, por
+evento, estado, intentos, error seguro y latencia de entrega. No expone el
+payload.
+
+Un super admin puede recuperar un evento agotado con
+`POST /api/v1/admin/integraciones/outbox/reprocesar`, indicando `event_id` y un
+`motivo`. La acción reinicia el presupuesto de intentos, vuelve el evento a
+`pending` y deja una entrada en `auditoria_admin`. Editores y viewers sólo
+pueden consultar el estado operativo.
