@@ -1398,7 +1398,7 @@ const WinterRedirection: React.FC = () => {
               <p className="font-semibold text-sm mb-1" style={{ color: C.dark }}>Saldo y cambios de fecha</p>
               <p className="text-xs leading-relaxed" style={{ color: C.muted }}>
                 Si reservaste con seña, el saldo pendiente se cancela hasta el check-out. Reprogramaciones de fecha o ajustes de comidas: mínimo 24 hs de anticipación. Política completa de cancelación en{' '}
-                <a href="/terminos-y-condiciones" style={{ color: C.green, textDecoration: 'underline' }}>Términos y Condiciones</a>.
+                <a href="/terminos-y-condiciones/" style={{ color: C.green, textDecoration: 'underline' }}>Términos y Condiciones</a>.
               </p>
             </div>
 

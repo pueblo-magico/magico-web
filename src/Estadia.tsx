@@ -420,7 +420,7 @@ const HorariosPension: React.FC = () => (
           <p className="text-brand font-semibold text-sm mb-1">Saldo y cambios de fecha</p>
           <p className="text-dark/60 text-xs leading-relaxed">
             Si reservaste con seña, el saldo pendiente se cancela hasta el check-out. Reprogramaciones de fecha o ajustes de comidas: mínimo 24 hs de anticipación. Política completa de cancelación en{' '}
-            <a href="/terminos-y-condiciones" className="text-brand underline">Términos y Condiciones</a>.
+            <a href="/terminos-y-condiciones/" className="text-brand underline">Términos y Condiciones</a>.
           </p>
         </div>
 

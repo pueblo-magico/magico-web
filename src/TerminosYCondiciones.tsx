@@ -98,7 +98,7 @@ export const TerminosYCondiciones: React.FC = () => {
 
         <Section title={en ? '8. Personal data and communications' : '8. Datos personales y comunicaciones'}>
           <p>{en ? 'Booking details are processed to provide the service, verify payments, meet legal obligations and send transactional communications. Marketing communications require a separate legal basis or consent and may be unsubscribed from without affecting the booking.' : 'Los datos de la reserva se tratan para prestar el servicio, verificar pagos, cumplir obligaciones legales y enviar comunicaciones transaccionales. Las comunicaciones comerciales requieren una base legal o consentimiento separado y pueden darse de baja sin afectar la reserva.'}</p>
-          <p><a href="/politica-de-privacidad" className="text-brand hover:underline">{en ? 'Read the Privacy Policy' : 'Consultar la Política de Privacidad'}</a>.</p>
+          <p><a href="/politica-de-privacidad/" className="text-brand hover:underline">{en ? 'Read the Privacy Policy' : 'Consultar la Política de Privacidad'}</a>.</p>
         </Section>
 
         <Section title={en ? '9. Liability and force majeure' : '9. Responsabilidad y fuerza mayor'}>
@@ -114,7 +114,7 @@ export const TerminosYCondiciones: React.FC = () => {
         <div className="mt-12 pt-8 border-t border-gray-200 text-xs text-dark/40 text-center">
           © {new Date().getFullYear()} HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
           <br />
-          <a href="/politica-de-privacidad" className="hover:text-brand transition-colors">{en ? 'Privacy Policy' : 'Política de Privacidad'}</a>{' · '}
+          <a href="/politica-de-privacidad/" className="hover:text-brand transition-colors">{en ? 'Privacy Policy' : 'Política de Privacidad'}</a>{' · '}
           <a href="/" className="hover:text-brand transition-colors">{en ? 'Back to home' : 'Volver al inicio'}</a>
         </div>
       </main>
