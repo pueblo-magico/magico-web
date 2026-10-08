@@ -620,6 +620,11 @@
   gap: 12px;
 }
 
+.booking-payment__heading > strong {
+  min-width: 0;
+  line-height: 1.35;
+}
+
 .booking-payment__heading span {
   flex: 0 0 auto;
   padding: 5px 9px;
@@ -812,6 +817,12 @@
   padding: 12px;
 }
 
+.booking-inline .booking-payment__heading {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .booking-button--payment {
   width: 100%;
   margin-top: 18px;
@@ -956,5 +967,11 @@
 
   .booking-summary__row strong {
     text-align: left;
+  }
+
+  .booking-payment__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 }
