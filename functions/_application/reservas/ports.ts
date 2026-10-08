@@ -72,6 +72,7 @@ import type {
   EstadoOperativoOutbox,
   EventoOutboxIntegracion,
 } from '../../_domain/reservas/integrationOutbox.ts';
+import type { IntencionComunicacion } from '../../_domain/reservas/communicationIntents.ts';
 
 export interface RepositorioExcepcionesCapacidad {
   obtenerContextoPorReserva(reservaId: number): Promise<ContextoCapacidadReserva | null>;
@@ -218,6 +219,7 @@ export interface RepositorioCreacionReservaPublica {
       clienteNombre: string;
       clienteTelefono: string | null;
       clienteEmail: string | null;
+      idioma?: 'es' | 'en';
       idempotencyKey: string;
       canalOrigen?: string;
       referenciaIntegracion?: {
@@ -698,4 +700,49 @@ export interface EntregadorEventoIntegracion {
 
 export interface RepositorioDeduplicacionEventos {
   registrarProcesado(consumer: string, eventId: string): Promise<boolean>;
+}
+
+export interface RepositorioIntencionesComunicacion {
+  consultarEstado(entrada: {
+    limite: number;
+    ahora: string;
+  }): Promise<import('../../_domain/reservas/communicationIntents.ts').EstadoOperativoComunicaciones>;
+  reclamarLote(entrada: {
+    claimUid: string;
+    limite: number;
+    ahora: string;
+    claimExpiresAt: string;
+  }): Promise<IntencionComunicacion[]>;
+  marcarEntregada(entrada: {
+    intencionUid: string;
+    claimUid: string;
+    canal: string;
+    completedAt: string;
+  }): Promise<void>;
+  marcarSinCanal(entrada: {
+    intencionUid: string;
+    claimUid: string;
+    completedAt: string;
+  }): Promise<void>;
+  marcarFalla(entrada: {
+    intencionUid: string;
+    claimUid: string;
+    canal: string;
+    errorCode: string;
+    deadLetter: boolean;
+    nextAttemptAt: string | null;
+    completedAt: string;
+  }): Promise<void>;
+  reprocesar(entrada: {
+    intencionUid: string;
+    actorEmail: string;
+    motivo: string;
+    correlationId: string;
+    ahora: string;
+  }): Promise<boolean>;
+}
+
+export interface CanalComunicacion {
+  readonly codigo: string;
+  entregar(intencion: IntencionComunicacion): Promise<void>;
 }

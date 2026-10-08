@@ -1,14 +1,12 @@
 import type { CollectionCucuruNormalizada } from '../../_domain/reservas/collectionAccounts.ts';
 import { ErrorReserva } from '../../_domain/reservas/errors.ts';
 import type {
-  NotificadorReservaConfirmada,
   RepositorioConciliacionCucuru,
 } from './ports.ts';
 
 export type ResultadoProcesarCollectionCucuru = {
   estado: 'aplicado' | 'prueba_cero' | 'revision_manual' | 'duplicado';
   motivoCodigo: string | null;
-  notificacionFallida: boolean;
 };
 
 function validarCollection(
@@ -35,18 +33,9 @@ export async function procesarCollectionCucuru(
   collection: CollectionCucuruNormalizada,
   collectorIdEsperado: string,
   repositorio: RepositorioConciliacionCucuru,
-  notificador: NotificadorReservaConfirmada,
   correlationId: string
 ): Promise<ResultadoProcesarCollectionCucuru> {
   const validada = validarCollection(collection, collectorIdEsperado);
   const resultado = await repositorio.procesar(validada, correlationId);
-  if (resultado.estado !== 'aplicado' || !resultado.reserva?.manyChatUserId) {
-    return { ...resultado, notificacionFallida: false };
-  }
-  try {
-    await notificador.notificar(resultado.reserva);
-    return { ...resultado, notificacionFallida: false };
-  } catch {
-    return { ...resultado, notificacionFallida: true };
-  }
+  return { estado: resultado.estado, motivoCodigo: resultado.motivoCodigo };
 }

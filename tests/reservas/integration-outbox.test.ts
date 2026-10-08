@@ -58,7 +58,7 @@ function d1(sqlite: DatabaseSync) {
   };
 }
 
-function crearEvento(sqlite: DatabaseSync, eventoUid: string): void {
+function crearEvento(sqlite: DatabaseSync, eventoUid: string, tipo = 'qa.outbox'): void {
   const reservaId = Number(sqlite.prepare(`
     INSERT INTO reservas (
       cliente_nombre, cliente_email, alojamiento_id, fecha_checkin, fecha_checkout,
@@ -73,14 +73,14 @@ function crearEvento(sqlite: DatabaseSync, eventoUid: string): void {
     INSERT INTO reserva_eventos (
       reserva_id, tipo, actor_tipo, actor_ref, correlation_id, payload_json,
       evento_uid, version, agregado_tipo, agregado_id
-    ) VALUES (?, 'reserva.creada', 'sistema', 'qa', 'correlation-qa',
+    ) VALUES (?, ?, 'sistema', 'qa', 'correlation-qa',
       json_object('email', 'pii-no-copiar@example.test'), ?, 1, 'reserva', ?)
-  `).run(reservaId, eventoUid, String(reservaId));
+  `).run(reservaId, tipo, eventoUid, String(reservaId));
 }
 
 test('crea el outbox en la misma escritura del evento sin copiar PII', () => {
   const sqlite = baseCompleta();
-  crearEvento(sqlite, 'reserva:outbox-1');
+  crearEvento(sqlite, 'reserva:outbox-1', 'reserva.creada');
 
   const row = sqlite.prepare(`
     SELECT event_id, event_type, payload_json, estado, attempts

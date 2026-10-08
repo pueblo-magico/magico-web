@@ -267,7 +267,12 @@ async function cotizarDomo(db: unknown) {
   return response.json() as Promise<any>;
 }
 
-function requestReserva(cotizacionCodigo: string, clave: string, nombre = 'Huésped QA') {
+function requestReserva(
+  cotizacionCodigo: string,
+  clave: string,
+  nombre = 'Huésped QA',
+  idioma?: string
+) {
   return new Request('https://test/api/v1/public/reservas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Idempotency-Key': clave },
@@ -275,6 +280,7 @@ function requestReserva(cotizacionCodigo: string, clave: string, nombre = 'Hués
       cotizacion_codigo: cotizacionCodigo,
       espacio_codigo: 'domo-1',
       cliente: { nombre, email: 'QA@Example.Test' },
+      ...(idioma === undefined ? {} : { idioma }),
     }),
   });
 }
@@ -311,6 +317,29 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   });
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo IN ('reserva.creada', 'reserva.retencion_iniciada')").get()?.n, 2);
   assert.equal(sqlite.prepare('SELECT cliente_email FROM reservas').get()?.cliente_email, 'qa@example.test');
+  sqlite.close();
+});
+
+test('persiste el idioma y selecciona plantillas versionadas para la reserva pública', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const response = await crearReserva({
+    request: requestReserva(quote.data.cotizacion.codigo, 'qa-language-en-0001', 'English Guest', 'en'),
+    env: env(db),
+  });
+  assert.equal(response.status, 201);
+  assert.equal(sqlite.prepare('SELECT idioma_comunicacion FROM reservas').get()?.idioma_comunicacion, 'en');
+  assert.deepEqual(sqlite.prepare(`
+    SELECT DISTINCT idioma, plantilla_version FROM comunicacion_intenciones ORDER BY idioma
+  `).all().map(row => ({ ...row })), [{ idioma: 'en', plantilla_version: 1 }]);
+
+  const invalidQuote = await cotizarDomo(db);
+  const invalid = await crearReserva({
+    request: requestReserva(invalidQuote.data.cotizacion.codigo, 'qa-language-invalid-0001', 'Guest', 'pt'),
+    env: env(db),
+  });
+  assert.equal(invalid.status, 400);
+  assert.equal((await invalid.json() as any).error.codigo, 'SOLICITUD_INVALIDA');
   sqlite.close();
 });
 
