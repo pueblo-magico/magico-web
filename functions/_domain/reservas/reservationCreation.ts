@@ -7,6 +7,13 @@ export type SolicitudCrearReservaPublica = {
   clienteTelefono: string | null;
   clienteEmail: string | null;
   idempotencyKey: string;
+  canalOrigen?: string;
+  referenciaIntegracion?: {
+    integracion: 'n8n';
+    contactoRef: string;
+    conversacionRef: string | null;
+    consultaCodigo?: string | null;
+  };
 };
 
 export type CotizacionAceptada = {
@@ -38,6 +45,7 @@ export type ErrorCreacionReserva =
   | 'SOLICITUD_INVALIDA'
   | 'IDEMPOTENCY_KEY_REQUERIDA'
   | 'IDEMPOTENCY_KEY_REUTILIZADA'
+  | 'CONSULTA_NO_ENCONTRADA'
   | 'COTIZACION_NO_ENCONTRADA'
   | 'COTIZACION_VENCIDA'
   | 'INVENTARIO_NO_DISPONIBLE';

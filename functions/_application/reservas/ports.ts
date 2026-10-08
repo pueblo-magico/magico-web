@@ -35,6 +35,10 @@ import type {
   CotizacionAceptada,
   ReservaPublicaCreada,
 } from '../../_domain/reservas/reservationCreation.ts';
+import type {
+  ConsultaIntegracionCreada,
+  SolicitudCrearConsultaIntegracion,
+} from '../../_domain/reservas/inquiryCreation.ts';
 import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundPolicies.ts';
 import type { EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
 import type {
@@ -199,8 +203,14 @@ export type SolicitudIdempotenteGuardada = {
 };
 
 export interface RepositorioCreacionReservaPublica {
-  buscarIdempotencia(clave: string): Promise<SolicitudIdempotenteGuardada | null>;
+  buscarIdempotencia(clave: string, alcance?: string): Promise<SolicitudIdempotenteGuardada | null>;
   obtenerCotizacion(codigo: string): Promise<CotizacionAceptada | null>;
+  buscarConsultaIntegracion(entrada: {
+    codigo: string;
+    integracion: 'n8n';
+    contactoRef: string;
+    conversacionRef: string | null;
+  }): Promise<number | null>;
   crearAtomica(entrada: {
     solicitud: {
       cotizacionCodigo: string;
@@ -209,13 +219,38 @@ export interface RepositorioCreacionReservaPublica {
       clienteTelefono: string | null;
       clienteEmail: string | null;
       idempotencyKey: string;
+      canalOrigen?: string;
+      referenciaIntegracion?: {
+        integracion: 'n8n';
+        contactoRef: string;
+        conversacionRef: string | null;
+        consultaCodigo?: string | null;
+      };
     };
+    consultaId: number | null;
     cotizacion: CotizacionAceptada;
     requestHash: string;
     reservaUid: string;
     reservaCodigo: string;
     holdExpiresAt: string;
   }): Promise<ReservaPublicaCreada>;
+}
+
+export type ConsultaIdempotenteGuardada = {
+  requestHash: string;
+  respuesta: ConsultaIntegracionCreada | null;
+};
+
+export interface RepositorioCreacionConsultaIntegracion {
+  buscarIdempotencia(clave: string): Promise<ConsultaIdempotenteGuardada | null>;
+  buscarCotizacionId(codigo: string): Promise<number | null>;
+  crearAtomica(entrada: {
+    solicitud: SolicitudCrearConsultaIntegracion;
+    cotizacionId: number | null;
+    requestHash: string;
+    consultaUid: string;
+    consultaCodigo: string;
+  }): Promise<ConsultaIntegracionCreada>;
 }
 
 export interface RepositorioConfiguracionBaseReservas {
