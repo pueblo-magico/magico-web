@@ -29,5 +29,5 @@ CREATE INDEX idx_reserva_metodos_pago_conciliacion
   );
 
 INSERT INTO schema_migrations (version, descripcion, checksum_ref)
-VALUES ('0021', 'conciliacion de transferencias Mercado Pago por DNI protegido',
-        'migrations/0021_mercadopago_transfer_reconciliation.sql');
+VALUES ('0025', 'conciliacion de transferencias Mercado Pago por DNI protegido',
+        'migrations/0025_mercadopago_transfer_reconciliation.sql');
