@@ -36,7 +36,11 @@ function baseMigrada() {
       sqlite.exec('BEGIN IMMEDIATE');
       try {
         const results = [];
-        for (const statement of statements) results.push(await statement.run());
+        for (const statement of statements) {
+          results.push(/\bRETURNING\b/i.test(statement.query)
+            ? await statement.all()
+            : await statement.run());
+        }
         sqlite.exec('COMMIT');
         return results;
       } catch (error) {
@@ -284,6 +288,7 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   assert.equal(creada.status, 201);
   const bodyCreada = await creada.json() as any;
   assert.equal(bodyCreada.data.reserva.estado, 'pendiente_pago');
+  assert.deepEqual(bodyCreada.data.cuenta_cobro, { proveedor: 'cucuru', estado: 'disabled' });
   assert.equal(bodyCreada.meta.idempotente, false);
 
   const retry = await crearReserva({ request: requestReserva(codigo, 'qa-create-0001'), env: env(db) });
@@ -294,6 +299,7 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
 
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM retenciones_reserva').get()?.n, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM cuentas_cobro_reserva WHERE estado = 'disabled'").get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ocupacion_reserva_noches').get()?.n, 2);
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT estado_configuracion, codigo, version
@@ -305,6 +311,46 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   });
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo IN ('reserva.creada', 'reserva.retencion_iniciada')").get()?.n, 2);
   assert.equal(sqlite.prepare('SELECT cliente_email FROM reservas').get()?.cliente_email, 'qa@example.test');
+  sqlite.close();
+});
+
+test('Preview puede provisionar un destino mock visible, durable e idempotente', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const entornoMock = {
+    ...env(db),
+    CUCURU_TRANSFER_ENABLED: 'true',
+    CUCURU_PROVIDER_MODE: 'mock',
+    CUCURU_MOCK_ALLOWED: 'true',
+    CUCURU_ALIAS_PREFIX: 'magico.qa',
+  };
+
+  const primera = await crearReserva({
+    request: requestReserva(quote.data.cotizacion.codigo, 'qa-cucuru-mock-0001'),
+    env: entornoMock,
+  });
+  assert.equal(primera.status, 201);
+  const bodyPrimera = await primera.json() as any;
+  assert.equal(bodyPrimera.data.cuenta_cobro.proveedor, 'cucuru_mock');
+  assert.equal(bodyPrimera.data.cuenta_cobro.estado, 'ready');
+  assert.equal(bodyPrimera.data.cuenta_cobro.simulado, true);
+  assert.match(bodyPrimera.data.cuenta_cobro.destino.cvu, /^99\d{20}$/);
+  assert.match(bodyPrimera.data.cuenta_cobro.destino.alias, /^magico\.qa\.reserva\d+$/);
+
+  const retry = await crearReserva({
+    request: requestReserva(quote.data.cotizacion.codigo, 'qa-cucuru-mock-0001'),
+    env: entornoMock,
+  });
+  const bodyRetry = await retry.json() as any;
+  assert.equal(retry.status, 200);
+  assert.equal(bodyRetry.data.reserva.id, bodyPrimera.data.reserva.id);
+  assert.equal(bodyRetry.data.cuenta_cobro.destino.cvu, bodyPrimera.data.cuenta_cobro.destino.cvu);
+  assert.equal(bodyRetry.meta.idempotente, true);
+
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT estado, simulada, COUNT(*) OVER () AS cantidad
+    FROM cuentas_cobro_reserva
+  `).get() }, { estado: 'ready', simulada: 1, cantidad: 1 });
   sqlite.close();
 });
 

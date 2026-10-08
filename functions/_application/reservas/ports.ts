@@ -55,6 +55,11 @@ import type {
   FiltrosExportacionReservas,
 } from '../../_domain/reservas/adminReservationExport.ts';
 import type {
+  CollectionCucuruNormalizada,
+  CuentaCobroReserva,
+  DestinoCobroProveedor,
+} from '../../_domain/reservas/collectionAccounts.ts';
+import type {
   CambioParametroOperativo,
   ConfiguracionBaseReservas,
   ParametroOperativoReserva,
@@ -490,6 +495,102 @@ export interface RepositorioHistorialReserva {
 
 export interface NotificadorReservaConfirmada {
   notificar(reserva: ReservaConfirmadaParaNotificar): Promise<void>;
+}
+
+export type ContextoCuentaCobroReserva = {
+  reservaId: number;
+  reservaUid: string;
+  estadoFlujo: string;
+  moneda: string;
+  montoEsperadoCentavos: number;
+};
+
+export interface RepositorioCuentasCobroReserva {
+  obtenerContexto(reservaId: number): Promise<ContextoCuentaCobroReserva | null>;
+  preparar(entrada: {
+    reservaId: number;
+    customerId: string;
+    habilitada: boolean;
+    simulada?: boolean;
+    operacionUid: string;
+  }): Promise<CuentaCobroReserva>;
+  reclamarProvisionamiento(cuentaId: number, operacionUid: string): Promise<CuentaCobroReserva | null>;
+  registrarIntento(entrada: {
+    cuentaId: number;
+    operacionUid: string;
+    tipo: 'lookup' | 'create' | 'alias';
+  }): Promise<void>;
+  completarIntento(
+    operacionUid: string,
+    resultado: 'succeeded' | 'not_found' | 'failed' | 'unknown_outcome',
+    errorCodigo?: string
+  ): Promise<void>;
+  marcarLista(cuentaId: number, operacionUid: string, destino: DestinoCobroProveedor): Promise<CuentaCobroReserva>;
+  marcarFalla(entrada: {
+    cuentaId: number;
+    operacionUid: string;
+    resultado: 'failed' | 'unknown_outcome';
+    errorCodigo: string;
+    nextRetryAt: string;
+  }): Promise<CuentaCobroReserva>;
+}
+
+export interface ProveedorCuentasCobro {
+  buscarPorCustomerId(customerId: string): Promise<DestinoCobroProveedor | null>;
+  crear(entrada: { customerId: string; idempotencyKey: string }): Promise<DestinoCobroProveedor>;
+  asignarAlias(entrada: {
+    cuenta: DestinoCobroProveedor;
+    alias: string;
+    idempotencyKey: string;
+  }): Promise<DestinoCobroProveedor>;
+}
+
+export interface ProveedorCollectionsCucuru {
+  listar(entrada: {
+    desde: string;
+    hasta: string;
+    cursor: string | null;
+    limite: number;
+  }): Promise<{ items: CollectionCucuruNormalizada[]; nextCursor: string | null }>;
+}
+
+export interface ConsumidorCollectionCucuru {
+  procesar(collection: CollectionCucuruNormalizada): Promise<void>;
+}
+
+export type CheckpointBackfillCucuru = {
+  cursor: string | null;
+  windowStartAt: string | null;
+  windowEndAt: string | null;
+};
+
+export interface RepositorioBackfillCucuru {
+  adquirirLock(entrada: {
+    alcance: string;
+    lockUid: string;
+    lockExpiresAt: string;
+  }): Promise<CheckpointBackfillCucuru | null>;
+  guardarCheckpoint(entrada: {
+    alcance: string;
+    lockUid: string;
+    cursor: string | null;
+    windowStartAt: string;
+    windowEndAt: string;
+  }): Promise<boolean>;
+  liberarLock(alcance: string, lockUid: string): Promise<void>;
+}
+
+export type ResultadoConciliacionCucuru = {
+  estado: 'aplicado' | 'prueba_cero' | 'revision_manual' | 'duplicado';
+  motivoCodigo: string | null;
+  reserva: ReservaConfirmadaParaNotificar | null;
+};
+
+export interface RepositorioConciliacionCucuru {
+  procesar(
+    collection: CollectionCucuruNormalizada,
+    correlationId: string
+  ): Promise<ResultadoConciliacionCucuru>;
 }
 
 export type DatosPersonalesReserva = {

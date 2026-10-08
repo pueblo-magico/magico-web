@@ -51,6 +51,20 @@ type Reserva = {
   canal_origen: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  cuenta_cobro?: {
+    proveedor: 'cucuru' | 'cucuru_mock';
+    estado: 'pending' | 'provisioning' | 'ready' | 'failed' | 'disabled' | 'unknown_outcome';
+    simulada: boolean;
+    cvu: string | null;
+    alias: string | null;
+    moneda: string;
+    intentos: number;
+    ultimoErrorCodigo: string | null;
+    proximoReintentoAt: string | null;
+    ultimoIntentoAt: string | null;
+    listaAt: string | null;
+    revisionesPendientes: number;
+  } | null;
   excepcion_capacidad?: {
     id: number;
     capacidad_autorizada: number;
@@ -76,6 +90,7 @@ type ReservaAdminV1 = {
   montoTotalCentavos: number; montoSenaCentavos: number | null;
   unidadAsignada: string | null; manychatUserId: string | null; createdAt: string;
   excepciones?: Array<Record<string, any>>;
+  cuentaCobro?: Reserva['cuenta_cobro'];
 };
 
 type MetaPaginaReservas = { pagina: number; limite: number; total: number; total_paginas: number };
@@ -101,6 +116,7 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
     canal_origen: item.canalOrigen,
     manychat_user_id: item.manychatUserId,
     created_at: item.createdAt,
+    cuenta_cobro: item.cuentaCobro ?? null,
     excepcion_capacidad: excepcion ? {
       id: Number(excepcion.id), capacidad_autorizada: Number(excepcion.capacidad_autorizada),
       motivo: String(excepcion.motivo), plan_camas: String(excepcion.plan_camas),
@@ -346,6 +362,15 @@ const ESPACIO_POR_ALOJAMIENTO: Record<number, string> = {
 const modalidadPara = (alojamiento: Alojamiento | undefined): 'privada' | 'compartida' =>
   alojamiento?.tipo === 'domo' ? 'privada' : 'compartida';
 
+const ETIQUETAS_ESTADO_CUENTA = {
+  pending: 'Pendiente',
+  provisioning: 'Creando cuenta',
+  ready: 'Lista',
+  failed: 'Fallida',
+  disabled: 'Desactivada',
+  unknown_outcome: 'Resultado desconocido',
+} as const;
+
 const ModalReserva: React.FC<{
   modo: 'crear' | 'editar';
   reserva: Reserva | null;
@@ -382,8 +407,15 @@ const ModalReserva: React.FC<{
   const [motivoExcepcion, setMotivoExcepcion] = useState('');
   const [planCamas, setPlanCamas] = useState('');
   const [gestionandoCapacidad, setGestionandoCapacidad] = useState(false);
+  const [destinoCopiado, setDestinoCopiado] = useState<'alias' | 'cvu' | null>(null);
 
   const setCampo = (campo: keyof FormReserva, valor: string) => setForm(f => ({ ...f, [campo]: valor }));
+
+  const copiarDestinoCobro = async (tipo: 'alias' | 'cvu', valor: string) => {
+    await navigator.clipboard.writeText(valor);
+    setDestinoCopiado(tipo);
+    window.setTimeout(() => setDestinoCopiado(actual => actual === tipo ? null : actual), 1600);
+  };
 
   const validar = (): string | null => {
     if (!form.cliente_nombre.trim()) return 'Falta el nombre del huésped.';
@@ -647,6 +679,69 @@ const ModalReserva: React.FC<{
           </a>
         )}
       </fieldset>
+
+      {modo === 'editar' && (
+        <section className="mb-4 rounded-lg border border-gray-200 bg-white p-3" aria-label="Destino de transferencia">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">Destino de transferencia</p>
+            {reserva?.cuenta_cobro?.simulada && (
+              <span className="rounded-full bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                Simulado · no usar para cobros reales
+              </span>
+            )}
+          </div>
+
+          {!reserva?.cuenta_cobro ? (
+            <p className="mt-2 text-xs text-gray-500">Esta reserva no tiene una cuenta de cobro asignada.</p>
+          ) : (
+            <div className="mt-2 space-y-2 text-xs text-gray-700">
+              <p>
+                Estado: <strong>{ETIQUETAS_ESTADO_CUENTA[reserva.cuenta_cobro.estado]}</strong>
+                {' · '}Intentos: {reserva.cuenta_cobro.intentos}
+              </p>
+
+              {reserva.cuenta_cobro.alias && (
+                <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
+                  <span className="min-w-0"><span className="text-gray-500">Alias:</span> <strong className="break-all">{reserva.cuenta_cobro.alias}</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => copiarDestinoCobro('alias', reserva.cuenta_cobro!.alias!)}
+                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
+                  >
+                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'alias' ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              )}
+
+              {reserva.cuenta_cobro.cvu && (
+                <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
+                  <span className="min-w-0"><span className="text-gray-500">CVU:</span> <strong className="break-all tabular-nums">{reserva.cuenta_cobro.cvu}</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => copiarDestinoCobro('cvu', reserva.cuenta_cobro!.cvu!)}
+                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
+                  >
+                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'cvu' ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              )}
+
+              {reserva.cuenta_cobro.ultimoErrorCodigo && (
+                <p className="rounded-md bg-red-50 px-2.5 py-2 text-red-700">
+                  Último error: <strong>{reserva.cuenta_cobro.ultimoErrorCodigo}</strong>
+                  {reserva.cuenta_cobro.proximoReintentoAt && <> · próximo intento {reserva.cuenta_cobro.proximoReintentoAt}</>}
+                </p>
+              )}
+
+              {reserva.cuenta_cobro.revisionesPendientes > 0 && (
+                <p className="rounded-md bg-amber-50 px-2.5 py-2 font-semibold text-amber-800">
+                  {reserva.cuenta_cobro.revisionesPendientes} pago(s) requieren revisión manual.
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {modo === 'editar' && reserva?.alojamiento_tipo === 'domo' && (
         <section className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3" aria-label="Capacidad excepcional">
