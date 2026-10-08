@@ -1,4 +1,5 @@
 import { crearReservaPublica } from '../../../_application/reservas/crearReservaPublica.ts';
+import { prepararCheckoutReservaPublica } from '../../../_application/reservas/prepararCheckoutReservaPublica.ts';
 import { provisionarCuentaCobroReserva } from '../../../_application/reservas/provisionarCuentaCobro.ts';
 import { CucuruClienteHttp } from '../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
 import {
@@ -9,8 +10,12 @@ import { D1RepositorioCuentasCobroReserva } from '../../../_infrastructure/d1/D1
 import { D1RepositorioCreacionReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
 import { D1RepositorioDisponibilidad } from '../../../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { D1RepositorioConfiguracionBaseReservas } from '../../../_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
+import { D1RepositorioCheckoutReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCheckoutReservaPublica.ts';
+import { MercadoPagoCheckoutReservas } from '../../../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
+import { hashDni, normalizarDni } from '../../../_lib/paymentIdentity.ts';
+import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../../../_lib/paymentMethods.ts';
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
@@ -30,6 +35,29 @@ export async function onRequestPost({ request, env }: any) {
   if (!lectura.ok) return lectura.response;
   const body: any = lectura.body;
   const cliente = body.cliente || {};
+  const pagoSolicitado = body.pago || {};
+  const metodoExplicito = typeof pagoSolicitado.metodo === 'string';
+  const metodoPago = pagoSolicitado.metodo || 'mercado_pago_checkout';
+  const transferenciaConfigurada = configuracionTransferenciaMp(env);
+  const checkoutConfigurado = checkoutMercadoPagoHabilitado(env);
+  if ((metodoPago === 'transferencia_mp' && !transferenciaConfigurada.habilitada) ||
+      (metodoPago === 'mercado_pago_checkout' && metodoExplicito && !checkoutConfigurado) ||
+      !['mercado_pago_checkout', 'transferencia_mp'].includes(metodoPago)) {
+    return jsonPublico(request, 'POST', {
+      error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'El medio de pago seleccionado no está disponible.' },
+    }, 400);
+  }
+  const dni = metodoPago === 'transferencia_mp'
+    ? normalizarDni(pagoSolicitado.pagador?.documento_numero)
+    : null;
+  if (metodoPago === 'transferencia_mp' && !dni) {
+    return jsonPublico(request, 'POST', {
+      error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'Ingresá un DNI válido del titular de la cuenta.' },
+    }, 400);
+  }
+  const documentoHash = dni
+    ? await hashDni(dni, env.PAYMENT_RECONCILIATION_SECRET)
+    : null;
 
   const resultado = await crearReservaPublica({
     cotizacionCodigo: String(body.cotizacion_codigo || ''),
@@ -37,6 +65,9 @@ export async function onRequestPost({ request, env }: any) {
     clienteNombre: String(cliente.nombre || ''),
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
     clienteEmail: cliente.email ? String(cliente.email) : null,
+    metodoPago,
+    pagadorDocumentoHash: documentoHash,
+    pagadorDocumentoUltimos4: dni ? dni.slice(-4) : null,
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
   }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB),
   new D1RepositorioConfiguracionBaseReservas(env.DB));
@@ -50,43 +81,81 @@ export async function onRequestPost({ request, env }: any) {
     );
   }
   let cuentaCobro: Record<string, unknown> = { proveedor: 'cucuru', estado: 'no_disponible' };
-  try {
-    const modoCuentasCobro = resolverModoCuentasCobro(env);
-    const proveedor = modoCuentasCobro === 'mock'
-      ? new CucuruProveedorCuentasCobroMock()
-      : new CucuruClienteHttp({
-        apiKey: env.CUCURU_API_KEY,
-        collectorId: env.CUCURU_COLLECTOR_ID,
-        baseUrl: env.CUCURU_API_BASE_URL,
-      });
-    const provisionamiento = await provisionarCuentaCobroReserva({
-      reservaId: resultado.valor.reservaId,
-      habilitada: modoCuentasCobro !== 'disabled',
-      simulada: modoCuentasCobro === 'mock',
-      aliasPrefix: env.CUCURU_ALIAS_PREFIX,
-    }, new D1RepositorioCuentasCobroReserva(env.DB), proveedor);
-    cuentaCobro = {
-      proveedor: modoCuentasCobro === 'mock' ? 'cucuru_mock' : 'cucuru',
-      estado: provisionamiento.estado,
-      ...(modoCuentasCobro === 'mock' ? { simulado: true } : {}),
-      ...(provisionamiento.estado === 'ready' ? {
-        destino: {
-          cvu: provisionamiento.cuenta.cvu,
-          alias: provisionamiento.cuenta.alias,
-          moneda: provisionamiento.cuenta.moneda,
-        },
-      } : {}),
-    };
-  } catch (error) {
-    // La reserva durable conserva su respuesta aunque falle la integración externa.
-    const codigo = error && typeof error === 'object' && 'codigo' in error
-      ? String((error as { codigo?: unknown }).codigo || '')
-      : error instanceof Error ? error.name : 'ERROR_DESCONOCIDO';
-    console.error(JSON.stringify({
-      evento: 'cuenta_cobro_provisionamiento_error',
-      codigo: /^[A-Z0-9_]{3,80}$/.test(codigo) ? codigo : 'ERROR_PROVISIONAMIENTO',
-    }));
+  if (metodoExplicito) {
+    cuentaCobro = { proveedor: 'cucuru', estado: 'disabled' };
+  } else {
+    try {
+      const modoCuentasCobro = resolverModoCuentasCobro(env);
+      const proveedor = modoCuentasCobro === 'mock'
+        ? new CucuruProveedorCuentasCobroMock()
+        : new CucuruClienteHttp({
+          apiKey: env.CUCURU_API_KEY,
+          collectorId: env.CUCURU_COLLECTOR_ID,
+          baseUrl: env.CUCURU_API_BASE_URL,
+        });
+      const provisionamiento = await provisionarCuentaCobroReserva({
+        reservaId: resultado.valor.reservaId,
+        habilitada: modoCuentasCobro !== 'disabled',
+        simulada: modoCuentasCobro === 'mock',
+        aliasPrefix: env.CUCURU_ALIAS_PREFIX,
+      }, new D1RepositorioCuentasCobroReserva(env.DB), proveedor);
+      cuentaCobro = {
+        proveedor: modoCuentasCobro === 'mock' ? 'cucuru_mock' : 'cucuru',
+        estado: provisionamiento.estado,
+        ...(modoCuentasCobro === 'mock' ? { simulado: true } : {}),
+        ...(provisionamiento.estado === 'ready' ? {
+          destino: {
+            cvu: provisionamiento.cuenta.cvu,
+            alias: provisionamiento.cuenta.alias,
+            moneda: provisionamiento.cuenta.moneda,
+          },
+        } : {}),
+      };
+    } catch (error) {
+      // La reserva durable conserva su respuesta aunque falle la integración externa.
+      const codigo = error && typeof error === 'object' && 'codigo' in error
+        ? String((error as { codigo?: unknown }).codigo || '')
+        : error instanceof Error ? error.name : 'ERROR_DESCONOCIDO';
+      console.error(JSON.stringify({
+        evento: 'cuenta_cobro_provisionamiento_error',
+        codigo: /^[A-Z0-9_]{3,80}$/.test(codigo) ? codigo : 'ERROR_PROVISIONAMIENTO',
+      }));
+    }
   }
+  let pago: Record<string, unknown> = { proveedor: 'mercado_pago', estado: 'disabled' };
+  try {
+    const checkoutHabilitado = resultado.valor.metodoPago === 'mercado_pago_checkout' &&
+      checkoutConfigurado;
+    const checkout = await prepararCheckoutReservaPublica({
+      reservaId: resultado.valor.reservaId,
+      habilitado: checkoutHabilitado,
+      correlationId: request.headers.get('CF-Ray') || crypto.randomUUID(),
+    }, new D1RepositorioCheckoutReservaPublica(env.DB), new MercadoPagoCheckoutReservas(
+      env.MP_ACCESS_TOKEN || '',
+      new URL(request.url).origin
+    ));
+    pago = {
+      proveedor: 'mercado_pago',
+      estado: checkout.estado,
+      ...(checkout.estado === 'ready' ? { checkout_url: checkout.checkoutUrl } : {}),
+    };
+  } catch {
+    // La reserva y su retención continúan vigentes si falla el proveedor externo.
+    pago = { proveedor: 'mercado_pago', estado: 'failed' };
+  }
+  const transferenciaHabilitada = resultado.valor.metodoPago === 'transferencia_mp' &&
+    transferenciaConfigurada.habilitada;
+  const transferencia: Record<string, unknown> = transferenciaHabilitada ? {
+    proveedor: 'mercado_pago_cuenta',
+    estado: 'ready',
+    confirmacion: 'webhook_dni',
+    destino: {
+      ...(transferenciaConfigurada.alias ? { alias: transferenciaConfigurada.alias } : {}),
+      ...(transferenciaConfigurada.cvu ? { cvu: transferenciaConfigurada.cvu } : {}),
+      ...(transferenciaConfigurada.titular ? { titular: transferenciaConfigurada.titular } : {}),
+      moneda: 'ARS',
+    },
+  } : { proveedor: 'mercado_pago_cuenta', estado: 'disabled' };
   return jsonPublico(request, 'POST', {
     data: {
       reserva: {
@@ -96,6 +165,8 @@ export async function onRequestPost({ request, env }: any) {
         expires_at: resultado.valor.expiresAt,
       },
       cotizacion_codigo: resultado.valor.cotizacionCodigo,
+      pago,
+      transferencia,
       cuenta_cobro: cuentaCobro,
     },
     meta: { version: 'v1', idempotente: resultado.valor.idempotente },

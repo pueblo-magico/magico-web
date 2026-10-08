@@ -101,7 +101,7 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
   }
 
   async obtenerDetalle(reservaId: number): Promise<DetalleReservaAdmin | null> {
-    const [row, estadias, excepciones, cuentaCobro] = await Promise.all([
+    const [row, estadias, excepciones, cuentaCobro, metodoPago] = await Promise.all([
       this.db.prepare(`
         SELECT ${SELECT_RESUMEN}, r.moneda
         ${FROM_RESERVA} WHERE r.id = ?
@@ -134,6 +134,10 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
         FROM cuentas_cobro_reserva c
         WHERE c.reserva_id = ? AND c.proveedor = 'cucuru'
       `).bind(reservaId).first(),
+      this.db.prepare(`
+        SELECT metodo, pagador_documento_ultimos4, estado
+        FROM reserva_metodos_pago WHERE reserva_id = ?
+      `).bind(reservaId).first(),
     ]);
     if (!row) return null;
     return {
@@ -157,6 +161,12 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
           ? null : String(cuentaCobro.last_attempt_at),
         listaAt: cuentaCobro.ready_at == null ? null : String(cuentaCobro.ready_at),
         revisionesPendientes: Number(cuentaCobro.revisiones_pendientes),
+      } : null,
+      metodoPago: metodoPago ? {
+        metodo: String(metodoPago.metodo) as 'mercado_pago_checkout' | 'transferencia_mp',
+        documentoUltimos4: metodoPago.pagador_documento_ultimos4 == null
+          ? null : String(metodoPago.pagador_documento_ultimos4),
+        estado: String(metodoPago.estado) as 'pendiente' | 'confirmado' | 'revision_manual',
       } : null,
     };
   }

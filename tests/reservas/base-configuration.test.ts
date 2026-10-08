@@ -132,7 +132,8 @@ test('la creación pública usa el plazo efectivo y conserva el vencimiento calc
       holdExpiresAt = entrada.holdExpiresAt;
       return {
         reservaId: 1, codigo: entrada.reservaCodigo, estado: 'pendiente_pago' as const,
-        expiresAt: entrada.holdExpiresAt, cotizacionCodigo: entrada.cotizacion.codigo, idempotente: false,
+        expiresAt: entrada.holdExpiresAt, cotizacionCodigo: entrada.cotizacion.codigo,
+        metodoPago: entrada.solicitud.metodoPago, idempotente: false,
       };
     },
   }, {

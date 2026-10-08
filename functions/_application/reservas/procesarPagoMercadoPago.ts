@@ -20,12 +20,31 @@ export async function procesarPagoMercadoPago(
   const pago = await pagos.obtenerPago(pagoId);
   if (!pago) return { estado: 'pago_no_disponible' };
 
-  const reservaId = Number(pago.referenciaExterna);
-  const referenciaValida = Number.isInteger(reservaId) && reservaId > 0;
-  const esperada = referenciaValida ? await reservas.obtenerEsperado(reservaId) : null;
-  const motivo = !referenciaValida
-    ? 'REFERENCIA_INVALIDA'
-    : !esperada
+  const referencia = String(pago.referenciaExterna ?? '').trim();
+  const reservaIdLegacy = Number(referencia);
+  const referenciaNumerica = Number.isInteger(reservaIdLegacy) && reservaIdLegacy > 0;
+  const referenciaCodigo = /^RES-[0-9a-f-]{36}$/i.test(referencia);
+  const referenciaValida = referenciaNumerica || referenciaCodigo;
+  let esperada = referenciaNumerica
+    ? await reservas.obtenerEsperado(reservaIdLegacy)
+    : referenciaCodigo && reservas.obtenerEsperadoPorCodigo
+      ? await reservas.obtenerEsperadoPorCodigo(referencia)
+      : null;
+  let coincidenciasTransferencia = 0;
+  if (!esperada && pago.estado === 'approved' && pago.pagadorDocumentoHash &&
+      pago.montoCentavos !== null && pago.moneda && reservas.obtenerEsperadosPorTransferencia) {
+    const candidatas = await reservas.obtenerEsperadosPorTransferencia(
+      pago.pagadorDocumentoHash, pago.montoCentavos, pago.moneda
+    );
+    coincidenciasTransferencia = candidatas.length;
+    if (candidatas.length === 1) esperada = candidatas[0];
+  }
+  const reservaId = esperada?.reservaId ?? 0;
+  const motivo = coincidenciasTransferencia > 1
+    ? 'DNI_TRANSFERENCIA_AMBIGUO'
+    : !esperada && !referenciaValida && !pago.pagadorDocumentoHash
+      ? 'REFERENCIA_INVALIDA'
+      : !esperada
       ? 'RESERVA_DESCONOCIDA'
       : pago.montoCentavos !== esperada.montoCentavos
         ? 'MONTO_INCORRECTO'

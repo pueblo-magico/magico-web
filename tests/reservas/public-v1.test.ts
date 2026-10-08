@@ -5,11 +5,14 @@ import test from 'node:test';
 
 import { D1RepositorioDisponibilidad } from '../../functions/_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { D1RepositorioCreacionReservaPublica } from '../../functions/_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
+import { D1RepositorioEstadoPagoReserva } from '../../functions/_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
 import { crearReservaPublica } from '../../functions/_application/reservas/crearReservaPublica.ts';
+import { procesarPagoMercadoPago } from '../../functions/_application/reservas/procesarPagoMercadoPago.ts';
 import { onRequestGet as listarAlojamientos } from '../../functions/api/v1/public/alojamientos.ts';
 import { onRequestGet as consultarDisponibilidad } from '../../functions/api/v1/public/disponibilidad.ts';
 import { onRequestPost as crearCotizacion } from '../../functions/api/v1/public/cotizaciones.ts';
 import { onRequestPost as crearReserva } from '../../functions/api/v1/public/reservas.ts';
+import { onRequestGet as consultarEstadoReserva } from '../../functions/api/v1/public/reservas/[codigo].ts';
 import { onRequestPost as expirarRetenciones } from '../../functions/api/v1/integrations/reservas/expirar-retenciones.ts';
 
 function baseMigrada() {
@@ -311,6 +314,226 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   });
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo IN ('reserva.creada', 'reserva.retencion_iniciada')").get()?.n, 2);
   assert.equal(sqlite.prepare('SELECT cliente_email FROM reservas').get()?.cliente_email, 'qa@example.test');
+  sqlite.close();
+});
+
+test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const request = requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001');
+  const entornoMp = {
+    ...env(db),
+    MP_CHECKOUT_ENABLED: 'true',
+    MP_ACCESS_TOKEN: 'TEST-token-no-log',
+    MP_TRANSFER_ENABLED: 'true',
+    MP_TRANSFER_ALIAS: 'pueblo.magico.test',
+    MP_TRANSFER_CVU: '0000003100012345678901',
+    MP_TRANSFER_ACCOUNT_HOLDER: 'Pueblo Mágico',
+    PAYMENT_RECONCILIATION_SECRET: 'qa-secret-mercado-pago-32-caracteres-minimo',
+  };
+  const originalFetch = globalThis.fetch;
+  const llamadas: Array<{ url: string; method: string; body?: string }> = [];
+  globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    llamadas.push({ url, method: init?.method || 'GET', body: init?.body ? String(init.body) : undefined });
+    if (url.includes('/checkout/preferences/search')) {
+      return new Response(JSON.stringify({ results: [] }), { status: 200 });
+    }
+    return new Response(JSON.stringify({
+      id: 'pref-publica-1',
+      init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1',
+    }), { status: 201 });
+  };
+
+  try {
+    const creada = await crearReserva({ request, env: entornoMp });
+    assert.equal(creada.status, 201);
+    const body = await creada.json() as any;
+    assert.deepEqual(body.data.pago, {
+      proveedor: 'mercado_pago',
+      estado: 'ready',
+      checkout_url: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1',
+    });
+    assert.deepEqual(body.data.transferencia, {
+      proveedor: 'mercado_pago_cuenta',
+      estado: 'disabled',
+    });
+    assert.equal(llamadas.length, 2);
+    assert.match(llamadas[0].url, new RegExp(`external_reference=${encodeURIComponent(body.data.reserva.codigo)}`));
+    assert.equal(JSON.parse(llamadas[1].body || '{}').external_reference, body.data.reserva.codigo);
+    assert.equal(sqlite.prepare('SELECT mp_preference_id FROM reservas').get()?.mp_preference_id, 'pref-publica-1');
+    assert.deepEqual({ ...sqlite.prepare(`
+      SELECT proveedor, estado, external_preference_id,
+             json_extract(metadata_json, '$.estado_checkout') estado_checkout
+      FROM pagos WHERE proveedor = 'mercado_pago'
+    `).get() }, {
+      proveedor: 'mercado_pago', estado: 'pendiente',
+      external_preference_id: 'pref-publica-1', estado_checkout: 'listo',
+    });
+
+    const retry = await crearReserva({
+      request: requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001'),
+      env: entornoMp,
+    });
+    assert.equal(retry.status, 200);
+    assert.equal((await retry.json() as any).data.pago.estado, 'ready');
+    assert.equal(llamadas.length, 2);
+    assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM pagos WHERE proveedor = 'mercado_pago'").get()?.n, 1);
+
+    const estado = await consultarEstadoReserva({
+      request: new Request(`https://test/api/v1/public/reservas/${body.data.reserva.codigo}`),
+      env: entornoMp,
+      params: { codigo: body.data.reserva.codigo },
+    });
+    const bodyEstado = await estado.json() as any;
+    assert.equal(estado.status, 200);
+    assert.equal(bodyEstado.data.reserva.codigo, body.data.reserva.codigo);
+    assert.equal(bodyEstado.data.reserva.estado, 'pendiente_pago');
+    assert.equal(bodyEstado.data.pago.estado, 'pendiente');
+    assert.doesNotMatch(JSON.stringify(bodyEstado), /cliente_|email|telefono|checkout_url/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+    sqlite.close();
+  }
+});
+
+test('rechaza un checkout explícito deshabilitado antes de crear la reserva', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const response = await crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-checkout-disabled-0001' },
+      body: JSON.stringify({
+        cotizacion_codigo: quote.data.cotizacion.codigo,
+        espacio_codigo: 'domo-1',
+        cliente: { nombre: 'Huésped Checkout' },
+        pago: { metodo: 'mercado_pago_checkout' },
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal((await response.json() as any).error.codigo, 'SOLICITUD_INVALIDA');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM reservas').get()?.cantidad, 0);
+  sqlite.close();
+});
+
+test('registra una transferencia por DNI protegido y sólo entonces expone el destino', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const entornoTransferencia = {
+    ...env(db),
+    MP_TRANSFER_ENABLED: 'true',
+    MP_TRANSFER_ALIAS: 'pueblo.magico.test',
+    MP_TRANSFER_CVU: '0000003100012345678901',
+    MP_TRANSFER_ACCOUNT_HOLDER: 'Pueblo Mágico',
+    PAYMENT_RECONCILIATION_SECRET: 'qa-secret-mercado-pago-32-caracteres-minimo',
+    CUCURU_TRANSFER_ENABLED: 'true',
+    CUCURU_PROVIDER_MODE: 'mock',
+    CUCURU_MOCK_ALLOWED: 'true',
+  };
+  const request = new Request('https://test/api/v1/public/reservas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-transferencia-dni-0001' },
+    body: JSON.stringify({
+      cotizacion_codigo: quote.data.cotizacion.codigo,
+      espacio_codigo: 'domo-1',
+      cliente: { nombre: 'Huésped Transferencia', email: 'qa@example.test' },
+      pago: {
+        metodo: 'transferencia_mp',
+        pagador: { documento_tipo: 'DNI', documento_numero: '12.345.678' },
+      },
+    }),
+  });
+
+  const response = await crearReserva({ request, env: entornoTransferencia });
+  assert.equal(response.status, 201);
+  const body = await response.json() as any;
+  assert.equal(body.data.pago.estado, 'disabled');
+  assert.deepEqual(body.data.transferencia, {
+    proveedor: 'mercado_pago_cuenta', estado: 'ready', confirmacion: 'webhook_dni',
+    destino: {
+      alias: 'pueblo.magico.test', cvu: '0000003100012345678901',
+      titular: 'Pueblo Mágico', moneda: 'ARS',
+    },
+  });
+  const metodo = sqlite.prepare(`
+    SELECT metodo, pagador_documento_hash, pagador_documento_ultimos4
+    FROM reserva_metodos_pago
+  `).get() as any;
+  assert.equal(metodo.metodo, 'transferencia_mp');
+  assert.match(String(metodo.pagador_documento_hash), /^[a-f0-9]{64}$/);
+  assert.equal(metodo.pagador_documento_ultimos4, '5678');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM cuentas_cobro_reserva').get()?.cantidad, 0);
+  assert.doesNotMatch(
+    JSON.stringify(body),
+    /"pagador_documento_hash"|"pagador_documento_ultimos4"|"documento_numero"/,
+  );
+  sqlite.close();
+});
+
+test('confirma de punta a punta una transferencia por DNI, importe y moneda', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const entornoTransferencia = {
+    ...env(db),
+    MP_TRANSFER_ENABLED: 'true',
+    MP_TRANSFER_ALIAS: 'pueblo.magico.test',
+    PAYMENT_RECONCILIATION_SECRET: 'qa-secret-mercado-pago-32-caracteres-minimo',
+  };
+  const response = await crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-transferencia-e2e-0001' },
+      body: JSON.stringify({
+        cotizacion_codigo: quote.data.cotizacion.codigo,
+        espacio_codigo: 'domo-1',
+        cliente: { nombre: 'Huésped Transferencia E2E', email: 'qa@example.test' },
+        pago: {
+          metodo: 'transferencia_mp',
+          pagador: { documento_tipo: 'DNI', documento_numero: '12.345.678' },
+        },
+      }),
+    }),
+    env: entornoTransferencia,
+  });
+  assert.equal(response.status, 201);
+  const creada = await response.json() as any;
+  const metodo = sqlite.prepare(`
+    SELECT rpm.pagador_documento_hash, rpm.monto_esperado_centavos, rpm.moneda
+    FROM reserva_metodos_pago rpm
+    JOIN reservas r ON r.id = rpm.reserva_id
+    WHERE r.codigo = ?
+  `).get(creada.data.reserva.codigo) as any;
+
+  const resultado = await procesarPagoMercadoPago(
+    'payment-transfer-e2e-1',
+    { async obtenerPago() {
+      return {
+        id: 'payment-transfer-e2e-1', estado: 'approved', referenciaExterna: null,
+        montoCentavos: Number(metodo.monto_esperado_centavos), moneda: String(metodo.moneda),
+        pagadorDocumentoHash: String(metodo.pagador_documento_hash),
+        pagadorDocumentoUltimos4: '5678',
+      };
+    } },
+    new D1RepositorioEstadoPagoReserva(db),
+    { async notificar() {} },
+    'webhook-transfer-e2e-1',
+    'request-transfer-e2e-1',
+  );
+
+  assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT r.estado_flujo, rpm.estado metodo_estado, p.estado pago_estado
+    FROM reservas r
+    JOIN reserva_metodos_pago rpm ON rpm.reserva_id = r.id
+    JOIN pagos p ON p.reserva_id = r.id AND p.external_payment_id = 'payment-transfer-e2e-1'
+    WHERE r.codigo = ?
+  `).get(creada.data.reserva.codigo) }, {
+    estado_flujo: 'confirmada', metodo_estado: 'confirmado', pago_estado: 'aprobado',
+  });
   sqlite.close();
 });
 

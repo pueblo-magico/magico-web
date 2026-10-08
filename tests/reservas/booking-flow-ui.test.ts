@@ -6,6 +6,7 @@ import {
   createBookingAttemptKey,
   createPublicReservation,
   formatRemaining,
+  getPublicReservationStatus,
   localTodayIso,
   remainingSeconds,
 } from '../../components/booking/bookingApi.ts';
@@ -24,6 +25,21 @@ test('mantiene el flujo dentro del widget en escritorio y protege los datos de p
   assert.match(source, /className="booking-payment__identifier"/);
   assert.match(styles, /\.booking-result a\.booking-button\s*\{[^}]*color:\s*#fff/s);
   assert.match(styles, /\.booking-payment__identifier\s*\{[^}]*white-space:\s*nowrap/s);
+  assert.match(source, /reservation\.pago\?\.estado === 'ready'/);
+  assert.match(source, /href=\{reservation\.pago\.checkout_url\}/);
+  assert.match(source, /reservation\.transferencia\?\.estado === 'ready'/);
+  assert.match(source, /Esperando acreditación/);
+});
+
+test('los retornos de Mercado Pago consultan el estado persistido y tienen fallback SPA', () => {
+  const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
+  const redirects = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8');
+  assert.match(source, /getPublicReservationStatus\(code\)/);
+  assert.match(source, /status\?\.reserva\.estado === 'confirmada'/);
+  assert.doesNotMatch(source, /params\.get\(['"]status['"]\)/);
+  for (const path of ['/reserva-confirmada', '/reserva-pendiente', '/reserva-fallida']) {
+    assert.match(redirects, new RegExp(`${path}\\s+/app-shell/\\s+200`));
+  }
 });
 
 test('oculta el encabezado promocional mientras el checkout está abierto', () => {
@@ -103,6 +119,7 @@ test('envía la clave idempotente y los datos mínimos al crear una reserva', as
     await createPublicReservation({
       quoteCode: 'COT-QA', spaceCode: 'domo-1',
       guest: { name: 'Persona QA', phone: '+5493510000000', email: '' },
+      paymentMethod: 'mercado_pago_checkout',
       idempotencyKey: 'web-reserva-qa',
     });
     assert.equal(requestedUrl, '/api/v1/public/reservas');
@@ -111,7 +128,29 @@ test('envía la clave idempotente y los datos mínimos al crear una reserva', as
       cotizacion_codigo: 'COT-QA',
       espacio_codigo: 'domo-1',
       cliente: { nombre: 'Persona QA', telefono: '+5493510000000', email: null },
+      pago: { metodo: 'mercado_pago_checkout' },
     });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('consulta el estado público por código opaco sin enviar credenciales', async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = '';
+  globalThis.fetch = async input => {
+    requestedUrl = String(input);
+    return new Response(JSON.stringify({
+      data: {
+        reserva: { codigo: 'RES-123', estado: 'confirmada', expires_at: null },
+        pago: { proveedor: 'mercado_pago', estado: 'aprobado' },
+      },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  try {
+    const status = await getPublicReservationStatus('RES-123');
+    assert.equal(requestedUrl, '/api/v1/public/reservas/RES-123');
+    assert.equal(status.reserva.estado, 'confirmada');
   } finally {
     globalThis.fetch = originalFetch;
   }

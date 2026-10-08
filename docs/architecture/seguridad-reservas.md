@@ -43,6 +43,13 @@ La integración futura con Cucuru debe tener identidad y secreto propios, firma 
 
 ## Auditoría y datos personales
 
+La conciliación de transferencias usa el DNI declarado por el titular de la
+cuenta pagadora. D1 no guarda el documento completo: persiste un HMAC-SHA256
+con `PAYMENT_RECONCILIATION_SECRET` y sólo los últimos cuatro dígitos para una
+referencia administrativa enmascarada. El secreto es independiente de sesión,
+rate limiting y proveedores externos. Ningún log, evento o respuesta pública
+incluye el DNI ni su hash.
+
 La auditoría persiste actor, acción, tipo e ID de entidad, fecha, motivo, correlation ID y metadata operativa acotada. No guarda nombres de huéspedes, emails, teléfonos, tokens, secretos ni valores de campos editados.
 La migración elimina el campo libre `detalle` de registros históricos porque podía contener PII; conserva actor, acción y fecha.
 
