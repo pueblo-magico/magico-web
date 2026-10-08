@@ -8,6 +8,10 @@ import {
   consultarEstadoComunicaciones,
   reprocesarIntencionComunicacion,
 } from '../../functions/_application/reservas/gestionarIntencionesComunicacion.ts';
+import {
+  codigoErrorComunicacionSeguro,
+  proximoIntentoComunicacion,
+} from '../../functions/_domain/reservas/communicationIntents.ts';
 import { D1RepositorioIntencionesComunicacion } from '../../functions/_infrastructure/d1/D1RepositorioIntencionesComunicacion.ts';
 
 function baseCompleta(): DatabaseSync {
@@ -79,6 +83,55 @@ function crearEvento(
     ) VALUES (?, ?, 'sistema', 'qa', 'correlation-comunicacion', '{}', ?, 1, 'reserva', ?)
   `).run(reservaId, tipo, uid, String(reservaId));
 }
+
+test('normaliza errores y backoff sin exponer detalles del proveedor', () => {
+  assert.equal(codigoErrorComunicacionSeguro({ codigo: 'SMTP_TIMEOUT' }), 'SMTP_TIMEOUT');
+  assert.equal(
+    codigoErrorComunicacionSeguro(new Error('guest@example.test')),
+    'COMMUNICATION_DELIVERY_ERROR'
+  );
+  assert.equal(
+    codigoErrorComunicacionSeguro({ codigo: 'valor-inválido@example.test' }),
+    'COMMUNICATION_DELIVERY_ERROR'
+  );
+  assert.equal(
+    proximoIntentoComunicacion(0, new Date('2099-10-01T10:00:00.000Z'), () => -1),
+    '2099-10-01T10:01:00.000Z'
+  );
+  assert.equal(
+    proximoIntentoComunicacion(20, new Date('2099-10-01T10:00:00.000Z'), () => 2),
+    '2099-10-01T11:12:00.000Z'
+  );
+});
+
+test('valida el reproceso y representa una cola vacía sin inventar fallas', async () => {
+  const sqlite = baseCompleta();
+  const repositorio = new D1RepositorioIntencionesComunicacion(d1(sqlite));
+  const estado = await consultarEstadoComunicaciones(
+    repositorio, 0, () => new Date('2099-10-01T10:00:00.000Z')
+  );
+  assert.equal(estado.oldestPendingAgeSeconds, null);
+  assert.deepEqual(estado.deliveryLast24h, { attempts: 0, failures: 0, failureRate: 0 });
+  assert.equal(estado.intenciones.length, 0);
+  await assert.rejects(
+    () => reprocesarIntencionComunicacion({
+      intencionUid: '', actorEmail: 'admin@test', motivo: 'Motivo válido', correlationId: 'qa-invalid',
+    }, repositorio),
+    (error: any) => error.codigo === 'DATOS_INVALIDOS' && error.status === 400
+  );
+  await assert.rejects(
+    () => reprocesarIntencionComunicacion({
+      intencionUid: 'comunicacion:ausente', actorEmail: 'admin@test', motivo: 'corto',
+      correlationId: 'qa-invalid-reason',
+    }, repositorio),
+    (error: any) => error.codigo === 'DATOS_INVALIDOS'
+  );
+  assert.equal(await reprocesarIntencionComunicacion({
+    intencionUid: 'comunicacion:ausente', actorEmail: 'admin@test',
+    motivo: 'Reproceso válido para intención ausente', correlationId: 'qa-absent',
+  }, repositorio), false);
+  sqlite.close();
+});
 
 test('proyecta eventos de reserva a intenciones versionadas sin copiar PII', () => {
   const sqlite = baseCompleta();
