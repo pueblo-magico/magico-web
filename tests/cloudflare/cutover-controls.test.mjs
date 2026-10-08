@@ -10,6 +10,7 @@ import {
 const workflow = readFileSync(new URL('../../.github/workflows/deploy.yml', import.meta.url), 'utf8');
 const sql = readFileSync(new URL('../../scripts/reservas/reconciliar-cutover.sql', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../../wrangler.toml', import.meta.url), 'utf8');
+const smoke = readFileSync(new URL('../../scripts/reservas/smoke-produccion.mjs', import.meta.url), 'utf8');
 
 test('el cutover captura bookmark y evidencia antes de migrar y reconcilia antes de desplegar', () => {
   const backup = workflow.indexOf('- name: Capture pre-cutover bookmark and reconciliation');
@@ -29,7 +30,8 @@ test('el cutover captura bookmark y evidencia antes de migrar y reconcilia antes
 
 test('Wrangler separa explícitamente las bases de Preview y Producción', () => {
   const production = wrangler.match(/\[\[env\.production\.d1_databases\]\][\s\S]*?database_id\s*=\s*"([^"]+)"/)?.[1];
-  const preview = wrangler.match(/\[\[env\.preview\.d1_databases\]\][\s\S]*?database_id\s*=\s*"([^"]+)"/)?.[1];
+  const previewConfig = wrangler.split('[[env.production.d1_databases]]')[0];
+  const preview = previewConfig.match(/\[\[d1_databases\]\][\s\S]*?database_id\s*=\s*"([^"]+)"/)?.[1];
   assert.equal(production, '4431f6d6-052c-4f35-8fd7-4805b2d7a858');
   assert.equal(preview, 'd893fa4d-96d8-49f2-a9f5-d9feb55ab0d3');
   assert.notEqual(production, preview);
@@ -47,6 +49,7 @@ test('compara conteos, estados e importes y bloquea inconsistencias', () => {
     { control: 'reservas_total', valor: 3 },
     { control: 'consultas_total', valor: 2 },
     { control: 'usuarios_admin_total', valor: 1 },
+    { control: 'super_admin_activo_total', valor: 1 },
     { control: 'auditoria_admin_total', valor: 4 },
     { control: 'reservas_monto_total', valor: '100.00' },
     { control: 'reservas_sena_total', valor: '30.00' },
@@ -60,4 +63,16 @@ test('compara conteos, estados e importes y bloquea inconsistencias', () => {
   const alterado = new Map(controles);
   alterado.set('reservas_total', '4');
   assert.throws(() => verificarReconciliacion(controles, alterado), /reservas_total/);
+
+  const sinSuperAdmin = new Map(controles);
+  sinSuperAdmin.set('super_admin_activo_total', '0');
+  assert.throws(() => verificarReconciliacion(sinSuperAdmin, sinSuperAdmin), /super_admin activo/);
+});
+
+test('el smoke productivo cubre superficies públicas, panel, jobs y webhook', () => {
+  assert.match(smoke, /\/admin\/reservas\//);
+  assert.match(smoke, /\/boton-de-arrepentimiento\//);
+  assert.match(smoke, /expirar-retenciones/);
+  assert.match(smoke, /outbox\/dispatch/);
+  assert.match(smoke, /\/api\/webhook-mp/);
 });

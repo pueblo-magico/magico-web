@@ -61,8 +61,10 @@ manual y un motivo de release visible en la ejecución.
    aplica las migraciones, ejecuta verificadores y compara conteos, estados e
    importes antes de desplegar Pages. Descargar el artifact
    `reservas-cutover-<SHA>` y adjuntarlo al registro de release.
-9. Si la reconciliación pasa, el workflow despliega y verifica catálogo público,
-   protección administrativa y rechazo seguro de un webhook sin firma.
+9. Si la reconciliación pasa y existe al menos un súper admin activo, el
+   workflow despliega y verifica catálogo público, panel administrativo, Botón
+   de Arrepentimiento, protección de jobs operativos y rechazo seguro de un
+   webhook sin firma.
 10. Ejecutar una reserva real controlada: cotizar, crear `RES-…`, pagar la seña
     por el medio Mercado Pago vigente y comprobar que sólo el webhook confirma.
     Repetir la entrega del webhook y comprobar idempotencia. Para un rechazo,
