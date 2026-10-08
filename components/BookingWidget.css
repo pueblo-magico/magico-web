@@ -607,6 +607,46 @@
   text-align: left;
 }
 
+.booking-payment-methods__title {
+  margin: 20px 0 10px;
+  color: #102b3c;
+  font-weight: 800;
+}
+
+.booking-payment__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.booking-payment__heading span {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #fff1c7;
+  color: #775508;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.booking-payment__instructions {
+  margin: 0;
+  color: #53677a;
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.booking-dni-field {
+  margin-top: 14px;
+}
+
+.booking-dni-field small {
+  color: #607284;
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
 .booking-payment__value {
   display: flex;
   min-width: 0;

@@ -65,6 +65,11 @@ type Reserva = {
     listaAt: string | null;
     revisionesPendientes: number;
   } | null;
+  metodo_pago?: {
+    metodo: 'mercado_pago_checkout' | 'transferencia_mp';
+    documentoUltimos4: string | null;
+    estado: 'pendiente' | 'confirmado' | 'revision_manual';
+  } | null;
   excepcion_capacidad?: {
     id: number;
     capacidad_autorizada: number;
@@ -91,6 +96,7 @@ type ReservaAdminV1 = {
   unidadAsignada: string | null; manychatUserId: string | null; createdAt: string;
   excepciones?: Array<Record<string, any>>;
   cuentaCobro?: Reserva['cuenta_cobro'];
+  metodoPago?: Reserva['metodo_pago'];
 };
 
 type MetaPaginaReservas = { pagina: number; limite: number; total: number; total_paginas: number };
@@ -117,6 +123,7 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
     manychat_user_id: item.manychatUserId,
     created_at: item.createdAt,
     cuenta_cobro: item.cuentaCobro ?? null,
+    metodo_pago: item.metodoPago ?? null,
     excepcion_capacidad: excepcion ? {
       id: Number(excepcion.id), capacidad_autorizada: Number(excepcion.capacidad_autorizada),
       motivo: String(excepcion.motivo), plan_camas: String(excepcion.plan_camas),
@@ -679,6 +686,25 @@ const ModalReserva: React.FC<{
           </a>
         )}
       </fieldset>
+
+      {modo === 'editar' && (
+        <section className="mb-4 rounded-lg border border-gray-200 bg-white p-3" aria-label="Forma de pago">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">Forma de pago</p>
+          {!reserva?.metodo_pago ? (
+            <p className="mt-2 text-xs text-gray-500">No hay una forma de pago registrada.</p>
+          ) : (
+            <div className="mt-2 text-xs text-gray-700">
+              <p>
+                <strong>{reserva.metodo_pago.metodo === 'transferencia_mp' ? 'Transferencia a Mercado Pago' : 'Checkout Mercado Pago'}</strong>
+                {' · '}{reserva.metodo_pago.estado}
+              </p>
+              {reserva.metodo_pago.documentoUltimos4 && (
+                <p className="mt-1">DNI de la cuenta pagadora: <strong>•••• {reserva.metodo_pago.documentoUltimos4}</strong></p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {modo === 'editar' && (
         <section className="mb-4 rounded-lg border border-gray-200 bg-white p-3" aria-label="Destino de transferencia">

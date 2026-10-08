@@ -96,6 +96,20 @@ después de que el webhook autenticado validó el pago y persistió la transici�
 Si Mercado Pago falla, la reserva pendiente continúa durable y el destino de
 transferencia o la gestión manual siguen disponibles como fallback.
 
+Cuando `MP_TRANSFER_ENABLED=true`, existe `MP_TRANSFER_ALIAS` o un
+`MP_TRANSFER_CVU` de 22 dígitos y `PAYMENT_RECONCILIATION_SECRET` tiene al menos
+32 caracteres, la cotización ofrece también transferencia directa a la cuenta
+de Mercado Pago. El huésped elige el medio antes de crear la reserva. Para una
+transferencia debe informar el DNI asociado a la cuenta pagadora.
+
+El DNI completo nunca se persiste: se normaliza, se protege con HMAC-SHA256 y
+se conservan sólo el hash y sus últimos cuatro dígitos. Al consultar el pago
+notificado, el adaptador aplica la misma protección a
+`payer.identification.number`. Una transferencia aprobada se confirma
+automáticamente sólo si DNI, importe y moneda encuentran exactamente una
+reserva pendiente y vigente. Cero o múltiples coincidencias quedan registradas
+para revisión manual; nunca se elige una reserva por aproximación.
+
 Al vencer la retención, deja de bloquear disponibilidad aun antes de ejecutar
 la limpieza. El proceso autenticado de n8n invoca
 `POST /api/v1/integrations/reservas/expirar-retenciones` para marcar la reserva

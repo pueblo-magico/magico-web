@@ -16,6 +16,7 @@ import {
   ErrorProveedorPagosTransitorio,
   MercadoPagoProveedorPagos,
 } from '../../functions/_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
+import { hashDni } from '../../functions/_lib/paymentIdentity.ts';
 
 const notificadorNulo: NotificadorReservaConfirmada = { async notificar() {} };
 
@@ -85,6 +86,58 @@ test('resuelve la referencia pública RES sin mezclar ids de preview y producci�
   );
   assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
   assert.equal(confirmada, 77);
+});
+
+test('concilia una transferencia aprobada por DNI, importe y moneda cuando la coincidencia es única', async () => {
+  let confirmada: number | null = null;
+  const repository = repositorio({
+    async obtenerEsperado() { return null; },
+    async obtenerEsperadosPorTransferencia(documentoHash, monto, moneda) {
+      assert.equal(documentoHash, 'hash-dni-12345678');
+      assert.equal(monto, 4500000);
+      assert.equal(moneda, 'ARS');
+      return [{ reservaId: 81, estadoFlujo: 'pendiente_pago', montoCentavos: monto, moneda, preferenciaId: null }];
+    },
+    async confirmar(reservaId) {
+      confirmada = reservaId;
+      return { manyChatUserId: null, fechaCheckin: '2027-08-10', fechaCheckout: '2027-08-12' };
+    },
+  });
+  const provider: ProveedorPagosReserva = {
+    async obtenerPago() {
+      return {
+        id: 'transfer-81', estado: 'approved', referenciaExterna: null,
+        montoCentavos: 4500000, moneda: 'ARS',
+        pagadorDocumentoHash: 'hash-dni-12345678', pagadorDocumentoUltimos4: '5678',
+      };
+    },
+  };
+
+  const resultado = await procesarPagoMercadoPago('transfer-81', provider, repository, notificadorNulo);
+  assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
+  assert.equal(confirmada, 81);
+});
+
+test('no confirma una transferencia cuando DNI e importe coinciden con más de una reserva', async () => {
+  let confirmaciones = 0;
+  const candidata = { reservaId: 81, estadoFlujo: 'pendiente_pago', montoCentavos: 4500000, moneda: 'ARS', preferenciaId: null };
+  const repository = repositorio({
+    async obtenerEsperado() { return null; },
+    async obtenerEsperadosPorTransferencia() { return [candidata, { ...candidata, reservaId: 82 }]; },
+    async confirmar() { confirmaciones += 1; return null; },
+  });
+  const provider: ProveedorPagosReserva = {
+    async obtenerPago() {
+      return {
+        id: 'transfer-ambigua', estado: 'approved', referenciaExterna: null,
+        montoCentavos: 4500000, moneda: 'ARS',
+        pagadorDocumentoHash: 'hash-dni-12345678', pagadorDocumentoUltimos4: '5678',
+      };
+    },
+  };
+
+  assert.equal((await procesarPagoMercadoPago('transfer-ambigua', provider, repository, notificadorNulo)).estado, 'pago_inconsistente');
+  assert.equal(confirmaciones, 0);
 });
 
 test('mantiene confirmación aunque falle la notificación y omite usuarios ausentes', async () => {
@@ -219,10 +272,31 @@ test('el proveedor Mercado Pago verifica estado HTTP y normaliza el pago', async
 
   assert.deepEqual(await exitoso.obtenerPago('11'), {
     id: '11', estado: 'approved', referenciaExterna: '9', montoCentavos: 2500, moneda: 'ARS',
+    pagadorDocumentoHash: null, pagadorDocumentoUltimos4: null,
   });
   assert.equal(authorization, 'Bearer token');
   await assert.rejects(() => fallido.obtenerPago('12'), ErrorProveedorPagosTransitorio);
   await assert.rejects(() => sinRed.obtenerPago('13'), ErrorProveedorPagosTransitorio);
+});
+
+test('el proveedor protege el DNI informado por Mercado Pago con el mismo HMAC de la reserva', async () => {
+  const secreto = 'secreto-de-conciliacion-mercado-pago-32-chars';
+  const proveedor = new MercadoPagoProveedorPagos(secreto, secreto, async () =>
+    new Response(JSON.stringify({
+      id: 14,
+      status: 'approved',
+      external_reference: null,
+      transaction_amount: 45_000,
+      currency_id: 'ARS',
+      payer: { identification: { type: 'DNI', number: '12.345.678' } },
+    }), { status: 200 })
+  );
+
+  const pago = await proveedor.obtenerPago('14');
+
+  assert.equal(pago?.pagadorDocumentoHash, await hashDni('12345678', secreto));
+  assert.equal(pago?.pagadorDocumentoUltimos4, '5678');
+  assert.doesNotMatch(JSON.stringify(pago), /12\.345\.678/);
 });
 
 test('el notificador ManyChat envía campos y flow con el mismo usuario', async () => {

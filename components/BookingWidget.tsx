@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   AlertCircle, ArrowLeft, BedDouble, CalendarDays, CheckCircle2, Clock3,
-  Copy, Loader2, MessageCircle, Minus, Plus, ShieldCheck, Users, Utensils, X,
+  Copy, CreditCard, Landmark, Loader2, MessageCircle, Minus, Plus, ShieldCheck, Users, Utensils, X,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { WA_MAGICO } from '../src/data/config';
@@ -10,6 +10,7 @@ import {
   BookingApiError,
   type BookingMode,
   type MealPlan,
+  type PaymentMethod,
   type PublicAccommodation,
   type QuoteRequest,
   type QuoteResponse,
@@ -48,6 +49,8 @@ const COPY = {
     unavailable: 'No hay disponibilidad para esa combinación. Probá con otras fechas u opciones.',
     contactSupport: 'Consultar por WhatsApp', reviewTitle: 'Revisá y completá tus datos',
     name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email', optional: 'Opcional',
+    paymentMethod: 'Forma de pago', checkoutMethod: 'Mercado Pago', transferMethod: 'Transferencia',
+    dni: 'DNI del titular de la cuenta', dniHelp: 'Debe coincidir con el DNI informado por la cuenta desde la que hacés la transferencia.',
     total: 'Total de la estadía', deposit: 'Seña', balance: 'Saldo al llegar',
     quoteValid: 'Cotización válida durante', consentPrefix: 'Leí y acepto los',
     terms: 'Términos y Condiciones', privacy: 'Política de Privacidad', reserve: 'Crear reserva',
@@ -57,6 +60,9 @@ const COPY = {
     reservationCode: 'Código de reserva', retention: 'Tiempo restante para realizar la seña',
     expired: 'La retención venció. Iniciá una nueva reserva para verificar disponibilidad nuevamente.',
     paymentTitle: 'Destino de transferencia', mockWarning: 'Simulado · no usar para cobros reales',
+    choosePayment: 'Elegí cómo pagar la seña', transferToMp: 'Transferir a nuestra cuenta de Mercado Pago',
+    transferInstructions: 'Transferí el importe exacto de la seña. La reserva quedará pendiente hasta que el equipo verifique el ingreso.',
+    accountHolder: 'Titular', manualConfirmation: 'Esperando acreditación',
     payDeposit: 'Pagar seña con Mercado Pago', paymentPending: 'Estamos preparando el pago seguro.',
     retryPayment: 'Reintentar Mercado Pago',
     alias: 'Alias', cvu: 'CVU', copy: 'Copiar', copied: 'Copiado',
@@ -84,6 +90,8 @@ const COPY = {
     unavailable: 'There is no availability for that combination. Try other dates or options.',
     contactSupport: 'Ask on WhatsApp', reviewTitle: 'Review and complete your details',
     name: 'Full name', phone: 'WhatsApp', email: 'Email', optional: 'Optional',
+    paymentMethod: 'Payment method', checkoutMethod: 'Mercado Pago', transferMethod: 'Bank transfer',
+    dni: "Account holder's DNI", dniHelp: 'It must match the DNI reported by the account used for the transfer.',
     total: 'Stay total', deposit: 'Deposit', balance: 'Balance on arrival', quoteValid: 'Quote valid for',
     consentPrefix: 'I have read and accept the', terms: 'Terms and Conditions', privacy: 'Privacy Policy',
     reserve: 'Create reservation', reserving: 'Creating reservation…',
@@ -92,6 +100,9 @@ const COPY = {
     retention: 'Time remaining to make the deposit',
     expired: 'The hold has expired. Start a new reservation to check availability again.',
     paymentTitle: 'Transfer destination', mockWarning: 'Simulation · do not use for real payments',
+    choosePayment: 'Choose how to pay the deposit', transferToMp: 'Transfer to our Mercado Pago account',
+    transferInstructions: 'Transfer the exact deposit amount. The reservation remains pending until our team verifies receipt.',
+    accountHolder: 'Account holder', manualConfirmation: 'Awaiting receipt',
     payDeposit: 'Pay deposit with Mercado Pago', paymentPending: 'We are preparing secure payment.',
     retryPayment: 'Retry Mercado Pago',
     alias: 'Alias', cvu: 'CVU', copy: 'Copy', copied: 'Copied',
@@ -136,6 +147,8 @@ export const BookingWidget: React.FC<{
   const [quoteSeconds, setQuoteSeconds] = useState(0);
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [guest, setGuest] = useState({ name: '', phone: '', email: '' });
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mercado_pago_checkout');
+  const [payerDni, setPayerDni] = useState('');
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reservation, setReservation] = useState<ReservationResponse | null>(null);
@@ -285,6 +298,7 @@ export const BookingWidget: React.FC<{
         return;
       }
       setQuote(result);
+      setPaymentMethod(result.metodos_pago[0] || 'mercado_pago_checkout');
       setStep(3);
     } catch (err) {
       setError({ message: apiErrorMessage(err, c.genericError, language), code: err instanceof BookingApiError ? err.code : undefined });
@@ -295,7 +309,9 @@ export const BookingWidget: React.FC<{
 
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault();
-    if (!quote?.opcion || !guest.name.trim() || !guest.phone.trim() || !consent) return;
+    const dniValido = /^\d{7,8}$/.test(payerDni.replace(/\D/g, ''));
+    if (!quote?.opcion || !guest.name.trim() || !guest.phone.trim() || !consent ||
+        (paymentMethod === 'transferencia_mp' && !dniValido)) return;
     if (quoteSeconds <= 0) {
       setError({ message: c.expired, code: 'COTIZACION_VENCIDA' });
       return;
@@ -307,6 +323,8 @@ export const BookingWidget: React.FC<{
         quoteCode: quote.cotizacion.codigo,
         spaceCode: quote.opcion.espacio_codigo,
         guest: { name: guest.name.trim(), phone: guest.phone.trim(), email: guest.email.trim() },
+        paymentMethod,
+        payerDni,
         idempotencyKey: idempotencyKey.current,
       });
       setReservation(result.data);
@@ -328,6 +346,8 @@ export const BookingWidget: React.FC<{
         quoteCode: quote.cotizacion.codigo,
         spaceCode: quote.opcion.espacio_codigo,
         guest: { name: guest.name.trim(), phone: guest.phone.trim(), email: guest.email.trim() },
+        paymentMethod,
+        payerDni,
         idempotencyKey: idempotencyKey.current,
       });
       setReservation(result.data);
@@ -425,7 +445,32 @@ export const BookingWidget: React.FC<{
                     <button className="booking-button booking-button--secondary" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button>
                   ) : null}
 
-                  {reservation.pago?.estado !== 'ready' && reservation.pago?.estado !== 'pending' && (
+                  {reservation.transferencia?.estado === 'ready' && reservation.transferencia.destino ? (
+                    <div className="booking-payment">
+                      <div className="booking-payment__heading">
+                        <strong>{c.transferToMp}</strong>
+                        <span>{c.manualConfirmation}</span>
+                      </div>
+                      <p className="booking-payment__instructions">{c.transferInstructions}</p>
+                      {reservation.transferencia.destino.titular && (
+                        <div className="booking-payment__value">
+                          <span className="booking-payment__text"><span>{c.accountHolder}:</span><strong>{reservation.transferencia.destino.titular}</strong></span>
+                        </div>
+                      )}
+                      {reservation.transferencia.destino.alias && (
+                        <div className="booking-payment__value">
+                          <span className="booking-payment__text"><span>{c.alias}:</span><strong>{reservation.transferencia.destino.alias}</strong></span>
+                          <button className="booking-copy-button" type="button" onClick={() => copyValue('alias', reservation.transferencia?.destino?.alias)} aria-label={`${c.copy} ${c.alias}`}>{copied === 'alias' ? c.copied : <Copy size={18} />}</button>
+                        </div>
+                      )}
+                      {reservation.transferencia.destino.cvu && (
+                        <div className="booking-payment__value">
+                          <span className="booking-payment__text"><span>{c.cvu}:</span><strong className="booking-payment__identifier">{reservation.transferencia.destino.cvu}</strong></span>
+                          <button className="booking-copy-button" type="button" onClick={() => copyValue('cvu', reservation.transferencia?.destino?.cvu)} aria-label={`${c.copy} ${c.cvu}`}>{copied === 'cvu' ? c.copied : <Copy size={18} />}</button>
+                        </div>
+                      )}
+                    </div>
+                  ) : reservation.pago?.estado !== 'ready' && reservation.pago?.estado !== 'pending' && (
                     reservation.cuenta_cobro.estado === 'ready' && reservation.cuenta_cobro.destino ? (
                     <div className="booking-payment">
                       <strong>{c.paymentTitle}</strong>
@@ -514,12 +559,28 @@ export const BookingWidget: React.FC<{
                     <label className="booking-field">{c.phone}<input type="tel" value={guest.phone} onChange={event => setGuest({ ...guest, phone: event.target.value })} autoComplete="tel" required /></label>
                     <label className="booking-field">{c.email} <small>{c.optional}</small><input type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} autoComplete="email" /></label>
                   </div>
+                  <p className="booking-section-title" style={{ marginTop: 20 }}>{c.paymentMethod}</p>
+                  <div className="booking-choice-grid">
+                    {quote.metodos_pago.map(option => (
+                      <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>
+                        {option === 'mercado_pago_checkout' ? <CreditCard size={22} /> : <Landmark size={22} />}
+                        {option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}
+                      </button>
+                    ))}
+                  </div>
+                  {paymentMethod === 'transferencia_mp' && (
+                    <label className="booking-field booking-field--full booking-dni-field">
+                      {c.dni}
+                      <input inputMode="numeric" value={payerDni} onChange={event => setPayerDni(event.target.value)} autoComplete="off" pattern="[0-9. -]{7,12}" required />
+                      <small>{c.dniHelp}</small>
+                    </label>
+                  )}
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={20} /> {c.privacyNote}</div>
                   <label className="booking-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank">{c.privacy}</a>.</span></label>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
                   <div className="booking-actions">
                     <button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button>
-                    <button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !consent}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : c.reserve}</button>
+                    <button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : c.reserve}</button>
                   </div>
                 </form>
               ) : (

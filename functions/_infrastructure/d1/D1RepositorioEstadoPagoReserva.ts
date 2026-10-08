@@ -30,6 +30,51 @@ export class D1RepositorioEstadoPagoReserva implements RepositorioEstadoPagoRese
     return this.obtenerEsperadoConFiltro('codigo = ?', codigo);
   }
 
+  async obtenerEsperadosPorTransferencia(
+    documentoHash: string,
+    montoCentavos: number,
+    moneda: string
+  ): Promise<PagoEsperadoReserva[]> {
+    const statement = this.db.prepare(`
+      SELECT r.id, r.estado_flujo, rpm.monto_esperado_centavos monto_centavos,
+             rpm.moneda, r.mp_preference_id
+      FROM reserva_metodos_pago rpm
+      JOIN reservas r ON r.id = rpm.reserva_id
+      WHERE rpm.metodo = 'transferencia_mp'
+        AND rpm.pagador_documento_hash = ?
+        AND rpm.monto_esperado_centavos = ?
+        AND rpm.moneda = ?
+        AND rpm.estado = 'pendiente'
+        AND r.estado_flujo = 'pendiente_pago'
+        AND (r.hold_expires_at IS NULL OR r.hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+      ORDER BY r.created_at DESC
+      LIMIT 2
+    `).bind(documentoHash, montoCentavos, moneda);
+    const rows: Record<string, unknown>[] = [];
+    let row = await statement.first();
+    if (row) rows.push(row);
+    // D1 `first` cannot expose a second row. A count query distinguishes an
+    // ambiguous payment without loading or exposing document data.
+    const count = await this.db.prepare(`
+      SELECT COUNT(*) cantidad
+      FROM reserva_metodos_pago rpm
+      JOIN reservas r ON r.id = rpm.reserva_id
+      WHERE rpm.metodo = 'transferencia_mp'
+        AND rpm.pagador_documento_hash = ? AND rpm.monto_esperado_centavos = ?
+        AND rpm.moneda = ? AND rpm.estado = 'pendiente'
+        AND r.estado_flujo = 'pendiente_pago'
+        AND (r.hold_expires_at IS NULL OR r.hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+    `).bind(documentoHash, montoCentavos, moneda).first();
+    if (Number(count?.cantidad || 0) > 1 && row) rows.push(row);
+    return rows.map(item => ({
+      reservaId: Number(item.id),
+      estadoFlujo: String(item.estado_flujo),
+      montoCentavos: Number(item.monto_centavos),
+      moneda: String(item.moneda),
+      preferenciaId: item.mp_preference_id ? String(item.mp_preference_id) : null,
+    }));
+  }
+
   private async obtenerEsperadoConFiltro(filtro: string, referencia: number | string): Promise<PagoEsperadoReserva | null> {
     const row = await this.db.prepare(`
       SELECT id, estado_flujo,
@@ -149,6 +194,11 @@ export class D1RepositorioEstadoPagoReserva implements RepositorioEstadoPagoRese
       .first();
 
     if (!row) return null;
+    await this.db.prepare(`
+      UPDATE reserva_metodos_pago
+      SET estado = 'confirmado', updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE reserva_id = ?
+    `).bind(reservaId).run();
     return {
       manyChatUserId: row.manychat_user_id ? String(row.manychat_user_id) : null,
       fechaCheckin: String(row.fecha_checkin),

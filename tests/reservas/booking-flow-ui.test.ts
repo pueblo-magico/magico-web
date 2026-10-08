@@ -27,6 +27,8 @@ test('mantiene el flujo dentro del widget en escritorio y protege los datos de p
   assert.match(styles, /\.booking-payment__identifier\s*\{[^}]*white-space:\s*nowrap/s);
   assert.match(source, /reservation\.pago\?\.estado === 'ready'/);
   assert.match(source, /href=\{reservation\.pago\.checkout_url\}/);
+  assert.match(source, /reservation\.transferencia\?\.estado === 'ready'/);
+  assert.match(source, /Esperando acreditación/);
 });
 
 test('los retornos de Mercado Pago consultan el estado persistido y tienen fallback SPA', () => {
@@ -117,6 +119,7 @@ test('envía la clave idempotente y los datos mínimos al crear una reserva', as
     await createPublicReservation({
       quoteCode: 'COT-QA', spaceCode: 'domo-1',
       guest: { name: 'Persona QA', phone: '+5493510000000', email: '' },
+      paymentMethod: 'mercado_pago_checkout',
       idempotencyKey: 'web-reserva-qa',
     });
     assert.equal(requestedUrl, '/api/v1/public/reservas');
@@ -125,6 +128,7 @@ test('envía la clave idempotente y los datos mínimos al crear una reserva', as
       cotizacion_codigo: 'COT-QA',
       espacio_codigo: 'domo-1',
       cliente: { nombre: 'Persona QA', telefono: '+5493510000000', email: null },
+      pago: { metodo: 'mercado_pago_checkout' },
     });
   } finally {
     globalThis.fetch = originalFetch;

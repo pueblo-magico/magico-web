@@ -14,6 +14,8 @@ import { D1RepositorioCheckoutReservaPublica } from '../../../_infrastructure/d1
 import { MercadoPagoCheckoutReservas } from '../../../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
+import { hashDni, normalizarDni } from '../../../_lib/paymentIdentity.ts';
+import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../../../_lib/paymentMethods.ts';
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
@@ -33,6 +35,26 @@ export async function onRequestPost({ request, env }: any) {
   if (!lectura.ok) return lectura.response;
   const body: any = lectura.body;
   const cliente = body.cliente || {};
+  const pagoSolicitado = body.pago || {};
+  const metodoPago = pagoSolicitado.metodo || 'mercado_pago_checkout';
+  const transferenciaConfigurada = configuracionTransferenciaMp(env);
+  if ((metodoPago === 'transferencia_mp' && !transferenciaConfigurada.habilitada) ||
+      !['mercado_pago_checkout', 'transferencia_mp'].includes(metodoPago)) {
+    return jsonPublico(request, 'POST', {
+      error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'El medio de pago seleccionado no está disponible.' },
+    }, 400);
+  }
+  const dni = metodoPago === 'transferencia_mp'
+    ? normalizarDni(pagoSolicitado.pagador?.documento_numero)
+    : null;
+  if (metodoPago === 'transferencia_mp' && !dni) {
+    return jsonPublico(request, 'POST', {
+      error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'Ingresá un DNI válido del titular de la cuenta.' },
+    }, 400);
+  }
+  const documentoHash = dni
+    ? await hashDni(dni, env.PAYMENT_RECONCILIATION_SECRET)
+    : null;
 
   const resultado = await crearReservaPublica({
     cotizacionCodigo: String(body.cotizacion_codigo || ''),
@@ -40,6 +62,9 @@ export async function onRequestPost({ request, env }: any) {
     clienteNombre: String(cliente.nombre || ''),
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
     clienteEmail: cliente.email ? String(cliente.email) : null,
+    metodoPago,
+    pagadorDocumentoHash: documentoHash,
+    pagadorDocumentoUltimos4: dni ? dni.slice(-4) : null,
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
   }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB),
   new D1RepositorioConfiguracionBaseReservas(env.DB));
@@ -92,8 +117,8 @@ export async function onRequestPost({ request, env }: any) {
   }
   let pago: Record<string, unknown> = { proveedor: 'mercado_pago', estado: 'disabled' };
   try {
-    const checkoutHabilitado = env.MP_CHECKOUT_ENABLED === 'true' &&
-      typeof env.MP_ACCESS_TOKEN === 'string' && env.MP_ACCESS_TOKEN.trim().length > 0;
+    const checkoutHabilitado = resultado.valor.metodoPago === 'mercado_pago_checkout' &&
+      checkoutMercadoPagoHabilitado(env);
     const checkout = await prepararCheckoutReservaPublica({
       reservaId: resultado.valor.reservaId,
       habilitado: checkoutHabilitado,
@@ -111,6 +136,19 @@ export async function onRequestPost({ request, env }: any) {
     // La reserva y su retención continúan vigentes si falla el proveedor externo.
     pago = { proveedor: 'mercado_pago', estado: 'failed' };
   }
+  const transferenciaHabilitada = resultado.valor.metodoPago === 'transferencia_mp' &&
+    transferenciaConfigurada.habilitada;
+  const transferencia: Record<string, unknown> = transferenciaHabilitada ? {
+    proveedor: 'mercado_pago_cuenta',
+    estado: 'ready',
+    confirmacion: 'webhook_dni',
+    destino: {
+      ...(transferenciaConfigurada.alias ? { alias: transferenciaConfigurada.alias } : {}),
+      ...(transferenciaConfigurada.cvu ? { cvu: transferenciaConfigurada.cvu } : {}),
+      ...(transferenciaConfigurada.titular ? { titular: transferenciaConfigurada.titular } : {}),
+      moneda: 'ARS',
+    },
+  } : { proveedor: 'mercado_pago_cuenta', estado: 'disabled' };
   return jsonPublico(request, 'POST', {
     data: {
       reserva: {
@@ -121,6 +159,7 @@ export async function onRequestPost({ request, env }: any) {
       },
       cotizacion_codigo: resultado.valor.cotizacionCodigo,
       pago,
+      transferencia,
       cuenta_cobro: cuentaCobro,
     },
     meta: { version: 'v1', idempotente: resultado.valor.idempotente },

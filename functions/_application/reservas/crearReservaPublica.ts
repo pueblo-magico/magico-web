@@ -14,12 +14,15 @@ function error(codigo: ErrorCreacionReserva, mensaje: string): ResultadoCreacion
 }
 
 async function hashSolicitud(solicitud: SolicitudCrearReservaPublica): Promise<string> {
+  const metodoPago = solicitud.metodoPago || 'mercado_pago_checkout';
   const canonica = JSON.stringify({
     cotizacionCodigo: solicitud.cotizacionCodigo,
     espacioCodigo: solicitud.espacioCodigo,
     clienteNombre: solicitud.clienteNombre.trim(),
     clienteTelefono: solicitud.clienteTelefono?.trim() || null,
     clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
+    metodoPago,
+    pagadorDocumentoHash: solicitud.pagadorDocumentoHash || null,
   });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonica));
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
@@ -33,11 +36,22 @@ export async function crearReservaPublica(
   ahora: () => Date = () => new Date(),
   crearUuid: () => string = () => crypto.randomUUID()
 ): Promise<ResultadoCreacionReservaPublica> {
+  const metodoPago = solicitud.metodoPago || 'mercado_pago_checkout';
+  const pagadorDocumentoHash = solicitud.pagadorDocumentoHash || null;
+  const pagadorDocumentoUltimos4 = solicitud.pagadorDocumentoUltimos4 || null;
   if (!solicitud.idempotencyKey || solicitud.idempotencyKey.length < 8 || solicitud.idempotencyKey.length > 128) {
     return error('IDEMPOTENCY_KEY_REQUERIDA', 'Se requiere un Idempotency-Key de 8 a 128 caracteres.');
   }
   if (!solicitud.cotizacionCodigo || !solicitud.espacioCodigo || !solicitud.clienteNombre.trim()) {
     return error('SOLICITUD_INVALIDA', 'Cotización, espacio y nombre son obligatorios.');
+  }
+  const checkoutValido = metodoPago === 'mercado_pago_checkout' &&
+    pagadorDocumentoHash === null && pagadorDocumentoUltimos4 === null;
+  const transferenciaValida = metodoPago === 'transferencia_mp' &&
+    /^[a-f0-9]{64}$/.test(pagadorDocumentoHash) &&
+    /^\d{4}$/.test(pagadorDocumentoUltimos4);
+  if (!checkoutValido && !transferenciaValida) {
+    return error('SOLICITUD_INVALIDA', 'El medio de pago o la identificación del pagador es inválido.');
   }
   if (solicitud.cotizacionCodigo.length > 100 || solicitud.espacioCodigo.length > 100 ||
       solicitud.clienteNombre.trim().length > 120 ||
@@ -85,6 +99,9 @@ export async function crearReservaPublica(
         clienteNombre: solicitud.clienteNombre.trim(),
         clienteTelefono: solicitud.clienteTelefono?.trim() || null,
         clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
+        metodoPago,
+        pagadorDocumentoHash,
+        pagadorDocumentoUltimos4,
       },
       cotizacion,
       requestHash,

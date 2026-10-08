@@ -323,6 +323,11 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     ...env(db),
     MP_CHECKOUT_ENABLED: 'true',
     MP_ACCESS_TOKEN: 'TEST-token-no-log',
+    MP_TRANSFER_ENABLED: 'true',
+    MP_TRANSFER_ALIAS: 'pueblo.magico.test',
+    MP_TRANSFER_CVU: '0000003100012345678901',
+    MP_TRANSFER_ACCOUNT_HOLDER: 'Pueblo Mágico',
+    PAYMENT_RECONCILIATION_SECRET: 'qa-secret-mercado-pago-32-caracteres-minimo',
   };
   const originalFetch = globalThis.fetch;
   const llamadas: Array<{ url: string; method: string; body?: string }> = [];
@@ -346,6 +351,10 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
       proveedor: 'mercado_pago',
       estado: 'ready',
       checkout_url: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1',
+    });
+    assert.deepEqual(body.data.transferencia, {
+      proveedor: 'mercado_pago_cuenta',
+      estado: 'disabled',
     });
     assert.equal(llamadas.length, 2);
     assert.match(llamadas[0].url, new RegExp(`external_reference=${encodeURIComponent(body.data.reserva.codigo)}`));
@@ -384,6 +393,56 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     globalThis.fetch = originalFetch;
     sqlite.close();
   }
+});
+
+test('registra una transferencia por DNI protegido y sólo entonces expone el destino', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const entornoTransferencia = {
+    ...env(db),
+    MP_TRANSFER_ENABLED: 'true',
+    MP_TRANSFER_ALIAS: 'pueblo.magico.test',
+    MP_TRANSFER_CVU: '0000003100012345678901',
+    MP_TRANSFER_ACCOUNT_HOLDER: 'Pueblo Mágico',
+    PAYMENT_RECONCILIATION_SECRET: 'qa-secret-mercado-pago-32-caracteres-minimo',
+  };
+  const request = new Request('https://test/api/v1/public/reservas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-transferencia-dni-0001' },
+    body: JSON.stringify({
+      cotizacion_codigo: quote.data.cotizacion.codigo,
+      espacio_codigo: 'domo-1',
+      cliente: { nombre: 'Huésped Transferencia', email: 'qa@example.test' },
+      pago: {
+        metodo: 'transferencia_mp',
+        pagador: { documento_tipo: 'DNI', documento_numero: '12.345.678' },
+      },
+    }),
+  });
+
+  const response = await crearReserva({ request, env: entornoTransferencia });
+  assert.equal(response.status, 201);
+  const body = await response.json() as any;
+  assert.equal(body.data.pago.estado, 'disabled');
+  assert.deepEqual(body.data.transferencia, {
+    proveedor: 'mercado_pago_cuenta', estado: 'ready', confirmacion: 'webhook_dni',
+    destino: {
+      alias: 'pueblo.magico.test', cvu: '0000003100012345678901',
+      titular: 'Pueblo Mágico', moneda: 'ARS',
+    },
+  });
+  const metodo = sqlite.prepare(`
+    SELECT metodo, pagador_documento_hash, pagador_documento_ultimos4
+    FROM reserva_metodos_pago
+  `).get() as any;
+  assert.equal(metodo.metodo, 'transferencia_mp');
+  assert.match(String(metodo.pagador_documento_hash), /^[a-f0-9]{64}$/);
+  assert.equal(metodo.pagador_documento_ultimos4, '5678');
+  assert.doesNotMatch(
+    JSON.stringify(body),
+    /"pagador_documento_hash"|"pagador_documento_ultimos4"|"documento_numero"/,
+  );
+  sqlite.close();
 });
 
 test('Preview puede provisionar un destino mock visible, durable e idempotente', async () => {
