@@ -5,11 +5,14 @@ import { cotizarEstadia as ejecutarCotizacion } from '../_application/reservas/c
 import type { RepositorioDisponibilidad } from '../_application/reservas/ports.ts';
 import type { Disponibilidad, SolicitudCotizacion, TipoAlojamiento } from '../_domain/reservas/models.ts';
 import { nochesEntre } from '../_domain/reservas/dateRange.ts';
-import { calcularPrecio, mensajePrivacidad } from '../_domain/reservas/pricing.ts';
+import { mensajePrivacidad } from '../_domain/reservas/pricing.ts';
 import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
+import { D1RepositorioTarifas } from '../_infrastructure/d1/D1RepositorioTarifas.ts';
+import { D1RepositorioCotizaciones } from '../_infrastructure/d1/D1RepositorioCotizaciones.ts';
+import { D1RepositorioTarifasAlimentacion } from '../_infrastructure/d1/D1RepositorioTarifasAlimentacion.ts';
 
 export type { Cotizacion, Disponibilidad, TipoAlojamiento } from '../_domain/reservas/models.ts';
-export { calcularPrecio, mensajePrivacidad, nochesEntre };
+export { mensajePrivacidad, nochesEntre };
 
 export async function chequearDisponibilidad(
   db: any,
@@ -31,5 +34,11 @@ export async function cotizarEstadia(
   solicitud: SolicitudCotizacion,
   repositorio?: RepositorioDisponibilidad
 ) {
-  return ejecutarCotizacion(solicitud, repositorio || new D1RepositorioDisponibilidad(db));
+  return ejecutarCotizacion(
+    solicitud,
+    repositorio || new D1RepositorioDisponibilidad(db),
+    new D1RepositorioTarifas(db),
+    new D1RepositorioTarifasAlimentacion(db),
+    new D1RepositorioCotizaciones(db)
+  );
 }

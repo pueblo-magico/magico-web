@@ -54,7 +54,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 migrations apply DB --remote --env preview
+          command: d1 migrations apply DB --remote
 
       - name: Verify preview D1 migration
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -62,7 +62,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-migracion.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-migracion.sql
 
       - name: Verify preview accommodation inventory
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -70,7 +70,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-inventario.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-inventario.sql
 
       - name: Verify preview capacity rules
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -78,7 +78,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-capacidad.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-capacidad.sql
 
       - name: Verify preview security controls
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -86,7 +86,23 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: d1 execute DB --remote --env preview --file=scripts/reservas/verificar-seguridad.sql
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-seguridad.sql
+
+      - name: Verify preview pricing rules
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-tarifas.sql
+
+      - name: Verify preview operational occupancy
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --file=scripts/reservas/verificar-ocupacion-operativa.sql
 
       - name: Deploy Cloudflare Pages preview
         id: deploy
@@ -151,24 +167,31 @@ jobs:
           PREVIEW_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}
         shell: bash
         run: |
-          availability_status=$(curl --silent --show-error --output /tmp/disponibilidad.json --write-out '%{http_code}' "$PREVIEW_URL/api/disponibilidad?desde=2026-11-10&hasta=2026-11-13")
-          test "$availability_status" = "200" || { cat /tmp/disponibilidad.json; exit 1; }
-
-          admin_status=$(curl --silent --show-error --output /tmp/admin-me.json --write-out '%{http_code}' "$PREVIEW_URL/api/admin/me")
-          test "$admin_status" = "401" || { cat /tmp/admin-me.json; echo 'Preview SESSION_SECRET is missing or invalid.'; exit 1; }
-
           correlation_id="smoke-wreserv-10-${{ github.event.pull_request.number }}"
-          for attempt in {1..6}; do
-            reservations_status=$(curl --silent --show-error --dump-header /tmp/admin-reservas.headers --output /tmp/admin-reservas.json --write-out '%{http_code}' --header "X-Request-ID: $correlation_id" "$PREVIEW_URL/api/admin/reservas")
-            if test "$reservations_status" = "401" && grep --ignore-case --quiet "^x-request-id: $correlation_id" /tmp/admin-reservas.headers; then
+          for attempt in {1..12}; do
+            availability_status=$(curl --silent --show-error --max-time 15 --output /tmp/disponibilidad.json --write-out '%{http_code}' "$PREVIEW_URL/api/disponibilidad?desde=2026-11-10&hasta=2026-11-13" || true)
+            admin_status=$(curl --silent --show-error --max-time 15 --output /tmp/admin-me.json --write-out '%{http_code}' "$PREVIEW_URL/api/admin/me" || true)
+            reservations_status=$(curl --silent --show-error --max-time 15 --dump-header /tmp/admin-reservas.headers --output /tmp/admin-reservas.json --write-out '%{http_code}' --header "X-Request-ID: $correlation_id" "$PREVIEW_URL/api/admin/reservas" || true)
+
+            if test "$availability_status" = "200" \
+              && test "$admin_status" = "401" \
+              && test "$reservations_status" = "401" \
+              && grep --ignore-case --quiet "^x-request-id: $correlation_id" /tmp/admin-reservas.headers; then
               break
             fi
-            if test "$attempt" = "6"; then
+
+            if test "$attempt" = "12"; then
+              echo "Availability response ($availability_status):"
+              cat /tmp/disponibilidad.json
+              echo "Admin session response ($admin_status):"
+              cat /tmp/admin-me.json
+              echo "Admin reservations response ($reservations_status):"
               cat /tmp/admin-reservas.headers
               cat /tmp/admin-reservas.json
-              echo 'Preview alias did not converge to the deployment with API middleware.'
+              echo 'Preview alias did not converge to the deployment with the expected API and security middleware.'
               exit 1
             fi
-            echo "Waiting for Cloudflare preview alias propagation (attempt $attempt/6)."
+
+            echo "Waiting for Cloudflare preview alias propagation (attempt $attempt/12; availability=$availability_status, admin=$admin_status, reservations=$reservations_status)."
             sleep 10
           done

@@ -32,6 +32,10 @@ export function verificarReconciliacion(antes, despues) {
   for (const clave of ['reservas_invalidas', 'mp_preference_duplicados', 'mp_payment_duplicados']) {
     assert.equal(despues.get(clave), '0', `${clave} debe quedar en cero`);
   }
+  assert.ok(
+    Number.parseInt(despues.get('super_admin_activo_total') || '0', 10) >= 1,
+    'Debe existir al menos un usuario super_admin activo'
+  );
   return { controlesComparados: new Set(inmutables).size, resultado: 'ok' };
 }
 

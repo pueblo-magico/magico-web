@@ -4,8 +4,7 @@ import type {
   PendienteVieja,
   ReservaPanel,
 } from './models.ts';
-
-const MS_POR_DIA = 86_400_000;
+import { ventanaOperativaCordoba } from './operationalDate.ts';
 
 export function calcularMetricasPanelReservas(
   reservasOperativas: ReservaPanel[],
@@ -14,12 +13,9 @@ export function calcularMetricasPanelReservas(
   umbralDias: number,
   ahora = new Date()
 ): MetricasPanelReservas {
-  // Comportamiento legacy preservado. WRESERV-17 reemplazará UTC por la zona
-  // operativa explícita de Córdoba.
-  const hoy = ahora.toISOString().slice(0, 10);
-  const en7dias = new Date(ahora.getTime() + 7 * MS_POR_DIA).toISOString().slice(0, 10);
+  const { desde: hoy, hastaExclusivo: en7dias } = ventanaOperativaCordoba(ahora, 7);
   const confirmadas = reservasOperativas.filter((reserva) => reserva.estado === 'confirmada');
-  const pendientes = reservasOperativas.filter((reserva) => reserva.estado === 'pendiente');
+  const pendientes = reservasOperativas.filter((reserva) => reserva.estado === 'pendiente_pago');
   const totalManyChat = Number(conversion.total) || 0;
   const confirmadasManyChat = Number(conversion.confirmadas) || 0;
 

@@ -44,7 +44,6 @@ jobs:
           test "${GITHUB_REF_NAME}" = "main"
           test "${CONFIRM_PRODUCTION}" = "PRODUCCION"
           test -n "${PRODUCTION_BASE_URL}"
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -112,6 +111,20 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-seguridad.sql
+
+      - name: Verify production pricing rules
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-tarifas.sql
+
+      - name: Verify production operational occupancy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-ocupacion-operativa.sql
 
       - name: Reconcile production data after migrations
         env:

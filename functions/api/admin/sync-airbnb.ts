@@ -27,6 +27,7 @@
 
 import { parseIcs } from '../../_lib/ical';
 import { requirePermission } from '../../_lib/authGuard';
+import { fechaOperativaCordoba } from '../../_domain/reservas/operationalDate.ts';
 import { registrarAuditoria } from '../../_lib/auditoria';
 
 function json(body: unknown, status = 200) {
@@ -54,7 +55,7 @@ export async function onRequestPost({ request, env }: any) {
   const db = env.DB;
   const { results: alojamientos } = await db.prepare('SELECT id, nombre FROM alojamientos ORDER BY id ASC').all();
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = fechaOperativaCordoba();
   const resumen: Record<string, any> = {};
 
   for (const aloj of alojamientos || []) {

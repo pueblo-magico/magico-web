@@ -4,6 +4,8 @@
 SELECT 'reservas_total' AS control, COUNT(*) AS valor FROM reservas;
 SELECT 'consultas_total' AS control, COUNT(*) AS valor FROM consultas;
 SELECT 'usuarios_admin_total' AS control, COUNT(*) AS valor FROM usuarios_admin;
+SELECT 'super_admin_activo_total' AS control, COUNT(*) AS valor
+FROM usuarios_admin WHERE rol = 'super_admin' AND activo = 1;
 SELECT 'auditoria_admin_total' AS control, COUNT(*) AS valor FROM auditoria_admin;
 
 SELECT 'reservas_monto_total' AS control,

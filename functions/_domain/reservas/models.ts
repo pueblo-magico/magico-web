@@ -1,17 +1,37 @@
+import type { RegimenAlimentacion } from './alimentacion.ts';
+
 export type TipoAlojamiento = 'domo' | 'refugio';
 
 export type Cotizacion = {
   tipo_alojamiento: TipoAlojamiento;
+  modalidad?: 'privada' | 'compartida' | 'camping';
+  contexto?: 'general' | 'retiro';
   cantidad_personas: number;
   noches: number;
-  precio_por_noche: number;
+  precio_por_noche: number | null;
   subtotal: number;
+  alojamiento_centavos: number;
+  alimentacion_centavos: number;
+  regimen_alimentacion: RegimenAlimentacion;
+  tarifa_alimentacion_version: number;
+  precio_comida_centavos: number;
+  comidas_adicionales_por_persona_noche: number;
   exclusividad_gratis: boolean;
+  moneda: string;
+  subtotal_centavos: number;
+  plan_codigo: string;
+  plan_version: number;
+  desglose_noches: Array<{ fecha: string; temporada: string; importe_centavos: number }>;
 };
 
 export type Disponibilidad = {
   estado: 'disponible' | 'ocupado';
   alojamiento_id: number | null;
+  motivo_codigo?: 'DISPONIBLE' | 'INVENTARIO_OCUPADO' | 'CAPACIDAD_INSUFICIENTE' | 'MODALIDAD_NO_DISPONIBLE';
+  espacio_id?: number | null;
+  espacio_codigo?: string | null;
+  modalidad?: 'privada' | 'compartida' | 'camping';
+  capacidad_disponible?: number;
 };
 
 export type SolicitudCotizacion = {
@@ -19,6 +39,9 @@ export type SolicitudCotizacion = {
   personas: number;
   fechaEntrada: string;
   fechaSalida: string;
+  modalidad?: 'privada' | 'compartida' | 'camping';
+  contexto?: 'general' | 'retiro';
+  regimenAlimentacion?: RegimenAlimentacion;
 };
 
 export type ResultadoCotizacion = {
@@ -27,13 +50,20 @@ export type ResultadoCotizacion = {
   sena: {
     porcentaje: number;
     monto: number;
+    monto_centavos: number;
   };
   saldoCheckin: number;
   mensajePrivacidad: string;
+  referencia: {
+    id: number;
+    codigo: string;
+    expiresAt: string;
+  } | null;
 };
 
 export type ErrorCotizacion = {
-  codigo: 'FECHAS_INVALIDAS' | 'OCUPACION_INVALIDA';
+  codigo: 'FECHAS_INVALIDAS' | 'OCUPACION_INVALIDA' | 'REGIMEN_ALIMENTACION_INVALIDO' |
+    'TARIFA_NO_CONFIGURADA' | 'TARIFA_AMBIGUA' | 'TARIFA_ALIMENTACION_NO_CONFIGURADA';
   mensaje: string;
 };
 
@@ -83,6 +113,7 @@ export type AlojamientoPanel = {
 
 export type ReservaPanel = {
   id: number;
+  version: number;
   cliente_nombre: string;
   cliente_telefono: string | null;
   cliente_email: string | null;

@@ -59,8 +59,63 @@ test('lists every page and selects only the requested preview branch', async () 
   );
   assert.equal(requests.length, 2);
   assert.equal(requests[0].url.searchParams.get('env'), 'preview');
+  assert.equal(requests[0].url.searchParams.has('page'), false);
+  assert.equal(requests[0].url.searchParams.has('per_page'), false);
   assert.equal(requests[1].url.searchParams.get('page'), '2');
+  assert.equal(requests[1].url.searchParams.has('per_page'), false);
   assert.equal(requests[0].options.headers.Authorization, 'Bearer token');
+});
+
+test('derives the next page from count metadata without forcing per_page', async () => {
+  const requests = [];
+  const deployments = await listPreviewDeployments({
+    accountId: 'account-id',
+    apiToken: 'token',
+    projectName: 'pueblo-magico-web',
+    branch: 'pr-42',
+    fetchImpl: async url => {
+      const requestUrl = new URL(url);
+      requests.push(requestUrl);
+      const page = requestUrl.searchParams.get('page');
+      return page === '2'
+        ? jsonResponse({
+            success: true,
+            result: [{ id: 'matching-2', deployment_trigger: { metadata: { branch: 'pr-42' } } }],
+            result_info: { page: 2, per_page: 2, total_count: 3 },
+          })
+        : jsonResponse({
+            success: true,
+            result: [
+              { id: 'matching-1', deployment_trigger: { metadata: { branch: 'pr-42' } } },
+              { id: 'other-pr', deployment_trigger: { metadata: { branch: 'pr-41' } } },
+            ],
+            result_info: { page: 1, per_page: 2, total_count: 3 },
+          });
+    },
+  });
+
+  assert.deepEqual(deployments.map(item => item.id), ['matching-1', 'matching-2']);
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].searchParams.has('page'), false);
+  assert.equal(requests[1].searchParams.get('page'), '2');
+  assert.ok(requests.every(url => !url.searchParams.has('per_page')));
+});
+
+test('deduplicates deployments if Cloudflare repeats an item between pages', async () => {
+  let request = 0;
+  const deployments = await listPreviewDeployments({
+    accountId: 'account-id', apiToken: 'token', projectName: 'pueblo-magico-web', branch: 'pr-42',
+    fetchImpl: async () => {
+      request += 1;
+      return jsonResponse({
+        success: true,
+        result: [{ id: 'same-deployment', deployment_trigger: { metadata: { branch: 'pr-42' } } }],
+        result_info: { page: request, total_pages: 2 },
+      });
+    },
+  });
+
+  assert.deepEqual(deployments.map(item => item.id), ['same-deployment']);
 });
 
 test('deletes all matching deployments with force enabled', async () => {
@@ -119,5 +174,15 @@ test('fails with the Cloudflare error message', async () => {
         jsonResponse({ success: false, errors: [{ message: 'Invalid API token' }] }, 403),
     }),
     /Invalid API token/
+  );
+});
+
+test('fails closed when Cloudflare returns a malformed deployment list', async () => {
+  await assert.rejects(
+    listPreviewDeployments({
+      accountId: 'account-id', apiToken: 'token', projectName: 'pueblo-magico-web', branch: 'pr-42',
+      fetchImpl: async () => jsonResponse({ success: true, result: null }),
+    }),
+    /invalid result/
   );
 });

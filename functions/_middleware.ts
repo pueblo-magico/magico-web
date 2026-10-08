@@ -6,6 +6,12 @@ import {
 const OPERACIONES: Record<string, string> = {
   '/api/cotizar': 'public.quote',
   '/api/disponibilidad': 'public.availability',
+  '/api/v1/public/alojamientos': 'public.v1.accommodations',
+  '/api/v1/public/disponibilidad': 'public.v1.availability',
+  '/api/v1/public/cotizaciones': 'public.v1.quotes',
+  '/api/v1/public/reservas': 'public.v1.reservations',
+  '/api/v1/public/arrepentimientos': 'public.v1.withdrawal_requests.create',
+  '/api/v1/integrations/reservas/expirar-retenciones': 'integration.reservations.expire_holds',
   '/api/ical': 'public.calendar',
   '/api/manychat': 'integration.manychat.create_reservation',
   '/api/webhook-mp': 'integration.mercadopago.webhook',
@@ -20,8 +26,11 @@ const OPERACIONES: Record<string, string> = {
   '/api/admin/logout': 'admin.session.delete',
   '/api/admin/me': 'admin.session.read',
   '/api/admin/metricas': 'admin.metrics.read',
+  '/api/admin/ocupacion-operativa': 'admin.operational_occupancy.manage',
+  '/api/admin/politicas-reserva': 'admin.reservation_policies.manage',
   '/api/admin/reservas': 'admin.reservations.read',
   '/api/admin/sync-airbnb': 'admin.calendar.sync',
+  '/api/admin/tarifas': 'admin.rate_plans.manage',
   '/api/admin/usuarios': 'admin.users.manage',
 };
 
@@ -29,6 +38,8 @@ const INSTRUMENTADAS_EN_HANDLER = new Set([
   'GET /api/disponibilidad',
   'POST /api/manychat',
   'POST /api/webhook-mp',
+  'POST /api/v1/integrations/outbox/dispatch',
+  'POST /api/v1/integrations/reservas/expirar-retenciones',
   'GET /api/admin/me',
 ]);
 
@@ -43,6 +54,15 @@ export function operacionApi(request: Request): string {
 
 export function handlerYaInstrumentado(request: Request): boolean {
   const pathname = new URL(request.url).pathname;
+  if (pathname === '/api/v1/admin/reservas') return true;
+  if (pathname === '/api/v1/admin/reservas/panel') return true;
+  if (pathname === '/api/v1/admin/reservas/exportar') return true;
+  if (pathname === '/api/v1/admin/configuracion-reservas') return true;
+  if (pathname === '/api/v1/admin/arrepentimientos') return true;
+  if (/^\/api\/v1\/admin\/arrepentimientos\/[^/]+$/.test(pathname)) return true;
+  if (/^\/api\/v1\/admin\/reservas\/[^/]+$/.test(pathname)) return true;
+  if (/^\/api\/v1\/admin\/reservas\/[^/]+\/estado$/.test(pathname)) return true;
+  if (/^\/api\/v1\/admin\/reservas\/[^/]+\/asignaciones$/.test(pathname)) return true;
   return INSTRUMENTADAS_EN_HANDLER.has(`${request.method.toUpperCase()} ${pathname}`);
 }
 

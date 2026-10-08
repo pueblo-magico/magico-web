@@ -27,7 +27,10 @@ export class D1RepositorioCreacionReserva implements RepositorioCreacionReserva 
     const row = await this.db
       .prepare(
         `SELECT COUNT(*) AS n FROM reservas
-         WHERE alojamiento_id = ? AND estado IN ('pendiente', 'confirmada')
+         WHERE alojamiento_id = ? AND (
+             estado = 'confirmada'
+             OR (estado = 'pendiente' AND (hold_expires_at IS NULL OR hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+           )
          AND fecha_checkin < ? AND fecha_checkout > ?`
       )
       .bind(alojamientoId, fechaCheckout, fechaCheckin)
