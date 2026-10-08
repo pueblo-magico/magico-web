@@ -216,6 +216,8 @@ test('n8n reclama el email y confirma la entrega sin filtrar PII al outbox', asy
   const entrega: any = (await claim.json()).data;
   assert.equal(entrega.destinatario, 'guest@example.test');
   assert.match(entrega.asunto, /We received/);
+  assert.equal(entrega.intento, 1);
+  assert.equal(entrega.max_intentos, 3);
 
   const resultado = await entregarNotificacion({ request: new Request('https://test/api/v1/integrations/arrepentimientos/notificaciones', {
     method: 'POST', headers, body: JSON.stringify({

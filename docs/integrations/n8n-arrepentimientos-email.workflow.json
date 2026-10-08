@@ -1,0 +1,343 @@
+{
+  "name": "Reservas - emails de arrepentimiento",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reservas-eventos",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-eventos-reservas",
+      "name": "Webhook eventos Reservas",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "e555fd1f-7349-47f2-93b0-a3d710d19152"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "auth-bearer-valido",
+              "leftValue": "={{ $json.headers.authorization }}",
+              "rightValue": "={{ 'Bearer ' + $env.INTEGRATION_EVENTS_WEBHOOK_SECRET }}",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validar-secreto-webhook",
+      "name": "Validar secreto webhook",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"accepted\":false,\"error\":\"unauthorized\"}",
+        "options": { "responseCode": 401 }
+      },
+      "id": "respuesta-no-autorizada",
+      "name": "Responder 401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [480, 160]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "tipo-arrepentimiento",
+              "leftValue": "={{ $json.body.event_type }}",
+              "rightValue": "arrepentimiento.notificacion_pendiente",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filtrar-evento-arrepentimiento",
+      "name": "Es email de arrepentimiento",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [480, -40]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"accepted\":true,\"ignored\":true}",
+        "options": { "responseCode": 202 }
+      },
+      "id": "respuesta-evento-ignorado",
+      "name": "Responder evento ignorado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [720, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Integration-Id", "value": "n8n" },
+            { "name": "X-Service-Secret", "value": "={{ $env.N8N_INBOUND_SECRET }}" },
+            { "name": "X-Request-ID", "value": "={{ 'n8n-arrepentimiento-claim-' + $execution.id }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ accion: 'reclamar', notificacion_uid: $json.body.notification_id }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "reclamar-notificacion",
+      "name": "Reclamar notificación",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, -100],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $vars.RESERVAS_EMAIL_FROM }}",
+        "toEmail": "={{ $json.data.destinatario }}",
+        "subject": "={{ $json.data.asunto }}",
+        "emailFormat": "text",
+        "text": "={{ $json.data.cuerpo }}",
+        "options": {}
+      },
+      "id": "enviar-email",
+      "name": "Enviar email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [980, -100],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Integration-Id", "value": "n8n" },
+            { "name": "X-Service-Secret", "value": "={{ $env.N8N_INBOUND_SECRET }}" },
+            { "name": "X-Request-ID", "value": "={{ 'n8n-arrepentimiento-ok-' + $execution.id }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid, claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'entregada' }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "registrar-entregada",
+      "name": "Registrar entregada",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1240, -180],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"accepted\":true,\"delivered\":true}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respuesta-entregada",
+      "name": "Responder entregada",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1500, -180]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "intentos-agotados",
+              "leftValue": "={{ $('Reclamar notificación').item.json.data.intento }}",
+              "rightValue": "={{ $('Reclamar notificación').item.json.data.max_intentos }}",
+              "operator": { "type": "number", "operation": "gte" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "evaluar-intentos",
+      "name": "Agotó intentos",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1240, 20]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Integration-Id", "value": "n8n" },
+            { "name": "X-Service-Secret", "value": "={{ $env.N8N_INBOUND_SECRET }}" },
+            { "name": "X-Request-ID", "value": "={{ 'n8n-arrepentimiento-dead-' + $execution.id }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid, claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'dead_letter', error_code: 'EMAIL_DELIVERY_ERROR' }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "registrar-dead-letter",
+      "name": "Registrar dead letter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, -20],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"accepted\":true,\"dead_letter\":true}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respuesta-dead-letter",
+      "name": "Responder dead letter",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1760, -20]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Integration-Id", "value": "n8n" },
+            { "name": "X-Service-Secret", "value": "={{ $env.N8N_INBOUND_SECRET }}" },
+            { "name": "X-Request-ID", "value": "={{ 'n8n-arrepentimiento-retry-' + $execution.id }}" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid, claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'retry', error_code: 'EMAIL_DELIVERY_ERROR' }) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "registrar-retry",
+      "name": "Registrar retry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 120],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "stopWorkflow"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"accepted\":false,\"retry\":true}",
+        "options": { "responseCode": 503 }
+      },
+      "id": "respuesta-retry",
+      "name": "Responder retry",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1760, 120]
+    }
+  ],
+  "connections": {
+    "Webhook eventos Reservas": {
+      "main": [[{ "node": "Validar secreto webhook", "type": "main", "index": 0 }]]
+    },
+    "Validar secreto webhook": {
+      "main": [
+        [{ "node": "Es email de arrepentimiento", "type": "main", "index": 0 }],
+        [{ "node": "Responder 401", "type": "main", "index": 0 }]
+      ]
+    },
+    "Es email de arrepentimiento": {
+      "main": [
+        [{ "node": "Reclamar notificación", "type": "main", "index": 0 }],
+        [{ "node": "Responder evento ignorado", "type": "main", "index": 0 }]
+      ]
+    },
+    "Reclamar notificación": {
+      "main": [[{ "node": "Enviar email", "type": "main", "index": 0 }]]
+    },
+    "Enviar email": {
+      "main": [
+        [{ "node": "Registrar entregada", "type": "main", "index": 0 }],
+        [{ "node": "Agotó intentos", "type": "main", "index": 0 }]
+      ]
+    },
+    "Registrar entregada": {
+      "main": [[{ "node": "Responder entregada", "type": "main", "index": 0 }]]
+    },
+    "Agotó intentos": {
+      "main": [
+        [{ "node": "Registrar dead letter", "type": "main", "index": 0 }],
+        [{ "node": "Registrar retry", "type": "main", "index": 0 }]
+      ]
+    },
+    "Registrar dead letter": {
+      "main": [[{ "node": "Responder dead letter", "type": "main", "index": 0 }]]
+    },
+    "Registrar retry": {
+      "main": [[{ "node": "Responder retry", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "timezone": "America/Argentina/Cordoba",
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 60
+  },
+  "active": false,
+  "versionId": "57efc40a-88dd-4905-a90c-4c6629e740d7",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

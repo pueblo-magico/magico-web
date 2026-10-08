@@ -29,6 +29,8 @@ async function procesar(request: Request, env: any): Promise<Response> {
         notificacion_uid: entrega.notificacionUid,
         claim_uid: entrega.claimUid,
         delivery_uid: entrega.deliveryUid,
+        intento: entrega.intento,
+        max_intentos: entrega.maxIntentos,
         canal: 'email',
         destinatario: entrega.destinatario,
         asunto: entrega.asunto,
