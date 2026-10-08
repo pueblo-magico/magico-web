@@ -20,7 +20,10 @@ import {
   onRequestGet as listarAdmin,
   onRequestPost as crearAdmin,
 } from '../../functions/api/v1/admin/reservas/index.ts';
-import { onRequestPatch as editarAdmin } from '../../functions/api/v1/admin/reservas/[id]/index.ts';
+import {
+  onRequestGet as detalleAdmin,
+  onRequestPatch as editarAdmin,
+} from '../../functions/api/v1/admin/reservas/[id]/index.ts';
 import { onRequestPost as cambiarEstadoAdmin } from '../../functions/api/v1/admin/reservas/[id]/estado.ts';
 import { onRequestGet as consultarPanelAdmin } from '../../functions/api/v1/admin/reservas/panel.ts';
 
@@ -252,6 +255,33 @@ test('el contrato v1 crea, edita y cancela con sesión, CSRF y versión optimist
   });
   assert.equal(panel.status, 200);
   assert.ok((await panel.json() as any).data.alojamientos.length >= 3);
+
+  sqlite.prepare(`
+    INSERT INTO cuentas_cobro_reserva (
+      reserva_id, proveedor, customer_id, estado, external_account_id, cvu,
+      alias, moneda, intentos, ultima_operacion_uid, simulada, ready_at
+    ) VALUES (?, 'cucuru', ?, 'ready', ?, ?, ?, 'ARS', 1, ?, 1, ?)
+  `).run(
+    reservaCreada.id, 'customer-interno-no-exponer', 'external-interno-no-exponer',
+    '9912345678901234567891', 'magico.qa.contrato', 'cuenta-contrato-admin',
+    '2099-12-01T12:00:00.000Z'
+  );
+  const detalle = await detalleAdmin({
+    request: new Request(`https://test/api/v1/admin/reservas/${reservaCreada.id}`, {
+      headers: { Cookie: cookie },
+    }), env, params: { id: String(reservaCreada.id) },
+  });
+  assert.equal(detalle.status, 200);
+  const cuentaCobro = (await detalle.json() as any).data.reserva.cuentaCobro;
+  assert.deepEqual(cuentaCobro, {
+    proveedor: 'cucuru_mock', estado: 'ready', simulada: true,
+    cvu: '9912345678901234567891', alias: 'magico.qa.contrato', moneda: 'ARS',
+    intentos: 1, ultimoErrorCodigo: null, proximoReintentoAt: null,
+    ultimoIntentoAt: null, listaAt: '2099-12-01T12:00:00.000Z',
+    revisionesPendientes: 0,
+  });
+  assert.equal(JSON.stringify(cuentaCobro).includes('customer-interno-no-exponer'), false);
+  assert.equal(JSON.stringify(cuentaCobro).includes('external-interno-no-exponer'), false);
 
   const editada = await editarAdmin({
     request: new Request(`https://test/api/v1/admin/reservas/${reservaCreada.id}`, {
