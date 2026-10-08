@@ -62,6 +62,12 @@ test('las identidades de servicio tienen secretos y alcances mínimos', () => {
     MANYCHAT_INBOUND_SECRET: 'manychat-secret-seguro-123456',
     OUTBOX_DISPATCH_SECRET: 'outbox-secret-seguro-123456789',
   };
+  assert.equal(autenticarServicio(
+    'manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:disponibilidad'
+  ), true);
+  assert.equal(autenticarServicio(
+    'manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:cotizar'
+  ), true);
   assert.equal(autenticarServicio('manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:crear'), true);
   assert.equal(autenticarServicio('manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:leer'), false);
   assert.equal(autenticarServicio('manychat', 'incorrecto', env, 'reservas:crear'), false);
