@@ -49,7 +49,7 @@ assert.equal(db.prepare('SELECT cliente_nombre FROM reservas WHERE id = ?').get(
 assert.equal(db.prepare('PRAGMA foreign_key_check').all().length, 0);
 assert.deepEqual(
   db.prepare('SELECT version FROM schema_migrations ORDER BY version').all().map(row => row.version),
-  ['0001', '0002', '0003', '0004', '0005']
+  migraciones.map(nombre => nombre.slice(0, 4))
 );
 db.close();
 if (carpeta) rmSync(carpeta, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
