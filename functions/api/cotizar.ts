@@ -45,7 +45,11 @@ export async function onRequestPost({ request, env }: any) {
     return respuestaJsonInvalido(error, headers);
   }
 
-  const { fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento } = body || {};
+  const {
+    fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento,
+    modalidad, contexto,
+    regimen_alimentacion,
+  } = body || {};
 
   if (!fecha_entrada || !fecha_salida || !cantidad_personas || !tipo_alojamiento) {
     return json(
@@ -61,12 +65,25 @@ export async function onRequestPost({ request, env }: any) {
   if (!Number.isInteger(personas) || personas < 1) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400, headers);
   }
+  if (modalidad !== undefined && !['privada', 'compartida'].includes(modalidad)) {
+    return json({ error: "modalidad debe ser 'privada' o 'compartida'." }, 400, headers);
+  }
+  if (contexto !== undefined && !['general', 'retiro'].includes(contexto)) {
+    return json({ error: "contexto debe ser 'general' o 'retiro'." }, 400, headers);
+  }
+  if (regimen_alimentacion !== undefined &&
+      !['desayuno_incluido', 'pension_completa'].includes(regimen_alimentacion)) {
+    return json({ error: "regimen_alimentacion debe ser 'desayuno_incluido' o 'pension_completa'." }, 400, headers);
+  }
 
   const resultado = await cotizarEstadia(env.DB, {
     tipo: tipo_alojamiento,
     personas,
     fechaEntrada: fecha_entrada,
     fechaSalida: fecha_salida,
+    modalidad,
+    contexto,
+    regimenAlimentacion: regimen_alimentacion,
   });
   if (resultado.ok === false) {
     return json({ error: resultado.error.mensaje }, 400, headers);
@@ -84,6 +101,10 @@ export async function onRequestPost({ request, env }: any) {
       sena: cotizacion.sena,
       saldo_checkin: cotizacion.saldoCheckin,
       mensaje_privacidad: cotizacion.mensajePrivacidad,
+      cotizacion: cotizacion.referencia,
+      moneda: cotizacion.desglose.moneda,
+      subtotal_centavos: cotizacion.desglose.subtotal_centavos,
+      sena_centavos: cotizacion.sena.monto_centavos,
     },
     200,
     headers

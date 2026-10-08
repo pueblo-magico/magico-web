@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { UpdateBanner } from './components/UpdateBanner';
+import { WithdrawalAccessLink } from './components/WithdrawalAccessLink';
 import './src/i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Main from './Main';
@@ -37,6 +38,8 @@ const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
+const BotonArrepentimiento = lazy(() => import('./src/BotonArrepentimiento'));
+const EstadoPagoReserva = lazy(() => import('./src/EstadoPagoReserva'));
 
 const ScrollToTop: React.FC = () => {
   const { pathname, hash } = useLocation();
@@ -84,6 +87,7 @@ root.render(
           <ScrollToTop />
           <UpdateBanner />
           <PWAInstallBanner />
+          <WithdrawalAccessLink />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Main />} />
@@ -112,7 +116,11 @@ root.render(
               <Route path="/coliving" element={<Coliving />} />
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
               <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
+              <Route path="/boton-de-arrepentimiento" element={<BotonArrepentimiento />} />
               <Route path="/admin/reservas" element={<PanelReservas />} />
+              <Route path="/reserva-confirmada" element={<EstadoPagoReserva returnState="success" />} />
+              <Route path="/reserva-pendiente" element={<EstadoPagoReserva returnState="pending" />} />
+              <Route path="/reserva-fallida" element={<EstadoPagoReserva returnState="failure" />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

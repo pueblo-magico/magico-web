@@ -8,6 +8,8 @@ import {
 import { onRequestGet as sesionAdmin } from '../../functions/api/admin/me.ts';
 import { onRequestPost as manyChat } from '../../functions/api/manychat.ts';
 import { onRequestPost as webhookMercadoPago } from '../../functions/api/webhook-mp.ts';
+import { onRequestGet as tarifasAdmin } from '../../functions/api/admin/tarifas.ts';
+import { onRequestGet as ocupacionOperativaAdmin } from '../../functions/api/admin/ocupacion-operativa.ts';
 
 const dbRateLimit = {
   prepare() {
@@ -17,6 +19,15 @@ const dbRateLimit = {
     };
   },
 };
+
+async function firmaWebhook(secret: string, paymentId: string, requestId: string, timestamp: string): Promise<string> {
+  const manifest = `id:${paymentId};request-id:${requestId};ts:${timestamp};`;
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const bytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(manifest));
+  return [...new Uint8Array(bytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
 
 test('contrato público devuelve JSON, CORS y correlación para un rango inválido', async () => {
   const response = await disponibilidad({
@@ -58,6 +69,24 @@ test('contrato administrativo no expone datos sin sesión', async () => {
   assert.deepEqual(await response.json(), { error: 'No autenticado.' });
 });
 
+test('contrato de tarifas no permite leer configuración sin sesión administrativa', async () => {
+  const response = await tarifasAdmin({
+    request: new Request('https://test/api/admin/tarifas'),
+    env: { SESSION_SECRET: 'session-secret-seguro-de-al-menos-32-caracteres' },
+  });
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'No autenticado.' });
+});
+
+test('contrato de ocupación operativa no expone bloqueos sin sesión', async () => {
+  const response = await ocupacionOperativaAdmin({
+    request: new Request('https://test/api/admin/ocupacion-operativa'),
+    env: { SESSION_SECRET: 'session-secret-seguro-de-al-menos-32-caracteres' },
+  });
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'No autenticado.' });
+});
+
 test('contrato de integración rechaza credenciales ausentes antes de procesar datos', async () => {
   const response = await manyChat({
     request: new Request('https://test/api/manychat', {
@@ -92,12 +121,7 @@ test('contrato de webhook acepta firma válida y consulta el pago sin exponer su
   const paymentId = 'payment-contract-2';
   const requestId = 'contract-webhook-2';
   const timestamp = '1700000000';
-  const manifest = `id:${paymentId};request-id:${requestId};ts:${timestamp};`;
-  const key = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
-  const bytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(manifest));
-  const signature = [...new Uint8Array(bytes)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+  const signature = await firmaWebhook(secret, paymentId, requestId, timestamp);
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response(JSON.stringify({
     id: paymentId,
@@ -120,6 +144,35 @@ test('contrato de webhook acepta firma válida y consulta el pago sin exponer su
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('X-Request-ID'), requestId);
     assert.equal(await response.text(), 'OK');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('contrato de webhook solicita reintento cuando Mercado Pago no está disponible', async () => {
+  const secret = 'webhook-secret-retry';
+  const paymentId = 'payment-contract-retry';
+  const requestId = 'contract-webhook-retry';
+  const timestamp = '1700000001';
+  const signature = await firmaWebhook(secret, paymentId, requestId, timestamp);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('{}', { status: 503 });
+
+  try {
+    const response = await webhookMercadoPago({
+      request: new Request(`https://test/api/webhook-mp?data.id=${paymentId}`, {
+        method: 'POST',
+        headers: {
+          'X-Request-ID': requestId,
+          'x-signature': `ts=${timestamp},v1=${signature}`,
+        },
+      }),
+      env: { DB: dbRateLimit, MP_WEBHOOK_SECRET: secret, MP_ACCESS_TOKEN: 'token-de-prueba' },
+    });
+
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('X-Request-ID'), requestId);
+    assert.equal(await response.text(), 'Proveedor temporalmente no disponible');
   } finally {
     globalThis.fetch = originalFetch;
   }

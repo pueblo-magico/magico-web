@@ -21,6 +21,11 @@ test('la matriz RBAC impide escalamiento y separa pagos, usuarios y PII', () => 
   assert.equal(rolTienePermiso('viewer', 'reservas.editar'), false);
   assert.equal(rolTienePermiso('editor', 'reservas.cancelar'), true);
   assert.equal(rolTienePermiso('editor', 'reservas.pagos.gestionar'), false);
+  assert.equal(rolTienePermiso('editor', 'reservas.tarifas.gestionar'), false);
+  assert.equal(rolTienePermiso('editor', 'reservas.configuracion.leer'), true);
+  assert.equal(rolTienePermiso('editor', 'reservas.configuracion.gestionar'), false);
+  assert.equal(rolTienePermiso('super_admin', 'reservas.configuracion.gestionar'), true);
+  assert.equal(rolTienePermiso('super_admin', 'reservas.tarifas.gestionar'), true);
   assert.equal(rolTienePermiso('editor', 'usuarios.gestionar'), false);
   assert.equal(rolTienePermiso('super_admin', 'datos_personales.anonimizar'), true);
 });
@@ -53,11 +58,33 @@ test('la sesión firmada rechaza manipulación y CSRF ausente', async () => {
 });
 
 test('las identidades de servicio tienen secretos y alcances mínimos', () => {
-  const env = { MANYCHAT_INBOUND_SECRET: 'manychat-secret-seguro-123456' };
+  const env = {
+    MANYCHAT_INBOUND_SECRET: 'manychat-secret-seguro-123456',
+    N8N_INBOUND_SECRET: 'n8n-secret-seguro-123456789',
+    OUTBOX_DISPATCH_SECRET: 'outbox-secret-seguro-123456789',
+  };
+  assert.equal(autenticarServicio(
+    'manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:disponibilidad'
+  ), false);
+  assert.equal(autenticarServicio(
+    'manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:cotizar'
+  ), false);
   assert.equal(autenticarServicio('manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:crear'), true);
   assert.equal(autenticarServicio('manychat', env.MANYCHAT_INBOUND_SECRET, env, 'reservas:leer'), false);
   assert.equal(autenticarServicio('manychat', 'incorrecto', env, 'reservas:crear'), false);
   assert.equal(autenticarServicio('manychat', '', {}, 'reservas:crear'), false);
+  assert.equal(autenticarServicio(
+    'n8n', env.N8N_INBOUND_SECRET, env, 'reservas:disponibilidad'
+  ), true);
+  assert.equal(autenticarServicio('n8n', env.N8N_INBOUND_SECRET, env, 'reservas:cotizar'), true);
+  assert.equal(autenticarServicio('n8n', env.N8N_INBOUND_SECRET, env, 'reservas:crear'), true);
+  assert.equal(autenticarServicio('n8n', env.N8N_INBOUND_SECRET, env, 'consultas:crear'), true);
+  assert.equal(autenticarServicio(
+    'outbox', env.OUTBOX_DISPATCH_SECRET, env, 'integraciones:despachar'
+  ), true);
+  assert.equal(autenticarServicio(
+    'outbox', env.OUTBOX_DISPATCH_SECRET, env, 'reservas:crear'
+  ), false);
 });
 
 test('la lectura JSON rechaza content type, arrays y cuerpos grandes', async () => {

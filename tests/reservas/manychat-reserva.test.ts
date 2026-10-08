@@ -4,10 +4,14 @@ import test from 'node:test';
 import { iniciarReservaManyChat } from '../../functions/_application/reservas/iniciarReservaManyChat.ts';
 import type {
   ProveedorCheckoutReserva,
+  RepositorioCotizaciones,
   RepositorioDisponibilidad,
+  RepositorioTarifas,
+  RepositorioTarifasAlimentacion,
   RepositorioReservasManyChat,
   ReservaPendienteManyChat,
 } from '../../functions/_application/reservas/ports.ts';
+import type { ConfiguracionTarifa } from '../../functions/_domain/reservas/ratePlans.ts';
 import { D1RepositorioReservasManyChat } from '../../functions/_infrastructure/d1/D1RepositorioReservasManyChat.ts';
 import { MercadoPagoCheckoutReservas } from '../../functions/_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 
@@ -30,6 +34,24 @@ function disponibilidad(alojamientoId: number | null): RepositorioDisponibilidad
   };
 }
 
+const plan: ConfiguracionTarifa = {
+  planId: 1, codigo: 'base', version: 1, moneda: 'ARS',
+  reglasPrecio: [{ temporadaCodigo: 'base', fechaDesde: '2000-01-01', fechaHasta: '2099-12-31', prioridad: 0,
+    tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 7,
+    baseCalculo: 'unidad_noche', importeCentavos: 7_500_000, exclusividadDesde: null, exclusividadHasta: null }],
+  reglasSena: [{ subtotalDesdeCentavos: 0, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 3000 }],
+};
+const tarifas: RepositorioTarifas = { async obtenerPublicada() { return plan; } };
+const tarifasAlimentacion: RepositorioTarifasAlimentacion = {
+  async obtenerPublicada(regimen) {
+    return { codigo: regimen, version: 1, moneda: 'ARS', precioComidaCentavos: 2_000_000,
+      comidasAdicionalesPorPersonaNoche: regimen === 'pension_completa' ? 2 : 0 };
+  },
+};
+const cotizaciones: RepositorioCotizaciones = {
+  async guardar() { return { id: 70, codigo: 'COT-70', expiresAt: '2026-10-01T00:15:00.000Z' }; },
+};
+
 test('inicia una reserva ManyChat y persiste la preferencia de pago', async () => {
   const creadas: ReservaPendienteManyChat[] = [];
   const preferencias: unknown[][] = [];
@@ -46,6 +68,9 @@ test('inicia una reserva ManyChat y persiste la preferencia de pago', async () =
   const resultado = await iniciarReservaManyChat(
     solicitud,
     disponibilidad(3),
+    tarifas,
+    tarifasAlimentacion,
+    cotizaciones,
     reservas,
     checkout
   );
@@ -72,10 +97,15 @@ test('devuelve validación u ocupado sin crear una reserva', async () => {
   const invalida = await iniciarReservaManyChat(
     { ...solicitud, fechaSalida: solicitud.fechaEntrada },
     disponibilidad(3),
+    tarifas,
+    tarifasAlimentacion,
+    cotizaciones,
     reservas,
     checkout
   );
-  const ocupada = await iniciarReservaManyChat(solicitud, disponibilidad(null), reservas, checkout);
+  const ocupada = await iniciarReservaManyChat(
+    solicitud, disponibilidad(null), tarifas, tarifasAlimentacion, cotizaciones, reservas, checkout
+  );
 
   assert.equal(invalida.estado, 'error_validacion');
   assert.deepEqual(ocupada, { estado: 'ocupado' });
@@ -86,6 +116,9 @@ test('distingue fallas de creación y de pago conservando la reserva pendiente',
   const sinId = await iniciarReservaManyChat(
     solicitud,
     disponibilidad(3),
+    tarifas,
+    tarifasAlimentacion,
+    cotizaciones,
     {
       async crearPendiente() { return { id: undefined }; },
       async guardarPreferenciaPago() {},
@@ -95,6 +128,9 @@ test('distingue fallas de creación y de pago conservando la reserva pendiente',
   const pagoFallido = await iniciarReservaManyChat(
     solicitud,
     disponibilidad(3),
+    tarifas,
+    tarifasAlimentacion,
+    cotizaciones,
     {
       async crearPendiente() { return { id: 55 }; },
       async guardarPreferenciaPago() {},
@@ -110,6 +146,9 @@ test('también trata como error de pago una preferencia que no puede persistirse
   const resultado = await iniciarReservaManyChat(
     solicitud,
     disponibilidad(3),
+    tarifas,
+    tarifasAlimentacion,
+    cotizaciones,
     {
       async crearPendiente() { return { id: 56 }; },
       async guardarPreferenciaPago() { throw new Error('D1 temporalmente no disponible'); },
@@ -148,12 +187,13 @@ test('el repositorio D1 encapsula creación pendiente y referencia de pago', asy
     montoTotal: 200_000,
     montoSena: 100_000,
     manyChatUserId: 'mc-123',
+    cotizacionId: 70,
   });
   await repository.guardarPreferenciaPago(61, 'pref-61');
 
   assert.deepEqual(creada, { id: 61 });
   assert.deepEqual(calls[0].values, [
-    'ManyChat #mc-123', 3, '2026-10-10', '2026-10-12', 2, 200_000, 100_000, 'mc-123',
+    'ManyChat #mc-123', 3, '2026-10-10', '2026-10-12', 2, 200_000, 100_000, 'mc-123', 70,
   ]);
   assert.deepEqual(calls[1].values, ['pref-61', 61]);
 });
@@ -173,7 +213,7 @@ test('el repositorio D1 conserva undefined si la inserción no devuelve fila', a
   assert.deepEqual(await repository.crearPendiente({
     clienteNombre: 'ManyChat #x', alojamientoId: 1,
     fechaCheckin: '2026-10-10', fechaCheckout: '2026-10-11',
-    cantidadPersonas: 1, montoTotal: 1, montoSena: 1, manyChatUserId: 'x',
+    cantidadPersonas: 1, montoTotal: 1, montoSena: 1, manyChatUserId: 'x', cotizacionId: 1,
   }), { id: undefined });
 });
 

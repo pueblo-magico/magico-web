@@ -46,14 +46,11 @@ El workflow hace un smoke test y exige que `/api/admin/me` responda `401` sin
 cookie. Un `503` indica que `SESSION_SECRET` falta o no alcanza la longitud
 mínima; en ese caso la preview no se considera válida.
 
-Do not configure the production `MANYCHAT_API_KEY` in preview. When
-`MANYCHAT_API_KEY` or `MANYCHAT_CONFIRMATION_FLOW_NS` is absent, payment state
-continues to update in preview D1 and the outbound ManyChat notification is
-skipped without failing the webhook.
-
-Set `MANYCHAT_NOTIFICATIONS_ENABLED=false` in preview as an explicit kill
-switch. This prevents outbound calls even if a stale or placeholder API-key
-secret remains configured.
+Do not configure the production `MANYCHAT_API_KEY` in preview. The reservation
+and payment flows no longer call ManyChat directly: they persist channel-neutral
+communication intents. The legacy outbound ManyChat variables are inactive and
+should remain absent. `MANYCHAT_NOTIFICATIONS_ENABLED=false` may be retained as
+an explicit legacy kill switch until that code is removed.
 
 Mercado Pago preferences created from a preview request use that preview's
 origin for `notification_url`; they never point to the production webhook.

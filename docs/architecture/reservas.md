@@ -23,7 +23,7 @@ Las dependencias siempre apuntan hacia el dominio. Un caso de uso no importa un 
 La cotización compartida por `/api/cotizar` y `/api/manychat` usa ahora `cotizarEstadia`. El caso de uso coordina:
 
 1. Validación del rango de fechas.
-2. Regla de precio legacy, aislada para ser reemplazada por WRESERV-25.
+2. Selección del plan tarifario publicado y cálculo por noche, temporada, modalidad y ocupación.
 3. Consulta de disponibilidad a través de `RepositorioDisponibilidad`.
 4. Cálculo de seña y saldo.
 
@@ -43,20 +43,31 @@ Las interfaces HTTP de reservas usan `jsonReserva` y `respuestaErrorReserva`. Lo
 
 La integración de ManyChat usa `iniciarReservaManyChat`, el mismo caso de uso de cotización, un repositorio D1 para la reserva pendiente y un adaptador de Mercado Pago. El handler conserva autenticación, validación y traducción del resultado externo, sin SQL ni llamadas directas al proveedor de pagos. `MANYCHAT_INBOUND_SECRET` autentica exclusivamente las solicitudes entrantes; nunca se reutiliza como credencial de la API pública. La URL de notificación de Mercado Pago conserva el origen de la solicitud, por lo que una preferencia creada en preview vuelve al webhook de preview y no al productivo.
 
-El webhook de Mercado Pago conserva la validación HMAC en la interfaz HTTP y delega la consulta del pago, la transición de reserva y la notificación de ManyChat a puertos separados mediante `procesarPagoMercadoPago`. La salida a ManyChat solo se habilita cuando existen `MANYCHAT_API_KEY` y `MANYCHAT_CONFIRMATION_FLOW_NS`, y se apaga explícitamente con `MANYCHAT_NOTIFICATIONS_ENABLED=false`; sin ellas, la confirmación de D1 continúa con un notificador nulo. La firma, reintentos e idempotencia integral se endurecen en WRESERV-13.
+El webhook de Mercado Pago conserva la validación HMAC en la interfaz HTTP y delega la consulta del pago y la transición de reserva a `procesarPagoMercadoPago`. La confirmación persiste un evento de dominio; un proyector D1 crea después una intención de comunicación independiente del canal. El webhook no conoce ManyChat, correo ni ningún proveedor de mensajería. La firma, reintentos e idempotencia integral se endurecen en WRESERV-13.
+
+Las comunicaciones de reservas siguen el diseño documentado en `comunicaciones-reservas.md`: eventos durables, plantillas versionadas, entrega desacoplada, errores seguros y reproceso auditado. La reserva y el pago continúan aunque no exista un canal habilitado.
+
+El checkout público de Mercado Pago reutiliza ese mismo webhook y se activa de
+forma explícita con `MP_CHECKOUT_ENABLED=true`. La reserva se persiste antes de
+llamar al proveedor; `prepararCheckoutReservaPublica` coordina el intento y
+`D1RepositorioCheckoutReservaPublica` conserva la preferencia en el ledger de
+pagos. Las nuevas preferencias usan el código global `RES-…` como referencia,
+mientras el procesador conserva compatibilidad con referencias numéricas
+legacy. Los redirects nunca confirman el pago: sólo consultan el estado mínimo
+persistido mediante la API pública.
 
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.
 - No duplicar reglas entre web, administración, ManyChat o webhooks.
 - Los cambios de comportamiento requieren pruebas de dominio o contrato.
-- Los importes actuales siguen siendo legacy; WRESERV-25 definirá unidades menores y snapshots versionados.
+- Los importes se guardan como enteros en unidades menores. Cada cotización persiste un snapshot versionado e inmutable del plan tarifario utilizado; ver `tarifas-reservas.md`.
 - El esquema actual no se modifica dentro de WRESERV-5.
 
 ## Estrategia de pruebas
 
 - Node 24 ejecuta las pruebas unitarias TypeScript sin una capa adicional de runtime.
 - `npm run test:reservas` ejecuta dominio, aplicación, límites arquitectónicos y adaptadores aislados.
-- `npm run test:reservas:coverage` exige como mínimo 90% de líneas, 85% de ramas y 100% de funciones sobre los módulos cargados.
-- Los repositorios D1 se prueban primero como adaptadores aislados; WRESERV-6/WRESERV-10 incorporarán una base D1 real para integración.
+- `npm run test:reservas:coverage` mantiene umbrales de regresión de 85% de líneas, 75% de ramas y 90% de funciones sobre los módulos cargados. No se agregan pruebas para alcanzar un porcentaje: se priorizan reglas de negocio, contratos HTTP, autorización, adaptadores D1, migraciones e integraciones.
+- Los repositorios D1 se prueban como adaptadores y, para los flujos críticos, contra SQLite efímero aplicando las mismas migraciones SQL que despliega Cloudflare D1.
 - Playwright queda reservado para contratos de navegador y administración cuando exista un ambiente de prueba con Chromium instalado.

@@ -24,8 +24,8 @@ export class D1RepositorioReservasManyChat implements RepositorioReservasManyCha
     const row = await this.db
       .prepare(
         `INSERT INTO reservas
-          (cliente_nombre, alojamiento_id, fecha_checkin, fecha_checkout, cantidad_personas, monto_total, monto_sena, estado, manychat_user_id, canal_origen)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, 'ManyChat')
+          (cliente_nombre, alojamiento_id, fecha_checkin, fecha_checkout, cantidad_personas, monto_total, monto_sena, estado, manychat_user_id, canal_origen, cotizacion_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, 'ManyChat', ?)
          RETURNING id`
       )
       .bind(
@@ -36,7 +36,8 @@ export class D1RepositorioReservasManyChat implements RepositorioReservasManyCha
         reserva.cantidadPersonas,
         reserva.montoTotal,
         reserva.montoSena,
-        reserva.manyChatUserId
+        reserva.manyChatUserId,
+        reserva.cotizacionId
       )
       .first();
 

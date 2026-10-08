@@ -39,10 +39,43 @@ son iniciales y deben ajustarse con tráfico real, conservando el evento estable
 | P2 | `event=payment.webhook_rejected`, 10 eventos | 10 min | revisar secreto, firma y origen; no copiar payloads a Jira |
 | P2 | `event=reservation.conflict`, 10 eventos | 10 min | revisar disponibilidad y concurrencia |
 | P2 | `event=notification.delivery_failed`, 5 eventos | 15 min | revisar canal; la reserva confirmada no se revierte |
+| P2 | `event=reservation.hold_expiration_failed`, 1 evento | inmediata | revisar el job y reintentar; una retención vencida deja de bloquear disponibilidad por fecha |
+| P2 | `event=outbox.dispatch_failed`, 3 eventos | 5 min | revisar flag, destino y conectividad usando `request_id` |
+| P2 | `event=outbox.batch_dispatched outcome=dead_letter`, 1 evento | inmediata | revisar el evento en el panel y reprocesar sólo con motivo auditado |
 
-Los eventos `outbox.pending`, `dlq.growing` y `calendar.conflict` quedan
-reservados para los tickets que incorporen esos componentes. No configurar una
-alerta que aparente cobertura antes de que exista su productor.
+La pestaña **Integraciones** del panel calcula además alertas visibles y sin PII
+para retenciones vencidas, outbox con más de 15 minutos, dead letter, tasa de
+error superior al 20 % con al menos cinco intentos, comunicaciones sin canal y
+webhooks de Mercado Pago inconsistentes.
+También compara los pendientes creados en los últimos 15 minutos con los 15
+minutos anteriores. Si una cola suma al menos cinco elementos y sigue creciendo,
+muestra una alerta de presión de cola.
+
+## Recuperación operativa desde el panel
+
+1. Abrir **Administración > Integraciones** y pulsar **Actualizar**. Empezar por
+   las alertas rojas y copiar únicamente el código de reserva, evento o
+   correlación; nunca copiar payloads ni datos del huésped a un incidente.
+2. Si hay retenciones vencidas, verificar que el job de vencimientos esté activo
+   y ejecutarlo desde n8n. Volver a actualizar: el contador debe llegar a cero y
+   el inventario debe quedar liberado.
+3. Si el outbox está en `dead_letter`, validar primero el destino y su secreto.
+   Como súper admin, elegir **Preparar reintento**, escribir un motivo concreto y
+   devolver el evento a Pendiente. Luego usar **Procesar pendientes ahora**.
+4. Si una comunicación está `sin_canal` o `dead_letter`, habilitar o reparar el
+   adaptador antes de reprocesarla. El reproceso exige motivo y queda en
+   `auditoria_admin`; no cambia el estado de la reserva.
+5. Para un webhook de Mercado Pago `inconsistente`, buscar por `correlation_id`,
+   contrastar monto, moneda, referencia y estado directamente en Mercado Pago.
+   No confirmar por una captura o mensaje del huésped. Si la acreditación es
+   comprobable, usar la confirmación manual de la reserva con motivo; esa acción
+   es versionada y auditada.
+6. Actualizar nuevamente el panel y comprobar el estado final. Registrar en el
+   incidente código, motivo, actor, hora UTC y resultado, sin PII.
+
+Repetir una acción ya resuelta no crea otra entrega ni otra transición: los
+eventos, webhooks y solicitudes usan claves idempotentes y los cambios de estado
+rechazan regresiones.
 
 ## Verificación de recuperación sin D1 remoto
 

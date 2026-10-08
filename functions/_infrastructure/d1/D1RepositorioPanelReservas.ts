@@ -19,10 +19,10 @@ type D1Database = {
 };
 
 const CAMPOS_RESERVA = `
-  r.id, r.cliente_nombre, r.cliente_telefono, r.cliente_email,
+  r.id, r.version, r.cliente_nombre, r.cliente_telefono, r.cliente_email,
   r.alojamiento_id, a.nombre AS alojamiento_nombre, a.tipo AS alojamiento_tipo,
   r.fecha_checkin, r.fecha_checkout, r.cantidad_personas,
-  r.monto_total, r.monto_sena, r.estado, r.unidad_asignada, r.canal_origen,
+  r.monto_total, r.monto_sena, r.estado_flujo AS estado, r.unidad_asignada, r.canal_origen,
   r.mp_preference_id, r.mp_payment_id, r.manychat_user_id, r.created_at,
   ec.id AS excepcion_capacidad_id,
   ec.capacidad_autorizada AS excepcion_capacidad_autorizada,
@@ -105,7 +105,7 @@ export class D1RepositorioPanelReservas implements RepositorioPanelReservas {
          FROM reservas r
          JOIN alojamientos a ON a.id = r.alojamiento_id
          ${JOINS_EXCEPCION}
-         WHERE r.estado IN ('confirmada', 'pendiente')
+         WHERE r.estado_flujo IN ('confirmada', 'pendiente_pago')
            AND DATE(r.fecha_checkout) >= DATE('now')
          ORDER BY r.fecha_checkin ASC`
       )
@@ -133,7 +133,7 @@ export class D1RepositorioPanelReservas implements RepositorioPanelReservas {
                 a.nombre AS alojamiento_nombre
          FROM reservas r
          JOIN alojamientos a ON a.id = r.alojamiento_id
-         WHERE r.estado = 'pendiente' AND r.created_at < datetime('now', ?)
+         WHERE r.estado_flujo = 'pendiente_pago' AND r.created_at < datetime('now', ?)
          ORDER BY r.created_at ASC`
       )
       .bind(`-${umbralDias} days`)
@@ -146,7 +146,7 @@ export class D1RepositorioPanelReservas implements RepositorioPanelReservas {
       .prepare(
         `SELECT
            COUNT(*) AS total,
-           SUM(CASE WHEN estado = 'confirmada' THEN 1 ELSE 0 END) AS confirmadas
+           SUM(CASE WHEN estado_flujo = 'confirmada' THEN 1 ELSE 0 END) AS confirmadas
          FROM reservas
          WHERE manychat_user_id IS NOT NULL`
       )
