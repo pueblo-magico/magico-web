@@ -10,16 +10,39 @@ export class MercadoPagoCheckoutReservas implements ProveedorCheckoutReserva {
   private readonly siteUrl: string;
   private readonly fetcher: Fetcher;
 
-  constructor(accessToken: string, siteUrl: string, fetcher: Fetcher = fetch) {
+  constructor(accessToken: string, siteUrl: string, fetcher: Fetcher = (input, init) => fetch(input, init)) {
     this.accessToken = accessToken;
-    this.siteUrl = siteUrl;
+    this.siteUrl = siteUrl.replace(/\/$/, '');
     this.fetcher = fetcher;
+  }
+
+  async buscarPreferenciaPorReferencia(referencia: string | number): Promise<{
+    preferenciaId: string;
+    checkoutUrl: string | null;
+  } | null> {
+    const query = new URLSearchParams({ external_reference: String(referencia) });
+    const response = await this.fetcher(
+      `https://api.mercadopago.com/checkout/preferences/search?${query}`,
+      { headers: { Authorization: `Bearer ${this.accessToken}` } }
+    );
+    if (!response.ok) throw new Error('Mercado Pago no pudo buscar la preferencia.');
+    const data = await response.json() as {
+      results?: Array<{ id?: unknown; init_point?: unknown; external_reference?: unknown }>;
+    };
+    const encontrada = data.results?.find(item =>
+      String(item.external_reference ?? '') === String(referencia) && item.id
+    );
+    return encontrada ? {
+      preferenciaId: String(encontrada.id),
+      checkoutUrl: typeof encontrada.init_point === 'string' ? encontrada.init_point : null,
+    } : null;
   }
 
   async crearPreferencia(solicitud: SolicitudPreferenciaPago): Promise<{
     preferenciaId: string;
     checkoutUrl: string | null;
   }> {
+    const referenciaRetorno = encodeURIComponent(solicitud.reservaCodigo || String(solicitud.reservaId));
     const response = await this.fetcher('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -33,12 +56,12 @@ export class MercadoPagoCheckoutReservas implements ProveedorCheckoutReserva {
           unit_price: solicitud.montoSena,
           currency_id: 'ARS',
         }],
-        external_reference: String(solicitud.reservaId),
+        external_reference: solicitud.reservaCodigo || String(solicitud.reservaId),
         notification_url: `${this.siteUrl}/api/webhook-mp`,
         back_urls: {
-          success: `${this.siteUrl}/reserva-confirmada`,
-          pending: `${this.siteUrl}/reserva-pendiente`,
-          failure: `${this.siteUrl}/reserva-fallida`,
+          success: `${this.siteUrl}/reserva-confirmada?reserva=${referenciaRetorno}`,
+          pending: `${this.siteUrl}/reserva-pendiente?reserva=${referenciaRetorno}`,
+          failure: `${this.siteUrl}/reserva-fallida?reserva=${referenciaRetorno}`,
         },
         auto_return: 'approved',
       }),

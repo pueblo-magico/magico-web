@@ -20,9 +20,17 @@ export async function procesarPagoMercadoPago(
   const pago = await pagos.obtenerPago(pagoId);
   if (!pago) return { estado: 'pago_no_disponible' };
 
-  const reservaId = Number(pago.referenciaExterna);
-  const referenciaValida = Number.isInteger(reservaId) && reservaId > 0;
-  const esperada = referenciaValida ? await reservas.obtenerEsperado(reservaId) : null;
+  const referencia = String(pago.referenciaExterna ?? '').trim();
+  const reservaIdLegacy = Number(referencia);
+  const referenciaNumerica = Number.isInteger(reservaIdLegacy) && reservaIdLegacy > 0;
+  const referenciaCodigo = /^RES-[0-9a-f-]{36}$/i.test(referencia);
+  const referenciaValida = referenciaNumerica || referenciaCodigo;
+  const esperada = referenciaNumerica
+    ? await reservas.obtenerEsperado(reservaIdLegacy)
+    : referenciaCodigo && reservas.obtenerEsperadoPorCodigo
+      ? await reservas.obtenerEsperadoPorCodigo(referencia)
+      : null;
+  const reservaId = esperada?.reservaId ?? 0;
   const motivo = !referenciaValida
     ? 'REFERENCIA_INVALIDA'
     : !esperada

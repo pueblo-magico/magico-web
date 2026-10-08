@@ -1,4 +1,5 @@
 import { crearReservaPublica } from '../../../_application/reservas/crearReservaPublica.ts';
+import { prepararCheckoutReservaPublica } from '../../../_application/reservas/prepararCheckoutReservaPublica.ts';
 import { provisionarCuentaCobroReserva } from '../../../_application/reservas/provisionarCuentaCobro.ts';
 import { CucuruClienteHttp } from '../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
 import {
@@ -9,6 +10,8 @@ import { D1RepositorioCuentasCobroReserva } from '../../../_infrastructure/d1/D1
 import { D1RepositorioCreacionReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCreacionReservaPublica.ts';
 import { D1RepositorioDisponibilidad } from '../../../_infrastructure/d1/D1RepositorioDisponibilidad.ts';
 import { D1RepositorioConfiguracionBaseReservas } from '../../../_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
+import { D1RepositorioCheckoutReservaPublica } from '../../../_infrastructure/d1/D1RepositorioCheckoutReservaPublica.ts';
+import { MercadoPagoCheckoutReservas } from '../../../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
 
@@ -87,6 +90,27 @@ export async function onRequestPost({ request, env }: any) {
       codigo: /^[A-Z0-9_]{3,80}$/.test(codigo) ? codigo : 'ERROR_PROVISIONAMIENTO',
     }));
   }
+  let pago: Record<string, unknown> = { proveedor: 'mercado_pago', estado: 'disabled' };
+  try {
+    const checkoutHabilitado = env.MP_CHECKOUT_ENABLED === 'true' &&
+      typeof env.MP_ACCESS_TOKEN === 'string' && env.MP_ACCESS_TOKEN.trim().length > 0;
+    const checkout = await prepararCheckoutReservaPublica({
+      reservaId: resultado.valor.reservaId,
+      habilitado: checkoutHabilitado,
+      correlationId: request.headers.get('CF-Ray') || crypto.randomUUID(),
+    }, new D1RepositorioCheckoutReservaPublica(env.DB), new MercadoPagoCheckoutReservas(
+      env.MP_ACCESS_TOKEN || '',
+      new URL(request.url).origin
+    ));
+    pago = {
+      proveedor: 'mercado_pago',
+      estado: checkout.estado,
+      ...(checkout.estado === 'ready' ? { checkout_url: checkout.checkoutUrl } : {}),
+    };
+  } catch {
+    // La reserva y su retención continúan vigentes si falla el proveedor externo.
+    pago = { proveedor: 'mercado_pago', estado: 'failed' };
+  }
   return jsonPublico(request, 'POST', {
     data: {
       reserva: {
@@ -96,6 +120,7 @@ export async function onRequestPost({ request, env }: any) {
         expires_at: resultado.valor.expiresAt,
       },
       cotizacion_codigo: resultado.valor.cotizacionCodigo,
+      pago,
       cuenta_cobro: cuentaCobro,
     },
     meta: { version: 'v1', idempotente: resultado.valor.idempotente },

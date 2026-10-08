@@ -10,6 +10,7 @@ import { onRequestGet as listarAlojamientos } from '../../functions/api/v1/publi
 import { onRequestGet as consultarDisponibilidad } from '../../functions/api/v1/public/disponibilidad.ts';
 import { onRequestPost as crearCotizacion } from '../../functions/api/v1/public/cotizaciones.ts';
 import { onRequestPost as crearReserva } from '../../functions/api/v1/public/reservas.ts';
+import { onRequestGet as consultarEstadoReserva } from '../../functions/api/v1/public/reservas/[codigo].ts';
 import { onRequestPost as expirarRetenciones } from '../../functions/api/v1/integrations/reservas/expirar-retenciones.ts';
 
 function baseMigrada() {
@@ -312,6 +313,77 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo IN ('reserva.creada', 'reserva.retencion_iniciada')").get()?.n, 2);
   assert.equal(sqlite.prepare('SELECT cliente_email FROM reservas').get()?.cliente_email, 'qa@example.test');
   sqlite.close();
+});
+
+test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const request = requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001');
+  const entornoMp = {
+    ...env(db),
+    MP_CHECKOUT_ENABLED: 'true',
+    MP_ACCESS_TOKEN: 'TEST-token-no-log',
+  };
+  const originalFetch = globalThis.fetch;
+  const llamadas: Array<{ url: string; method: string; body?: string }> = [];
+  globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    llamadas.push({ url, method: init?.method || 'GET', body: init?.body ? String(init.body) : undefined });
+    if (url.includes('/checkout/preferences/search')) {
+      return new Response(JSON.stringify({ results: [] }), { status: 200 });
+    }
+    return new Response(JSON.stringify({
+      id: 'pref-publica-1',
+      init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1',
+    }), { status: 201 });
+  };
+
+  try {
+    const creada = await crearReserva({ request, env: entornoMp });
+    assert.equal(creada.status, 201);
+    const body = await creada.json() as any;
+    assert.deepEqual(body.data.pago, {
+      proveedor: 'mercado_pago',
+      estado: 'ready',
+      checkout_url: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1',
+    });
+    assert.equal(llamadas.length, 2);
+    assert.match(llamadas[0].url, new RegExp(`external_reference=${encodeURIComponent(body.data.reserva.codigo)}`));
+    assert.equal(JSON.parse(llamadas[1].body || '{}').external_reference, body.data.reserva.codigo);
+    assert.equal(sqlite.prepare('SELECT mp_preference_id FROM reservas').get()?.mp_preference_id, 'pref-publica-1');
+    assert.deepEqual({ ...sqlite.prepare(`
+      SELECT proveedor, estado, external_preference_id,
+             json_extract(metadata_json, '$.estado_checkout') estado_checkout
+      FROM pagos WHERE proveedor = 'mercado_pago'
+    `).get() }, {
+      proveedor: 'mercado_pago', estado: 'pendiente',
+      external_preference_id: 'pref-publica-1', estado_checkout: 'listo',
+    });
+
+    const retry = await crearReserva({
+      request: requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001'),
+      env: entornoMp,
+    });
+    assert.equal(retry.status, 200);
+    assert.equal((await retry.json() as any).data.pago.estado, 'ready');
+    assert.equal(llamadas.length, 2);
+    assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM pagos WHERE proveedor = 'mercado_pago'").get()?.n, 1);
+
+    const estado = await consultarEstadoReserva({
+      request: new Request(`https://test/api/v1/public/reservas/${body.data.reserva.codigo}`),
+      env: entornoMp,
+      params: { codigo: body.data.reserva.codigo },
+    });
+    const bodyEstado = await estado.json() as any;
+    assert.equal(estado.status, 200);
+    assert.equal(bodyEstado.data.reserva.codigo, body.data.reserva.codigo);
+    assert.equal(bodyEstado.data.reserva.estado, 'pendiente_pago');
+    assert.equal(bodyEstado.data.pago.estado, 'pendiente');
+    assert.doesNotMatch(JSON.stringify(bodyEstado), /cliente_|email|telefono|checkout_url/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+    sqlite.close();
+  }
 });
 
 test('Preview puede provisionar un destino mock visible, durable e idempotente', async () => {

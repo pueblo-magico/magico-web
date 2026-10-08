@@ -23,12 +23,20 @@ export class D1RepositorioEstadoPagoReserva implements RepositorioEstadoPagoRese
   constructor(db: D1Database) { this.db = db; }
 
   async obtenerEsperado(reservaId: number): Promise<PagoEsperadoReserva | null> {
+    return this.obtenerEsperadoConFiltro('id = ?', reservaId);
+  }
+
+  async obtenerEsperadoPorCodigo(codigo: string): Promise<PagoEsperadoReserva | null> {
+    return this.obtenerEsperadoConFiltro('codigo = ?', codigo);
+  }
+
+  private async obtenerEsperadoConFiltro(filtro: string, referencia: number | string): Promise<PagoEsperadoReserva | null> {
     const row = await this.db.prepare(`
       SELECT id, estado_flujo,
         COALESCE(monto_sena_centavos, CAST(round(monto_sena * 100) AS INTEGER)) monto_centavos,
         moneda, mp_preference_id
-      FROM reservas WHERE id = ?
-    `).bind(reservaId).first();
+      FROM reservas WHERE ${filtro}
+    `).bind(referencia).first();
     if (!row) return null;
     return {
       reservaId: Number(row.id),

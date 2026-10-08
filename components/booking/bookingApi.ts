@@ -41,12 +41,22 @@ export interface QuoteResponse {
 export interface ReservationResponse {
   reserva: { codigo: string; estado: string; expires_at: string };
   cotizacion_codigo: string;
+  pago?: {
+    proveedor: 'mercado_pago';
+    estado: 'disabled' | 'pending' | 'expired' | 'failed' | 'ready';
+    checkout_url?: string;
+  };
   cuenta_cobro: {
     proveedor: string;
     estado: string;
     simulado?: boolean;
     destino?: { cvu?: string; alias?: string; moneda?: string };
   };
+}
+
+export interface PublicReservationStatus {
+  reserva: { codigo: string; estado: string; expires_at: string | null };
+  pago: { proveedor: 'mercado_pago'; estado: string };
 }
 
 export class BookingApiError extends Error {
@@ -129,6 +139,13 @@ export async function createPublicReservation(input: {
     }),
   });
   return { data: response.data, idempotent: response.meta.idempotente };
+}
+
+export async function getPublicReservationStatus(code: string): Promise<PublicReservationStatus> {
+  const response = await requestJson<{ data: PublicReservationStatus }>(
+    `/api/v1/public/reservas/${encodeURIComponent(code)}`
+  );
+  return response.data;
 }
 
 export function createBookingAttemptKey(): string {

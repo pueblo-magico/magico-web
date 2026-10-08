@@ -772,6 +772,30 @@
   padding: 12px;
 }
 
+.booking-button--payment {
+  width: 100%;
+  margin-top: 18px;
+  background: #009ee3;
+  border-color: #009ee3;
+  color: #fff;
+}
+
+.booking-button--payment:hover {
+  background: #008ed0;
+  border-color: #008ed0;
+}
+
+.booking-link-button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: #005333;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .booking-inline .booking-summary {
   padding: 16px;
 }

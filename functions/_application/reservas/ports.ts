@@ -391,15 +391,55 @@ export interface RepositorioReservasManyChat {
 
 export type SolicitudPreferenciaPago = {
   reservaId: number;
+  reservaCodigo?: string;
   tipoAlojamiento: 'domo' | 'refugio';
   montoSena: number;
 };
 
 export interface ProveedorCheckoutReserva {
+  buscarPreferenciaPorReferencia?(referencia: string | number): Promise<{
+    preferenciaId: string;
+    checkoutUrl: string | null;
+  } | null>;
   crearPreferencia(solicitud: SolicitudPreferenciaPago): Promise<{
     preferenciaId: string;
     checkoutUrl: string | null;
   }>;
+}
+
+export type CheckoutReservaPublica = {
+  reservaId: number;
+  reservaCodigo: string;
+  tipoAlojamiento: 'domo' | 'refugio';
+  montoSenaCentavos: number;
+  moneda: string;
+  estadoFlujo: string;
+  expiresAt: string | null;
+  preferenciaId: string | null;
+  checkoutUrl: string | null;
+};
+
+export interface RepositorioCheckoutReservaPublica {
+  obtener(reservaId: number): Promise<CheckoutReservaPublica | null>;
+  reclamarProvisionamiento(reservaId: number): Promise<boolean>;
+  guardarPreferencia(
+    reservaId: number,
+    preferenciaId: string,
+    checkoutUrl: string,
+    correlationId: string
+  ): Promise<void>;
+  registrarFallo(reservaId: number, codigo: string): Promise<void>;
+}
+
+export type EstadoReservaPublica = {
+  codigo: string;
+  estado: string;
+  expiresAt: string | null;
+  pagoEstado: string | null;
+};
+
+export interface RepositorioConsultaEstadoReservaPublica {
+  obtenerPorCodigo(codigo: string): Promise<EstadoReservaPublica | null>;
 }
 
 export type PagoExternoReserva = {
@@ -440,6 +480,7 @@ export interface ProveedorPagosReserva {
 
 export interface RepositorioEstadoPagoReserva {
   obtenerEsperado(reservaId: number): Promise<PagoEsperadoReserva | null>;
+  obtenerEsperadoPorCodigo?(codigo: string): Promise<PagoEsperadoReserva | null>;
   obtenerEstadoPago(proveedor: string, externalPaymentId: string): Promise<EstadoPagoReserva | null>;
   registrarObservacion(observacion: ObservacionPagoReserva): Promise<boolean>;
   registrarPago(observacion: ObservacionPagoReserva, estado: EstadoPagoReserva): Promise<void>;

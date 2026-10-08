@@ -9,6 +9,7 @@ flujos internos existentes. D1 sigue siendo la fuente operativa de verdad.
 - `GET /api/v1/public/disponibilidad?check_in=2027-04-10&check_out=2027-04-12&personas=2&tipo_alojamiento=domo&modalidad=privada&contexto=general`
 - `POST /api/v1/public/cotizaciones`
 - `POST /api/v1/public/reservas`
+- `GET /api/v1/public/reservas/:codigo`
 
 Ejemplo de solicitud de cotización:
 
@@ -79,6 +80,22 @@ estado. Sólo cuando el estado es `ready` incluye CVU, alias y moneda. Con
 ninguna llamada externa. El provisionamiento nunca revierte ni deja parcial la
 reserva ya creada.
 
+Cuando `MP_CHECKOUT_ENABLED=true` y existe `MP_ACCESS_TOKEN`, el mismo endpoint
+prepara fuera de la transacción una preferencia de Mercado Pago y devuelve
+`data.pago.checkout_url`. La preferencia usa el código opaco `RES-…` como
+`external_reference`, de modo que preview y producción no se confunden aunque
+sus IDs internos coincidan. Un retry idempotente recupera la preferencia ya
+persistida; ante un resultado externo incierto, primero se busca por esa
+referencia antes de crear otra.
+
+Los retornos `/reserva-confirmada`, `/reserva-pendiente` y `/reserva-fallida`
+no confían en los parámetros del redirect. Consultan
+`GET /api/v1/public/reservas/:codigo`, que devuelve solamente código, estado,
+vencimiento y estado de pago. La reserva se muestra como confirmada únicamente
+después de que el webhook autenticado validó el pago y persistió la transición.
+Si Mercado Pago falla, la reserva pendiente continúa durable y el destino de
+transferencia o la gestión manual siguen disponibles como fallback.
+
 Al vencer la retención, deja de bloquear disponibilidad aun antes de ejecutar
 la limpieza. El proceso autenticado de n8n invoca
 `POST /api/v1/integrations/reservas/expirar-retenciones` para marcar la reserva
@@ -106,8 +123,9 @@ Motivos estables: `DISPONIBLE`, `INVENTARIO_OCUPADO`,
 
 ## Seguridad y límites de esta etapa
 
-Las respuestas públicas no incluyen PII, identificadores de reserva ni IDs
-internos del inventario. Los endpoints tienen CORS explícito, lectura JSON
+Las respuestas públicas no incluyen PII ni IDs internos del inventario. El
+código opaco `RES-…` identifica la reserva en el flujo de pago y permite leer
+únicamente su estado mínimo. Los endpoints tienen CORS explícito, lectura JSON
 limitada y rate limiting persistido por hash.
 
 Hasta WRESERV-15, los domos y la habitación privada se resuelven de manera

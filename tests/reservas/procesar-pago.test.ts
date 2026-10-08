@@ -65,6 +65,28 @@ test('confirma y notifica una sola vez ante entregas duplicadas', async () => {
   assert.equal(notificaciones, 1);
 });
 
+test('resuelve la referencia pública RES sin mezclar ids de preview y producción', async () => {
+  const codigo = 'RES-123e4567-e89b-12d3-a456-426614174000';
+  let confirmada: number | null = null;
+  const repository = repositorio({
+    async obtenerEsperado() { throw new Error('No debe resolver un código como id numérico.'); },
+    async obtenerEsperadoPorCodigo(referencia) {
+      assert.equal(referencia, codigo);
+      return { reservaId: 77, estadoFlujo: 'pendiente_pago', montoCentavos: 2500, moneda: 'ARS', preferenciaId: 'pref-77' };
+    },
+    async confirmar(reservaId) {
+      confirmada = reservaId;
+      return { manyChatUserId: null, fechaCheckin: '2027-01-01', fechaCheckout: '2027-01-02' };
+    },
+  });
+
+  const resultado = await procesarPagoMercadoPago(
+    'pay-public', pagos('approved', codigo), repository, notificadorNulo
+  );
+  assert.deepEqual(resultado, { estado: 'confirmada', notificacionFallida: false });
+  assert.equal(confirmada, 77);
+});
+
 test('mantiene confirmación aunque falle la notificación y omite usuarios ausentes', async () => {
   const fallida = await procesarPagoMercadoPago(
     'pay-7', pagos('approved'),

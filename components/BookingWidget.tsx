@@ -57,6 +57,8 @@ const COPY = {
     reservationCode: 'Código de reserva', retention: 'Tiempo restante para realizar la seña',
     expired: 'La retención venció. Iniciá una nueva reserva para verificar disponibilidad nuevamente.',
     paymentTitle: 'Destino de transferencia', mockWarning: 'Simulado · no usar para cobros reales',
+    payDeposit: 'Pagar seña con Mercado Pago', paymentPending: 'Estamos preparando el pago seguro.',
+    retryPayment: 'Reintentar Mercado Pago',
     alias: 'Alias', cvu: 'CVU', copy: 'Copiar', copied: 'Copiado',
     manualPayment: 'El equipo te enviará las instrucciones de pago. Tu reserva ya quedó registrada.',
     whatsapp: 'Abrir conversación', newBooking: 'Nueva reserva', genericError: 'No pudimos completar la solicitud.',
@@ -90,6 +92,8 @@ const COPY = {
     retention: 'Time remaining to make the deposit',
     expired: 'The hold has expired. Start a new reservation to check availability again.',
     paymentTitle: 'Transfer destination', mockWarning: 'Simulation · do not use for real payments',
+    payDeposit: 'Pay deposit with Mercado Pago', paymentPending: 'We are preparing secure payment.',
+    retryPayment: 'Retry Mercado Pago',
     alias: 'Alias', cvu: 'CVU', copy: 'Copy', copied: 'Copied',
     manualPayment: 'Our team will send payment instructions. Your reservation has already been registered.',
     whatsapp: 'Open conversation', newBooking: 'New reservation', genericError: 'We could not complete the request.',
@@ -315,6 +319,25 @@ export const BookingWidget: React.FC<{
     }
   }
 
+  async function retryPayment() {
+    if (!quote?.opcion) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await createPublicReservation({
+        quoteCode: quote.cotizacion.codigo,
+        spaceCode: quote.opcion.espacio_codigo,
+        guest: { name: guest.name.trim(), phone: guest.phone.trim(), email: guest.email.trim() },
+        idempotencyKey: idempotencyKey.current,
+      });
+      setReservation(result.data);
+    } catch (err) {
+      setError({ message: apiErrorMessage(err, c.genericError, language) });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function startAgain() {
     setStep(1); setQuote(null); setReservation(null); setError(null); setConsent(false);
     idempotencyKey.current = createBookingAttemptKey();
@@ -383,7 +406,27 @@ export const BookingWidget: React.FC<{
                     </div>
                   )}
 
-                  {reservation.cuenta_cobro.estado === 'ready' && reservation.cuenta_cobro.destino ? (
+                  {reservation.pago?.estado === 'ready' && reservation.pago.checkout_url ? (
+                    <a
+                      className="booking-button booking-button--payment"
+                      href={reservation.pago.checkout_url}
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <ShieldCheck size={20} aria-hidden="true" /> {c.payDeposit}
+                    </a>
+                  ) : reservation.pago?.estado === 'pending' ? (
+                    <div className="booking-notice">
+                      <Loader2 className="booking-loading" size={20} />
+                      <span>{c.paymentPending}</span>
+                      <button className="booking-link-button" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button>
+                    </div>
+                  ) : reservation.pago?.estado === 'failed' ? (
+                    <button className="booking-button booking-button--secondary" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button>
+                  ) : null}
+
+                  {reservation.pago?.estado !== 'ready' && reservation.pago?.estado !== 'pending' && (
+                    reservation.cuenta_cobro.estado === 'ready' && reservation.cuenta_cobro.destino ? (
                     <div className="booking-payment">
                       <strong>{c.paymentTitle}</strong>
                       {reservation.cuenta_cobro.simulado && <span className="booking-notice">{c.mockWarning}</span>}
@@ -400,7 +443,8 @@ export const BookingWidget: React.FC<{
                         </div>
                       )}
                     </div>
-                  ) : <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /> {c.manualPayment}</div>}
+                  ) : <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /> {c.manualPayment}</div>
+                  )}
 
                   <div className="booking-actions">
                     <button className="booking-button booking-button--secondary" type="button" onClick={startAgain}>{c.newBooking}</button>

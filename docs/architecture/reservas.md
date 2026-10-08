@@ -45,6 +45,15 @@ La integración de ManyChat usa `iniciarReservaManyChat`, el mismo caso de uso d
 
 El webhook de Mercado Pago conserva la validación HMAC en la interfaz HTTP y delega la consulta del pago, la transición de reserva y la notificación de ManyChat a puertos separados mediante `procesarPagoMercadoPago`. La salida a ManyChat solo se habilita cuando existen `MANYCHAT_API_KEY` y `MANYCHAT_CONFIRMATION_FLOW_NS`, y se apaga explícitamente con `MANYCHAT_NOTIFICATIONS_ENABLED=false`; sin ellas, la confirmación de D1 continúa con un notificador nulo. La firma, reintentos e idempotencia integral se endurecen en WRESERV-13.
 
+El checkout público de Mercado Pago reutiliza ese mismo webhook y se activa de
+forma explícita con `MP_CHECKOUT_ENABLED=true`. La reserva se persiste antes de
+llamar al proveedor; `prepararCheckoutReservaPublica` coordina el intento y
+`D1RepositorioCheckoutReservaPublica` conserva la preferencia en el ledger de
+pagos. Las nuevas preferencias usan el código global `RES-…` como referencia,
+mientras el procesador conserva compatibilidad con referencias numéricas
+legacy. Los redirects nunca confirman el pago: sólo consultan el estado mínimo
+persistido mediante la API pública.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.

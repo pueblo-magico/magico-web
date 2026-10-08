@@ -11,7 +11,7 @@ export class MercadoPagoProveedorPagos implements ProveedorPagosReserva {
   private readonly accessToken: string;
   private readonly fetcher: Fetcher;
 
-  constructor(accessToken: string, fetcher: Fetcher = fetch) {
+  constructor(accessToken: string, fetcher: Fetcher = (input, init) => fetch(input, init)) {
     this.accessToken = accessToken;
     this.fetcher = fetcher;
   }
