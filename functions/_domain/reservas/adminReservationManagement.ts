@@ -77,10 +77,26 @@ export type PaginaReservasAdmin = {
   totalPaginas: number;
 };
 
+export type CuentaCobroReservaAdmin = {
+  proveedor: 'cucuru' | 'cucuru_mock';
+  estado: 'pending' | 'provisioning' | 'ready' | 'failed' | 'disabled' | 'unknown_outcome';
+  simulada: boolean;
+  cvu: string | null;
+  alias: string | null;
+  moneda: string;
+  intentos: number;
+  ultimoErrorCodigo: string | null;
+  proximoReintentoAt: string | null;
+  ultimoIntentoAt: string | null;
+  listaAt: string | null;
+  revisionesPendientes: number;
+};
+
 export type DetalleReservaAdmin = ResumenReservaAdmin & {
   moneda: string;
   estadias: Array<Record<string, unknown>>;
   excepciones: Array<Record<string, unknown>>;
+  cuentaCobro: CuentaCobroReservaAdmin | null;
 };
 
 export type NuevaReservaAdmin = {

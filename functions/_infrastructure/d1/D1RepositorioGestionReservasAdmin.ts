@@ -1,6 +1,7 @@
 import type { RepositorioGestionReservasAdmin } from '../../_application/reservas/ports.ts';
 import type {
   CambiosReservaAdmin,
+  CuentaCobroReservaAdmin,
   DetalleReservaAdmin,
   FiltrosReservasAdmin,
   PaginaReservasAdmin,
@@ -100,7 +101,7 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
   }
 
   async obtenerDetalle(reservaId: number): Promise<DetalleReservaAdmin | null> {
-    const [row, estadias, excepciones] = await Promise.all([
+    const [row, estadias, excepciones, cuentaCobro] = await Promise.all([
       this.db.prepare(`
         SELECT ${SELECT_RESUMEN}, r.moneda
         ${FROM_RESERVA} WHERE r.id = ?
@@ -121,6 +122,18 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
         JOIN reserva_estadias re ON re.id = ec.reserva_estadia_id
         WHERE re.reserva_id = ? ORDER BY ec.id DESC
       `).bind(reservaId).all(),
+      this.db.prepare(`
+        SELECT c.estado, c.simulada, c.cvu, c.alias, c.moneda, c.intentos,
+          c.ultimo_error_codigo, c.next_retry_at, c.last_attempt_at, c.ready_at,
+          (
+            SELECT COUNT(*)
+            FROM cucuru_revisiones_pago crp
+            JOIN cucuru_observaciones_transferencia cot ON cot.id = crp.observacion_id
+            WHERE cot.reserva_id = c.reserva_id AND crp.estado = 'pendiente'
+          ) revisiones_pendientes
+        FROM cuentas_cobro_reserva c
+        WHERE c.reserva_id = ? AND c.proveedor = 'cucuru'
+      `).bind(reservaId).first(),
     ]);
     if (!row) return null;
     return {
@@ -128,6 +141,23 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
       moneda: String(row.moneda),
       estadias: estadias.results || [],
       excepciones: excepciones.results || [],
+      cuentaCobro: cuentaCobro ? {
+        proveedor: Number(cuentaCobro.simulada) === 1 ? 'cucuru_mock' : 'cucuru',
+        estado: String(cuentaCobro.estado) as CuentaCobroReservaAdmin['estado'],
+        simulada: Number(cuentaCobro.simulada) === 1,
+        cvu: cuentaCobro.cvu == null ? null : String(cuentaCobro.cvu),
+        alias: cuentaCobro.alias == null ? null : String(cuentaCobro.alias),
+        moneda: String(cuentaCobro.moneda),
+        intentos: Number(cuentaCobro.intentos),
+        ultimoErrorCodigo: cuentaCobro.ultimo_error_codigo == null
+          ? null : String(cuentaCobro.ultimo_error_codigo),
+        proximoReintentoAt: cuentaCobro.next_retry_at == null
+          ? null : String(cuentaCobro.next_retry_at),
+        ultimoIntentoAt: cuentaCobro.last_attempt_at == null
+          ? null : String(cuentaCobro.last_attempt_at),
+        listaAt: cuentaCobro.ready_at == null ? null : String(cuentaCobro.ready_at),
+        revisionesPendientes: Number(cuentaCobro.revisiones_pendientes),
+      } : null,
     };
   }
 

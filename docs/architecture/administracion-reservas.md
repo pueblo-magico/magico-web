@@ -9,7 +9,10 @@ sesión administrativa; las mutaciones también requieren un token CSRF válido.
 - `GET /api/v1/admin/reservas`: listado paginado con filtros por fechas, estado
   de flujo, origen, espacio y titular. Requiere `reservas.leer`.
 - `GET /api/v1/admin/reservas/:id`: detalle compuesto con estadías,
-  asignaciones, pagos, eventos y excepciones. Requiere `reservas.leer`.
+  asignaciones, pagos, eventos, excepciones y el estado operativo de la cuenta
+  de cobro. Requiere `reservas.leer`. La cuenta expone sólo alias, CVU,
+  estado, intentos y errores necesarios para operar; nunca credenciales ni
+  identificadores internos del proveedor.
 - `GET /api/v1/admin/reservas/panel`: alojamientos y métricas agregadas para
   la vista operativa, sin duplicar el listado de reservas.
 - `GET /api/v1/admin/reservas/exportar`: exportación CSV filtrada y auditada.

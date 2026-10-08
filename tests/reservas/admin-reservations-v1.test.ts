@@ -98,6 +98,16 @@ test('lista reservas con paginación estable y filtros combinables', async () =>
 test('el detalle reúne estadía, asignación, pagos, eventos y excepciones', async () => {
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite, 1);
+  sqlite.prepare(`
+    INSERT INTO cuentas_cobro_reserva (
+      reserva_id, proveedor, customer_id, estado, external_account_id, cvu,
+      alias, moneda, intentos, ultima_operacion_uid, simulada, ready_at
+    ) VALUES (?, 'cucuru', ?, 'ready', ?, ?, ?, 'ARS', 1, ?, 1, ?)
+  `).run(
+    reservaId, `pm-reserva-admin-${reservaId}`, `mock-admin-${reservaId}`,
+    '9912345678901234567890', 'magico.qa.admin', `admin-account-${reservaId}`,
+    '2099-11-01T12:00:00.000Z'
+  );
   const database = d1(sqlite);
   const detalle = await consultarReservaAdmin(
     reservaId,
@@ -111,6 +121,13 @@ test('el detalle reúne estadía, asignación, pagos, eventos y excepciones', as
   assert.equal(detalle.asignacion.reservaId, reservaId);
   assert.ok(detalle.historial.eventos.some(evento => evento.tipo === 'reserva.creada_legacy'));
   assert.deepEqual(detalle.reserva.excepciones, []);
+  assert.deepEqual(detalle.reserva.cuentaCobro, {
+    proveedor: 'cucuru_mock', estado: 'ready', simulada: true,
+    cvu: '9912345678901234567890', alias: 'magico.qa.admin', moneda: 'ARS',
+    intentos: 1, ultimoErrorCodigo: null, proximoReintentoAt: null,
+    ultimoIntentoAt: null, listaAt: '2099-11-01T12:00:00.000Z',
+    revisionesPendientes: 0,
+  });
   sqlite.close();
 });
 

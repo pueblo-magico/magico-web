@@ -104,6 +104,12 @@ observación, el pago externo y el evento conservan el marcador y usan
 `cucuru_mock` como proveedor. De esta forma una confirmación end to end de QA
 no puede confundirse con una transferencia real de Cucuru.
 
+El detalle autenticado de una reserva muestra al equipo administrativo el
+estado de la cuenta, alias, CVU, cantidad de intentos, último error y revisiones
+pendientes. Las cuentas mock llevan un aviso visible y se presentan como
+`cucuru_mock`. La API administrativa no devuelve la API key, el secreto del
+webhook, el `customer_id` ni el identificador externo de la cuenta.
+
 La doble activación es intencional: si falta `CUCURU_MOCK_ALLOWED=true`, el
 modo mock falla cerrado. Esta variable sólo se configura en desarrollo o en
 las variables de Preview de Cloudflare y nunca en producción. El backfill real
