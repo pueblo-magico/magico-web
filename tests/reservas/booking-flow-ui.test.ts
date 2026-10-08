@@ -42,6 +42,17 @@ test('los retornos de Mercado Pago consultan el estado persistido y tienen fallb
   }
 });
 
+test('el widget actualiza una reserva pendiente y retira las instrucciones de pago al confirmarse', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  assert.match(source, /getPublicReservationStatus\(code\)/);
+  assert.match(source, /window\.setInterval\(refreshStatus, 10_000\)/);
+  assert.match(source, /document\.addEventListener\('visibilitychange', onVisibilityChange\)/);
+  assert.match(source, /reservationConfirmed \? c\.confirmedTitle/);
+  assert.match(source, /reservationConfirmed \? \(/);
+  assert.match(source, /reservationPending && \(reservation\.pago\?\.estado/);
+  assert.match(source, /reservationPending && reservation\.transferencia\?\.estado === 'ready'/);
+});
+
 test('oculta el encabezado promocional mientras el checkout está abierto', () => {
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');

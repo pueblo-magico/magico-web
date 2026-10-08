@@ -20,6 +20,7 @@ import {
   createPublicQuote,
   createPublicReservation,
   formatRemaining,
+  getPublicReservationStatus,
   listPublicAccommodations,
   localTodayIso,
   remainingSeconds,
@@ -57,6 +58,11 @@ const COPY = {
     reserving: 'Creando reserva…', privacyNote: 'Usamos tus datos únicamente para gestionar esta reserva.',
     pendingTitle: 'Tu lugar está retenido',
     pendingCopy: 'La reserva se confirma cuando verificamos la recepción de la seña.',
+    confirmedTitle: '¡Reserva confirmada!',
+    confirmedCopy: 'Tu lugar ya está reservado. Guardá el código para cualquier consulta.',
+    confirmedNotice: 'La reserva fue confirmada. No realices otro pago desde esta pantalla.',
+    closedTitle: 'La reserva ya no está pendiente',
+    closedCopy: 'Esta reserva ya no admite pagos. Iniciá una nueva reserva o comunicate con el equipo.',
     reservationCode: 'Código de reserva', retention: 'Tiempo restante para realizar la seña',
     expired: 'La retención venció. Iniciá una nueva reserva para verificar disponibilidad nuevamente.',
     paymentTitle: 'Destino de transferencia', mockWarning: 'Simulado · no usar para cobros reales',
@@ -97,6 +103,11 @@ const COPY = {
     reserve: 'Create reservation', reserving: 'Creating reservation…',
     privacyNote: 'We only use your details to manage this reservation.', pendingTitle: 'Your place is being held',
     pendingCopy: 'Your reservation is confirmed once we verify the deposit.', reservationCode: 'Reservation code',
+    confirmedTitle: 'Booking confirmed!',
+    confirmedCopy: 'Your place is reserved. Keep the booking code for any questions.',
+    confirmedNotice: 'The booking has been confirmed. Do not make another payment from this screen.',
+    closedTitle: 'This booking is no longer pending',
+    closedCopy: 'This booking no longer accepts payments. Start a new booking or contact our team.',
     retention: 'Time remaining to make the deposit',
     expired: 'The hold has expired. Start a new reservation to check availability again.',
     paymentTitle: 'Transfer destination', mockWarning: 'Simulation · do not use for real payments',
@@ -254,12 +265,56 @@ export const BookingWidget: React.FC<{
   }, [quote?.cotizacion.expiresAt]);
 
   useEffect(() => {
-    if (!reservation?.reserva.expires_at) return;
-    const tick = () => setReservationSeconds(remainingSeconds(reservation.reserva.expires_at));
+    const expiresAt = reservation?.reserva.expires_at;
+    if (reservation?.reserva.estado !== 'pendiente_pago' || !expiresAt) {
+      setReservationSeconds(0);
+      return;
+    }
+    const tick = () => setReservationSeconds(remainingSeconds(expiresAt));
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [reservation?.reserva.expires_at]);
+  }, [reservation?.reserva.estado, reservation?.reserva.expires_at]);
+
+  useEffect(() => {
+    const code = reservation?.reserva.codigo;
+    if (!open || !code || reservation.reserva.estado !== 'pendiente_pago') return;
+
+    let cancelled = false;
+    let checking = false;
+    const refreshStatus = async () => {
+      if (checking || document.visibilityState === 'hidden') return;
+      checking = true;
+      try {
+        const status = await getPublicReservationStatus(code);
+        if (cancelled || status.reserva.codigo !== code) return;
+        setReservation(current => current?.reserva.codigo === code ? {
+          ...current,
+          reserva: {
+            ...current.reserva,
+            estado: status.reserva.estado,
+            expires_at: status.reserva.expires_at,
+          },
+        } : current);
+      } catch {
+        // A temporary status-check failure must not discard a valid reservation.
+      } finally {
+        checking = false;
+      }
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void refreshStatus();
+    };
+
+    void refreshStatus();
+    const timer = window.setInterval(refreshStatus, 10_000);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [open, reservation?.reserva.codigo, reservation?.reserva.estado]);
 
   const quoteRequest: QuoteRequest = {
     check_in: checkIn, check_out: checkOut, personas: people,
@@ -377,9 +432,13 @@ export const BookingWidget: React.FC<{
   const stayNights = checkIn && checkOut
     ? Math.max(0, Math.round((Date.parse(`${checkOut}T12:00:00Z`) - Date.parse(`${checkIn}T12:00:00Z`)) / 86_400_000))
     : 0;
-  const headerTitle = reservation ? c.pendingTitle : step === 1 ? c.heroDates : step === 2 ? c.heroStay : c.heroReview;
+  const reservationPending = reservation?.reserva.estado === 'pendiente_pago';
+  const reservationConfirmed = reservation?.reserva.estado === 'confirmada';
+  const reservationTitle = reservationConfirmed ? c.confirmedTitle : reservationPending ? c.pendingTitle : c.closedTitle;
+  const reservationCopy = reservationConfirmed ? c.confirmedCopy : reservationPending ? c.pendingCopy : c.closedCopy;
+  const headerTitle = reservation ? reservationTitle : step === 1 ? c.heroDates : step === 2 ? c.heroStay : c.heroReview;
   const headerCopy = reservation
-    ? c.pendingCopy
+    ? reservationCopy
     : step === 1
       ? c.heroDatesCopy
       : step === 2
@@ -410,12 +469,14 @@ export const BookingWidget: React.FC<{
               {reservation ? (
                 <div className="booking-panel booking-result">
                   <div className="booking-result__icon"><CheckCircle2 size={38} aria-hidden="true" /></div>
-                  <h3>{c.pendingTitle}</h3>
-                  <p>{c.pendingCopy}</p>
+                  <h3>{reservationTitle}</h3>
+                  <p>{reservationCopy}</p>
                   <p className="booking-result__code">{c.reservationCode}: <strong>{reservation.reserva.codigo}</strong></p>
-                  {reservationSeconds > 0
+                  {reservationConfirmed ? (
+                    <div className="booking-notice booking-notice--success"><CheckCircle2 size={20} aria-hidden="true" /> {c.confirmedNotice}</div>
+                  ) : reservationPending && (reservationSeconds > 0
                     ? <div className="booking-countdown"><Clock3 size={18} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</div>
-                    : <div className="booking-notice booking-notice--error"><AlertCircle size={20} aria-hidden="true" /> {c.expired}</div>}
+                    : <div className="booking-notice booking-notice--error"><AlertCircle size={20} aria-hidden="true" /> {c.expired}</div>)}
 
                   {quote && (
                     <div className="booking-summary booking-summary--result">
@@ -426,7 +487,7 @@ export const BookingWidget: React.FC<{
                     </div>
                   )}
 
-                  {reservation.pago?.estado === 'ready' && reservation.pago.checkout_url ? (
+                  {reservationPending && (reservation.pago?.estado === 'ready' && reservation.pago.checkout_url ? (
                     <a
                       className="booking-button booking-button--payment"
                       href={reservation.pago.checkout_url}
@@ -443,9 +504,9 @@ export const BookingWidget: React.FC<{
                     </div>
                   ) : reservation.pago?.estado === 'failed' ? (
                     <button className="booking-button booking-button--secondary" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button>
-                  ) : null}
+                  ) : null)}
 
-                  {reservation.transferencia?.estado === 'ready' && reservation.transferencia.destino ? (
+                  {reservationPending && reservation.transferencia?.estado === 'ready' && reservation.transferencia.destino ? (
                     <div className="booking-payment">
                       <div className="booking-payment__heading">
                         <strong>{c.transferToMp}</strong>
@@ -470,7 +531,7 @@ export const BookingWidget: React.FC<{
                         </div>
                       )}
                     </div>
-                  ) : reservation.pago?.estado !== 'ready' && reservation.pago?.estado !== 'pending' && (
+                  ) : reservationPending && reservation.pago?.estado !== 'ready' && reservation.pago?.estado !== 'pending' && (
                     reservation.cuenta_cobro.estado === 'ready' && reservation.cuenta_cobro.destino ? (
                     <div className="booking-payment">
                       <strong>{c.paymentTitle}</strong>
