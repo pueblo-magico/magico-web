@@ -196,6 +196,12 @@ type SolicitudArrepentimientoAdmin = {
   email: string;
   detalle: string;
   estado: 'recibida' | 'en_revision' | 'resuelta' | 'rechazada';
+  idioma: 'es' | 'en';
+  mensaje_cliente: string | null;
+  version: number;
+  notificacion_estado: string | null;
+  notificacion_uid: string | null;
+  notificacion_error_codigo: string | null;
   created_at: string;
   acknowledged_at: string;
   resolved_at: string | null;
@@ -2091,25 +2097,54 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
     item: SolicitudArrepentimientoAdmin,
     nuevoEstado: SolicitudArrepentimientoAdmin['estado']
   ) => {
-    const motivo = window.prompt(
+    const notaInterna = window.prompt(
       nuevoEstado === 'en_revision'
         ? 'Nota de seguimiento (mínimo 5 caracteres)'
         : 'Motivo o resolución (mínimo 5 caracteres)'
     );
-    if (!motivo || motivo.trim().length < 5) return;
+    if (!notaInterna || notaInterna.trim().length < 5) return;
+    const mensajeCliente = window.prompt('Mensaje visible para el huésped (mínimo 5 caracteres)');
+    if (!mensajeCliente || mensajeCliente.trim().length < 5) return;
     setProcesando(item.id);
     setError('');
     try {
       const response = await adminFetch(`/api/v1/admin/arrepentimientos/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado_actual: item.estado, estado: nuevoEstado, motivo }),
+        body: JSON.stringify({
+          estado_actual: item.estado,
+          estado: nuevoEstado,
+          nota_interna: notaInterna,
+          mensaje_cliente: mensajeCliente,
+        }),
       });
       const body: any = await response.json();
       if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
       await cargar();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo actualizar la solicitud.');
+    } finally {
+      setProcesando(null);
+    }
+  };
+
+  const reprocesarNotificacion = async (item: SolicitudArrepentimientoAdmin) => {
+    if (!item.notificacion_uid) return;
+    const motivo = window.prompt('Motivo del reintento (mínimo 8 caracteres)');
+    if (!motivo || motivo.trim().length < 8) return;
+    setProcesando(item.id);
+    setError('');
+    try {
+      const response = await adminFetch('/api/v1/admin/arrepentimientos/notificaciones/reprocesar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificacion_uid: item.notificacion_uid, motivo }),
+      });
+      const body: any = await response.json();
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      await cargar();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudo reprocesar la notificación.');
     } finally {
       setProcesando(null);
     }
@@ -2146,6 +2181,8 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
                   <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{item.detalle}</p>
                   <p className="mt-2 text-[11px] text-gray-400 tabular-nums">Recibida: {fmtFechaHora(item.acknowledged_at)}</p>
                   {item.resolution_note && <p className="mt-1 text-xs text-gray-500">Última nota: {item.resolution_note}{item.resolved_by ? ` — ${item.resolved_by}` : ''}</p>}
+                  {item.mensaje_cliente && <p className="mt-1 text-xs text-gray-600">Mensaje al huésped: {item.mensaje_cliente}</p>}
+                  {item.notificacion_estado && <p className="mt-1 text-xs text-gray-500">Email: {item.notificacion_estado.replace('_', ' ')}{item.notificacion_error_codigo ? ` · ${item.notificacion_error_codigo}` : ''}</p>}
                 </div>
                 {puedeGestionar && abierta && (
                   <div className="flex shrink-0 flex-wrap gap-2">
@@ -2153,6 +2190,9 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
                     <button disabled={procesando === item.id} onClick={() => cambiarEstado(item, 'resuelta')} className={`rounded-lg border border-green-300 px-3 py-2 text-xs font-semibold text-green-800 hover:bg-green-50 disabled:opacity-50 ${FOCUS_RING}`}>Resolver</button>
                     <button disabled={procesando === item.id} onClick={() => cambiarEstado(item, 'rechazada')} className={`rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 ${FOCUS_RING}`}>Rechazar</button>
                   </div>
+                )}
+                {puedeGestionar && item.notificacion_estado === 'dead_letter' && (
+                  <button disabled={procesando === item.id} onClick={() => reprocesarNotificacion(item)} className={`shrink-0 rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50 ${FOCUS_RING}`}>Reintentar email</button>
                 )}
               </div>
             </li>

@@ -77,6 +77,27 @@ Alertar de inmediato ante `dead_letter` o errores repetidos. La recuperación de
 un evento agotado se hace desde el panel admin con motivo auditado; no se edita
 D1 manualmente.
 
+## Envío de arrepentimientos por email
+
+El webhook consumidor de `INTEGRATION_EVENTS_WEBHOOK_URL` debe derivar los eventos
+`arrepentimiento.notificacion_pendiente` a un subflujo de correo:
+
+1. Leer `notification_id` del evento. El evento no contiene PII.
+2. Reclamar la entrega con `POST /api/v1/integrations/arrepentimientos/notificaciones`,
+   cabeceras `X-Integration-Id: n8n`, `X-Service-Secret: <N8N_INBOUND_SECRET>` y body:
+   `{"accion":"reclamar","notificacion_uid":"<notification_id>"}`.
+3. Enviar `destinatario`, `asunto` y `cuerpo` con el proveedor de email. No guardar
+   esos valores en logs ni datos de ejecución persistentes de n8n.
+4. Informar el resultado al mismo endpoint con `accion=resultado`, los tres IDs
+   devueltos (`notificacion_uid`, `claim_uid`, `delivery_uid`) y uno de:
+   `entregada`, `retry` o `dead_letter`. En una falla, enviar sólo un
+   `error_code` estable como `SMTP_TIMEOUT`; nunca el mensaje crudo del proveedor.
+
+Un resultado repetido con el mismo `delivery_uid` es idempotente. `retry`
+reprograma también el evento del outbox; `dead_letter` queda visible para
+reproceso manual en Administración. Un `409 NOTIFICACION_NO_DISPONIBLE` significa
+que otro proceso conserva el lease o que la entrega ya terminó.
+
 ## Pausa, recuperación y cutover
 
 Para pausar, desactivar primero el workflow de n8n. Si también debe impedirse un

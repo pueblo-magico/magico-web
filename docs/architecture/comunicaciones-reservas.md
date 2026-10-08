@@ -21,6 +21,10 @@ Los tipos iniciales son: reserva creada, pago pendiente, pago aprobado, retenci�
 - Una intención en `sin_canal` o `dead_letter` puede volver a `pendiente` mediante el caso de uso de reproceso, que exige motivo y registra actor, correlación y estado anterior en `auditoria_admin`.
 - El modelo operativo expone conteos por estado, antigüedad del pendiente más antiguo, tasa de fallas de las últimas 24 horas y el listado reciente sin PII. WRESERV-21 lo presentará junto al resto de integraciones en el panel administrativo.
 
-## Límites de esta entrega
+## Arrepentimientos por email
 
-No hay un canal saliente activo en el MVP base. WRESERV-43 implementará el primer adaptador de correo. Las decisiones sobre ManyChat quedan fuera de este flujo y se mantienen en WRESERV-36. El endpoint entrante legado puede seguir existiendo, pero ningún webhook de pago llama directamente a ManyChat.
+WRESERV-43 agrega el primer contrato de correo para el lanzamiento. Crear una solicitud o cambiar su estado genera una notificación idempotente en la misma operación D1. El outbox publica sólo `notification_id`, intención, idioma y versión; nunca copia el email ni el mensaje del huésped.
+
+Cuando n8n recibe `arrepentimiento.notificacion_pendiente`, reclama los datos sensibles con `POST /api/v1/integrations/arrepentimientos/notificaciones`, identidad `n8n` y alcance `comunicaciones:entregar`. Después de enviar el correo, informa `entregada`, `retry` o `dead_letter` al mismo endpoint. La reserva y la decisión administrativa no se revierten si el correo falla.
+
+Administración ve el último estado de entrega y puede reprocesar un `dead_letter` con motivo auditado. La nota interna nunca se usa en la plantilla: sólo `mensaje_cliente` puede llegar al huésped. Las decisiones sobre ManyChat quedan fuera de este flujo.

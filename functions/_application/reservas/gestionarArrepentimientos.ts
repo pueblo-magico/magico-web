@@ -10,9 +10,16 @@ export type SolicitudArrepentimiento = {
   emailContacto: string;
   detalle: string;
   estado: EstadoSolicitudArrepentimiento;
+  idioma: 'es' | 'en';
+  mensajeCliente: string | null;
+  version: number;
+  notificacionEstado: string | null;
+  notificacionUid: string | null;
+  notificacionErrorCodigo: string | null;
   requestHash: string;
   createdAt: string;
   acknowledgedAt: string;
+  updatedAt: string;
   resolvedAt: string | null;
   resolvedBy: string | null;
   resolutionNote: string | null;
@@ -25,17 +32,20 @@ export interface RepositorioSolicitudesArrepentimiento {
     reservaCodigo: string | null;
     email: string;
     detalle: string;
+    idioma: 'es' | 'en';
     idempotencyKey: string;
     requestHash: string;
     correlationId: string;
   }): Promise<SolicitudArrepentimiento>;
   listar(estado?: EstadoSolicitudArrepentimiento | null): Promise<SolicitudArrepentimiento[]>;
+  buscarPublica(codigo: string, email: string): Promise<SolicitudArrepentimiento | null>;
   cambiarEstado(entrada: {
     id: number;
     estadoActual: EstadoSolicitudArrepentimiento;
     estado: EstadoSolicitudArrepentimiento;
     actorEmail: string;
-    motivo: string;
+    notaInterna: string;
+    mensajeCliente: string;
   }): Promise<SolicitudArrepentimiento | null>;
 }
 
@@ -56,6 +66,7 @@ export async function crearSolicitudArrepentimiento(
     reservaCodigo: string | null;
     email: string;
     detalle: string;
+    idioma?: 'es' | 'en';
     idempotencyKey: string;
     correlationId: string;
   },
@@ -65,12 +76,16 @@ export async function crearSolicitudArrepentimiento(
   const detalle = entrada.detalle.trim();
   const reservaCodigo = entrada.reservaCodigo?.trim().toUpperCase() || null;
   const clave = entrada.idempotencyKey.trim();
+  const idioma = entrada.idioma || 'es';
 
   if (clave.length < 8 || clave.length > 128) {
     return { ok: false, codigo: 'IDEMPOTENCY_KEY_REQUERIDA', mensaje: 'Se requiere un Idempotency-Key de 8 a 128 caracteres.' };
   }
   if (!EMAIL.test(email) || email.length > 254) {
     return { ok: false, codigo: 'EMAIL_INVALIDO', mensaje: 'Ingresá un correo electrónico válido.' };
+  }
+  if (idioma !== 'es' && idioma !== 'en') {
+    return { ok: false, codigo: 'IDIOMA_INVALIDO', mensaje: 'El idioma no es válido.' };
   }
   if (reservaCodigo && !CODIGO_RESERVA.test(reservaCodigo)) {
     return { ok: false, codigo: 'CODIGO_RESERVA_INVALIDO', mensaje: 'El código de reserva no tiene un formato válido.' };
@@ -79,7 +94,7 @@ export async function crearSolicitudArrepentimiento(
     return { ok: false, codigo: 'DETALLE_INVALIDO', mensaje: 'Contanos brevemente qué contratación querés revocar (10 a 1000 caracteres).' };
   }
 
-  const requestHash = await sha256(JSON.stringify({ reservaCodigo, email, detalle }));
+  const requestHash = await sha256(JSON.stringify({ reservaCodigo, email, detalle, idioma }));
   const anterior = await repositorio.buscarPorIdempotencia(clave);
   if (anterior) {
     if (anterior.requestHash !== requestHash) {
@@ -94,6 +109,7 @@ export async function crearSolicitudArrepentimiento(
       reservaCodigo,
       email,
       detalle,
+      idioma,
       idempotencyKey: clave,
       requestHash,
       correlationId: entrada.correlationId,
@@ -121,14 +137,17 @@ export async function resolverSolicitudArrepentimiento(
     estadoActual: EstadoSolicitudArrepentimiento;
     estado: EstadoSolicitudArrepentimiento;
     actorEmail: string;
-    motivo: string;
+    notaInterna: string;
+    mensajeCliente: string;
     correlationId: string;
   },
   repositorio: RepositorioSolicitudesArrepentimiento,
   auditoria: RegistroAuditoriaReservas
 ): Promise<SolicitudArrepentimiento | null> {
-  const motivo = entrada.motivo.trim();
-  if (!Number.isInteger(entrada.id) || entrada.id < 1 || motivo.length < 5 || motivo.length > 500) {
+  const notaInterna = entrada.notaInterna.trim();
+  const mensajeCliente = entrada.mensajeCliente.trim();
+  if (!Number.isInteger(entrada.id) || entrada.id < 1 || notaInterna.length < 5 || notaInterna.length > 500 ||
+      mensajeCliente.length < 5 || mensajeCliente.length > 1_000) {
     throw new Error('DATOS_INVALIDOS');
   }
   if (!TRANSICIONES[entrada.estadoActual]?.includes(entrada.estado)) {
@@ -139,7 +158,8 @@ export async function resolverSolicitudArrepentimiento(
     estadoActual: entrada.estadoActual,
     estado: entrada.estado,
     actorEmail: entrada.actorEmail,
-    motivo,
+    notaInterna,
+    mensajeCliente,
   });
   if (!actualizada) return null;
   await auditoria.registrar({
@@ -147,9 +167,9 @@ export async function resolverSolicitudArrepentimiento(
     accion: 'resolver_solicitud_arrepentimiento',
     entidadTipo: 'solicitud_arrepentimiento',
     entidadId: entrada.id,
-    motivo,
+    motivo: notaInterna,
     correlationId: entrada.correlationId,
-    metadata: { estado: entrada.estado },
+    metadata: { estado: entrada.estado, mensaje_cliente_informado: true },
   });
   return actualizada;
 }

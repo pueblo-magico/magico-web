@@ -153,3 +153,14 @@ conservadora; ese ticket incorporará asignación física definitiva por unidad.
 El endpoint legacy `POST /api/cotizar` continúa disponible y delega al mismo
 caso de uso. Acepta opcionalmente `modalidad` y `contexto` para una migración
 gradual de consumidores.
+
+## Arrepentimiento
+
+`POST /api/v1/public/arrepentimientos` registra una solicitud idempotente en ES
+o EN y devuelve únicamente código `ARR-…`, estado y fecha de recepción. No
+cancela la reserva ni ejecuta una devolución.
+
+`GET /api/v1/public/arrepentimientos?codigo=ARR-…&email=…` permite consultar el
+estado y el mensaje público del equipo. Exige la combinación exacta de código y
+email normalizado, aplica rate limit, usa una respuesta genérica para datos que
+no coinciden y nunca devuelve la nota interna ni datos de la reserva vinculada.
