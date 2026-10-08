@@ -143,7 +143,6 @@ export const BookingWidget: React.FC<{
   const c = COPY[language];
   const today = localTodayIso();
   const [open, setOpen] = useState(false);
-  const [mobileFlow, setMobileFlow] = useState(false);
   const [step, setStep] = useState<Step>(1);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -173,14 +172,6 @@ export const BookingWidget: React.FC<{
   useEffect(() => {
     onOpenChange?.(open);
   }, [onOpenChange, open]);
-
-  useEffect(() => {
-    const media = window.matchMedia('(max-width: 640px)');
-    const update = () => setMobileFlow(media.matches);
-    update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
 
   const availableTypes = useMemo(() => {
     const unique = new Set(accommodations.map(item => item.tipo));
@@ -223,7 +214,7 @@ export const BookingWidget: React.FC<{
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
-    if (mobileFlow) document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
     const focusTimer = window.setTimeout(() => {
       dialogRef.current?.querySelector<HTMLElement>('button, input, a[href], [tabindex]:not([tabindex="-1"])')?.focus();
     }, 0);
@@ -232,7 +223,7 @@ export const BookingWidget: React.FC<{
         setOpen(false);
         return;
       }
-      if (!mobileFlow || event.key !== 'Tab' || !dialogRef.current) return;
+      if (event.key !== 'Tab' || !dialogRef.current) return;
       const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
         'button:not(:disabled), input:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])',
       ));
@@ -250,11 +241,11 @@ export const BookingWidget: React.FC<{
     window.addEventListener('keydown', onKeyDown);
     return () => {
       window.clearTimeout(focusTimer);
-      if (mobileFlow) document.body.style.overflow = previous;
+      document.body.style.overflow = previous;
       window.removeEventListener('keydown', onKeyDown);
       launcherRef.current?.focus();
     };
-  }, [open, mobileFlow]);
+  }, [open]);
 
   useEffect(() => {
     if (!quote?.cotizacion.expiresAt) return;
@@ -446,7 +437,7 @@ export const BookingWidget: React.FC<{
         : c.heroReviewCopy;
 
   const bookingFlow = (
-    <section ref={dialogRef} className="booking-dialog" role="dialog" aria-modal={mobileFlow || undefined} aria-labelledby="booking-title" tabIndex={-1}>
+    <section ref={dialogRef} className="booking-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-title" tabIndex={-1}>
             <header className="booking-flow__header">
               <p className="booking-flow__eyebrow">{c.launcherEyebrow}</p>
               <h2 id="booking-title">{headerTitle}</h2>
@@ -667,10 +658,9 @@ export const BookingWidget: React.FC<{
             </button>
           </div>
         )}
-        {open && !mobileFlow && <div className="booking-inline">{bookingFlow}</div>}
       </div>
 
-      {open && mobileFlow && createPortal(
+      {open && createPortal(
         <div className="booking-overlay" role="presentation" onMouseDown={event => event.target === event.currentTarget && setOpen(false)}>
           {bookingFlow}
         </div>,

@@ -702,127 +702,6 @@
   width: 100%;
 }
 
-.booking-inline .booking-dialog {
-  width: 100%;
-  border-radius: 18px;
-  box-shadow: none;
-}
-
-.booking-inline .booking-flow__header {
-  min-height: 0;
-  padding: 22px 56px 22px 22px;
-  border-radius: 18px 18px 0 0;
-}
-
-.booking-inline .booking-flow__header h2 {
-  margin-top: 5px;
-  font-size: clamp(1.65rem, 4vw, 2.15rem);
-}
-
-.booking-inline .booking-flow__price-lead {
-  font-size: .86rem;
-}
-
-.booking-inline .booking-flow__intro {
-  font-size: .82rem;
-}
-
-.booking-inline .booking-flow__close {
-  top: 15px;
-  right: 14px;
-}
-
-.booking-inline .booking-icon-button {
-  width: 38px;
-  height: 38px;
-}
-
-.booking-inline .booking-steps {
-  gap: 5px;
-  padding: 16px 14px 0;
-}
-
-.booking-inline .booking-step {
-  gap: 5px;
-  font-size: .68rem;
-}
-
-.booking-inline .booking-step:not(:last-child)::after {
-  display: none;
-}
-
-.booking-inline .booking-step::before {
-  width: 28px;
-  height: 28px;
-}
-
-.booking-inline .booking-flow__body {
-  padding: 14px;
-}
-
-.booking-inline .booking-panel {
-  padding: 16px;
-  border-radius: 16px;
-}
-
-.booking-inline .booking-date-grid,
-.booking-inline .booking-grid,
-.booking-inline .booking-choice-grid {
-  grid-template-columns: 1fr;
-}
-
-.booking-inline .booking-date-card {
-  min-height: 76px;
-  padding: 14px;
-}
-
-.booking-inline .booking-guests-row {
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.booking-inline .booking-counter {
-  gap: 8px;
-}
-
-.booking-inline .booking-counter button {
-  width: 38px;
-  height: 38px;
-}
-
-.booking-inline .booking-stay-card {
-  grid-template-columns: 82px 1fr auto;
-  min-height: 92px;
-  gap: 11px;
-  padding-right: 10px;
-}
-
-.booking-inline .booking-stay-card img {
-  height: 76px;
-}
-
-.booking-inline .booking-stay-card small {
-  font-size: .75rem;
-}
-
-.booking-inline .booking-actions {
-  flex-direction: column-reverse;
-}
-
-.booking-inline .booking-result h3 {
-  font-size: 1.75rem;
-}
-
-.booking-inline .booking-payment {
-  padding: 12px;
-}
-
-.booking-inline .booking-payment__heading {
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .booking-button--payment {
   width: 100%;
   margin-top: 18px;
@@ -845,10 +724,6 @@
   font-weight: 800;
   text-decoration: underline;
   cursor: pointer;
-}
-
-.booking-inline .booking-summary {
-  padding: 16px;
 }
 
 @media (max-width: 640px) {
