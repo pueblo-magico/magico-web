@@ -52,6 +52,8 @@ const COPIA = {
   },
 } as const;
 
+export const MAX_INTENTOS_EMAIL_ARREPENTIMIENTO = 3;
+
 function renderizar(valor: string, codigo: string, mensaje: string | null): string {
   return valor.replaceAll('{{codigo}}', codigo).replaceAll('{{mensaje}}', mensaje || '').trim();
 }
@@ -83,6 +85,8 @@ export async function reclamarNotificacionArrepentimiento(
     notificacionUid: reclamada.notificacionUid,
     claimUid,
     deliveryUid: `entrega:${reclamada.notificacionUid}:${reclamada.attempts}`,
+    intento: reclamada.attempts,
+    maxIntentos: MAX_INTENTOS_EMAIL_ARREPENTIMIENTO,
     destinatario: reclamada.email,
     asunto: renderizar(asunto, reclamada.codigo, reclamada.mensajeCliente),
     cuerpo: renderizar(cuerpo, reclamada.codigo, reclamada.mensajeCliente),
