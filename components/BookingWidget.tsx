@@ -151,7 +151,7 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
   }, [accommodations, type]);
 
   useEffect(() => {
-    if (!open || optionsLoaded || loadingOptions) return;
+    if (!open || optionsLoaded) return;
     let cancelled = false;
     setLoadingOptions(true);
     setError(null);
@@ -170,7 +170,7 @@ export const BookingWidget: React.FC<{ compact?: boolean }> = ({ compact = false
         }
       });
     return () => { cancelled = true; };
-  }, [open, optionsLoaded, loadingOptions, c.noOptions, language]);
+  }, [open, optionsLoaded, c.noOptions, language]);
 
   useEffect(() => {
     if (!availableModes.includes(mode) && availableModes.length > 0) setMode(availableModes[0]);

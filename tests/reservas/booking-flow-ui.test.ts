@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   checkPublicAvailability,
@@ -8,6 +9,12 @@ import {
   localTodayIso,
   remainingSeconds,
 } from '../../components/booking/bookingApi.ts';
+
+test('la carga de alojamientos no se cancela al activar su propio indicador', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  assert.match(source, /\}, \[open, optionsLoaded, c\.noOptions, language\]\);/);
+  assert.doesNotMatch(source, /\[open, optionsLoaded, loadingOptions/);
+});
 
 test('genera una clave idempotente distinta por intento de reserva web', () => {
   const first = createBookingAttemptKey();
