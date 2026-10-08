@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const terms = readFileSync(new URL('../../src/TerminosYCondiciones.tsx', import.meta.url), 'utf8');
 const privacy = readFileSync(new URL('../../src/PoliticaPrivacidad.tsx', import.meta.url), 'utf8');
+const booking = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
 
 test('los términos describen el flujo online sin promesas comerciales inventadas', () => {
   assert.match(terms, /pendiente de pago/);
@@ -29,4 +30,11 @@ test('privacidad diferencia los plazos legales y evita inventar retención', () 
   assert.match(privacy, /cinco días hábiles/);
   assert.match(privacy, /deben configurarse y aprobarse/);
   assert.doesNotMatch(privacy, /en general, 5 años/);
+});
+
+test('los enlaces legales usan las rutas canónicas de Cloudflare Pages', () => {
+  assert.match(terms, /href="\/politica-de-privacidad\/"/);
+  assert.match(privacy, /href="\/terminos-y-condiciones\/"/);
+  assert.match(booking, /href="\/terminos-y-condiciones\/"/);
+  assert.match(booking, /href="\/politica-de-privacidad\/"/);
 });

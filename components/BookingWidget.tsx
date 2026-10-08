@@ -1158,13 +1158,13 @@ export const BookingWidget: React.FC<{
                     </div>
                     {selectedUtilities.length > 0 && <div className="booking-conditions__section"><strong>{c.includedConditionsTitle}</strong><div className="booking-utilities booking-utilities--review" aria-label={c.utilities}>{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div></div>}
                     <div className="booking-conditions__detail"><Leaf aria-hidden="true" /><span><strong>{c.extendedUseTitle}</strong><small>{c.extendedUseCopy}</small></span></div>
-                    <div className="booking-conditions__detail booking-conditions__detail--gold"><CalendarDays aria-hidden="true" /><span><strong>{c.changesTitle}</strong><small>{c.changesCopy} <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer">{c.fullPolicy}</a>.</small></span></div>
+                    <div className="booking-conditions__detail booking-conditions__detail--gold"><CalendarDays aria-hidden="true" /><span><strong>{c.changesTitle}</strong><small>{c.changesCopy} <a href="/terminos-y-condiciones/" target="_blank" rel="noopener noreferrer">{c.fullPolicy}</a>.</small></span></div>
                   </section>
                   <div className="booking-notice"><ShieldCheck size={20} /> {c.privacyNote}</div>
                   <label className={`booking-consent ${showReviewError('consent') && reviewErrorFor('consent') ? 'booking-consent--error' : ''}`}>
                     <input data-booking-field="consent" type="checkbox" checked={consent} onChange={event => { setConsent(event.target.checked); touchReviewField('consent'); }} aria-invalid={showReviewError('consent') && Boolean(reviewErrorFor('consent'))} aria-describedby={showReviewError('consent') && reviewErrorFor('consent') ? 'booking-consent-error' : undefined} required />
                     <span className="booking-consent__content">
-                      <span className="booking-consent__copy">{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer">{c.privacy}</a>.</span>
+                      <span className="booking-consent__copy">{c.consentPrefix} <a href="/terminos-y-condiciones/" target="_blank" rel="noopener noreferrer">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad/" target="_blank" rel="noopener noreferrer">{c.privacy}</a>.</span>
                       {showReviewError('consent') && reviewErrorFor('consent') && <small id="booking-consent-error" className="booking-field__error"><AlertCircle />{reviewErrorFor('consent')?.message}</small>}
                     </span>
                   </label>

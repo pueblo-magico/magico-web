@@ -102,7 +102,7 @@ export const PoliticaPrivacidad: React.FC = () => {
         <div className="mt-12 pt-8 border-t border-gray-200 text-xs text-dark/40 text-center">
           © {new Date().getFullYear()} HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
           <br />
-          <a href="/terminos-y-condiciones" className="hover:text-brand transition-colors">{en ? 'Terms and Conditions' : 'Términos y Condiciones'}</a>{' · '}
+          <a href="/terminos-y-condiciones/" className="hover:text-brand transition-colors">{en ? 'Terms and Conditions' : 'Términos y Condiciones'}</a>{' · '}
           <a href="/" className="hover:text-brand transition-colors">{en ? 'Back to home' : 'Volver al inicio'}</a>
         </div>
       </main>
