@@ -2040,6 +2040,39 @@ type EstadoIntegracionesApi = {
   deliveryLast24h: { attempts: number; failures: number; failureRate: number };
   eventos: EventoIntegracionOperativo[];
 };
+type EstadoComunicacionOperativa = 'pendiente' | 'procesando' | 'entregada' | 'sin_canal' | 'dead_letter';
+type EstadoOperacionesMvpApi = {
+  reservas: {
+    pendientesPago: number;
+    retencionesVencidasSinProcesar: number;
+    oldestPendingAgeSeconds: number | null;
+  };
+  pagos: {
+    webhooksLast24h: number;
+    aplicadosLast24h: number;
+    inconsistentesLast24h: number;
+    eventos: Array<{
+      proveedor: string; reservaId: number | null; resultado: string;
+      motivoCodigo: string | null; correlationId: string | null;
+      createdAt: string; processedAt: string | null;
+    }>;
+  };
+  comunicaciones: {
+    resumen: Record<EstadoComunicacionOperativa, number>;
+    oldestPendingAgeSeconds: number | null;
+    deliveryLast24h: { attempts: number; failures: number; failureRate: number };
+    intenciones: Array<{
+      intencionUid: string; reservaId: number; tipo: string; idioma: string;
+      estado: EstadoComunicacionOperativa; attempts: number; canal: string | null;
+      lastErrorCode: string | null; createdAt: string;
+    }>;
+  };
+  tendenciaColas: {
+    outbox: { creadosPendientesUltimos15m: number; creadosPendientes15mAnteriores: number; crecimiento: number };
+    comunicaciones: { creadosPendientesUltimos15m: number; creadosPendientes15mAnteriores: number; crecimiento: number };
+  };
+  alertas: Array<{ codigo: string; nivel: 'info' | 'warning' | 'critical'; mensaje: string; cantidad: number }>;
+};
 
 const ESTADO_EVENTO_LABEL: Record<EstadoEventoIntegracion, string> = {
   pending: 'Pendiente', processing: 'Procesando', delivered: 'Entregado', dead_letter: 'Requiere atención',
@@ -2055,22 +2088,25 @@ const fmtDuracion = (segundos: number | null) => {
 
 const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmin }) => {
   const [estado, setEstado] = useState<EstadoIntegracionesApi | null>(null);
+  const [operaciones, setOperaciones] = useState<EstadoOperacionesMvpApi | null>(null);
   const [meta, setMeta] = useState({ despachoHabilitado: false, destinoConfigurado: false });
   const [cargando, setCargando] = useState(true);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [eventoReproceso, setEventoReproceso] = useState<string | null>(null);
+  const [intencionReproceso, setIntencionReproceso] = useState<string | null>(null);
   const [motivo, setMotivo] = useState('');
 
   const cargar = async () => {
     setCargando(true);
     setError('');
     try {
-      const res = await adminFetch('/api/v1/admin/integraciones/outbox?limite=100');
+      const res = await adminFetch('/api/v1/admin/integraciones/estado?limite=100');
       const body: any = await res.json();
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
-      setEstado(body.data);
+      setEstado(body.data.outbox);
+      setOperaciones(body.data);
       setMeta({
         despachoHabilitado: body.meta?.despacho_habilitado === true,
         destinoConfigurado: body.meta?.destino_configurado === true,
@@ -2125,6 +2161,28 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
     }
   };
 
+  const reprocesarComunicacion = async (intencionUid: string) => {
+    setProcesando(true);
+    setError('');
+    setMensaje('');
+    try {
+      const res = await adminFetch('/api/v1/admin/integraciones/comunicaciones/reprocesar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intencion_uid: intencionUid, motivo: motivo.trim() }),
+      });
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      setIntencionReproceso(null);
+      setMotivo('');
+      setMensaje('La comunicación volvió a Pendiente y el cambio quedó auditado.');
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo reintentar la comunicación.');
+    } finally {
+      setProcesando(false);
+    }
+  };
+
   const configuracionLista = meta.despachoHabilitado && meta.destinoConfigurado;
   const tasa = estado ? Math.round(estado.deliveryLast24h.failureRate * 1000) / 10 : 0;
 
@@ -2162,6 +2220,30 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
       {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
+
+      {(operaciones?.alertas || []).length > 0 && (
+        <section className="space-y-2" aria-label="Alertas operativas">
+          {operaciones!.alertas.map(alerta => (
+            <div key={alerta.codigo} className={`rounded-lg border px-4 py-3 text-sm ${
+              alerta.nivel === 'critical'
+                ? 'border-red-200 bg-red-50 text-red-800'
+                : 'border-amber-200 bg-amber-50 text-amber-800'
+            }`}>
+              <p className="font-semibold">{alerta.mensaje}</p>
+              <p className="mt-0.5 text-xs">{alerta.cantidad} elemento{alerta.cantidad === 1 ? '' : 's'} · código {alerta.codigo}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricCard compact label="Reservas pendientes" value={operaciones ? String(operaciones.reservas.pendientesPago) : '—'}
+          hint={operaciones?.reservas.oldestPendingAgeSeconds != null ? `Más antigua: ${fmtDuracion(operaciones.reservas.oldestPendingAgeSeconds)}` : undefined} />
+        <MetricCard compact label="Retenciones vencidas" value={operaciones ? String(operaciones.reservas.retencionesVencidasSinProcesar) : '—'} />
+        <MetricCard compact label="Webhooks MP 24 h" value={operaciones ? String(operaciones.pagos.webhooksLast24h) : '—'}
+          hint={operaciones ? `${operaciones.pagos.aplicadosLast24h} aplicados` : undefined} />
+        <MetricCard compact label="Pagos a conciliar" value={operaciones ? String(operaciones.pagos.inconsistentesLast24h) : '—'} />
+      </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <MetricCard compact label="Pendientes" value={estado ? String(estado.resumen.pending) : '—'} />
@@ -2205,7 +2287,7 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
                     {evento.lastErrorCode && <p className="mt-1 text-xs font-medium text-red-700">Código: {evento.lastErrorCode}</p>}
                   </div>
                   {esSuperAdmin && necesitaAtencion && eventoReproceso !== evento.eventId && (
-                    <button type="button" onClick={() => { setEventoReproceso(evento.eventId); setMotivo(''); }}
+                    <button type="button" onClick={() => { setEventoReproceso(evento.eventId); setIntencionReproceso(null); setMotivo(''); }}
                       className={`self-start rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 ${FOCUS_RING}`}>
                       Preparar reintento
                     </button>
@@ -2235,6 +2317,84 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             )}
           </ul>
         )}
+      </section>
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Comunicaciones de reservas</h3>
+          <p className="mt-1 text-xs text-gray-500">Intenciones durables, sin datos personales. El canal de correo se habilita por separado.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 border-b border-gray-100 p-4 lg:grid-cols-5">
+          <MetricCard compact label="Pendientes" value={operaciones ? String(operaciones.comunicaciones.resumen.pendiente) : '—'} />
+          <MetricCard compact label="Procesando" value={operaciones ? String(operaciones.comunicaciones.resumen.procesando) : '—'} />
+          <MetricCard compact label="Entregadas" value={operaciones ? String(operaciones.comunicaciones.resumen.entregada) : '—'} />
+          <MetricCard compact label="Sin canal" value={operaciones ? String(operaciones.comunicaciones.resumen.sin_canal) : '—'} />
+          <MetricCard compact label="Con atención" value={operaciones ? String(operaciones.comunicaciones.resumen.dead_letter) : '—'} />
+        </div>
+        <ul className="divide-y divide-gray-100">
+          {(operaciones?.comunicaciones.intenciones || []).slice(0, 20).map(intencion => (
+            <li key={intencion.intencionUid} className="px-4 py-3 sm:px-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      intencion.estado === 'entregada' ? 'bg-green-100 text-green-800' :
+                      intencion.estado === 'dead_letter' ? 'bg-red-100 text-red-800' :
+                      intencion.estado === 'sin_canal' ? 'bg-amber-100 text-amber-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>{intencion.estado.replace('_', ' ')}</span>
+                    <span className="text-sm font-semibold text-gray-800">{intencion.tipo.replaceAll('_', ' ')}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">Reserva {intencion.reservaId} · {intencion.idioma.toUpperCase()} · {intencion.attempts} intento{intencion.attempts === 1 ? '' : 's'}</p>
+                  <p className="mt-1 break-all text-[11px] text-gray-400">{intencion.intencionUid}</p>
+                  {intencion.lastErrorCode && <p className="mt-1 text-xs font-medium text-red-700">Código: {intencion.lastErrorCode}</p>}
+                </div>
+                {esSuperAdmin && ['sin_canal', 'dead_letter'].includes(intencion.estado) && intencionReproceso !== intencion.intencionUid && (
+                  <button type="button" onClick={() => { setIntencionReproceso(intencion.intencionUid); setEventoReproceso(null); setMotivo(''); }}
+                    className={`rounded-lg border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-50 ${FOCUS_RING}`}>Preparar reintento</button>
+                )}
+              </div>
+              {esSuperAdmin && intencionReproceso === intencion.intencionUid && (
+                <div className="mt-3 rounded-lg border border-amber-100 bg-amber-50 p-3">
+                  <label htmlFor={`motivo_com_${intencion.intencionUid}`} className="text-xs font-semibold text-amber-900">Motivo del reintento</label>
+                  <textarea id={`motivo_com_${intencion.intencionUid}`} rows={2} maxLength={500} value={motivo}
+                    onChange={e => setMotivo(e.target.value)} placeholder="Ej. Canal habilitado y configuración validada"
+                    className={`mt-1 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm ${FOCUS_RING}`} />
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button type="button" onClick={() => { setIntencionReproceso(null); setMotivo(''); }} className={`rounded-lg px-3 py-2 text-xs font-semibold text-gray-600 ${FOCUS_RING}`}>Cancelar</button>
+                    <button type="button" onClick={() => reprocesarComunicacion(intencion.intencionUid)} disabled={procesando || motivo.trim().length < 8}
+                      className={`rounded-lg bg-amber-700 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>Volver a Pendiente</button>
+                  </div>
+                </div>
+              )}
+            </li>
+          ))}
+          {!cargando && operaciones?.comunicaciones.intenciones.length === 0 && (
+            <li className="px-5 py-8 text-center text-sm text-gray-400">Todavía no hay comunicaciones registradas.</li>
+          )}
+        </ul>
+      </section>
+
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Mercado Pago reciente</h3>
+        </div>
+        <ul className="divide-y divide-gray-100">
+          {(operaciones?.pagos.eventos || []).map((evento, index) => (
+            <li key={`${evento.correlationId || 'sin-correlacion'}-${index}`} className="px-4 py-3 sm:px-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${evento.resultado === 'inconsistente' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{evento.resultado}</span>
+                <span className="text-sm text-gray-700">Reserva {evento.reservaId ?? 'sin vincular'}</span>
+              </div>
+              <p className="mt-1 break-all text-xs text-gray-500">Solicitud: {evento.correlationId || 'sin correlación'}</p>
+              {evento.motivoCodigo && <p className="mt-1 text-xs font-medium text-red-700">Código: {evento.motivoCodigo}</p>}
+              <p className="mt-1 text-[11px] text-gray-400">{fmtFechaHora(evento.createdAt)}</p>
+            </li>
+          ))}
+          {!cargando && operaciones?.pagos.eventos.length === 0 && (
+            <li className="px-5 py-8 text-center text-sm text-gray-400">No hay webhooks de Mercado Pago registrados.</li>
+          )}
+        </ul>
       </section>
     </div>
   );
