@@ -1,237 +1,109 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
-
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="mb-10">
+  <section className="mb-10">
     <h2 className="text-xl font-serif text-brand mb-4 pb-2 border-b border-brand/10">{title}</h2>
     <div className="text-dark/80 font-light leading-relaxed space-y-3 text-sm">{children}</div>
-  </div>
+  </section>
 );
 
 export const PoliticaPrivacidad: React.FC = () => {
-  useEffect(() => {
-    document.title = 'Política de Privacidad — Pueblo Mágico';
-    window.scrollTo(0, 0);
-  }, []);
+  const { language, toggleLanguage } = useLanguage();
+  const en = language === 'en';
 
-  const fecha = '27 de abril de 2025';
+  useEffect(() => {
+    document.title = en ? 'Privacy Policy — Pueblo Mágico' : 'Política de Privacidad — Pueblo Mágico';
+    window.scrollTo(0, 0);
+  }, [en]);
 
   return (
     <div className="min-h-screen bg-bone font-sans antialiased">
-      {/* Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
-          <a
-            href="/"
-            className="flex items-center gap-2 text-sm text-dark/60 hover:text-brand transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Volver al inicio
+          <a href="/" className="flex items-center gap-2 text-sm text-dark/60 hover:text-brand transition-colors">
+            <ArrowLeft size={16} /> {en ? 'Back to home' : 'Volver al inicio'}
           </a>
           <span className="text-gray-200">|</span>
-          <img
-            src="/uploads/pueblo_magico_logo_marron.svg"
-            alt="Pueblo Mágico"
-            className="h-7 opacity-80"
-          />
+          <img src="/uploads/pueblo_magico_logo_marron.svg" alt="Pueblo Mágico" className="h-7 opacity-80" />
+          <button type="button" onClick={toggleLanguage} className="ml-auto text-xs font-bold text-brand underline underline-offset-4">
+            {en ? 'ES' : 'EN'}
+          </button>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-16">
-        {/* Título */}
         <div className="mb-12">
-          <p className="text-brand/60 text-xs uppercase tracking-widest font-semibold mb-3">Documento legal</p>
-          <h1 className="text-4xl md:text-5xl font-serif text-brand mb-4">
-            Política de Privacidad
-          </h1>
-          <p className="text-dark/50 text-sm font-light">
-            Última actualización: {fecha}
-          </p>
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-            Esta política describe cómo recopilamos, usamos y protegemos tu información personal, conforme a la <strong>Ley N° 25.326 de Protección de Datos Personales</strong> de la República Argentina.
+          <p className="text-brand/60 text-xs uppercase tracking-widest font-semibold mb-3">{en ? 'Legal document' : 'Documento legal'}</p>
+          <h1 className="text-4xl md:text-5xl font-serif text-brand mb-4">{en ? 'Privacy Policy' : 'Política de Privacidad'}</h1>
+          <p className="text-dark/50 text-sm font-light">{en ? 'Last updated: October 8, 2026' : 'Última actualización: 8 de octubre de 2026'}</p>
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+            {en ? 'This policy explains how we process information used for inquiries, online bookings and stays under Argentine Personal Data Protection Law 25,326.' : 'Esta política explica cómo tratamos la información utilizada para consultas, reservas online y estadías conforme a la Ley argentina 25.326 de Protección de Datos Personales.'}
           </div>
         </div>
 
-        <Section title="1. Responsable del tratamiento">
-          <p>
-            <strong>Razón social:</strong> HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
-          </p>
-          <p>
-            <strong>Nombre comercial:</strong> Pueblo Mágico — Eco-Refugio & Glamping
-          </p>
-          <p>
-            <strong>CUIT:</strong> 30-71875586-3
-          </p>
-          <p>
-            <strong>Domicilio:</strong> Calle Aconquija 635, Villa Allende, Departamento Colón, Córdoba, Argentina.
-          </p>
-          <p>
-            <strong>Contacto para asuntos de privacidad:</strong>{' '}
-            <a href="mailto:experienciamagico@gmail.com" className="text-brand hover:underline">
-              experienciamagico@gmail.com
-            </a>
-            {' '}/ WhatsApp{' '}
-            <a href="https://wa.me/5493516765820" className="text-brand hover:underline" target="_blank" rel="noopener noreferrer">
-              +54 9 351 676 5820
-            </a>
-          </p>
+        <Section title={en ? '1. Data controller' : '1. Responsable del tratamiento'}>
+          <p><strong>{en ? 'Legal name:' : 'Razón social:'}</strong> HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA</p>
+          <p><strong>{en ? 'Trade name:' : 'Nombre comercial:'}</strong> Pueblo Mágico — Eco-Refugio & Glamping</p>
+          <p><strong>CUIT:</strong> 30-71875586-3</p>
+          <p><strong>{en ? 'Address:' : 'Domicilio:'}</strong> Calle Aconquija 635, Villa Allende, Departamento Colón, Córdoba, Argentina.</p>
+          <p><strong>{en ? 'Privacy contact:' : 'Contacto de privacidad:'}</strong>{' '}<a href="mailto:experienciamagico@gmail.com" className="text-brand hover:underline">experienciamagico@gmail.com</a>{' · '}<a href="https://wa.me/5493516765820" className="text-brand hover:underline" target="_blank" rel="noopener noreferrer">+54 9 351 676 5820</a></p>
         </Section>
 
-        <Section title="2. Datos personales que recopilamos">
-          <p>Recopilamos únicamente los datos necesarios para gestionar tu reserva o consulta:</p>
-          <p><strong>Datos de contacto y reserva (provistos por el/la interesado/a vía WhatsApp o email):</strong></p>
+        <Section title={en ? '2. Information we process' : '2. Información que tratamos'}>
+          <p>{en ? 'Depending on how you interact with us, we process only the information needed for the stated purpose:' : 'Según cómo interactúes con nosotros, tratamos únicamente la información necesaria para la finalidad informada:'}</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Nombre y apellido.</li>
-            <li>Número de teléfono / WhatsApp.</li>
-            <li>Correo electrónico.</li>
-            <li>Fechas de reserva y tipo de experiencia o alojamiento.</li>
-            <li>Número de personas (adultos y menores, cuando corresponda).</li>
+            <li>{en ? 'Name, telephone or WhatsApp number, and optional email address.' : 'Nombre, teléfono o WhatsApp y correo electrónico opcional.'}</li>
+            <li>{en ? 'Dates, number of guests, accommodation, meal plan, quote and booking code.' : 'Fechas, cantidad de huéspedes, alojamiento, régimen de comidas, cotización y código de reserva.'}</li>
+            <li>{en ? 'Booking status, accepted commercial snapshot and payment-verification references.' : 'Estado de la reserva, snapshot comercial aceptado y referencias de verificación del pago.'}</li>
+            <li>{en ? 'Transactional history, cancellation requests, consent and audit records required to resolve the booking.' : 'Historial transaccional, solicitudes de cancelación, consentimiento y registros de auditoría necesarios para resolver la reserva.'}</li>
+            <li>{en ? 'Technical security and traffic data, with identifiers minimized or hashed where the system supports it.' : 'Datos técnicos de seguridad y tráfico, con identificadores minimizados o hasheados cuando el sistema lo permite.'}</li>
           </ul>
-          <p><strong>Datos de pago (cuando aplica):</strong></p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>CBU/alias para transferencias. No almacenamos datos de tarjetas de crédito o débito.</li>
-          </ul>
-          <p><strong>Datos de navegación (automáticos):</strong></p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Datos técnicos de visita al sitio web (dirección IP, tipo de dispositivo, páginas visitadas) a través de herramientas de analítica web (ver Sección 7).</li>
-          </ul>
+          <p>{en ? 'Payment providers process the financial credentials entered on their own services. Pueblo Mágico does not need to store card numbers or online-banking credentials to verify a payment.' : 'Los proveedores de pago tratan las credenciales financieras ingresadas en sus propios servicios. Pueblo Mágico no necesita almacenar números de tarjeta ni credenciales bancarias para verificar un pago.'}</p>
         </Section>
 
-        <Section title="3. Finalidades del tratamiento">
-          <p>Tus datos personales son utilizados exclusivamente para:</p>
+        <Section title={en ? '3. Purposes and legal basis' : '3. Finalidades y bases del tratamiento'}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Gestión de reservas:</strong> confirmar disponibilidad, enviar propuestas y coordinar tu estadía.</li>
-            <li><strong>Comunicaciones relacionadas con tu reserva:</strong> recordatorios, indicaciones de acceso, cambios o cancelaciones.</li>
-            <li><strong>Facturación y cumplimiento de obligaciones legales</strong> (impositivas, contables, turísticas).</li>
-            <li><strong>Atención al cliente:</strong> resolver consultas, reclamos o solicitudes de arrepentimiento.</li>
-            <li><strong>Comunicaciones comerciales:</strong> solo si otorgaste tu consentimiento expreso. Podés darte de baja en cualquier momento.</li>
+            <li><strong>{en ? 'Requested service:' : 'Servicio solicitado:'}</strong> {en ? 'quote, hold inventory, create and manage the booking, verify payment and provide the stay.' : 'cotizar, retener inventario, crear y gestionar la reserva, verificar el pago y prestar la estadía.'}</li>
+            <li><strong>{en ? 'Transactional communications:' : 'Comunicaciones transaccionales:'}</strong> {en ? 'send booking, payment, expiration, change and cancellation information.' : 'informar sobre reserva, pago, vencimiento, cambios y cancelación.'}</li>
+            <li><strong>{en ? 'Legal obligations:' : 'Obligaciones legales:'}</strong> {en ? 'accounting, tax, tourism, consumer-protection and dispute records.' : 'registros contables, impositivos, turísticos, de consumo y reclamos.'}</li>
+            <li><strong>{en ? 'Security and service improvement:' : 'Seguridad y mejora del servicio:'}</strong> {en ? 'prevent abuse, diagnose failures and understand site use according to cookie choices.' : 'prevenir abusos, diagnosticar fallas y comprender el uso del sitio según las preferencias de cookies.'}</li>
+            <li><strong>{en ? 'Marketing:' : 'Marketing:'}</strong> {en ? 'only with a valid legal basis or separate consent; unsubscribing does not affect a booking.' : 'solo con base legal válida o consentimiento separado; la baja no afecta una reserva.'}</li>
           </ul>
+          <p>{en ? 'A failed communication or external integration does not decide or reverse the booking automatically.' : 'Una comunicación o integración externa fallida no decide ni revierte automáticamente el estado de la reserva.'}</p>
         </Section>
 
-        <Section title="4. Bases legales y consentimiento">
-          <p>El tratamiento de tus datos se basa en:</p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Ejecución del contrato:</strong> los datos de reserva son necesarios para cumplir el servicio solicitado.</li>
-            <li><strong>Obligación legal:</strong> datos de facturación e impositivos requeridos por AFIP y normativa turística.</li>
-            <li><strong>Consentimiento:</strong> para el envío de comunicaciones comerciales o el uso de imágenes con fines promocionales. Este consentimiento puede revocarse en cualquier momento sin afectar la validez de la reserva.</li>
-          </ul>
-          <p>
-            No tomamos decisiones automatizadas ni realizamos perfilado con tus datos personales.
-          </p>
+        <Section title={en ? '4. Recipients and processors' : '4. Destinatarios y encargados'}>
+          <p>{en ? 'We may share the minimum necessary information with infrastructure, payment, communications, accounting and professional-service providers acting for the purposes described above, as well as with authorities when legally required.' : 'Podemos compartir la información mínima necesaria con proveedores de infraestructura, pagos, comunicaciones, contabilidad y servicios profesionales que actúan para las finalidades descritas, y con autoridades cuando exista obligación legal.'}</p>
+          <p>{en ? 'The booking database remains the operational source of truth. External systems receive only the data and permissions required for their integration.' : 'La base de reservas permanece como fuente operativa de verdad. Los sistemas externos reciben únicamente los datos y permisos necesarios para su integración.'}</p>
         </Section>
 
-        <Section title="5. Cómo ejercer tus derechos (Ley 25.326)">
-          <p>
-            En virtud de la Ley N° 25.326, tenés los siguientes derechos sobre tus datos personales:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Acceso:</strong> conocer qué datos tenemos sobre vos.</li>
-            <li><strong>Rectificación:</strong> corregir datos inexactos o incompletos.</li>
-            <li><strong>Supresión:</strong> solicitar la eliminación de tus datos cuando ya no sean necesarios.</li>
-            <li><strong>Oposición:</strong> oponerte al tratamiento para fines de comunicación comercial.</li>
-          </ul>
-          <p>
-            <strong>Cómo ejercerlos:</strong> enviá tu solicitud por escrito a{' '}
-            <a href="mailto:experienciamagico@gmail.com" className="text-brand hover:underline">
-              experienciamagico@gmail.com
-            </a>
-            {' '}o por WhatsApp al +54 9 351 676 5820, indicando tu nombre completo y el derecho que deseás ejercer.
-          </p>
-          <p>
-            <strong>Plazo de respuesta:</strong> dentro de los 10 días hábiles de recibida la solicitud, conforme a lo establecido por la Ley 25.326.
-          </p>
-          <p>
-            Si considerás que tu solicitud no fue atendida correctamente, podés presentar una denuncia ante la{' '}
-            <strong>Agencia de Acceso a la Información Pública (AAIP)</strong>, organismo de control en materia de protección de datos personales en Argentina:{' '}
-            <a href="https://www.argentina.gob.ar/aaip" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-              www.argentina.gob.ar/aaip
-            </a>.
-          </p>
+        <Section title={en ? '5. Retention and security' : '5. Conservación y seguridad'}>
+          <p>{en ? 'Information is retained while needed to provide the service, address claims and meet applicable accounting, tax and other legal obligations. Operational retention periods are not invented by the application: they must be configured and approved before automated deletion is enabled.' : 'La información se conserva mientras sea necesaria para prestar el servicio, atender reclamos y cumplir obligaciones contables, impositivas y legales aplicables. La aplicación no inventa plazos operativos: deben configurarse y aprobarse antes de habilitar eliminaciones automáticas.'}</p>
+          <p>{en ? 'We apply reasonable access controls, audit trails, environment separation and data-minimization measures. No internet service can promise absolute security.' : 'Aplicamos controles razonables de acceso, auditoría, separación de ambientes y minimización de datos. Ningún servicio de Internet puede prometer seguridad absoluta.'}</p>
         </Section>
 
-        <Section title="6. Seguridad y conservación de los datos">
-          <p>
-            Implementamos medidas técnicas y organizativas razonables para proteger tus datos personales contra pérdida, uso indebido, acceso no autorizado o divulgación.
-          </p>
-          <p>
-            Tus datos de reserva son conservados por el tiempo necesario para cumplir la prestación del servicio y las obligaciones legales aplicables (en general, 5 años para documentación contable e impositiva).
-          </p>
-          <p>
-            No compartimos tus datos con terceros sin tu consentimiento, salvo obligación legal (requerimientos de AFIP, Defensa del Consumidor u otras autoridades competentes) o con proveedores estrictamente necesarios para la prestación del servicio (ej. plataformas de pago), quienes están obligados a mantener la confidencialidad.
-          </p>
+        <Section title={en ? '6. Your rights' : '6. Tus derechos'}>
+          <p>{en ? 'You may request access to your personal data free of charge at intervals no shorter than six months. We must respond to access requests within ten calendar days.' : 'Podés solicitar acceso a tus datos personales gratuitamente en intervalos no inferiores a seis meses. Debemos responder el acceso dentro de diez días corridos.'}</p>
+          <p>{en ? 'You may request rectification, updating or deletion when legally applicable. Those requests must be handled within five business days. Deletion may be limited where information must be retained by law or to protect legitimate third-party rights.' : 'Podés solicitar rectificación, actualización o supresión cuando corresponda legalmente. Esas solicitudes deben atenderse dentro de cinco días hábiles. La supresión puede limitarse cuando exista obligación legal de conservación o derechos legítimos de terceros.'}</p>
+          <p>{en ? 'Send the request through the privacy contact above, identifying yourself and the right you wish to exercise. If the response is absent or insufficient, you may complain to the Argentine Agency for Access to Public Information (AAIP): ' : 'Enviá la solicitud al contacto de privacidad indicado arriba, acreditando identidad e indicando el derecho que querés ejercer. Si no recibís respuesta suficiente, podés reclamar ante la Agencia de Acceso a la Información Pública (AAIP): '}<a href="https://www.argentina.gob.ar/aaip" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">argentina.gob.ar/aaip</a>.</p>
         </Section>
 
-        <Section title="7. Cookies y herramientas de analítica">
-          <p>
-            Este sitio web utiliza herramientas de analítica web para comprender el comportamiento de los visitantes y mejorar la experiencia:
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>
-              <strong>Microsoft Clarity:</strong> herramienta de mapas de calor y grabación de sesiones (anonimizadas). No recopila datos personales identificables. Política de privacidad:{' '}
-              <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-                privacy.microsoft.com
-              </a>.
-            </li>
-            <li>
-              <strong>Meta Pixel (Facebook):</strong> herramienta de análisis para medir la eficacia de la publicidad y personalizar anuncios en plataformas de Meta (Facebook/Instagram). Política de privacidad:{' '}
-              <a href="https://www.facebook.com/about/privacy" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-                facebook.com/about/privacy
-              </a>.
-            </li>
-            <li>
-              <strong>Google Ads:</strong> herramienta para medir conversiones y personalizar anuncios basados en tus intereses. Política de privacidad:{' '}
-              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-                policies.google.com/privacy
-              </a>.
-            </li>
-          </ul>
-          <p>
-            Podés rechazar o limitar las cookies Desde la configuración de tu navegador o mediante herramientas de exclusión publicitaria como{' '}
-            <a href="https://www.youronlinechoices.com/es/" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-              Your Online Choices
-            </a>.
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>Chrome: Configuración → Privacidad y seguridad → Cookies.</li>
-            <li>Firefox: Opciones → Privacidad y seguridad.</li>
-            <li>Safari: Preferencias → Privacidad.</li>
-          </ul>
-          <p>
-            Deshabilitar cookies puede afectar la funcionalidad de algunos elementos del sitio.
-          </p>
+        <Section title={en ? '7. Cookies and analytics' : '7. Cookies y analítica'}>
+          <p>{en ? 'Essential storage supports language and security preferences. Optional analytics or advertising tools are used only according to the consent choices presented by the site. You may change browser controls or reject optional cookies without preventing the core booking API from operating.' : 'El almacenamiento esencial sostiene preferencias de idioma y seguridad. Las herramientas opcionales de analítica o publicidad se usan según las opciones de consentimiento presentadas por el sitio. Podés modificar el navegador o rechazar cookies opcionales sin impedir el funcionamiento básico de la API de reservas.'}</p>
+          <p>{en ? 'The site may use Microsoft Clarity and, when enabled with the required consent, Meta or Google measurement tools. Their own privacy notices govern data they process as independent providers.' : 'El sitio puede usar Microsoft Clarity y, cuando estén habilitadas con el consentimiento requerido, herramientas de medición de Meta o Google. Sus avisos de privacidad rigen los datos que tratan como proveedores independientes.'}</p>
         </Section>
 
-        <Section title="8. Modificaciones a esta política">
-          <p>
-            Podemos actualizar esta Política de Privacidad en cualquier momento. La fecha de última actualización siempre estará visible al inicio del documento. Te recomendamos revisarla periódicamente.
-          </p>
-          <p>
-            Si realizamos cambios significativos que afecten tus derechos, te lo comunicaremos por correo electrónico o WhatsApp si ya sos cliente.
-          </p>
+        <Section title={en ? '8. Changes to this policy' : '8. Cambios a esta política'}>
+          <p>{en ? 'We may update this policy when the booking flow, providers or legal requirements change. The current revision date appears at the top. Material changes affecting an active booking will be communicated through an appropriate contact channel when required.' : 'Podemos actualizar esta política cuando cambien el flujo de reservas, los proveedores o los requisitos legales. La fecha vigente figura al inicio. Los cambios relevantes que afecten una reserva activa se comunicarán por un canal de contacto adecuado cuando corresponda.'}</p>
         </Section>
 
-        <div className="mt-12 pt-8 border-t border-gray-200 text-xs text-dark/40 text-center flex flex-col items-center gap-4">
-          <a
-            href="https://www.afip.gob.ar/fe/qr/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:opacity-80 transition-opacity"
-            title="Ver Data Fiscal AFIP"
-          >
-            <img 
-              src="/uploads/qr-arca.png" 
-              alt="Data Fiscal AFIP" 
-              className="h-16 w-auto object-contain"
-            />
-          </a>
-          <div>
-            © {new Date().getFullYear()} HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA — Todos los derechos reservados.
-            <br />
-            <a href="/terminos-y-condiciones" className="hover:text-brand transition-colors">Términos y Condiciones</a>
-            {' · '}
-            <a href="/" className="hover:text-brand transition-colors">Volver al inicio</a>
-          </div>
+        <div className="mt-12 pt-8 border-t border-gray-200 text-xs text-dark/40 text-center">
+          © {new Date().getFullYear()} HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
+          <br />
+          <a href="/terminos-y-condiciones" className="hover:text-brand transition-colors">{en ? 'Terms and Conditions' : 'Términos y Condiciones'}</a>{' · '}
+          <a href="/" className="hover:text-brand transition-colors">{en ? 'Back to home' : 'Volver al inicio'}</a>
         </div>
       </main>
     </div>
