@@ -17,11 +17,14 @@ test('la carga de alojamientos no se cancela al activar su propio indicador', ()
   assert.doesNotMatch(source, /\[open, optionsLoaded, loadingOptions/);
 });
 
-test('mantiene el flujo dentro del widget en escritorio y protege los datos de pago', () => {
+test('muestra el flujo en un modal accesible en todos los tamaños y protege los datos de pago', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
-  assert.match(source, /open && !mobileFlow && <div className="booking-inline">/);
-  assert.match(source, /open && mobileFlow && createPortal/);
+  assert.match(source, /open && createPortal/);
+  assert.match(source, /aria-modal="true"/);
+  assert.match(source, /document\.body\.style\.overflow = 'hidden'/);
+  assert.doesNotMatch(source, /booking-inline/);
+  assert.doesNotMatch(source, /mobileFlow/);
   assert.match(source, /className="booking-payment__identifier"/);
   assert.match(styles, /\.booking-result a\.booking-button\s*\{[^}]*color:\s*#fff/s);
   assert.match(styles, /\.booking-payment__identifier\s*\{[^}]*white-space:\s*nowrap/s);
@@ -42,6 +45,80 @@ test('los retornos de Mercado Pago consultan el estado persistido y tienen fallb
   }
 });
 
+test('el widget actualiza una reserva pendiente y retira las instrucciones de pago al confirmarse', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  assert.match(source, /getPublicReservationStatus\(code\)/);
+  assert.match(source, /window\.setInterval\(refreshStatus, 10_000\)/);
+  assert.match(source, /document\.addEventListener\('visibilitychange', onVisibilityChange\)/);
+  assert.match(source, /reservationConfirmed\s*\?\s*c\.confirmedTitle/);
+  assert.match(source, /reservationConfirmed \? \(/);
+  assert.match(source, /reservationPending && \(reservation\.pago\?\.estado/);
+  assert.match(source, /reservationPending && reservation\.transferencia\?\.estado === 'ready'/);
+});
+
+test('conserva una reserva activa sin PII y muestra acceso persistente al cerrar el modal', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(source, /magico\.active-reservation\.v1/);
+  assert.match(source, /writeActiveReservation/);
+  assert.match(source, /readActiveReservation/);
+  assert.match(source, /clearActiveReservation/);
+  assert.match(source, /!open && viewportEligible && reservation && \(/);
+  assert.match(source, /<FloatingUiPortal surface="reservation">/);
+  assert.match(source, /booking-active-reservation/);
+  assert.match(source, /\/reserva-pendiente/);
+  assert.match(source, /if \(!viewportEligible \|\| !code/);
+  assert.match(source, /reservationExpired = Boolean/);
+  assert.match(source, /remainingSeconds\(reservation\.reserva\.expires_at\) === 0/);
+  assert.match(source, /reservationExpired && <button className="booking-active-reservation__discard"/);
+  assert.match(source, /reservationExpired\s*\?\s*c\.expiredTitle/);
+  assert.doesNotMatch(source, /context:\s*\{[^}]*guest/s);
+  assert.doesNotMatch(source, /context:\s*\{[^}]*payerDni/s);
+  assert.match(styles, /\.booking-active-reservation\s*\{[^}]*width:\s*100%/s);
+});
+
+test('apila las superficies flotantes y mantiene WhatsApp accesible debajo de la reserva', () => {
+  const context = readFileSync(new URL('../../components/FloatingUiContext.tsx', import.meta.url), 'utf8');
+  const stackStyles = readFileSync(new URL('../../components/FloatingUiContext.css', import.meta.url), 'utf8');
+  const root = readFileSync(new URL('../../index.tsx', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const pwa = readFileSync(new URL('../../components/PWAInstallBanner.tsx', import.meta.url), 'utf8');
+  const whatsapp = readFileSync(new URL('../../components/WhatsAppButton.tsx', import.meta.url), 'utf8');
+  const cookies = readFileSync(new URL('../../components/CookieBanner.tsx', import.meta.url), 'utf8');
+
+  assert.match(context, /'cookie' \| 'pwa' \| 'reservation' \| 'whatsapp'/);
+  assert.match(context, /createPortal/);
+  assert.match(context, /className="floating-ui-stack"/);
+  assert.match(root, /<FloatingUiProvider>/);
+  assert.match(widget, /<FloatingUiPortal surface="reservation">/);
+  assert.match(pwa, /<FloatingUiPortal surface="pwa">/);
+  assert.match(cookies, /<FloatingUiPortal surface="cookie">/);
+  assert.match(whatsapp, /<FloatingUiPortal surface="whatsapp">/);
+  assert.doesNotMatch(whatsapp, /if \(activeSurface\) return null/);
+  assert.match(whatsapp, /origin-bottom-right/);
+  assert.match(stackStyles, /\.floating-ui-stack\s*\{[^}]*position:\s*fixed[^}]*flex-direction:\s*column/s);
+  assert.doesNotMatch(stackStyles, /overflow-[xy]:\s*(auto|scroll)/);
+  assert.match(stackStyles, /\.floating-ui-stack__item--reservation\s*\{\s*order:\s*30/);
+  assert.match(stackStyles, /\.floating-ui-stack__item--whatsapp\s*\{[^}]*order:\s*40/s);
+});
+
+test('mantiene sincronizada la página pública cuando vence la retención', () => {
+  const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
+  assert.match(source, /remainingSeconds\(status\.reserva\.expires_at, now\) === 0/);
+  assert.match(source, /expired \? c\.expired/);
+  assert.match(source, /window\.setInterval\(tick, 1000\)/);
+});
+
+test('ubica el botón de arrepentimiento debajo de los widgets de reserva principales', () => {
+  const access = readFileSync(new URL('../../components/WithdrawalAccessLink.tsx', import.meta.url), 'utf8');
+  const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  assert.match(access, /embedded\?: boolean/);
+  assert.match(access, /location\.pathname === '\/' \|\| location\.pathname === ROUTES\.ESTADIA/);
+  assert.equal((home.match(/<WithdrawalAccessLink embedded inverse \/>/g) || []).length, 2);
+  assert.match(stay, /<WithdrawalAccessLink embedded \/>/);
+});
+
 test('oculta el encabezado promocional mientras el checkout está abierto', () => {
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
@@ -49,7 +126,8 @@ test('oculta el encabezado promocional mientras el checkout está abierto', () =
 
   assert.match(widget, /onOpenChange\?\.\(open\)/);
   assert.match(home, /!desktopBookingOpen && <div/);
-  assert.match(home, /<BookingWidget onOpenChange=\{setDesktopBookingOpen\}/);
+  assert.match(home, /<BookingWidget compact activeViewport="mobile" onOpenChange=\{setCompactBookingOpen\}/);
+  assert.match(home, /<BookingWidget activeViewport="desktop" onOpenChange=\{setDesktopBookingOpen\}/);
   assert.match(stay, /!bookingOpen && <div/);
   assert.match(stay, /<BookingWidget onOpenChange=\{setBookingOpen\}/);
 });

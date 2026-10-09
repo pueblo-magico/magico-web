@@ -41,7 +41,7 @@ export interface QuoteResponse {
 }
 
 export interface ReservationResponse {
-  reserva: { codigo: string; estado: string; expires_at: string };
+  reserva: { codigo: string; estado: string; expires_at: string | null };
   cotizacion_codigo: string;
   pago?: {
     proveedor: 'mercado_pago';

@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { UpdateBanner } from './components/UpdateBanner';
 import { WithdrawalAccessLink } from './components/WithdrawalAccessLink';
+import { FloatingUiProvider } from './components/FloatingUiContext';
 import './src/i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Main from './Main';
@@ -84,12 +85,13 @@ root.render(
     <ErrorBoundary>
       <LanguageProvider>
         <BrowserRouter>
-          <ScrollToTop />
-          <UpdateBanner />
-          <PWAInstallBanner />
-          <WithdrawalAccessLink />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+          <FloatingUiProvider>
+            <ScrollToTop />
+            <UpdateBanner />
+            <PWAInstallBanner />
+            <WithdrawalAccessLink />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/reset-vital" element={<ResetVitalApp />} />
               <Route path="/familion" element={<Familion />} />
@@ -122,8 +124,9 @@ root.render(
               <Route path="/reserva-pendiente" element={<EstadoPagoReserva returnState="pending" />} />
               <Route path="/reserva-fallida" element={<EstadoPagoReserva returnState="failure" />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </FloatingUiProvider>
         </BrowserRouter>
       </LanguageProvider>
     </ErrorBoundary>
