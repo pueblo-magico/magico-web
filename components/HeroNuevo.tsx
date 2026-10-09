@@ -204,7 +204,7 @@ export const HeroNuevo: React.FC = () => {
               </p>
             </div>}
             <div style={{ background: 'rgba(255,255,255,0.96)' }}>
-              <BookingWidget activeViewport="desktop" onOpenChange={setDesktopBookingOpen} />
+              <BookingWidget compact activeViewport="desktop" onOpenChange={setDesktopBookingOpen} />
             </div>
           </div>
           <WithdrawalAccessLink embedded inverse />

@@ -30,6 +30,9 @@
 .booking-launcher__price { display: block; margin-top: 12px; color: #f5c744; font-size: clamp(16px, 2vw, 22px); }
 .booking-launcher__copy { margin: 8px 0 0; color: rgba(255, 255, 255, .88); font-size: 16px; }
 .booking-launcher .booking-button { width: fit-content; min-width: min(100%, 260px); color: var(--booking-green); background: white; }
+.booking-launcher[data-compact] { display: block; padding: 12px; border: 0; border-radius: 0; background: rgba(255, 255, 255, .97); box-shadow: none; }
+.booking-launcher[data-compact]::after, .booking-launcher[data-compact] .booking-launcher__content { display: none; }
+.booking-launcher[data-compact] .booking-button { width: 100%; min-width: 0; border-radius: 12px; color: white; background: linear-gradient(110deg, var(--booking-green), #007348); }
 
 .booking-button { display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px; padding: 13px 24px; border: 1px solid var(--booking-green); border-radius: 999px; color: white; background: linear-gradient(110deg, var(--booking-green), #007348); box-shadow: 0 10px 24px rgba(0, 83, 51, .14); font: inherit; font-size: 14px; font-weight: 800; letter-spacing: .07em; line-height: 1.2; text-align: center; text-decoration: none; text-transform: uppercase; cursor: pointer; transition: transform 160ms ease, box-shadow 160ms ease; }
 .booking-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0, 83, 51, .2); }

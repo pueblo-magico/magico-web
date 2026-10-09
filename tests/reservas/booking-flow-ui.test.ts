@@ -52,6 +52,19 @@ test('muestra el flujo en un modal accesible en todos los tamaños y protege los
   assert.match(source, /Esperando acreditación/);
 });
 
+test('el widget embebido conserva un lanzador compacto sin duplicar el hero', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
+
+  assert.match(source, /data-compact=\{compact \|\| undefined\}/);
+  assert.match(styles, /\.booking-launcher\[data-compact\][^{]*\{[^}]*background:\s*rgba\(255, 255, 255, \.97\)/s);
+  assert.match(styles, /\.booking-launcher\[data-compact\][^{]*\.booking-launcher__content\s*\{[^}]*display:\s*none/s);
+  assert.match(styles, /\.booking-launcher\[data-compact\][^{]*\.booking-button\s*\{[^}]*width:\s*100%/s);
+  assert.match(home, /<BookingWidget compact activeViewport="mobile"/);
+  assert.match(home, /<BookingWidget compact activeViewport="desktop"/);
+});
+
 test('los retornos de Mercado Pago consultan el estado persistido y tienen fallback SPA', () => {
   const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
   const redirects = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8');
@@ -145,7 +158,7 @@ test('oculta el encabezado promocional mientras el checkout está abierto', () =
   assert.match(widget, /onOpenChange\?\.\(open\)/);
   assert.match(home, /!desktopBookingOpen && <div/);
   assert.match(home, /<BookingWidget compact activeViewport="mobile" onOpenChange=\{setCompactBookingOpen\}/);
-  assert.match(home, /<BookingWidget activeViewport="desktop" onOpenChange=\{setDesktopBookingOpen\}/);
+  assert.match(home, /<BookingWidget compact activeViewport="desktop" onOpenChange=\{setDesktopBookingOpen\}/);
   assert.match(stay, /!bookingOpen && <div/);
   assert.match(stay, /<BookingWidget onOpenChange=\{setBookingOpen\}/);
 });
