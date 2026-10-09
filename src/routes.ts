@@ -13,6 +13,7 @@ export const ROUTES = {
   VUELO_CONDOR: '/el-vuelo-del-condor',
   TERMINOS: '/terminos-y-condiciones',
   PRIVACIDAD: '/politica-de-privacidad',
+  ARREPENTIMIENTO: '/boton-de-arrepentimiento',
   PROPUESTA_CALMA_YOGA: '/propuesta/calma-magico',
   ORGANIZA_EXPERIENCIA: '/organizamos-tu-experiencia',
   INTI_RAYMI: '/inti-raymi',

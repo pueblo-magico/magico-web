@@ -80,7 +80,7 @@ export const PoliticaPrivacidad: React.FC = () => {
 
         <Section title="2. Datos personales que recopilamos">
           <p>Recopilamos únicamente los datos necesarios para gestionar tu reserva o consulta:</p>
-          <p><strong>Datos de contacto y reserva (provistos por el/la interesado/a vía WhatsApp o email):</strong></p>
+          <p><strong>Datos de contacto y reserva (provistos en el sitio, vía WhatsApp o email):</strong></p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Nombre y apellido.</li>
             <li>Número de teléfono / WhatsApp.</li>
@@ -91,6 +91,7 @@ export const PoliticaPrivacidad: React.FC = () => {
           <p><strong>Datos de pago (cuando aplica):</strong></p>
           <ul className="list-disc pl-5 space-y-1">
             <li>CBU/alias para transferencias. No almacenamos datos de tarjetas de crédito o débito.</li>
+            <li>Si elegís transferencia, solicitamos el DNI asociado a la cuenta pagadora exclusivamente para conciliar el ingreso. No conservamos el número completo: almacenamos una huella criptográfica y sus últimos cuatro dígitos.</li>
           </ul>
           <p><strong>Datos de navegación (automáticos):</strong></p>
           <ul className="list-disc pl-5 space-y-1">

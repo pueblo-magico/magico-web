@@ -69,6 +69,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/politica-de-privacidad',
   },
   {
+    path: '/boton-de-arrepentimiento',
+    title: 'Botón de Arrepentimiento — Pueblo Mágico',
+    description: 'Formulario público para solicitar la revocación de una contratación online y recibir una constancia trazable, sin registro previo.',
+    image: 'https://experienciamagico.com/uploads/img_6948.webp',
+    canonical: 'https://experienciamagico.com/boton-de-arrepentimiento',
+  },
+  {
     path: '/el-vuelo-del-condor',
     title: 'El Vuelo del Cóndor — Un viaje iniciático en Perú | Pueblo Mágico',
     description: '7 días para elevar tu conciencia, expandir tu visión y reconectar con tu propósito en el Valle Sagrado de los Incas, Perú. Del 22 al 29 de Julio.',

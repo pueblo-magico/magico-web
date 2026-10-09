@@ -30,3 +30,6 @@
 /reset-vital    /app-shell/   200
 /despertar    /app-shell/   200
 /propuesta/nico-grupe    /app-shell/   200
+/reserva-confirmada    /app-shell/   200
+/reserva-pendiente    /app-shell/   200
+/reserva-fallida    /app-shell/   200

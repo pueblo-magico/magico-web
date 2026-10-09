@@ -11,27 +11,23 @@
 // ejemplo, que la reserva de Airbnb que está cargando YA existe en la
 // realidad, aunque nuestra grilla la marque "libre").
 
-import { requireRole } from '../../_lib/authGuard';
-import { registrarAuditoria } from '../../_lib/auditoria';
-
-const TIPOS_ESTADIA_VALIDOS = ['huesped', 'staff', 'voluntario', 'residente'];
-
-function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body, null, 2), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
+import { requirePermission } from '../../_lib/authGuard';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../../_interfaces/http/requestSecurity.ts';
+import { crearReservaManual } from '../../_application/reservas/crearReservaManual.ts';
+import { D1RegistroAuditoriaReservas } from '../../_infrastructure/d1/D1RegistroAuditoriaReservas.ts';
+import { D1RepositorioCreacionReserva } from '../../_infrastructure/d1/D1RepositorioCreacionReserva.ts';
+import { jsonReserva as json, respuestaErrorReserva } from '../../_interfaces/http/reservasHttp.ts';
+import { TIPOS_ESTADIA } from '../../_domain/reservas/reservationCatalog.ts';
 
 export async function onRequestPost({ request, env }: any) {
-  const auth = await requireRole(request, env, ['super_admin', 'editor']);
+  const auth = await requirePermission(request, env, 'reservas.crear');
   if (auth instanceof Response) return auth;
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const {
@@ -58,49 +54,37 @@ export async function onRequestPost({ request, env }: any) {
   if (estado && !['pendiente', 'confirmada', 'cancelada'].includes(estado)) {
     return json({ error: "estado debe ser 'pendiente', 'confirmada' o 'cancelada'." }, 400);
   }
-  if (tipo_estadia && !TIPOS_ESTADIA_VALIDOS.includes(tipo_estadia)) {
-    return json({ error: `tipo_estadia debe ser uno de: ${TIPOS_ESTADIA_VALIDOS.join(', ')}.` }, 400);
+  if (tipo_estadia && !TIPOS_ESTADIA.includes(tipo_estadia)) {
+    return json({ error: `tipo_estadia debe ser uno de: ${TIPOS_ESTADIA.join(', ')}.` }, 400);
   }
 
-  const db = env.DB;
-
-  const solapa: any = await db
-    .prepare(
-      `SELECT COUNT(*) AS n FROM reservas
-       WHERE alojamiento_id = ? AND estado IN ('pendiente', 'confirmada')
-       AND fecha_checkin < ? AND fecha_checkout > ?`
-    )
-    .bind(alojamiento_id, fecha_checkout, fecha_checkin)
-    .first();
-  const disponible = !solapa || Number(solapa.n) === 0;
-
   try {
-    const inserted: any = await db
-      .prepare(
-        `INSERT INTO reservas
-          (cliente_nombre, cliente_telefono, cliente_email, alojamiento_id, fecha_checkin, fecha_checkout, cantidad_personas, monto_total, monto_sena, estado, canal_origen, tipo_estadia)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         RETURNING id`
-      )
-      .bind(
-        cliente_nombre,
-        cliente_telefono || null,
-        cliente_email || null,
-        alojamiento_id,
-        fecha_checkin,
-        fecha_checkout,
-        cantidad_personas,
-        monto_total,
-        monto_sena ?? null,
-        estado || 'confirmada',
-        canal_origen || 'Manual',
-        tipo_estadia || 'huesped'
-      )
-      .first();
+    const resultado = await crearReservaManual(
+      {
+        actorEmail: auth.email,
+        clienteNombre: cliente_nombre,
+        clienteTelefono: cliente_telefono || null,
+        clienteEmail: cliente_email || null,
+        alojamientoId: alojamiento_id,
+        fechaCheckin: fecha_checkin,
+        fechaCheckout: fecha_checkout,
+        cantidadPersonas: cantidad_personas,
+        montoTotal: monto_total,
+        montoSena: monto_sena ?? null,
+        estado: estado || 'confirmada',
+        canalOrigen: canal_origen || 'Manual',
+        tipoEstadia: tipo_estadia || 'huesped',
+      },
+      new D1RepositorioCreacionReserva(env.DB),
+      new D1RegistroAuditoriaReservas(env.DB)
+    );
 
-    await registrarAuditoria(db, auth.email, 'crear_reserva', `Reserva #${inserted?.id} — ${cliente_nombre}`);
-    return json({ ok: true, reserva_id: inserted?.id, disponible }, 200);
-  } catch (e: any) {
-    return json({ error: `No se pudo crear la reserva: ${e.message}` }, 400);
+    return json({ ok: true, reserva_id: resultado.reservaId, disponible: resultado.disponible }, 200);
+  } catch (error: unknown) {
+    return respuestaErrorReserva(error, {
+      codigo: 'DATOS_INVALIDOS',
+      mensaje: 'No se pudo crear la reserva con los datos enviados.',
+      status: 400,
+    });
   }
 }

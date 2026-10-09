@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
 import { BookingWidget } from '../components/BookingWidget';
+import { WithdrawalAccessLink } from '../components/WithdrawalAccessLink';
 import {
   Bed, ForkKnife, Leaf, WifiHigh, Tree, UsersThree,
   CheckCircle, ArrowRight, Sun, Mountains, Campfire,
@@ -157,6 +158,7 @@ const ALOJAMIENTOS = [
 
 const Alojamientos: React.FC = () => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   return (
     <section id="alojamientos" className="py-20 bg-bone">
@@ -270,7 +272,7 @@ const Alojamientos: React.FC = () => {
           <div id="reservar" className="order-first lg:order-none lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:rounded-2xl">
 
             <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-brand/5">
-              <div style={{ background: '#005333', padding: '16px 20px' }}>
+              {!bookingOpen && <div style={{ background: '#005333', padding: '16px 20px' }}>
                 <p style={{ fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', fontWeight: 700, color: 'rgba(212,175,55,0.85)', marginBottom: 5 }}>
                   RESERVÁ TU LUGAR
                 </p>
@@ -280,9 +282,10 @@ const Alojamientos: React.FC = () => {
                 <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
                   y estimar el costo de tu estadía
                 </p>
-              </div>
-              <BookingWidget />
+              </div>}
+              <BookingWidget onOpenChange={setBookingOpen} />
             </div>
+            <WithdrawalAccessLink embedded />
           </div>
         </div>
       </div>

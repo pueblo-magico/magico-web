@@ -1,25 +1,49 @@
 name: Deploy to Cloudflare Pages
 
 on:
-  # Production releases stay manual until the reservation cutover is approved.
-  # Referencing the protected production environment keeps its configured
-  # reviewers and deployment rules in the release path.
   workflow_dispatch:
     inputs:
-      confirm_production:
-        description: Confirmar despliegue manual a producción
+      release_reason:
+        description: Reason and approval reference for this production release
         required: true
-        default: false
-        type: boolean
+        type: string
+      confirm_production:
+        description: Escribir PRODUCCION para habilitar el job
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-pages-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    if: ${{ inputs.confirm_production }}
-    environment: production
+    if: github.ref_name == 'main' && inputs.confirm_production == 'PRODUCCION'
     runs-on: ubuntu-latest
+    environment:
+      name: production
     steps:
       - uses: actions/checkout@v7
 
+      - name: Show approved production commit
+        env:
+          RELEASE_REASON: ${{ inputs.release_reason }}
+        run: |
+          echo "Deploying commit ${GITHUB_SHA}"
+          echo "Release reason: ${RELEASE_REASON}"
+          git show --no-patch --format='%H %s' HEAD
+
+      - name: Validate production target
+        env:
+          CONFIRM_PRODUCTION: ${{ inputs.confirm_production }}
+          PRODUCTION_BASE_URL: ${{ vars.PRODUCTION_BASE_URL }}
+        run: |
+          test "${GITHUB_REF_NAME}" = "main"
+          test "${CONFIRM_PRODUCTION}" = "PRODUCCION"
+          test -n "${PRODUCTION_BASE_URL}"
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
@@ -27,10 +51,22 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Validate TypeScript
+        run: npm run typecheck
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium
+
+      - name: Test reservations with coverage
+        run: npm run test:reservas:coverage
+
+      - name: Test Cloudflare preview cleanup
+        run: npm run test:cloudflare-cleanup
+
+      - name: Test reservation recovery drill
+        run: npm run test:reservas:recovery
 
       - name: Build
         run: npm run build
@@ -41,9 +77,90 @@ jobs:
           VITE_REFORESTATION_SEPA_BANK: ${{ vars.VITE_REFORESTATION_SEPA_BANK }}
           VITE_REFORESTATION_SEPA_CURRENCY: ${{ vars.VITE_REFORESTATION_SEPA_CURRENCY }}
 
+      - name: Capture pre-cutover bookmark and reconciliation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p cutover-artifacts
+          npx wrangler d1 time-travel info DB --env production --json > cutover-artifacts/pre-cutover-bookmark.json
+          npx wrangler d1 execute DB --remote --env production --file=scripts/reservas/reconciliar-cutover.sql --json > cutover-artifacts/reconciliacion-antes.json
+
+      - name: Apply production D1 migrations
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 migrations apply DB --remote --env production
+
+      - name: Verify production D1 migration
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-migracion.sql
+
+      - name: Verify production accommodation inventory
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-inventario.sql
+
+      - name: Verify production capacity rules
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-capacidad.sql
+
+      - name: Verify production security controls
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-seguridad.sql
+
+      - name: Verify production pricing rules
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-tarifas.sql
+
+      - name: Verify production operational occupancy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute DB --remote --env production --file=scripts/reservas/verificar-ocupacion-operativa.sql
+
+      - name: Reconcile production data after migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler d1 execute DB --remote --env production --file=scripts/reservas/reconciliar-cutover.sql --json > cutover-artifacts/reconciliacion-despues.json
+          node scripts/reservas/verificar-reconciliacion-cutover.mjs cutover-artifacts/reconciliacion-antes.json cutover-artifacts/reconciliacion-despues.json
+
+      - name: Preserve cutover evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reservas-cutover-${{ github.sha }}
+          path: cutover-artifacts/
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=pueblo-magico-web
+
+      - name: Smoke test production surfaces
+        env:
+          PRODUCTION_BASE_URL: ${{ vars.PRODUCTION_BASE_URL }}
+        run: node scripts/reservas/smoke-produccion.mjs

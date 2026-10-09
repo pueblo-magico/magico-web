@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ROUTES } from '../src/routes';
+import { FloatingUiPortal } from './FloatingUiContext';
 
 const STORAGE_KEY = 'cookie-consent';
 
@@ -36,11 +37,12 @@ export const CookieBanner: React.FC = () => {
   if (!visible) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-label={t.cookieBanner.title}
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-[380px] z-[100] animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out"
-    >
+    <FloatingUiPortal surface="cookie">
+      <div
+        role="dialog"
+        aria-label={t.cookieBanner.title}
+        className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out"
+      >
       <div className="bg-white/80 backdrop-blur-md border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-6 relative overflow-hidden group">
         {/* Subtle background glow */}
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-gold/5 rounded-full blur-2xl group-hover:bg-gold/10 transition-colors duration-500" />
@@ -89,6 +91,7 @@ export const CookieBanner: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </FloatingUiPortal>
   );
 };

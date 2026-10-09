@@ -6,6 +6,11 @@
 //
 // GET /api/disponibilidad?desde=YYYY-MM-DD&hasta=YYYY-MM-DD
 
+import { consultarCalendarioDisponibilidad } from '../_application/reservas/consultarCalendarioDisponibilidad.ts';
+import { D1RepositorioCalendarioDisponibilidad } from '../_infrastructure/d1/D1RepositorioCalendarioDisponibilidad.ts';
+import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
+import { observarSolicitud, type ContextoObservabilidad } from '../_interfaces/http/observability.ts';
+
 const ALLOWED_ORIGINS = ['https://experienciamagico.com'];
 const LOCALHOST_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -27,93 +32,35 @@ function json(body: unknown, status: number, headers: Record<string, string>) {
   });
 }
 
-function isoDate(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
-
-function addDaysIso(iso: string, dias: number) {
-  return isoDate(new Date(new Date(`${iso}T00:00:00Z`).getTime() + dias * 86400000));
-}
-
 export async function onRequestOptions({ request }: any) {
   return new Response(null, { status: 204, headers: corsHeaders(request) });
 }
 
 export async function onRequestGet({ request, env }: any) {
+  return observarSolicitud(request, 'public.availability', contexto => consultar(request, env, contexto));
+}
+
+async function consultar(request: Request, env: any, contexto: ContextoObservabilidad) {
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.disponibilidad', 60, 60));
+  if (limitada) {
+    contexto.signal('rate_limit.rejected', 'warn', { metric: 'reservas_rate_limit_rejections_total' });
+    return limitada;
+  }
   const headers = corsHeaders(request);
   const url = new URL(request.url);
   const desde = url.searchParams.get('desde') || '';
   const hasta = url.searchParams.get('hasta') || '';
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(desde) || !/^\d{4}-\d{2}-\d{2}$/.test(hasta) || hasta <= desde) {
-    return json({ error: "Parámetros 'desde' y 'hasta' (YYYY-MM-DD, hasta > desde) son requeridos." }, 400, headers);
-  }
-
-  const db = env.DB;
-
-  const { results: alojamientosRaw } = await db
-    .prepare(`SELECT id, nombre, tipo, capacidad_total FROM alojamientos ORDER BY id ASC`)
-    .all();
-  const alojamientos = alojamientosRaw || [];
-
-  // Reservas activas que se solapan con el rango pedido.
-  const { results: reservasRaw } = await db
-    .prepare(
-      `SELECT alojamiento_id, fecha_checkin, fecha_checkout, cantidad_personas
-       FROM reservas
-       WHERE estado IN ('pendiente', 'confirmada')
-         AND fecha_checkin < ?2 AND fecha_checkout > ?1`
-    )
-    .bind(desde, hasta)
-    .all();
-  const reservas = reservasRaw || [];
-
-  const totalDomos = alojamientos.filter((a: any) => a.tipo === 'domo').length;
-  const refugio = alojamientos.find((a: any) => a.tipo === 'refugio');
-  const capacidadRefugio = refugio ? Number(refugio.capacidad_total) : 15;
-
-  const unidadesBlocked: Record<number, string[]> = {};
-  for (const a of alojamientos) unidadesBlocked[a.id] = [];
-
-  const blockedDomo: string[] = [];
-  const blockedRefugio: string[] = [];
-
-  for (let dia = desde; dia < hasta; dia = addDaysIso(dia, 1)) {
-    const diaFin = addDaysIso(dia, 1);
-    const domosOcupados = new Set<number>();
-    let personasRefugio = 0;
-
-    for (const r of reservas as any[]) {
-      const solapa = String(r.fecha_checkin) < diaFin && String(r.fecha_checkout) > dia;
-      if (!solapa) continue;
-      const aloj = alojamientos.find((a: any) => a.id === r.alojamiento_id);
-      if (!aloj) continue;
-      if (aloj.tipo === 'domo') {
-        domosOcupados.add(r.alojamiento_id);
-        unidadesBlocked[r.alojamiento_id].push(dia);
-      } else {
-        personasRefugio += Number(r.cantidad_personas) || 0;
-      }
-    }
-
-    if (totalDomos > 0 && domosOcupados.size >= totalDomos) blockedDomo.push(dia);
-    if (personasRefugio >= capacidadRefugio) blockedRefugio.push(dia);
-  }
-
-  return json(
-    {
-      desde,
-      hasta,
-      domo: { blocked: blockedDomo },
-      refugio: { blocked: blockedRefugio },
-      unidades: alojamientos.map((a: any) => ({
-        id: a.id,
-        nombre: a.nombre,
-        tipo: a.tipo,
-        blocked: unidadesBlocked[a.id] || [],
-      })),
-    },
-    200,
-    headers
+  const resultado = await consultarCalendarioDisponibilidad(
+    desde,
+    hasta,
+    new D1RepositorioCalendarioDisponibilidad(env.DB)
   );
+
+  if (resultado.ok === false) {
+    contexto.signal('availability.invalid_range', 'warn', { metric: 'reservas_availability_rejections_total' });
+    return json({ error: resultado.error.mensaje }, 400, headers);
+  }
+
+  return json(resultado.valor, 200, headers);
 }

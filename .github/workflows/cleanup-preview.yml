@@ -2,8 +2,6 @@ name: Cleanup Cloudflare Pages PR Preview
 
 on:
   pull_request:
-    branches:
-      - main
     types: [closed]
 
 # Share the preview workflow's concurrency group so closing a PR cancels any

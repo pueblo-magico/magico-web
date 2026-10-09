@@ -2,7 +2,9 @@
 // Recibe una fecha_entrada/fecha_salida + tipo_alojamiento y devuelve disponibilidad,
 // desglose de precio, seña y saldo. No crea la reserva — es solo el "cotizador".
 
-import { calcularPrecio, chequearDisponibilidad, mensajePrivacidad, nochesEntre } from '../_lib/cotizador';
+import { cotizarEstadia } from '../_lib/cotizador';
+import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../_interfaces/http/requestSecurity.ts';
 
 const ALLOWED_ORIGINS = [
   'https://experienciamagico.com',
@@ -33,15 +35,21 @@ export async function onRequestOptions({ request }: any) {
 
 export async function onRequestPost({ request, env }: any) {
   const headers = corsHeaders(request);
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.cotizar', 60, 60));
+  if (limitada) return limitada;
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400, headers);
+    body = await leerJsonSeguro(request);
+  } catch (error) {
+    return respuestaJsonInvalido(error, headers);
   }
 
-  const { fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento } = body || {};
+  const {
+    fecha_entrada, fecha_salida, cantidad_personas, tipo_alojamiento,
+    modalidad, contexto,
+    regimen_alimentacion,
+  } = body || {};
 
   if (!fecha_entrada || !fecha_salida || !cantidad_personas || !tipo_alojamiento) {
     return json(
@@ -57,36 +65,46 @@ export async function onRequestPost({ request, env }: any) {
   if (!Number.isInteger(personas) || personas < 1) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400, headers);
   }
-
-  const noches = nochesEntre(fecha_entrada, fecha_salida);
-  if (noches === null) {
-    return json({ error: 'Fechas inválidas: fecha_salida debe ser posterior a fecha_entrada.' }, 400, headers);
+  if (modalidad !== undefined && !['privada', 'compartida'].includes(modalidad)) {
+    return json({ error: "modalidad debe ser 'privada' o 'compartida'." }, 400, headers);
+  }
+  if (contexto !== undefined && !['general', 'retiro'].includes(contexto)) {
+    return json({ error: "contexto debe ser 'general' o 'retiro'." }, 400, headers);
+  }
+  if (regimen_alimentacion !== undefined &&
+      !['desayuno_incluido', 'pension_completa'].includes(regimen_alimentacion)) {
+    return json({ error: "regimen_alimentacion debe ser 'desayuno_incluido' o 'pension_completa'." }, 400, headers);
   }
 
-  const precio = calcularPrecio(tipo_alojamiento, personas, noches);
-  if ('error' in precio) {
-    return json({ error: precio.error }, 400, headers);
+  const resultado = await cotizarEstadia(env.DB, {
+    tipo: tipo_alojamiento,
+    personas,
+    fechaEntrada: fecha_entrada,
+    fechaSalida: fecha_salida,
+    modalidad,
+    contexto,
+    regimenAlimentacion: regimen_alimentacion,
+  });
+  if (resultado.ok === false) {
+    return json({ error: resultado.error.mensaje }, 400, headers);
   }
 
-  const { estado } = await chequearDisponibilidad(env.DB, tipo_alojamiento, personas, fecha_entrada, fecha_salida);
-
-  const senaPorcentaje = precio.subtotal <= 100000 ? 0.5 : 0.3;
-  const montoSena = Math.round(precio.subtotal * senaPorcentaje);
-  const saldoCheckin = precio.subtotal - montoSena;
+  const cotizacion = resultado.valor;
 
   return json(
     {
-      estado,
+      estado: cotizacion.disponibilidad.estado,
       fecha_entrada,
       fecha_salida,
-      desglose: precio,
-      subtotal: precio.subtotal,
-      sena: {
-        porcentaje: senaPorcentaje,
-        monto: montoSena,
-      },
-      saldo_checkin: saldoCheckin,
-      mensaje_privacidad: mensajePrivacidad(tipo_alojamiento, personas),
+      desglose: cotizacion.desglose,
+      subtotal: cotizacion.desglose.subtotal,
+      sena: cotizacion.sena,
+      saldo_checkin: cotizacion.saldoCheckin,
+      mensaje_privacidad: cotizacion.mensajePrivacidad,
+      cotizacion: cotizacion.referencia,
+      moneda: cotizacion.desglose.moneda,
+      subtotal_centavos: cotizacion.desglose.subtotal_centavos,
+      sena_centavos: cotizacion.sena.monto_centavos,
     },
     200,
     headers
