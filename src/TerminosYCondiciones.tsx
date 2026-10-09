@@ -59,7 +59,7 @@ export const TerminosYCondiciones: React.FC = () => {
             <strong>Razón social:</strong> HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
           </p>
           <p>
-            <strong>Nombre comercial:</strong> Pueblo Mágico — Eco-Refugio & Glamping
+            <strong>Nombre comercial:</strong> Pueblo Mágico — Ecolodge de Montaña
           </p>
           <p>
             <strong>Domicilio legal:</strong> Calle Aconquija 635, Villa Allende, Departamento Colón, Provincia de Córdoba, República Argentina.

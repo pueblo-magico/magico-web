@@ -197,7 +197,7 @@ const ESPACIO_IMGS = [
   { src: '/uploads/469280911_444096748740233_2818770490495002077_n.webp', alt: 'Experiencia grupal' },
   { src: '/uploads/469742031_941240881439467_8316347989568757415_n.webp', alt: 'Experiencia grupal' },
   { src: '/uploads/domos_2.jpg',    alt: 'Domos geodésicos' },
-  { src: '/uploads/refu.webp',      alt: 'Eco-Refugio' },
+  { src: '/uploads/refu.webp',      alt: 'Refugio de Piedra' },
   { src: '/uploads/dji_0074.webp',  alt: 'Vista aérea Pueblo Mágico' },
 ];
 
@@ -622,11 +622,11 @@ const PropuestaNicoGrupe: React.FC = () => {
                 Pueblo Mágico, <span style={{ color: '#D4AF37' }}>Nuestra Sede</span>
               </h2>
               <p className="text-white/65 text-base leading-relaxed mb-8">
-                Un eco-centro de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que vos enseñás — presencia, reconexión y transformación real.
+                Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que vos enseñás — presencia, reconexión y transformación real.
               </p>
               <ul className="space-y-3">
                 {[
-                  'Domos geodésicos y eco-centro en Sierras Grandes',
+                  'Ecolodge con domos geodésicos en Sierras Grandes',
                   'Pensión completa — Alimentación Natural & Regenerativa',
                   'Salón panorámico, explanadas abiertas y fogón',
                   'Senderos en la Montaña · Río · Cielos limpios',

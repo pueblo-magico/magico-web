@@ -22,14 +22,20 @@ export const BLOCKED_DATES_REFUGIO: string[] = [];
 // equipo confirme caso por caso si hay lugar (puede que solo se use un domo
 // del evento, o ninguno, y quede libre igual).
 // ⚠️ Manual por ahora — mantené esta lista al día con la agenda de eventos.
-export const RETIRO_DATES_DOMO: string[] = [
-  '2026-08-21', '2026-08-22', '2026-08-23', // finde 21-23 ago
-  '2026-08-28', '2026-08-29', '2026-08-30', // Ciclo Vital Femenino
-];
-export const RETIRO_DATES_REFUGIO: string[] = [
-  '2026-08-21', '2026-08-22', '2026-08-23',
-  '2026-08-28', '2026-08-29', '2026-08-30',
-];
+export const RETIRO_DATES_DOMO: string[] = [];
+export const RETIRO_DATES_REFUGIO: string[] = [];
+
+// Los domos recién se pueden reservar desde esta fecha (antes no están
+// habilitados) — en el calendario los días anteriores salen como "sin lugar"
+// solo para domo.
+export const DOMO_DISPONIBLE_DESDE = '2026-10-12';
+
+// Por ahora todos los findes (noches de viernes y sábado) en domo se marcan
+// como "consultar disponibilidad": suele haber eventos que a veces se
+// confirman y a veces se cancelan, así que no los bloqueamos ni los damos por
+// libres — derivan a WhatsApp igual que RETIRO_DATES_*. Poner en false cuando
+// la agenda de eventos esté cargada de verdad.
+export const DOMO_FINDES_A_CONSULTAR = true;
 
 // Última fecha para reservar y acceder a la Promo Parejas de domo privado
 // (la estadía en sí puede ser más adelante, lo que vence es la reserva).
@@ -41,9 +47,11 @@ export const PROMO_PAREJAS_RESERVA_HASTA = '2026-07-31';
 // badge en el widget de reserva sobre ese mes.
 export type MonthUrgency = 'normal' | 'pocos-lugares' | 'ultimos-lugares';
 export const MONTHLY_URGENCY: Record<string, MonthUrgency> = {
-  '2026-07': 'normal',
-  '2026-08': 'normal',
-  '2026-09': 'normal',
+  '2026-10': 'normal',
+  '2026-11': 'normal',
+  '2026-12': 'normal',
+  '2027-01': 'normal',
+  '2027-02': 'normal',
 };
 
 export const PRECIO_NOCHE_ARS = 35_000; // alojamiento + desayuno, habitación o domo compartido (Eco-Refugio)

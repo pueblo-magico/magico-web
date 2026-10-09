@@ -58,7 +58,7 @@ export const PoliticaPrivacidad: React.FC = () => {
             <strong>Razón social:</strong> HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA
           </p>
           <p>
-            <strong>Nombre comercial:</strong> Pueblo Mágico — Eco-Refugio & Glamping
+            <strong>Nombre comercial:</strong> Pueblo Mágico — Ecolodge de Montaña
           </p>
           <p>
             <strong>CUIT:</strong> 30-71875586-3

@@ -224,7 +224,7 @@ const AlmaDeLobo: React.FC = () => {
                 Pueblo Mágico,<br />Los Gigantes
               </h2>
               <p className="text-base leading-relaxed mb-6" style={{ color: C.muted }}>
-                Un eco-centro de montaña en Los Gigantes, Córdoba. Un espacio para realizar retiros y actividades orientadas al desarrollo personal. Inmerso en la naturaleza, invita a conectar con la esencia y el propósito más profundo.
+                Un ecolodge de montaña en Los Gigantes, Córdoba. Un espacio para realizar retiros y actividades orientadas al desarrollo personal. Inmerso en la naturaleza, invita a conectar con la esencia y el propósito más profundo.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <a href={WA_INFO} target="_blank" rel="noopener noreferrer"

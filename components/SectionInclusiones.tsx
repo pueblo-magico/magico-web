@@ -25,7 +25,7 @@ export const SectionInclusiones: React.FC = () => {
   const { t } = useLanguage();
   const i = t.inclusiones;
   const carpaDesde = ESTADIA_PRICES?.carpaDesde;
-  const domoPrivadoDesde = ESTADIA_PRICES?.domoPrivadoDesde;
+  const domoPrivadoDesde = ESTADIA_PRICES?.domoPrivado;
   const hasCarpaPrice = typeof carpaDesde === 'number' && Number.isFinite(carpaDesde);
   const hasDomoPrice = typeof domoPrivadoDesde === 'number' && Number.isFinite(domoPrivadoDesde);
 

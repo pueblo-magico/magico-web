@@ -25,7 +25,7 @@ const faqs = [
   {
     Icon: HouseIcon,
     question: "¿Cómo es el alojamiento y la comida?",
-    answer: "La estadía incluye alojamiento premium (Domos Geodésicos o Eco-refugio compartido) con ropa de cama y abrigo, duchas con agua caliente 24hs y todas las comidas caseras (desayuno, almuerzo, merienda y cena) incluidas durante los tres días. Tenemos opciones sin gluten y podemos garantizar platos que no llevan gluten entre sus ingredientes, pero no un ambiente 100% libre de contaminación cruzada (cocinamos en una cocina y mesada compartida) — para celiaquía severa o intolerancia alta, contanos tu caso al reservar."
+    answer: "La estadía incluye alojamiento en Domos Geodésicos o en el Refugio de Piedra (compartido) con ropa de cama y abrigo, duchas con agua caliente 24hs y todas las comidas caseras (desayuno, almuerzo, merienda y cena) incluidas durante los tres días. Tenemos opciones sin gluten y podemos garantizar platos que no llevan gluten entre sus ingredientes, pero no un ambiente 100% libre de contaminación cruzada (cocinamos en una cocina y mesada compartida) — para celiaquía severa o intolerancia alta, contanos tu caso al reservar."
   },
   {
     Icon: PawPrintIcon,

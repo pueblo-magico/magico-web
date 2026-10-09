@@ -478,7 +478,7 @@ const Despertar: React.FC = () => {
                 Pueblo Mágico,<br />Sierras de Córdoba
               </h2>
               <p className="text-base leading-relaxed mb-6" style={{ color: C.muted }}>
-                Un eco-centro de montaña donde la naturaleza marca el ritmo y todo está diseñado para
+                Un ecolodge de montaña donde la naturaleza marca el ritmo y todo está diseñado para
                 acompañar procesos reales.
               </p>
               <ul className="space-y-3">

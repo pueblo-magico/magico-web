@@ -872,7 +872,7 @@ const CTAFinal: React.FC = () => (
 const Coliving: React.FC = () => {
   useEffect(() => {
     const TITLE = 'Coliving Mágico — Vivir, Trabajar y Reconectar · Los Gigantes, Córdoba | Pueblo Mágico';
-    const DESC = `Coliving en las Sierras de Córdoba para bienestar y estilo de vida. Formatos de 3, 5 y 10 noches, y Pase Libre Mensual desde $${fmt(COLIVING_PRICES.formatos[0].precio)}. Pensión completa, WiFi satelital y Programa Reset Vital incluidos.`;
+    const DESC = `Coliving en las Sierras de Córdoba para bienestar y estilo de vida. Formatos de ${COLIVING_PRICES.formatos.map(f => f.noches).join(' y ')} noches, y Pase Libre Mensual a $${fmt(COLIVING_PRICES.paseMensual.precio)}. Pensión completa, WiFi satelital y Programa Reset Vital incluidos.`;
     const URL = SITE_URL + ROUTES.COLIVING;
     const IMG = `${SITE_URL}/uploads/coworking.webp`;
     const prevTitle = document.title;

@@ -5,11 +5,16 @@
 # redirect por si hay links viejos (ManyChat, WhatsApp compartido, etc.)
 /reservas    /estadia    301
 
+# Campañas de invierno 2026 (Winter Camp / Winter Redirection) terminadas — se
+# eliminaron las páginas; los links viejos van a la estadía actual.
+/winter-camp    /estadia    301
+/winter-redirection    /estadia    301
+
 # URL limpia para el Recetario Familión (ManyChat / automatizaciones)
 /recetario-familion    /uploads/Recetarios/recetario-familion.pdf    302
 
 # SPA fallback SOLO para las rutas client-only que no están prerenderizadas
-# (todo lo demás ya tiene su propio dist/<ruta>/index.html real — ver
+# (todo lo demás ya tiene su propio dist/<ruta>.html real — ver
 # scripts/prerender.mjs ROUTES). Un catch-all "/* -> /index.html 200" acá
 # rompía /estadia y compañía (ver scripts/check-routes.mjs) y además Cloudflare
 # lo detecta como loop infinito porque /* también matchea /index.html.

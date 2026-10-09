@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { WhatsAppButton } from '../components/WhatsAppButton';
+import { SectionHojaDeRuta } from '../components/SectionHojaDeRuta';
 import { SITE_URL } from './data/config';
 import { ROUTES } from './routes';
 
@@ -11,10 +12,13 @@ import EmpresasProblema from './components/EmpresasProblema';
 import EmpresasGaleria from './components/EmpresasGaleria';
 import EmpresasJornada from './components/EmpresasJornada';
 import EmpresasImpacto from './components/EmpresasImpacto';
+import EmpresasBienestar from './components/EmpresasBienestar';
 import EmpresasEquipo from './components/EmpresasEquipo';
 import EmpresasPreview from './components/EmpresasPreview';
 import EmpresasProceso from './components/EmpresasProceso';
+import EmpresasEntregables from './components/EmpresasEntregables';
 import EmpresasRespaldo from './components/EmpresasRespaldo';
+import EmpresasFAQ from './components/EmpresasFAQ';
 import EmpresasCTAFinal from './components/EmpresasCTAFinal';
 
 const EmpresasContent: React.FC = () => {
@@ -113,10 +117,14 @@ const EmpresasContent: React.FC = () => {
       <EmpresasGaleria />
       <EmpresasJornada />
       <EmpresasImpacto />
+      <EmpresasBienestar />
       <EmpresasEquipo />
       <EmpresasPreview />
       <EmpresasProceso />
+      <EmpresasEntregables />
+      <SectionHojaDeRuta visibleCount={3} />
       <EmpresasRespaldo />
+      <EmpresasFAQ />
       <EmpresasCTAFinal />
 
       <Footer />

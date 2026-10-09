@@ -2,9 +2,7 @@
   "es": {
     "booking": {
       "months": [
-        { "label": "Julio", "short": "Jul" },
-        { "label": "Agosto", "short": "Ago" },
-        { "label": "Septiembre", "short": "Sep" }
+        { "label": "Octubre", "short": "Oct" }, { "label": "Noviembre", "short": "Nov" }, { "label": "Diciembre", "short": "Dic" }, { "label": "Enero", "short": "Ene" }, { "label": "Febrero", "short": "Feb" }
       ],
       "dayNames": ["L", "M", "X", "J", "V", "S", "D"],
       "monthAbbr": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
@@ -18,23 +16,23 @@
       "guestsLabel": "Personas",
       "accommodation": "Alojamiento",
       "domoShort": "Domo",
-      "refugioShort": "Refugio",
+      "refugioShort": "Refugio de Piedra",
       "carpaShort": "Carpa",
       "domoFull": "Domo geodésico",
-      "refugioFull": "Refugio",
+      "refugioFull": "Refugio de Piedra",
       "carpaFull": "Camping",
       "carpaRegimen": "Alojamiento + desayuno",
       "carpaNote": "Camping — te confirmamos disponibilidad y coordinamos todo por WhatsApp.",
       "roomType": "Tipo de habitación",
       "sharedRoom": "Compartida",
       "privateRoom": "Privada",
-      "privateDomoNote": "Privada en domo: 1 o 2 personas ($150.000/noche) o grupos de 3 a 7 personas",
-      "retiroNote": "🗓️ Estas fechas coinciden con un retiro — te confirmamos por WhatsApp si hay lugar antes de cerrar la reserva.",
+      "mealPlan": "Comidas", "mealBreakfast": "Con desayuno", "mealFullBoard": "Pensión completa", "mealBreakfastNote": "Alojamiento + desayuno. Almuerzo o cena se suman aparte (+$20.000 c/u).", "mealFullBoardNote": "Desayuno, almuerzo y cena incluidos — precio total cerrado por persona/noche.", "privateDomoNote": "Domo privado: hasta 7 personas ($50.000 por persona/noche con desayuno; 1 persona sola $100.000)",
+      "retiroNote": "🗓️ Los fines de semana puede haber retiros o eventos en los domos — consultanos disponibilidad: te confirmamos por WhatsApp si hay lugar antes de cerrar la reserva.",
       "unavailableForDates": "Esa opción no tiene lugar en las fechas que elegiste — probá con otras fechas.",
       "capacityExceeded": "El {tipo} tiene capacidad para hasta {max} personas — para grupos más grandes, escribinos por WhatsApp.",
       "groupNote": {
         "domo": "Grupo: podés reservar el domo entero solo para ustedes (privado).",
-        "refugio": "Grupo: podríamos ofrecerte una o más habitaciones privadas dentro del refugio, solo para ustedes — consultanos la disponibilidad por WhatsApp."
+        "refugio": "Grupo: podríamos ofrecerte una o más habitaciones privadas dentro del Refugio de Piedra, solo para ustedes — consultanos la disponibilidad por WhatsApp."
       },
       "groupTeaser": "👥 ¿Van 3 o más? Hay tarifas especiales para grupos.",
       "perPersonPerNight": "persona/noche",
@@ -50,18 +48,36 @@
       "confirmWhatsapp": "Confirmar por WhatsApp",
       "checkAvailability": "Consultar disponibilidad",
       "waTemplateWithDates": "¡Hola! Quiero reservar en Pueblo Mágico.\n\n🏕 {tipo} · {regimen}\n📅 Llegada: {start}\n📅 Salida: {end}\n🌙 {nights} · 👥 {personas}\n\n¿Está disponible?",
-      "waTemplateDefault": "¡Hola! Me interesa reservar en Pueblo Mágico — invierno 2026. ¿Me pueden dar más info?"
+      "waTemplateDefault": "¡Hola! Me interesa reservar en Pueblo Mágico. ¿Me pueden dar más info?"
+    },
+    "roadmap": {
+      "tag": "Transparencia · En proceso",
+      "title": "En qué estamos trabajando ahora",
+      "intro": "Lo que ya hacemos está a la vista: +25.000 árboles nativos plantados, 200 hectáreas cuidadas, energía solar casi al 100% y baños secos. Ahora estamos construyendo las herramientas para que ese impacto pueda verificarse desde afuera.",
+      "items": [
+        { "status": "En implementación", "title": "Registro georreferenciado de cada árbol", "text": "Cada plantación quedará registrada con punto GPS, especie, cantidad, fecha, foto, zona y quién plantó (empresa, escuela o voluntarios). Lo estamos implementando para la temporada de plantación 2026–2027, que arranca con las jornadas de noviembre, y estamos mapeando las zonas ya reforestadas." },
+        { "status": "En proceso", "title": "Monitoreo satelital público", "text": "Estamos registrando nuestras áreas de restauración en Restor, una plataforma científica abierta con imágenes satelitales, para que empresas y donantes puedan seguir la evolución del territorio." },
+        { "status": "En gestión", "title": "Validación universitaria", "text": "Estamos gestionando convenios con la Universidad Nacional de Córdoba y la Universidad Empresarial Siglo 21 para medir cada año la supervivencia de los árboles plantados." },
+        { "status": "En postulación", "title": "Conservación voluntaria de las 200 ha", "text": "Estamos tramitando nuestra incorporación a la Red Argentina de Reservas Naturales Privadas y al programa Refugios de Vida Silvestre de Fundación Vida Silvestre." },
+        { "status": "En evaluación", "title": "Ley de Bosques Nativos", "text": "Estamos evaluando con la Secretaría de Ambiente de Córdoba la incorporación de nuestro bosque nativo de tabaquillos al programa de Pago por Servicios Ambientales (Ley 26.331)." },
+        { "status": "En curso", "title": "Diagnóstico de impacto", "text": "Estamos completando la Evaluación de Impacto B de Sistema B para medir y mejorar nuestra gestión de energía, residuos, agua, equipo y comunidad." }
+      ],
+      "closing": "Vamos a compartir cada avance a medida que se concrete."
     },
     "regeneration": {
       "title": "Tu Inversión Genera Regeneración",
       "items": [
         {
-          "lead": "+15.000 árboles plantados",
-          "text": " en nuestra reserva."
+          "lead": "+25.000 árboles nativos plantados",
+          "text": " en nuestra reserva, y vamos por 10.000 más este año."
         },
         {
-          "lead": "100% Energía Solar",
-          "text": " (cero huella de carbono)."
+          "lead": "Energía solar casi al 100%",
+          "text": ": solo encendemos un generador en emergencias o en días muy nublados en que las baterías no llegan a cargar."
+        },
+        {
+          "lead": "Baños secos",
+          "text": " que no usan ni contaminan agua: cuidamos las nacientes de los arroyos de las Sierras Grandes y transformamos los desechos en compost."
         },
         {
           "lead": "El 10% de tu inversión",
@@ -73,6 +89,8 @@
     },
     "ui": {
       "prev": "Anterior",
+      "showMore": "Ver más",
+      "showLess": "Ver menos",
       "next": "Siguiente",
       "swipeMore": "Deslizá para ver más →",
       "swipeMoreNoArrow": "Deslizá para ver más",
@@ -301,30 +319,64 @@
       "contribution": {
         "eyebrow": "Aporte directo",
         "title": "Tu aporte se convierte en bosque",
-        "description": "Transferí el monto que elijas directamente a la cuenta destinada a la campaña. No hay un aporte mínimo.",
+        "description": "Elegí el medio que te resulte más simple. No hay un aporte mínimo.",
         "cardTitle": "Aporte voluntario",
-        "cardDescription": "Esta contribución financia el proyecto de reforestación. Es independiente de la rifa y no incluye números, premios, vouchers ni servicios.",
+        "cardDescription": "Tu contribución financia directamente el proyecto de reforestación.",
         "modalTitle": "Hacé tu aporte a la reforestación",
-        "modalDescription": "Elegí el monto que quieras aportar. Podés usar los datos de transferencia o escribirnos por WhatsApp si necesitás ayuda.",
+        "modalDescription": "Elegí entre transferencia en Argentina, transferencia internacional SEPA o criptomonedas. También podés escribirnos por WhatsApp si necesitás ayuda.",
         "closeModal": "Cerrar opciones de aporte",
         "notes": [
           "Elegís libremente el monto.",
-          "La transferencia se realiza en pesos argentinos.",
-          "Podés avisarnos por WhatsApp para facilitar la conciliación."
+          "No incluye números, premios, vouchers ni servicios.",
+          "Conservá el comprobante."
         ],
+        "activeGoalLabel": "Meta activa",
+        "progressCta": "Ver avance del proyecto",
+        "chooseMethodTitle": "Elegí cómo aportar",
+        "availableLabel": "Disponible",
+        "comingSoonLabel": "Próximamente",
+        "partialLabel": "BTC y ETH disponibles",
+        "afterTransferTitle": "Después de transferir",
+        "afterTransferDescription": "Avisanos por WhatsApp para que podamos conciliar tu aporte.",
+        "argentinaMethod": "Argentina",
+        "sepaMethod": "SEPA",
+        "cryptoMethod": "Criptomonedas",
+        "localTransferTitle": "Transferencia en Argentina",
+        "internationalTransferTitle": "Transferencia internacional SEPA",
+        "sepaSampleBadge": "Datos de ejemplo",
+        "sepaWarning": "Estos datos SEPA son de muestra y no reciben transferencias. Serán reemplazados por la cuenta real antes de habilitar aportes internacionales.",
+        "cryptoTransferTitle": "Aporte con criptomonedas",
+        "cryptoSampleBadge": "Dato de ejemplo",
+        "cryptoWarning": "Las direcciones marcadas como ejemplo no reciben fondos. Verificá siempre el activo y la red antes de transferir; una red incorrecta puede provocar la pérdida irreversible del aporte.",
+        "cryptoNetworkNote": "Antes de enviar, verificá cuidadosamente el activo, la red y la dirección. Si transferís por una red no admitida o a una dirección incorrecta, los fondos pueden no llegar a Pueblo Mágico y podrían no ser recuperables. Para USDC se admiten únicamente Ethereum y Polygon.",
+        "networkLabel": "Red",
+        "walletLabel": "Dirección",
+        "scanQr": "Escanear QR",
+        "qrTitle": "Dirección para {asset}",
+        "qrDescription": "Escaneá el código y verificá que la red coincida antes de confirmar la transferencia.",
+        "closeQr": "Cerrar código QR",
         "aliasLabel": "Alias para transferir",
         "holderLabel": "Titular",
         "cbuLabel": "CBU / CVU",
+        "ibanLabel": "IBAN",
+        "bicLabel": "BIC / SWIFT",
+        "bankLabel": "Banco",
+        "currencyLabel": "Moneda",
         "copy": "Copiar",
         "copied": "Copiado",
         "copyCbu": "Copiar CBU o CVU",
-        "copyConfirmation": "Dato copiado al portapapeles",
+        "copyIban": "Copiar IBAN",
+        "copyBic": "Copiar BIC o SWIFT",
+        "copyWallet": "Copiar dirección de {asset}",
+        "copyConfirmation": "Dato copiado correctamente",
         "confirmCta": "Avisar que aporté",
         "fallbackTitle": "Pedinos los datos para aportar",
         "fallbackDescription": "La cuenta pública de la campaña todavía no está configurada en esta versión del sitio. Escribinos y te compartimos los datos vigentes.",
         "fallbackCta": "Pedir datos por WhatsApp",
         "whatsappMessage": "¡Hola! Quiero hacer un aporte a la campaña de reforestación de árboles nativos. ¿Me comparten los datos vigentes?",
-        "legalNote": "Aporte voluntario destinado a la campaña de reforestación. Esta página no comercializa ni promociona participaciones en sorteos. Conservá tu comprobante de transferencia."
+        "confirmationWhatsappMessage": "¡Hola! Ya realicé un aporte a la campaña de reforestación de 10.000 árboles nativos.\n\nNombre: [completar]\nMonto y moneda: [completar]\nMedio utilizado: {method}\nReferencia o hash de la operación: [completar]\n\nAdjunto el comprobante para que puedan conciliar mi aporte. ¡Gracias!",
+        "methodPlaceholder": "[Argentina / SEPA / USDC / BTC / ETH]",
+        "legalNote": "Aporte voluntario destinado a la campaña de reforestación. Esta página no comercializa ni promociona participaciones en sorteos. Conservá tu comprobante de transferencia. No envíes fondos a ningún dato marcado como ejemplo."
       },
       "closing": {
         "title": "Lo que plantamos hoy puede cuidar la montaña durante generaciones",
@@ -345,7 +397,7 @@
       "badge_accommodation": "Alojamiento", 
       "personalizeStay": "PERSONALIZÁ TU ESTADÍA",
       "coworkingBadge": "Coworking & Coliving",
-      "card_extra_text": "También podés solo alojarte si querés — desde $20.000/persona/noche con desayuno, en carpa, habitación o domo compartido. Sumá almuerzo, cena o pensión completa a tu gusto.",
+      "card_extra_text": "También podés solo alojarte si querés — desde $20.000/persona/noche con desayuno, en carpa, Refugio de Piedra o domo compartido. Sumá almuerzo, cena o pensión completa a tu gusto.",
       "btn": "RESERVAR MI LUGAR", 
       "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
       "cards": [
@@ -359,8 +411,8 @@
         },
         {
           "id": 2,
-          "title": "Eco-Refugio & Glamping",
-          "description": "Dormir en la montaña como elijas: Domos geodésicos y Eco-Refugio o camping. Confort simple y naturaleza pura.",
+          "title": "Refugio de Piedra · Domos · Camping",
+          "description": "Dormí en el ecolodge como elijas: Refugio de Piedra, domos geodésicos o camping. Confort simple y naturaleza pura.",
           "ctaText": "VER ALOJAMIENTOS",
           "ctaLink": "/estadia",
           "image": "/uploads/refu.webp"
@@ -399,7 +451,7 @@
       "tag": "Comunidad Internacional",
       "shortTitle": "Voluntariados",
       "title": "Un refugio <span class='italic text-green'>internacional</span>",
-      "description": "Recibimos voluntarios y viajeros de todo el mundo. La energía de Pueblo Mágico se nutre de esta comunidad global: sentarte en el fogón o compartir una comida acá es como viajar por Europa o estar en un hostel internacional, pero con la paz inmensa de las Sierras de Córdoba. Es un espacio de intercambio cultural, colaboración y servicio a la Tierra.",
+      "description": "Recibimos voluntarios y viajeros de todo el mundo. La energía de Pueblo Mágico se nutre de esta comunidad global: sentarte en el fogón o compartir una comida acá es como dar la vuelta al mundo sin moverte, pero con la paz inmensa de las Sierras de Córdoba. Es un espacio de intercambio cultural, colaboración y servicio a la Tierra.",
       "btn": "POSTULARME",
       "image": "/uploads/reforestacion/comunidad-atardecer.webp",
       "link": "/voluntariado",
@@ -462,7 +514,7 @@
       "intro": {
         "eyebrow": "Un intercambio consciente",
         "title": "Ser parte de algo que está vivo",
-        "p1": "Pueblo Mágico es un eco-centro de montaña donde la vida cotidiana se entrelaza con la naturaleza, la comunidad y los ciclos de la Tierra. Hace más de 25 años que esta familia habita y cuida el territorio.",
+        "p1": "Pueblo Mágico es un ecolodge de montaña donde la vida cotidiana se entrelaza con la naturaleza, la comunidad y los ciclos de la Tierra. Hace más de 25 años que esta familia habita y cuida el territorio.",
         "p2": "Programa Semilla es la puerta de entrada para participar en su evolución: una experiencia de presencia, aprendizaje, responsabilidad y co-creación. No es un proyecto terminado. Quienes llegan participan también de su construcción.",
         "quote": "Regenerar el territorio también es regenerar nuestra forma de habitar.",
         "imageAlt": "Vista aérea del territorio de Pueblo Mágico"
@@ -664,21 +716,21 @@
           "name": "Julieta Castoldi",
           "role": "Facilitadora",
           "text": "Lo más importante: El amor, la entrega de todo el equipo y la capacidad de sentirte uno con la naturaleza.",
-          "image": "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
+          "image": ""
         },
         {
           "id": 2,
           "name": "Sofía R.",
           "role": "Viajera",
           "text": "Me sentí parte de la vida de la montaña, como en casa. Un refugio de paz inigualable.",
-          "image": "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg"
+          "image": ""
         },
         {
           "id": 3,
           "name": "Marcos D.",
           "role": "Huésped",
           "text": "Una experiencia transformadora. La comida consciente y los espacios son de otro mundo.",
-          "image": "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+          "image": ""
         }
       ]
     },
@@ -795,13 +847,13 @@
     },
     "hero": {
       "title": "Te invita a Ser",
-      "titleSub": "El mejor refugio de Córdoba Argentina",
-      "subtitle": "Comunidad y Filosofía del Buen Vivir. Eco-centro y co-living de montaña para emprendedores, artistas y creadores. Experiencias de alto impacto.",
+      "titleSub": "Ecolodge de montaña en Córdoba, Argentina",
+      "subtitle": "Comunidad y Filosofía del Buen Vivir. Ecolodge de montaña: energía solar, baños secos y compost. Co-living para emprendedores, artistas y creadores.",
       "tag": "LOS GIGANTES · SIERRAS GRANDES · CÓRDOBA",
       "btnBook": "AGENDA DE ACTIVIDADES",
       "btnRetreat": "ORGANIZAR RETIRO",
       "linkComoLlegar": "¿Cómo llegar?",
-      "stats_years": "+15.000 Árboles Plantados",
+      "stats_years": "+25.000 Árboles Plantados",
       "stats_trees": "Huéspedes de +20 Países",
       "stats_land": "+200ha cuidadas · 25 años",
       "stats_sus": "Desde $20.000 / persona / noche",
@@ -814,15 +866,11 @@
       ],
       "bookLink": "#eventos",
       "retreatLink": "/organizamos-tu-experiencia",
-      "nextEvent": {
-        "label": "WINTER CAMP · INVIERNO 2026 · ¡RESERVÁ TU LUGAR!",
-        "link": "/winter-camp"
-      },
       "colivingBadge": {
         "label": "CO-LIVING · ESTADÍAS LARGAS",
         "link": "/coliving"
       },
-      "reservationKicker": "INVIERNO 2026",
+      "reservationKicker": "ECOLODGE DE MONTAÑA",
       "reservationCta": "Verificar disponibilidad",
       "reservationTitle": "Reserva tu experiencia inolvidable en la montaña",
       "reservationPricing": "Desde $20.000/persona/noche (carpa, con desayuno) · sumá comidas a tu gusto"
@@ -914,7 +962,7 @@
       {
         "id": 1,
         "title": "Regeneración",
-        "subtitle": "Más de 15.000 árboles plantados y cuidados. Acciones concretas para restaurar el ecosistema y sembrar nuevos futuros posibles."
+        "subtitle": "Más de 25.000 árboles nativos plantados y cuidados. Acciones concretas para restaurar el ecosistema y sembrar nuevos futuros posibles."
       },
       {
         "id": 2,
@@ -971,7 +1019,7 @@
       }
     },
     "footer": {
-      "description": "Un refugio de montaña diseñado para inspirar vidas más simples, conscientes y conectadas con la naturaleza.",
+      "description": "Un ecolodge de montaña diseñado para inspirar vidas más simples, conscientes y conectadas con la naturaleza.",
       "titles": {
         "explore": "Explorar",
         "experiences": "Experiencias",
@@ -1011,7 +1059,7 @@
           ]
         }
       ],
-      "copyright": "Pueblo Mágico Eco-Refugio. Todos los derechos reservados. Operado por HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA.",
+      "copyright": "Pueblo Mágico Ecolodge. Todos los derechos reservados. Operado por HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA.",
       "madeBy": "Hecho con respeto a la montaña"
     },
     "cookieBanner": {
@@ -1113,7 +1161,7 @@
           },
           {
             "question": "¿Cómo es el alojamiento?",
-            "answer": "Ofrecemos tres opciones: camping familiar, eco-refugio compartido y domo privado. Todas incluyen baños con agua caliente."
+            "answer": "Ofrecemos tres opciones: camping familiar, Refugio de Piedra (compartido) y domo privado. Todas incluyen baños con agua caliente."
           },
           {
             "question": "¿Qué debo llevar?",
@@ -1135,7 +1183,7 @@
         "subtitle": "Todo lo que necesitás saber antes de venir con tu familia."
       },
       "eco_center": {
-        "title": "Un eco-centro vivo en la montaña",
+        "title": "Un ecolodge vivo en la montaña",
         "subtitle": "Pueblo Mágico es mucho más que un lugar: es una comunidad viva donde la naturaleza y las personas se encuentran en equilibrio.",
         "items": [
           {
@@ -1150,7 +1198,7 @@
           },
           {
             "num": "03",
-            "title": "+15.000 Árboles Plantados",
+            "title": "+25.000 Árboles Plantados",
             "text": "Somos parte activa de la restauración del monte nativo. El 10% de cada experiencia va directo a reforestar tabaquillos en las Sierras Grandes.",
             "href": "/reforestacion"
           },
@@ -1273,7 +1321,7 @@
         "subtitle": "Las recetas que preparamos en Familión. Sabores que nacen del fuego compartido, de la huerta y de las manos que cocinan juntas en la montaña.",
         "items": [
           "Recetas con ingredientes de estación",
-          "Platos que preparamos en el ecocentro",
+          "Platos que preparamos en el ecolodge",
           "Para cocinar en familia, con calma",
           "PDF descargable, tuyo para siempre"
         ],
@@ -1309,7 +1357,7 @@
             "text": "Bosques, ríos, miradores y senderos para explorar en familia sin límites."
           },
           {
-            "title": "100% energía solar.",
+            "title": "Energía solar casi al 100%.",
             "text": "Un ejemplo vivo de vida regenerativa que los niños internalizan naturalmente."
           },
           {
@@ -1516,14 +1564,14 @@
             "text": "Entregamos objetivos de aprendizaje, documentación institucional y todo lo que necesitás para presentar y aprobar la salida ante la dirección."
           },
           {
-            "title": "Seguridad certificada para grupos escolares.",
+            "title": "Seguridad pensada para grupos escolares.",
             "text": "Protocolos de emergencia en montaña, primeros auxilios, seguro de responsabilidad civil y acceso para micros escolares hasta la entrada del lugar."
           }
         ],
         "strengthen_title": "Fortalecer el grupo",
         "strengthen_text": "Cada actividad está diseñada para trabajar la confianza, la comunicación y el trabajo en equipo. Los chicos vuelven con lazos más fuertes.",
         "reforest_title": "Plantamos juntos",
-        "reforest_text": "Durante todo el año estamos reforestando el lugar y ya superamos los 15.000 árboles plantados. Venir a Pueblo Mágico también aporta de forma directa a este gran objetivo ambiental. El 10% de tu inversión se destina a reforestar tabaquillos y restaurar las sierras.",
+        "reforest_text": "Durante todo el año estamos reforestando el lugar y ya superamos los 25.000 árboles plantados. Venir a Pueblo Mágico también aporta de forma directa a este gran objetivo ambiental. El 10% de tu inversión se destina a reforestar tabaquillos y restaurar las sierras.",
         "footer_text": "Acceso para micros y vehículos escolares hasta la entrada del lugar.",
         "safety_items": [
           {
@@ -1816,7 +1864,7 @@
     "empresas": {
       "seo": {
         "title": "Empresas — Voluntariado Corporativo & RSE en las Sierras · Los Gigantes, Córdoba | Pueblo Mágico",
-        "description": "Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +15.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria."
+        "description": "Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +25.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria."
       },
       "hero": {
         "tag": "Programas corporativos",
@@ -1828,7 +1876,7 @@
         "wa_query_programa": "¡Hola! Quiero diseñar un programa de voluntariado corporativo / RSE con Pueblo Mágico para mi organización.",
         "wa_query_jornada": "¡Hola! Quiero coordinar un primer encuentro (llamada virtual, en Córdoba Capital o en Pueblo Mágico) para conocer la propuesta para organizaciones.",
         "stats": [
-          { "value": "+15.000", "label": "árboles plantados" },
+          { "value": "+25.000", "label": "árboles plantados" },
           { "value": "+200", "label": "hectáreas cuidadas" },
           { "value": "+25 años", "label": "en Los Gigantes" }
         ]
@@ -1839,7 +1887,12 @@
         "intro": "Muchas organizaciones ya cuentan con políticas de sustentabilidad, RSE, voluntariado o metas ambientales. El desafío suele estar en transformar esos compromisos en acciones que sean, al mismo tiempo:",
         "items": ["Concretas y visibles", "Participativas", "Vinculadas con el territorio", "Valiosas para los colaboradores", "Documentables", "Adaptables a los objetivos de la organización"],
         "closing1": "Pueblo Mágico funciona como territorio, infraestructura y plataforma para diseñar esas experiencias en las Sierras Grandes.",
-        "closing2": "No buscamos realizar una actividad ambiental aislada. Buscamos que tu organización se integre a un proceso de regeneración que ya existe."
+        "closing2": "No buscamos realizar una actividad ambiental aislada. Buscamos que tu organización se integre a un proceso de regeneración que ya existe.",
+        "hr_note": {
+          "text": "La evidencia acompaña: un estudio con casi 20.000 personas encontró que pasar al menos 2 horas por semana en la naturaleza se asocia con mejor salud y bienestar.",
+          "source": "White et al., Scientific Reports (2019)",
+          "url": "https://www.nature.com/articles/s41598-019-44097-3"
+        }
       },
       "dimensiones": {
         "title": "Tres dimensiones que pueden convivir en un mismo programa",
@@ -1874,20 +1927,105 @@
           { "num": "05", "title": "Integrar", "text": "Cuando la organización lo requiere, incorporamos dinámicas orientadas a desarrollar capacidades del equipo." },
           { "num": "06", "title": "Documentar", "text": "Registro de indicadores acordados: participantes, horas de voluntariado, ejemplares plantados, material fotográfico y otros datos relevantes." }
         ],
-        "benchmark": "Las grandes compañías estructuran sus programas de voluntariado alrededor de acciones, participación e indicadores. Globant, por ejemplo, reportó en 2025 2.787 voluntarios y 34.073 horas destinadas a iniciativas comunitarias y ambientales."
+        "benchmark": "Las grandes compañías estructuran sus programas de voluntariado alrededor de acciones, participación e indicadores. Globant, por ejemplo, reportó en 2025 2.787 voluntarios y 34.073 horas destinadas a iniciativas comunitarias y ambientales.",
+        "cta_lead": "¿Te imaginás esta jornada con tu equipo?"
       },
       "impacto": {
         "tag": "No es una plantación creada para empresas",
         "title": "Es la posibilidad de sumarse a un proceso que ya existe",
         "text": "La regeneración ambiental forma parte de Pueblo Mágico desde mucho antes de esta propuesta corporativa.",
         "stats": [
-          { "value": "+15.000", "label": "árboles plantados y cuidados" },
+          { "value": "+25.000", "label": "árboles plantados y cuidados" },
           { "value": "+200", "label": "hectáreas cuidadas" },
           { "value": "+25", "label": "años de trayectoria en Los Gigantes" }
+        ],
+        "practices_title": "La regeneración también está en la operación diaria",
+        "practices": [
+          { "title": "Energía solar casi al 100%", "text": "El generador solo se usa en emergencias o en días muy nublados." },
+          { "title": "Baños secos", "text": "No usan ni contaminan agua: cuidamos las nacientes de los arroyos serranos." },
+          { "title": "Compost", "text": "Los residuos orgánicos y de los baños secos vuelven al suelo como abono." }
         ],
         "partners_intro": "A lo largo de este camino trabajamos y generamos vínculos con organizaciones ambientales como:",
         "partners": ["Bosques de Agua", "Acciones Serranas"],
         "partners_note": "Actualmente estamos desarrollando nuevas articulaciones con Acción Ambiental y otros actores del ecosistema ambiental."
+      },
+      "bienestar": {
+        "tag": "Bienestar para equipos",
+        "title": "La regeneración empieza por dentro",
+        "intro": "Incorporá prácticas y dinámicas de bienestar a la experiencia de tu equipo. Trabajamos con especialistas en desarrollo personal, coaching y espiritualidad para diseñar jornadas que fortalecen el vínculo entre las personas, bajan el ritmo y abren espacio para lo que en la oficina no tiene lugar.",
+        "custom": "Cada propuesta se arma a medida según los objetivos del grupo. Puede ser descanso, integración, liderazgo o reconexión con el propósito.",
+        "list_title": "Algunas de las prácticas que podés sumar",
+        "items": [
+          {
+            "title": "Coaching de equipos",
+            "text": "Dinámicas guiadas para alinear objetivos, mejorar la comunicación y potenciar el trabajo colaborativo.",
+            "icon": "users"
+          },
+          {
+            "title": "Liderazgo consciente",
+            "text": "Talleres para líderes que buscan conducir desde la coherencia, la empatía y el propósito.",
+            "icon": "compass"
+          },
+          {
+            "title": "Mindfulness",
+            "text": "Herramientas simples de atención plena para llevar al día a día laboral y gestionar el estrés.",
+            "icon": "brain"
+          },
+          {
+            "title": "Trekking consciente",
+            "text": "Caminatas por la naturaleza con pausas de observación, silencio y registro personal.",
+            "icon": "footprints"
+          },
+          {
+            "title": "Plantación de árboles",
+            "text": "Tu equipo deja su huella regenerativa participando del proyecto de reforestación de Pueblo Mágico.",
+            "icon": "sprout"
+          },
+          {
+            "title": "Meditaciones guiadas",
+            "text": "Un espacio para frenar, respirar y volver al presente, pensado también para quienes nunca meditaron.",
+            "icon": "flower"
+          },
+          {
+            "title": "Yoga y movimiento consciente",
+            "text": "Prácticas corporales para soltar tensiones y reconectar con el cuerpo, adaptadas a todos los niveles.",
+            "icon": "person"
+          },
+          {
+            "title": "Respiración consciente (breathwork)",
+            "text": "Técnicas de respiración para liberar energía, regular emociones y ganar claridad.",
+            "icon": "wind"
+          },
+          {
+            "title": "Círculos de palabra",
+            "text": "Espacios de escucha y conversación honesta que fortalecen la confianza en el equipo.",
+            "icon": "messages"
+          },
+          {
+            "title": "Baños de sonido",
+            "text": "Una experiencia de relajación profunda con cuencos y otros instrumentos.",
+            "icon": "music"
+          },
+          {
+            "title": "Rituales de conexión con la naturaleza",
+            "text": "Ceremonias simples al aire libre para cerrar ciclos, agradecer y dar intención a lo que viene.",
+            "icon": "sun"
+          },
+          {
+            "title": "Constelaciones organizacionales",
+            "text": "Una dinámica sistémica que hace visibles los vínculos, roles y bloqueos dentro de la organización.",
+            "icon": "network"
+          },
+          {
+            "title": "Astrología evolutiva",
+            "text": "Una mirada simbólica para conocerse mejor y entender las dinámicas propias y del equipo.",
+            "icon": "sparkles"
+          }
+        ],
+        "show_all": "Ver todas las prácticas",
+        "show_less": "Ver menos",
+        "cta": "Diseñemos la experiencia de tu equipo",
+        "wa_query": "¡Hola! Vengo de la web de empresas y quiero diseñar una experiencia de bienestar para mi equipo en Pueblo Mágico. ✨"
       },
       "equipo": {
         "title": "Una acción ambiental también puede fortalecer al equipo",
@@ -1932,11 +2070,85 @@
       "formatos": {
         "title": "Distintos formatos según el objetivo",
         "items": [
-          { "title": "Jornada corporativa", "text": "Una experiencia de un día. Ideal para voluntariado, restauración, integración y primeras experiencias institucionales." },
-          { "title": "Jornada + noche", "text": "Más inmersiva: permite incorporar convivencia, fogón, naturaleza y actividades complementarias." },
-          { "title": "Programa de varios días", "text": "Para equipos que buscan profundizar en liderazgo, cultura, coordinación y estrategia." }
+          { "title": "Jornada corporativa", "text": "Una experiencia de un día. Ideal para voluntariado, restauración, integración y primeras experiencias institucionales.",
+            "price": "Desde $35.000 por persona" },
+          { "title": "Jornada + noche", "text": "Más inmersiva: permite incorporar convivencia, fogón, naturaleza y actividades complementarias.",
+            "price": "Desde $75.000 por persona" },
+          { "title": "Programa de varios días", "text": "Para equipos que buscan profundizar en liderazgo, cultura, coordinación y estrategia.",
+            "price": "A consultar" }
         ],
-        "note": "Todos los formatos se diseñan según la necesidad de cada organización."
+        "note": "Todos los formatos se diseñan según la necesidad de cada organización.",
+        "more_title": "Otras formas de sumarse",
+        "open_days": {
+          "badge": "Sin costo",
+          "title": "Jornadas abiertas de reforestación",
+          "text": "Pueden sumarse empresas de cualquier tamaño, sin mínimo de participantes. La movilidad corre por cuenta de la empresa (podemos ayudarte a coordinarla) y las comidas o el alojamiento se contratan aparte si los necesitan.",
+          "cta": "Sumar a mi equipo",
+          "wa_query": "¡Hola! Quiero sumar a mi equipo a una jornada abierta de reforestación. ¿Qué fechas hay disponibles y cómo nos organizamos?"
+        },
+        "gifts": {
+          "badge": "Fin de año",
+          "title": "Regalos corporativos que regeneran",
+          "text": "Regalá un árbol nativo a cada colaborador o cliente, con un certificado a su nombre. Los árboles se plantan en la reserva durante las próximas jornadas.",
+          "cta": "Consultar",
+          "wa_query": "¡Hola! Quiero consultar por regalos corporativos de fin de año: árboles nativos con certificado para mi equipo o mis clientes."
+        },
+        "remote": {
+          "title": "¿Tu equipo no puede viajar?",
+          "text": "Tu organización puede apadrinar árboles de la campaña de reforestación y sumarse a una charla virtual o en Córdoba Capital para conocer el proyecto.",
+          "cta": "Ver la campaña de reforestación"
+        }
+      },
+      "entregables": {
+        "tag": "Transparencia",
+        "title": "Qué incluye y qué recibe tu organización",
+        "included_title": "Incluido en cada jornada",
+        "included": [
+          "Coordinación y acompañamiento de nuestro equipo y especialistas",
+          "Seguro para todos los participantes",
+          "Plantines nativos, herramientas y materiales",
+          "Gastronomía según el formato elegido",
+          "Alojamiento en los formatos con noche"
+        ],
+        "receive_title": "Lo que recibe tu organización",
+        "receive": [
+          "Certificado de participación para la organización y para cada participante, emitido por Pueblo Mágico junto a las organizaciones aliadas de la jornada",
+          "Informe de impacto: participantes, horas de voluntariado, árboles plantados y especies nativas",
+          "Registro fotográfico para tu reporte de sostenibilidad y tu comunicación interna",
+          "Ubicación de la intervención en el mapa del proyecto de reforestación"
+        ],
+        "soon_label": "En desarrollo",
+        "roadmap_text": "Además, estamos implementando la geolocalización de cada árbol, el monitoreo satelital público y la validación universitaria de la supervivencia de los árboles.",
+        "roadmap_cta": "Ver en qué estamos trabajando",
+        "soon": [
+          "Geolocalización de cada árbol plantado (operativa para la plantación del verano 2026–2027)",
+          "Monitoreo satelital público de las áreas restauradas en Restor",
+          "Estimación del CO₂ capturado, validada por terceros",
+          "Seguimiento anual de supervivencia validado por la UNC y la Universidad Empresarial Siglo 21 (convenios en gestión)"
+        ],
+        "care": {
+          "title": "Los árboles no quedan solos",
+          "text": "Lo que tu equipo planta queda en un territorio que cuidamos hace más de 25 años: protección y cuidado inicial después de cada plantación, y un vivero propio, que estamos construyendo, para criar los próximos ejemplares."
+        },
+        "ods_title": "Alineado con los Objetivos de Desarrollo Sostenible",
+        "ods": [
+          {
+            "n": "3",
+            "label": "Salud y bienestar"
+          },
+          {
+            "n": "13",
+            "label": "Acción por el clima"
+          },
+          {
+            "n": "15",
+            "label": "Vida de ecosistemas terrestres"
+          },
+          {
+            "n": "17",
+            "label": "Alianzas para lograr los objetivos"
+          }
+        ]
       },
       "respaldo": {
         "title": "Una experiencia respaldada por trayectoria",
@@ -1944,6 +2156,11 @@
         "text1": "Durante más de 25 años desarrollamos capacidades vinculadas con naturaleza, hospitalidad, grupos, experiencias y regeneración. Recibimos instituciones, escuelas, clubes, retiros, comunidades, voluntarios internacionales y grupos de distintos tamaños.",
         "aula_verde_note": "A través de Aula Verde ya desarrollamos experiencias institucionales adaptadas a objetivos educativos y grupales, incluyendo jornadas con más de 200 participantes.",
         "aula_verde_cta": "Conocer Aula Verde",
+        "testimonial": {
+          "quote": "El equipo de Pueblo Mágico es profesional y cálido a la vez. Se adaptaron a todos nuestros requerimientos institucionales y el programa fue impecable.",
+          "name": "Federico T.",
+          "role": "Director, Colegio Racing Club de Córdoba"
+        },
         "items": ["Alojamiento", "Gastronomía", "Espacios comunes y senderos", "Especialistas y facilitadores", "Experiencia logística", "Diseño de experiencias a medida"],
         "text3": "No somos nuevos recibiendo grupos ni trabajando con instituciones. Lo nuevo es poner esa experiencia al servicio de los objetivos de sustentabilidad y participación de las empresas."
       },
@@ -1954,12 +2171,51 @@
           { "name": "Pueblo Mágico", "text": "Territorio, infraestructura, hospitalidad, experiencia, regeneración y operación de las jornadas." },
           { "name": "Fundación para el Desarrollo Sostenible", "text": "Marco institucional y administrativo para programas de voluntariado: planificación, administración de fondos de patrocinadores, facturación y rendición de cuentas." },
           { "name": "Apoidea", "text": "Vinculación con empresas, reuniones de diagnóstico, desarrollo de propuestas particulares y otros aspectos de asesoría y comercialización." },
-          { "name": "Organizaciones ambientales", "text": "Conocimiento técnico, ejemplares, experiencia territorial y acompañamiento ambiental, según cada intervención." }
+          { "name": "Organizaciones ambientales", "text": "Acción Ambiental, Bosques de Agua y Acción Serrana aportan conocimiento técnico, ejemplares, experiencia territorial y acompañamiento ambiental, según cada intervención." }
         ],
-        "benchmark": "La lógica coincide con cómo las empresas más grandes estructuran sus programas de impacto: colaboración con organizaciones, involucramiento de empleados y proyectos ambientales conectados con una estrategia más amplia."
+        "allies_title": "Organizaciones ambientales aliadas",
+      "allies": [{"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Conservación del ambiente: difusión, educación y acción ambiental en la provincia de Córdoba."},{"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restauran el bosque nativo de altura y las cuencas hídricas de las Sierras Grandes."},{"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regeneran los bosques de altura y sus nacientes de agua junto a las comunidades locales."}],
+      "benchmark": "La lógica coincide con cómo las empresas más grandes estructuran sus programas de impacto: colaboración con organizaciones, involucramiento de empleados y proyectos ambientales conectados con una estrategia más amplia."
+      },
+      "faq": {
+        "title": "Preguntas frecuentes",
+        "items": [
+          {
+            "q": "¿Cuántas personas pueden participar?",
+            "a": "Para una acción organizada para tu empresa, desde 5 personas y sin límite máximo: ya recibimos grupos de más de 200 participantes. En los formatos con noche combinamos camas y espacios de campamento. En las jornadas abiertas de reforestación no hay mínimo: pueden sumarse equipos de cualquier tamaño."
+          },
+          {
+            "q": "¿Cuánto cuesta?",
+            "a": "Jornada de un día: desde $35.000 por persona. Jornada con una noche: desde $75.000 por persona. Programas de varios días: a consultar. Las jornadas abiertas de reforestación no tienen costo."
+          },
+          {
+            "q": "¿Cómo se llega desde Córdoba? ¿Hay traslado?",
+            "a": "Pueblo Mágico está en Los Gigantes, a 1 h de Tanti y 1:30 h de Villa Carlos Paz, con acceso para todo tipo de vehículos. Podemos proporcionar trafics o buses según la cantidad de personas y la necesidad de tu empresa."
+          },
+          {
+            "q": "¿Qué pasa si llueve?",
+            "a": "Si el clima no acompaña, reprogramamos la fecha."
+          },
+          {
+            "q": "¿Es accesible para todo tipo de participantes?",
+            "a": "Tenemos zonas accesibles para todo público y otras con acceso solo a pie. Adaptamos el recorrido al grupo."
+          },
+          {
+            "q": "¿Los participantes tienen seguro?",
+            "a": "Sí, todos los participantes cuentan con seguro durante la jornada."
+          },
+          {
+            "q": "¿Emiten factura?",
+            "a": "Sí, emitimos factura."
+          },
+          {
+            "q": "¿Con cuánta anticipación hay que reservar?",
+            "a": "Recomendamos 3 a 4 semanas para una jornada de día y 6 a 8 semanas para programas con noche o de varios días. Para fin de año (noviembre y diciembre), cuanto antes mejor."
+          }
+        ]
       },
       "empezar": {
-        "title": "Dos formas de empezar",
+        "title": "¿Por dónde querés empezar?",
         "option1": { "title": "Ya tengo una iniciativa en mente", "text": "Contanos qué quiere lograr tu organización y diseñamos una propuesta.", "cta": "Quiero diseñar un programa" },
         "option2": { "title": "Primero quiero conocer Pueblo Mágico", "text": "Participá de una Jornada de Presentación, conocé el territorio, viví una muestra de la experiencia y evaluá si tiene sentido para tu equipo.", "cta": "Quiero recibir invitación" }
       },
@@ -2257,9 +2513,9 @@
       "price_solo_label": "Camping",
       "price_solo_sub": "Alojamiento + desayuno, precio por persona",
       "price_pension_label": "Domo Privado",
-      "price_pension_sub": "1 o 2 personas, domo entero",
+      "price_pension_sub": "Con desayuno · 1 persona sola $100.000",
       "price_unit": "/ persona / noche",
-      "price_pension_unit": "/ noche",
+      "price_pension_unit": "/ persona / noche",
       "cta": "Ver todos los alojamientos"
     },
     "para_quien": {
@@ -2313,7 +2569,7 @@
         },
         {
           "q": "¿Necesito experiencia previa en retiros o meditación?",
-          "a": "Para nada. Pueblo Mágico no es un centro de meditación formal — es un ecocentro vivo donde cada persona encuentra su propio ritmo. Podés venir a trabajar remoto, descansar, explorar la naturaleza o simplemente estar."
+          "a": "Para nada. Pueblo Mágico no es un centro de meditación formal — es un ecolodge vivo donde cada persona encuentra su propio ritmo. Podés venir a trabajar remoto, descansar, explorar la naturaleza o simplemente estar."
         },
         {
           "q": "¿Hay señal o internet en la montaña?",
@@ -2341,9 +2597,7 @@
   "en": {
     "booking": {
       "months": [
-        { "label": "July", "short": "Jul" },
-        { "label": "August", "short": "Aug" },
-        { "label": "September", "short": "Sep" }
+        { "label": "October", "short": "Oct" }, { "label": "November", "short": "Nov" }, { "label": "December", "short": "Dec" }, { "label": "January", "short": "Jan" }, { "label": "February", "short": "Feb" }
       ],
       "dayNames": ["M", "T", "W", "T", "F", "S", "S"],
       "monthAbbr": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -2357,23 +2611,23 @@
       "guestsLabel": "Guests",
       "accommodation": "Accommodation",
       "domoShort": "Dome",
-      "refugioShort": "Shelter",
+      "refugioShort": "Stone Refuge",
       "carpaShort": "Tent",
       "domoFull": "Geodesic dome",
-      "refugioFull": "Shelter",
+      "refugioFull": "Stone Refuge (Refugio de Piedra)",
       "carpaFull": "Camping",
       "carpaRegimen": "Accommodation + breakfast",
       "carpaNote": "Camping — we'll confirm availability and sort everything out over WhatsApp.",
       "roomType": "Room type",
       "sharedRoom": "Shared",
       "privateRoom": "Private",
-      "privateDomoNote": "Private dome: 1 or 2 people ($150,000/night), or groups of 3 to 7 people",
-      "retiroNote": "🗓️ These dates overlap with a retreat — we'll confirm availability with you on WhatsApp before finalizing the booking.",
+      "mealPlan": "Meals", "mealBreakfast": "With breakfast", "mealFullBoard": "Full board", "mealBreakfastNote": "Accommodation + breakfast. Lunch or dinner can be added (+$20,000 each).", "mealFullBoardNote": "Breakfast, lunch and dinner included — fixed total price per person/night.", "privateDomoNote": "Private dome: up to 7 people ($50,000 per person/night with breakfast; solo traveler $100,000)",
+      "retiroNote": "🗓️ On weekends the domes may host retreats or events — ask us about availability: we'll confirm on WhatsApp before finalizing the booking.",
       "unavailableForDates": "That option has no availability for the dates you picked — try different dates.",
       "capacityExceeded": "The {tipo} has room for up to {max} people — for bigger groups, message us on WhatsApp.",
       "groupNote": {
         "domo": "Group: you can book the whole dome exclusively for your group.",
-        "refugio": "Group: we may be able to offer you one or more private rooms inside the shelter, just for your group — check availability with us on WhatsApp."
+        "refugio": "Group: we may be able to offer you one or more private rooms inside the Stone Refuge, just for your group — check availability with us on WhatsApp."
       },
       "groupTeaser": "👥 Going as 3 or more? Ask about our group rates.",
       "perPersonPerNight": "person/night",
@@ -2389,18 +2643,36 @@
       "confirmWhatsapp": "Confirm via WhatsApp",
       "checkAvailability": "Check availability",
       "waTemplateWithDates": "Hi! I'd like to book at Pueblo Mágico.\n\n🏕 {tipo} · {regimen}\n📅 Arrival: {start}\n📅 Departure: {end}\n🌙 {nights} · 👥 {personas}\n\nIs it available?",
-      "waTemplateDefault": "Hi! I'm interested in booking at Pueblo Mágico — winter 2026. Could you give me more info?"
+      "waTemplateDefault": "Hi! I'm interested in booking at Pueblo Mágico. Could you give me more info?"
+    },
+    "roadmap": {
+      "tag": "Transparency · In progress",
+      "title": "What we are working on now",
+      "intro": "What we already do is visible: 25,000+ native trees planted, 200 hectares cared for, nearly 100% solar energy and dry toilets. Now we are building the tools so that this impact can be verified from the outside.",
+      "items": [
+        { "status": "Being implemented", "title": "Geo-referenced record of every tree", "text": "Every planting will be recorded with GPS point, species, quantity, date, photo, zone and who planted it (company, school or volunteers). We are implementing it for the 2026–2027 planting season, which starts with the November workdays, and we are mapping the areas already reforested." },
+        { "status": "In progress", "title": "Public satellite monitoring", "text": "We are registering our restoration areas on Restor, an open scientific platform with satellite imagery, so companies and donors can follow how the land evolves." },
+        { "status": "In talks", "title": "University validation", "text": "We are working on agreements with the National University of Córdoba (UNC) and Universidad Empresarial Siglo 21 to measure the survival of planted trees every year." },
+        { "status": "Applying", "title": "Voluntary conservation of the 200 ha", "text": "We are applying to join the Argentine Network of Private Nature Reserves and Fundación Vida Silvestre's Wildlife Refuges program." },
+        { "status": "Under review", "title": "Native Forest Law", "text": "We are reviewing with Córdoba's Environment Secretariat the inclusion of our native tabaquillo forest in the Payment for Environmental Services program (Law 26,331)." },
+        { "status": "Ongoing", "title": "Impact assessment", "text": "We are completing Sistema B's B Impact Assessment to measure and improve how we manage energy, waste, water, team and community." }
+      ],
+      "closing": "We will share each step as it happens."
     },
     "regeneration": {
       "title": "Your Investment Drives Regeneration",
       "items": [
         {
-          "lead": "+15,000 trees planted",
+          "lead": "+25,000 native trees planted",
           "text": " in our reserve."
         },
         {
-          "lead": "100% Solar Energy",
-          "text": " (zero carbon footprint)."
+          "lead": "Nearly 100% solar energy",
+          "text": ": we only run a generator in emergencies or on very cloudy days when the batteries can't fully charge."
+        },
+        {
+          "lead": "Dry toilets",
+          "text": " that neither use nor pollute water: we protect the headwaters of the Sierras Grandes streams and turn waste into compost."
         },
         {
           "lead": "10% of your investment",
@@ -2412,6 +2684,8 @@
     },
     "ui": {
       "prev": "Previous",
+      "showMore": "See more",
+      "showLess": "See less",
       "next": "Next",
       "swipeMore": "Swipe to see more →",
       "swipeMoreNoArrow": "Swipe to see more",
@@ -2640,30 +2914,64 @@
       "contribution": {
         "eyebrow": "Direct contribution",
         "title": "Your contribution becomes forest",
-        "description": "Transfer any amount directly to the account dedicated to the campaign. There is no minimum contribution.",
+        "description": "Choose the method that works best for you. There is no minimum contribution.",
         "cardTitle": "Voluntary contribution",
-        "cardDescription": "This contribution funds the reforestation project. It is independent from the raffle and does not include entries, prizes, vouchers or services.",
+        "cardDescription": "Your contribution directly funds the reforestation project.",
         "modalTitle": "Support the reforestation campaign",
-        "modalDescription": "Choose any amount to contribute. Use the bank transfer details or contact us on WhatsApp if you need help.",
+        "modalDescription": "Choose between an Argentine transfer, an international SEPA transfer or cryptocurrency. You can also contact us on WhatsApp if you need help.",
         "closeModal": "Close contribution options",
         "notes": [
           "You choose the amount freely.",
-          "Transfers are made in Argentine pesos.",
-          "You can notify us on WhatsApp to help us reconcile the transfer."
+          "It does not include raffle entries, prizes, vouchers or services.",
+          "Keep your transfer receipt."
         ],
+        "activeGoalLabel": "Active goal",
+        "progressCta": "View project progress",
+        "chooseMethodTitle": "Choose how to contribute",
+        "availableLabel": "Available",
+        "comingSoonLabel": "Coming soon",
+        "partialLabel": "BTC and ETH available",
+        "afterTransferTitle": "After transferring",
+        "afterTransferDescription": "Message us on WhatsApp so we can reconcile your contribution.",
+        "argentinaMethod": "Argentina",
+        "sepaMethod": "SEPA",
+        "cryptoMethod": "Cryptocurrency",
+        "localTransferTitle": "Transfer in Argentina",
+        "internationalTransferTitle": "International SEPA transfer",
+        "sepaSampleBadge": "Sample details",
+        "sepaWarning": "These SEPA details are placeholders and cannot receive transfers. They will be replaced with the real account before international contributions are enabled.",
+        "cryptoTransferTitle": "Cryptocurrency contribution",
+        "cryptoSampleBadge": "Sample detail",
+        "cryptoWarning": "Addresses marked as samples cannot receive funds. Always verify the asset and network before transferring; using the wrong network can cause the irreversible loss of the contribution.",
+        "cryptoNetworkNote": "Before sending, carefully verify the asset, network and address. If you transfer through an unsupported network or to the wrong address, the funds may not reach Pueblo Mágico and may not be recoverable. USDC is accepted only on Ethereum and Polygon.",
+        "networkLabel": "Network",
+        "walletLabel": "Address",
+        "scanQr": "Scan QR",
+        "qrTitle": "Address for {asset}",
+        "qrDescription": "Scan the code and verify that the network matches before confirming the transfer.",
+        "closeQr": "Close QR code",
         "aliasLabel": "Transfer alias",
         "holderLabel": "Account holder",
         "cbuLabel": "CBU / CVU",
+        "ibanLabel": "IBAN",
+        "bicLabel": "BIC / SWIFT",
+        "bankLabel": "Bank",
+        "currencyLabel": "Currency",
         "copy": "Copy",
         "copied": "Copied",
         "copyCbu": "Copy CBU or CVU",
-        "copyConfirmation": "Banking detail copied to clipboard",
+        "copyIban": "Copy IBAN",
+        "copyBic": "Copy BIC or SWIFT",
+        "copyWallet": "Copy {asset} address",
+        "copyConfirmation": "Detail copied successfully",
         "confirmCta": "Let us know I contributed",
         "fallbackTitle": "Ask us for contribution details",
         "fallbackDescription": "The campaign's public account is not configured in this site version yet. Message us and we will share the current details.",
         "fallbackCta": "Request details on WhatsApp",
         "whatsappMessage": "Hi! I'd like to contribute to the native-tree reforestation campaign. Could you share the current transfer details?",
-        "legalNote": "Voluntary contribution to the reforestation campaign. This page does not sell or promote entries in any prize draw. Keep your transfer receipt."
+        "confirmationWhatsappMessage": "Hi! I have made a contribution to the campaign to plant 10,000 native trees.\n\nName: [complete]\nAmount and currency: [complete]\nMethod used: {method}\nTransaction reference or hash: [complete]\n\nI am attaching the receipt so you can reconcile my contribution. Thank you!",
+        "methodPlaceholder": "[Argentina / SEPA / USDC / BTC / ETH]",
+        "legalNote": "Voluntary contribution to the reforestation campaign. This page does not sell or promote entries in any prize draw. Keep your transfer receipt. Do not send funds to any detail marked as a sample."
       },
       "closing": {
         "title": "What we plant today can protect the mountains for generations",
@@ -2684,7 +2992,7 @@
       "badge_accommodation": "Accommodation",
       "personalizeStay": "CUSTOMIZE YOUR STAY",
       "coworkingBadge": "Coworking & Coliving",
-      "card_extra_text": "You can also just book accommodation if you wish — from $20,000/person/night with breakfast, in a tent, shared room or dome. Add lunch, dinner or full board as you like.",
+      "card_extra_text": "You can also just book accommodation if you wish — from $20,000/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
       "btn": "Book my spot", 
       "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
       "cards": [
@@ -2698,8 +3006,8 @@
         },
         {
           "id": 2,
-          "title": "Glamping & Shelter",
-          "description": "From Geodesic Domes and Yurts to rooms in our historic house.",
+          "title": "Stone Refuge · Domes · Camping",
+          "description": "Sleep at the ecolodge your way: the Stone Refuge, geodesic domes or camping. Simple comfort and pure nature.",
           "ctaText": "View Accommodations",
           "ctaLink": "/estadia",
           "image": "/uploads/refu.webp"
@@ -2738,7 +3046,7 @@
       "tag": "International Community",
       "shortTitle": "Volunteering",
       "title": "An <span class='italic text-green'>international</span> haven",
-      "description": "We receive volunteers and travelers from all over the world. The energy of Pueblo Mágico is fueled by this global community: sitting by the fire or sharing a meal here feels like traveling through Europe or staying in an international hostel, but with the immense peace of the Córdoba mountains. It's a space for cultural exchange, collaboration, and service to the Earth.",
+      "description": "We receive volunteers and travelers from all over the world. The energy of Pueblo Mágico is fueled by this global community: sitting by the fire or sharing a meal here feels like traveling around the world without moving, but with the immense peace of the Córdoba mountains. It's a space for cultural exchange, collaboration, and service to the Earth.",
       "btn": "Apply",
       "image": "/uploads/reforestacion/comunidad-atardecer.webp",
       "link": "/voluntariado",
@@ -3003,21 +3311,21 @@
           "name": "Julieta Castoldi",
           "role": "Facilitator",
           "text": "The most important thing: Love, the dedication of the entire team and the ability to feel one with nature.",
-          "image": "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
+          "image": ""
         },
         {
           "id": 2,
           "name": "Sofía R.",
           "role": "Traveler",
           "text": "I felt part of the mountain life, like at home. A unique refuge of peace.",
-          "image": "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg"
+          "image": ""
         },
         {
           "id": 3,
           "name": "Marcos D.",
           "role": "Guest",
           "text": "A transformative experience. The conscious food and spaces are out of this world.",
-          "image": "https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+          "image": ""
         }
       ]
     },
@@ -3134,13 +3442,13 @@
     },
     "hero": {
       "title": "Invites You to Be",
-      "titleSub": "The best refuge in Córdoba, Argentina",
-      "subtitle": "Community and Philosophy of Buen Vivir. Mountain eco-center and co-living for entrepreneurs, artists and creators. High-impact experiences.",
+      "titleSub": "Mountain ecolodge in Córdoba, Argentina",
+      "subtitle": "Community and Philosophy of Buen Vivir. Mountain ecolodge: solar power, dry toilets and composting. Co-living for entrepreneurs, artists and creators.",
       "tag": "LOS GIGANTES · SIERRAS GRANDES · CÓRDOBA",
       "btnBook": "ACTIVITY CALENDAR",
       "btnRetreat": "ORGANIZE RETREAT",
       "linkComoLlegar": "How to get here?",
-      "stats_years": "+15,000 Trees Planted",
+      "stats_years": "+25,000 Trees Planted",
       "stats_trees": "Guests from +20 Countries",
       "stats_land": "+200ha cared for · 25 years",
       "stats_sus": "From $20,000 / person / night",
@@ -3153,15 +3461,11 @@
       ],
       "bookLink": "#eventos",
       "retreatLink": "/organizamos-tu-experiencia",
-      "nextEvent": {
-        "label": "WINTER CAMP · WINTER 2026 · BOOK YOUR SPOT!",
-        "link": "/winter-camp"
-      },
       "colivingBadge": {
         "label": "CO-LIVING · LONG STAYS",
         "link": "/coliving"
       },
-      "reservationKicker": "WINTER 2026",
+      "reservationKicker": "MOUNTAIN ECOLODGE",
       "reservationCta": "Check availability",
       "reservationTitle": "Book your unforgettable mountain experience",
       "reservationPricing": "From $20,000/person/night (tent, with breakfast) · add meals as you like"
@@ -3253,7 +3557,7 @@
       {
         "id": 1,
         "title": "Regeneration", 
-        "subtitle": "Over 15,000 trees planted and cared for. Concrete actions to restore the ecosystem and sow new possible futures."
+        "subtitle": "Over 25,000 native trees planted and cared for. Concrete actions to restore the ecosystem and sow new possible futures."
       },
       {
         "id": 2,
@@ -3310,7 +3614,7 @@
       }
     },
     "footer": {
-      "description": "A mountain refuge designed to inspire simpler, conscious lives connected with nature.",
+      "description": "A mountain ecolodge designed to inspire simpler, conscious lives connected with nature.",
       "titles": {
         "explore": "Explore",
         "experiences": "Experiences",
@@ -3350,7 +3654,7 @@
           ]
         }
       ],
-      "copyright": "Pueblo Mágico Eco-Refugio. All rights reserved. Operated by HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA.",
+      "copyright": "Pueblo Mágico Ecolodge. All rights reserved. Operated by HERMANOS MÁGICOS SOCIEDAD POR ACCIONES SIMPLIFICADA.",
       "madeBy": "Made with respect for the mountain"
     },
     "cookieBanner": {
@@ -3452,7 +3756,7 @@
           },
           {
             "question": "What is the accommodation like?",
-            "answer": "We offer three options: family camping, shared eco-shelter, and private dome. All include access to bathrooms with hot water."
+            "answer": "We offer three options: family camping, the shared Stone Refuge, and private dome. All include access to bathrooms with hot water."
           },
           {
             "question": "What should I bring?",
@@ -3474,7 +3778,7 @@
         "subtitle": "Everything you need to know before coming with your family."
       },
       "eco_center": {
-        "title": "A living eco-center in the mountains",
+        "title": "A living mountain ecolodge",
         "subtitle": "Pueblo Magico is much more than a place: it is a living community where nature and people find balance.",
         "items": [
           {
@@ -3489,7 +3793,7 @@
           },
           {
             "num": "03",
-            "title": "+15,000 Trees Planted",
+            "title": "+25,000 Trees Planted",
             "text": "We are an active part of native forest restoration. 10% of every experience goes directly to replanting native tabaquillo trees.",
             "href": "/reforestacion"
           },
@@ -3612,7 +3916,7 @@
         "subtitle": "The recipes we prepare at Familión. Flavors born from shared fire, from the garden, and from hands cooking together in the mountain.",
         "items": [
           "Recipes with seasonal ingredients",
-          "Dishes we prepare at the eco-center",
+          "Dishes we prepare at the ecolodge",
           "For cooking as a family, with calm",
           "Downloadable PDF, yours forever"
         ],
@@ -3648,7 +3952,7 @@
             "text": "Forests, rivers, viewpoints, and trails to explore as a family without limits."
           },
           {
-            "title": "100% solar energy.",
+            "title": "Nearly 100% solar energy.",
             "text": "A living example of regenerative living that children internalize naturally."
           },
           {
@@ -3860,14 +4164,14 @@
             "text": "We provide learning objectives, institutional documentation and everything you need to present and get the trip approved by management."
           },
           {
-            "title": "Certified safety for school groups.",
+            "title": "Safety designed for school groups.",
             "text": "Mountain emergency protocols, first aid, civil liability insurance and bus access to the entrance of the property."
           }
         ],
         "strengthen_title": "Strengthen the group",
         "strengthen_text": "Every activity is designed to work on trust, communication, and teamwork. Students return with stronger bonds.",
         "reforest_title": "We plant together",
-        "reforest_text": "Throughout the year we are reforesting the land and have already planted over 15,000 trees. Visiting Pueblo Mágico directly contributes to this great environmental goal. 10% of your investment goes to reforesting tabaquillos and restoring the sierras.",
+        "reforest_text": "Throughout the year we are reforesting the land and have already planted over 25,000 trees. Visiting Pueblo Mágico directly contributes to this great environmental goal. 10% of your investment goes to reforesting tabaquillos and restoring the sierras.",
         "footer_text": "Road access for coaches and school vehicles right to the entrance of the property.",
         "safety_items": [
           {
@@ -4155,7 +4459,7 @@
     "empresas": {
       "seo": {
         "title": "Companies — Corporate Volunteering & CSR in the Sierras · Los Gigantes, Córdoba | Pueblo Mágico",
-        "description": "Environmental restoration, corporate volunteering and team-building programs in Los Gigantes, Córdoba. +15,000 trees planted, +200 hectares cared for, +25 years of track record."
+        "description": "Environmental restoration, corporate volunteering and team-building programs in Los Gigantes, Córdoba. +25,000 trees planted, +200 hectares cared for, +25 years of track record."
       },
       "hero": {
         "tag": "Corporate programs",
@@ -4167,7 +4471,7 @@
         "wa_query_programa": "Hi! I'd like to design a corporate volunteering / CSR program with Pueblo Mágico for my organization.",
         "wa_query_jornada": "Hi! I'd like to set up a first meeting (virtual call, in Córdoba Capital, or at Pueblo Mágico) to learn about the proposal for organizations.",
         "stats": [
-          { "value": "+15,000", "label": "trees planted" },
+          { "value": "+25,000", "label": "trees planted" },
           { "value": "+200", "label": "hectares cared for" },
           { "value": "+25 years", "label": "in Los Gigantes" }
         ]
@@ -4178,7 +4482,12 @@
         "intro": "Many organizations already have sustainability policies, CSR programs, volunteering or environmental goals. The challenge is usually turning those commitments into actions that are, at the same time:",
         "items": ["Concrete and visible", "Participatory", "Connected to the land", "Valuable for employees", "Documentable", "Adaptable to the organization's goals"],
         "closing1": "Pueblo Mágico works as territory, infrastructure and platform to design those experiences in the Sierras Grandes.",
-        "closing2": "We're not looking to run an isolated environmental activity. We want your organization to join a regeneration process that already exists."
+        "closing2": "We're not looking to run an isolated environmental activity. We want your organization to join a regeneration process that already exists.",
+        "hr_note": {
+          "text": "The evidence backs it up: a study of nearly 20,000 people found that spending at least 2 hours a week in nature is associated with better health and wellbeing.",
+          "source": "White et al., Scientific Reports (2019)",
+          "url": "https://www.nature.com/articles/s41598-019-44097-3"
+        }
       },
       "dimensiones": {
         "title": "Three dimensions that can coexist in one program",
@@ -4213,20 +4522,105 @@
           { "num": "05", "title": "Integrating", "text": "When the organization needs it, we add activities designed to build team capabilities." },
           { "num": "06", "title": "Documenting", "text": "Recording agreed indicators: participants, volunteer hours, trees planted, photo material and other data relevant to the organization." }
         ],
-        "benchmark": "Large companies structure their volunteering programs around actions, participation and indicators. Globant, for example, reported 2,787 volunteers and 34,073 hours dedicated to community and environmental initiatives in 2025."
+        "benchmark": "Large companies structure their volunteering programs around actions, participation and indicators. Globant, for example, reported 2,787 volunteers and 34,073 hours dedicated to community and environmental initiatives in 2025.",
+        "cta_lead": "Can you picture this day with your team?"
       },
       "impacto": {
         "tag": "Not a plantation created for companies",
         "title": "The chance to join a process that already exists",
         "text": "Environmental regeneration has been part of Pueblo Mágico long before this corporate proposal.",
         "stats": [
-          { "value": "+15,000", "label": "trees planted and cared for" },
+          { "value": "+25,000", "label": "trees planted and cared for" },
           { "value": "+200", "label": "hectares cared for" },
           { "value": "+25", "label": "years of track record in Los Gigantes" }
+        ],
+        "practices_title": "Regeneration is also part of daily operations",
+        "practices": [
+          { "title": "Nearly 100% solar energy", "text": "The generator only runs in emergencies or on very cloudy days." },
+          { "title": "Dry toilets", "text": "They neither use nor pollute water: we protect the headwaters of the mountain streams." },
+          { "title": "Compost", "text": "Organic and dry-toilet waste returns to the soil as fertilizer." }
         ],
         "partners_intro": "Along the way we've worked and built ties with environmental organizations such as:",
         "partners": ["Bosques de Agua", "Acciones Serranas"],
         "partners_note": "We're currently building new partnerships with Acción Ambiental and other players in the environmental ecosystem."
+      },
+      "bienestar": {
+        "tag": "Team wellbeing",
+        "title": "Regeneration starts within",
+        "intro": "Bring wellbeing practices and dynamics into your team’s experience. We work with specialists in personal development, coaching and spirituality to design days that strengthen the bonds between people, slow things down and open space for what has no room at the office.",
+        "custom": "Every proposal is tailored to the group’s goals — rest, integration, leadership or reconnecting with purpose.",
+        "list_title": "Some of the practices you can add",
+        "items": [
+          {
+            "title": "Team coaching",
+            "text": "Guided dynamics to align goals, improve communication and boost collaboration.",
+            "icon": "users"
+          },
+          {
+            "title": "Conscious leadership",
+            "text": "Workshops for leaders who want to lead with coherence, empathy and purpose.",
+            "icon": "compass"
+          },
+          {
+            "title": "Mindfulness",
+            "text": "Simple mindfulness tools to bring into everyday work and manage stress.",
+            "icon": "brain"
+          },
+          {
+            "title": "Mindful trekking",
+            "text": "Nature walks with pauses for observation, silence and personal reflection.",
+            "icon": "footprints"
+          },
+          {
+            "title": "Tree planting",
+            "text": "Your team leaves a regenerative footprint by taking part in Pueblo Mágico’s reforestation project.",
+            "icon": "sprout"
+          },
+          {
+            "title": "Guided meditations",
+            "text": "A space to stop, breathe and return to the present — designed for those who have never meditated, too.",
+            "icon": "flower"
+          },
+          {
+            "title": "Yoga and mindful movement",
+            "text": "Body practices to release tension and reconnect with the body, adapted to all levels.",
+            "icon": "person"
+          },
+          {
+            "title": "Breathwork",
+            "text": "Breathing techniques to release energy, regulate emotions and gain clarity.",
+            "icon": "wind"
+          },
+          {
+            "title": "Talking circles",
+            "text": "Spaces for listening and honest conversation that build trust within the team.",
+            "icon": "messages"
+          },
+          {
+            "title": "Sound baths",
+            "text": "A deeply relaxing experience with singing bowls and other instruments.",
+            "icon": "music"
+          },
+          {
+            "title": "Nature connection rituals",
+            "text": "Simple outdoor ceremonies to close cycles, give thanks and set intentions for what comes next.",
+            "icon": "sun"
+          },
+          {
+            "title": "Organizational constellations",
+            "text": "A systemic dynamic that makes the bonds, roles and blocks within the organization visible.",
+            "icon": "network"
+          },
+          {
+            "title": "Evolutionary astrology",
+            "text": "A symbolic lens to know yourself better and understand your own dynamics and your team’s.",
+            "icon": "sparkles"
+          }
+        ],
+        "show_all": "See all practices",
+        "show_less": "See less",
+        "cta": "Let’s design your team’s experience",
+        "wa_query": "Hi! I’m coming from the corporate page and I’d like to design a wellbeing experience for my team at Pueblo Mágico. ✨"
       },
       "equipo": {
         "title": "An environmental action can also strengthen the team",
@@ -4271,11 +4665,85 @@
       "formatos": {
         "title": "Different formats depending on the goal",
         "items": [
-          { "title": "Corporate day", "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences." },
-          { "title": "Day + overnight", "text": "More immersive: adds shared living, a bonfire, nature and complementary activities." },
-          { "title": "Multi-day program", "text": "For teams looking to go deeper on leadership, culture, coordination and strategy." }
+          { "title": "Corporate day", "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences.",
+            "price": "From ARS 35,000 per person" },
+          { "title": "Day + overnight", "text": "More immersive: adds shared living, a bonfire, nature and complementary activities.",
+            "price": "From ARS 75,000 per person" },
+          { "title": "Multi-day program", "text": "For teams looking to go deeper on leadership, culture, coordination and strategy.",
+            "price": "On request" }
         ],
-        "note": "All formats are designed around each organization's needs."
+        "note": "All formats are designed around each organization's needs.",
+        "more_title": "Other ways to join",
+        "open_days": {
+          "badge": "Free",
+          "title": "Open reforestation days",
+          "text": "Companies of any size can join, with no minimum number of participants. Transport is arranged by the company (we can help you coordinate it), and meals or accommodation are booked separately if needed.",
+          "cta": "Add my team",
+          "wa_query": "Hi! I’d like my team to join an open reforestation day. Which dates are available and how do we organize it?"
+        },
+        "gifts": {
+          "badge": "Year-end",
+          "title": "Corporate gifts that regenerate",
+          "text": "Give a native tree to each employee or client, with a certificate in their name. The trees are planted in the reserve during the upcoming planting days.",
+          "cta": "Ask us",
+          "wa_query": "Hi! I’d like to ask about year-end corporate gifts: native trees with a certificate for my team or clients."
+        },
+        "remote": {
+          "title": "Can’t your team travel?",
+          "text": "Your organization can sponsor trees from the reforestation campaign and join a virtual talk or one in Córdoba city to learn about the project.",
+          "cta": "See the reforestation campaign"
+        }
+      },
+      "entregables": {
+        "tag": "Transparency",
+        "title": "What’s included and what your organization receives",
+        "included_title": "Included in every day",
+        "included": [
+          "Coordination and support from our team and specialists",
+          "Insurance for all participants",
+          "Native seedlings, tools and materials",
+          "Meals according to the chosen format",
+          "Accommodation in overnight formats"
+        ],
+        "receive_title": "What your organization receives",
+        "receive": [
+          "Participation certificate for the organization and for each participant, issued by Pueblo Mágico together with the partner organizations of the day",
+          "Impact report: participants, volunteering hours, trees planted and native species",
+          "Photo record for your sustainability report and internal communication",
+          "Location of the intervention on the reforestation project map"
+        ],
+        "soon_label": "In development",
+        "roadmap_text": "We are also implementing geolocation for every tree, public satellite monitoring and university validation of tree survival.",
+        "roadmap_cta": "See what we are working on",
+        "soon": [
+          "Geolocation of every tree planted (running for the 2026–2027 summer planting)",
+          "Public satellite monitoring of the restored areas on Restor",
+          "Third-party validated estimate of the CO₂ captured",
+          "Yearly survival monitoring validated by UNC and Universidad Empresarial Siglo 21 (agreements in progress)"
+        ],
+        "care": {
+          "title": "The trees aren’t left on their own",
+          "text": "What your team plants stays in a territory we have cared for over 25 years: protection and initial care after every planting, and our own nursery, now under construction, to grow the next seedlings."
+        },
+        "ods_title": "Aligned with the Sustainable Development Goals",
+        "ods": [
+          {
+            "n": "3",
+            "label": "Good health and well-being"
+          },
+          {
+            "n": "13",
+            "label": "Climate action"
+          },
+          {
+            "n": "15",
+            "label": "Life on land"
+          },
+          {
+            "n": "17",
+            "label": "Partnerships for the goals"
+          }
+        ]
       },
       "respaldo": {
         "title": "An experience backed by track record",
@@ -4283,6 +4751,11 @@
         "text1": "Over more than 25 years we've built capabilities around nature, hospitality, groups, experiences and regeneration. We've hosted institutions, schools, clubs, retreats, communities, international volunteers and groups of all sizes.",
         "aula_verde_note": "Through Aula Verde we've already developed institutional experiences adapted to educational and group goals, including days with more than 200 participants.",
         "aula_verde_cta": "Get to know Aula Verde",
+        "testimonial": {
+          "quote": "The Pueblo Mágico team is professional and warm at the same time. They adapted to all our institutional requirements and the program was flawless.",
+          "name": "Federico T.",
+          "role": "Director, Colegio Racing Club de Córdoba"
+        },
         "items": ["Accommodation", "Food service", "Common areas and trails", "Specialists and facilitators", "Logistics experience", "Tailor-made experience design"],
         "text3": "We're not new to hosting groups or working with institutions. What's new is putting that experience at the service of companies' sustainability and participation goals."
       },
@@ -4293,12 +4766,51 @@
           { "name": "Pueblo Mágico", "text": "Territory, infrastructure, hospitality, experience, regeneration and day-to-day operations." },
           { "name": "Fundación para el Desarrollo Sostenible", "text": "Institutional and administrative framework for volunteering programs: planning, sponsor fund management, invoicing and accountability." },
           { "name": "Apoidea", "text": "Business outreach, diagnostic meetings, development of tailored proposals and other advisory and sales aspects." },
-          { "name": "Environmental organizations", "text": "Technical knowledge, plant stock, local expertise and environmental support, depending on each intervention." }
+          { "name": "Environmental organizations", "text": "Acción Ambiental, Bosques de Agua and Acción Serrana bring technical knowledge, plant stock, local expertise and environmental support, depending on each intervention." }
         ],
-        "benchmark": "This mirrors how the largest companies structure their impact programs: collaborating with organizations, engaging employees, and connecting environmental projects to a broader strategy."
+        "allies_title": "Allied environmental organizations",
+      "allies": [{"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Environmental conservation: outreach, education and environmental action in the province of Córdoba."},{"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restoring the high-altitude native forest and the watersheds of the Sierras Grandes."},{"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regenerating high-altitude forests and their water sources together with local communities."}],
+      "benchmark": "This mirrors how the largest companies structure their impact programs: collaborating with organizations, engaging employees, and connecting environmental projects to a broader strategy."
+      },
+      "faq": {
+        "title": "Frequently asked questions",
+        "items": [
+          {
+            "q": "How many people can take part?",
+            "a": "For an action organized for your company, from 5 people with no maximum: we have already hosted groups of more than 200 participants. In overnight formats we combine beds and camping areas. Open reforestation days have no minimum: teams of any size can join."
+          },
+          {
+            "q": "How much does it cost?",
+            "a": "One-day program: from ARS 35,000 per person. Day + one night: from ARS 75,000 per person. Multi-day programs: on request. Open reforestation days are free."
+          },
+          {
+            "q": "How do we get there from Córdoba? Is transport available?",
+            "a": "Pueblo Mágico is in Los Gigantes, 1 h from Tanti and 1.5 h from Villa Carlos Paz, accessible by any type of vehicle. We can provide vans or buses depending on your group size and needs."
+          },
+          {
+            "q": "What if it rains?",
+            "a": "If the weather doesn’t cooperate, we reschedule the date."
+          },
+          {
+            "q": "Is it accessible for all participants?",
+            "a": "Some areas are accessible to everyone and others can only be reached on foot. We adapt the route to the group."
+          },
+          {
+            "q": "Are participants insured?",
+            "a": "Yes, all participants are insured during the day."
+          },
+          {
+            "q": "Do you issue invoices?",
+            "a": "Yes, we issue invoices."
+          },
+          {
+            "q": "How far in advance should we book?",
+            "a": "We recommend 3 to 4 weeks for a one-day program and 6 to 8 weeks for overnight or multi-day programs. For the year-end season (November and December), the sooner the better."
+          }
+        ]
       },
       "empezar": {
-        "title": "Two ways to start",
+        "title": "Where would you like to start?",
         "option1": { "title": "I already have an initiative in mind", "text": "Tell us what your organization wants to achieve and we'll design a proposal.", "cta": "I want to design a program" },
         "option2": { "title": "I want to get to know Pueblo Mágico first", "text": "Join a Preview Day, see the site, live a sample of the experience and judge for yourself whether it makes sense for your team.", "cta": "I want to be invited" }
       },
@@ -4598,9 +5110,9 @@
       "price_solo_label": "Camping",
       "price_solo_sub": "Accommodation + breakfast, price per person",
       "price_pension_label": "Private Dome",
-      "price_pension_sub": "1 or 2 people, whole dome",
+      "price_pension_sub": "With breakfast · solo traveler $100,000",
       "price_unit": "/ person / night",
-      "price_pension_unit": "/ night",
+      "price_pension_unit": "/ person / night",
       "cta": "View all accommodations"
     },
     "para_quien": {
@@ -4654,7 +5166,7 @@
         },
         {
           "q": "Do I need prior experience with retreats or meditation?",
-          "a": "Not at all. Pueblo Mágico is not a formal meditation center — it is a living eco-center where each person finds their own rhythm. You can come to work remotely, rest, explore nature or simply be."
+          "a": "Not at all. Pueblo Mágico is not a formal meditation center — it is a living ecolodge where each person finds their own rhythm. You can come to work remotely, rest, explore nature or simply be."
         },
         {
           "q": "Is there signal or internet in the mountains?",

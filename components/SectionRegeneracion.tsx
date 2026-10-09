@@ -1,9 +1,9 @@
 import React from 'react';
-import { TreePine, Sun, Leaf, ArrowRight } from 'lucide-react';
+import { TreePine, Sun, Droplets, Leaf, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ROUTES } from '../src/routes';
 
-const ICONS = [TreePine, Sun, Leaf];
+const ICONS = [TreePine, Sun, Droplets, Leaf];
 
 // Bloque "Tu inversión genera regeneración". `embedded` = solo la tarjeta, para usar dentro de una sección verde existente.
 export const SectionRegeneracion: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {

@@ -79,7 +79,7 @@ export const SectionExperiencias: React.FC = () => {
           <div ref={scrollRef}
             className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 pb-6 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
             {t.experiences.cards.map((card: any) => {
-              const isEcoRefugio = card.title?.toString().toLowerCase().includes('eco-refugio') || card.title?.toString().toLowerCase().includes('glamping');
+              const isEcoRefugio = card.ctaLink === '/estadia';
               return (
                 <div key={card.id}
                   className="min-w-[90vw] md:min-w-0 snap-center bg-bone rounded-2xl overflow-hidden shadow-lg group hover:-translate-y-1 transition-transform duration-300 border-t-4 border-gold relative flex flex-col h-full">

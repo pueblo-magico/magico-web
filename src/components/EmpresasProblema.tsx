@@ -42,6 +42,16 @@ const EmpresasProblema: React.FC = () => {
                 <p className="text-gray-700 text-base md:text-lg leading-relaxed mb-3">{p.closing1}</p>
                 <p className="text-gray-500 text-base leading-relaxed font-light">{p.closing2}</p>
               </div>
+
+              {/* Argumento para RRHH, con fuente citada */}
+              {p.hr_note && (
+                <p className="text-gray-500 text-sm leading-relaxed font-light mt-6">
+                  {p.hr_note.text}{' '}
+                  <a href={p.hr_note.url} target="_blank" rel="noopener noreferrer" className="italic underline decoration-[#D4AF37]/50 underline-offset-2 hover:text-[#005333]">
+                    {p.hr_note.source}
+                  </a>
+                </p>
+              )}
             </div>
 
             <div data-reveal data-delay="3" className="rounded-2xl overflow-hidden min-h-[280px] md:min-h-full">

@@ -650,7 +650,7 @@ const IntiRaymi: React.FC = () => {
                 Pueblo Mágico,<br />Los Gigantes
               </h2>
               <p className="text-base leading-relaxed mb-6" style={{ color: C.muted }}>
-                Un eco-centro de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que este encuentro propone — naturaleza, comunidad y presencia.
+                Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que este encuentro propone — naturaleza, comunidad y presencia.
               </p>
               <ul className="space-y-3">
                 {[

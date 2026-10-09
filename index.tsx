@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { StrictMode } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -29,8 +29,6 @@ const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
 const Reforestacion = lazy(() => import('./src/Reforestacion'));
 const Despertar = lazy(() => import('./src/Despertar'));
-const WinterCamp = lazy(() => import('./src/WinterCamp'));
-const WinterRedirection = lazy(() => import('./src/WinterRedirection'));
 const PropuestaNicoGrupe = lazy(() => import('./src/PropuestaNicoGrupe'));
 const ResetVitalApp = lazy(() => import('./ResetVital.jsx'));
 const Estadia = lazy(() => import('./src/Estadia'));
@@ -111,8 +109,9 @@ root.render(
               <Route path="/voluntariado" element={<Voluntariado />} />
               <Route path="/reforestacion" element={<Reforestacion />} />
               <Route path="/despertar" element={<Despertar />} />
-              <Route path="/winter-camp" element={<WinterCamp />} />
-              <Route path="/winter-redirection" element={<WinterRedirection />} />
+              {/* Campañas de invierno 2026 terminadas — redirigen a la estadía actual */}
+              <Route path="/winter-camp" element={<Navigate to="/estadia" replace />} />
+              <Route path="/winter-redirection" element={<Navigate to="/estadia" replace />} />
               <Route path="/propuesta/nico-grupe" element={<PropuestaNicoGrupe />} />
               <Route path="/estadia" element={<Estadia />} />
               <Route path="/coliving" element={<Coliving />} />

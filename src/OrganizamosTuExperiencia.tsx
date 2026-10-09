@@ -33,7 +33,7 @@ const BASE_ACTIVITIES: Activity[] = [
   { Icon: Heart,     title: 'Yoga & movimiento',       desc: 'Salón panorámico y espacios al aire libre para la práctica.' },
   { Icon: Flame,     title: 'Fogón & estrellas',       desc: 'Encuentro nocturno alrededor del fuego bajo uno de los cielos más limpios del país.' },
   { Icon: Leaf,      title: 'Gastronomía regenerativa',desc: 'Cocina de autor con productos locales, orgánicos y de estación.' },
-  { Icon: Compass,   title: 'Huerta & tierra',         desc: 'Contacto directo con el ciclo de los alimentos y la vida del eco-centro.' },
+  { Icon: Compass,   title: 'Huerta & tierra',         desc: 'Contacto directo con el ciclo de los alimentos y la vida del ecolodge.' },
   { Icon: BookOpen,  title: 'Reset Vital',             desc: 'Retiro autoguiado incluido en toda estadía. Herramientas para la reconexión profunda.' },
 ];
 
@@ -229,8 +229,8 @@ const SPACE_IMGS = [
   { src: '/uploads/469280911_444096748740233_2818770490495002077_n.webp', alt: 'Experiencia grupal en Pueblo Mágico' },
   { src: '/uploads/dji_0074.webp',   alt: 'Vista aérea Pueblo Mágico' },
   { src: '/uploads/domos_2.jpg',     alt: 'Domos geodésicos' },
-  { src: '/uploads/refu.webp',       alt: 'Eco-Refugio' },
-  { src: '/uploads/exterior.webp',   alt: 'Exterior del eco-centro' },
+  { src: '/uploads/refu.webp',       alt: 'Refugio de Piedra' },
+  { src: '/uploads/exterior.webp',   alt: 'Exterior del ecolodge' },
 ];
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
@@ -709,12 +709,12 @@ const OrganizamosTuExperiencia: React.FC = () => {
                 <span style={{ color: C.gold }}>nuestra sede</span>
               </h2>
               <p className="text-white/65 text-base leading-relaxed mb-8">
-                Un eco-centro de montaña en las Sierras Grandes de Córdoba, a las puertas del macizo Los Gigantes.
-                Anfitrionamos experiencias transformadoras hace más de 20 años.
+                Un ecolodge de montaña en las Sierras Grandes de Córdoba, a las puertas del macizo Los Gigantes.
+                Anfitrionamos experiencias transformadoras hace más de 25 años.
               </p>
               <ul className="space-y-3">
                 {[
-                  'Domos geodésicos y eco-refugio en Sierras Grandes',
+                  'Refugio de Piedra y domos geodésicos en Sierras Grandes',
                   'Pensión completa — Gastronomía natural y regenerativa',
                   'Salón panorámico, explanadas y fogón',
                   'Senderos · Río · Cielos limpios · 200 ha de reserva',

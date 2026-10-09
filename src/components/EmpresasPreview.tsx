@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { HelpCircle, Users2, CheckCircle2, Video, MapPin, Mountain } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { ShowMoreButton } from '../../components/ShowMoreButton';
 import { WA_MAGICO } from '../data/config';
 
 const MODALIDAD_ICONS = [Video, MapPin, Mountain];
@@ -8,6 +9,8 @@ const MODALIDAD_ICONS = [Video, MapPin, Mountain];
 const EmpresasPreview: React.FC = () => {
   const { t } = useLanguage();
   const p = t.empresas.preview;
+  // Preguntas, público e "incluye" son detalle: plegados para acortar la página
+  const [showDetails, setShowDetails] = useState(false);
 
   const waJornada = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(t.empresas.hero.wa_query_jornada)}`;
 
@@ -51,9 +54,23 @@ const EmpresasPreview: React.FC = () => {
             ))}
           </div>
 
+          <div data-reveal>
+            <div className="text-center">
+              <ShowMoreButton
+                open={showDetails}
+                onToggle={() => setShowDetails(v => !v)}
+                moreLabel={t.ui.showMore}
+                lessLabel={t.ui.showLess}
+                controls="empresas-preview-detalle"
+              />
+            </div>
+          </div>
+
+          {showDetails && (
+          <div id="empresas-preview-detalle" className="mt-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
             {/* Preguntas */}
-            <div data-reveal data-delay="2">
+            <div>
               <div className="flex items-start gap-2 mb-5">
                 <HelpCircle className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="font-bold brand-green text-sm uppercase tracking-widest">
@@ -70,7 +87,7 @@ const EmpresasPreview: React.FC = () => {
             </div>
 
             {/* A quién está dirigida */}
-            <div data-reveal data-delay="2">
+            <div>
               <div className="flex items-start gap-2 mb-5">
                 <Users2 className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" aria-hidden="true" />
                 <p className="font-bold brand-green text-sm uppercase tracking-widest leading-relaxed">{p.audience_title}</p>
@@ -88,21 +105,22 @@ const EmpresasPreview: React.FC = () => {
           </div>
 
           {/* Qué incluye */}
-          <div data-reveal data-delay="3" className="mt-12 pt-10 border-t border-[#005333]/10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
-              {p.includes.map((item: string, i: number) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-[#005333] flex-shrink-0" aria-hidden="true" />
-                  <span className="text-gray-700 text-sm font-light">{item}</span>
-                </div>
-              ))}
-            </div>
+          <div className="mt-12 pt-10 border-t border-[#005333]/10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {p.includes.map((item: string, i: number) => (
+              <div key={i} className="flex items-center gap-3">
+                <CheckCircle2 className="w-4 h-4 text-[#005333] flex-shrink-0" aria-hidden="true" />
+                <span className="text-gray-700 text-sm font-light">{item}</span>
+              </div>
+            ))}
+          </div>
+          </div>
+          )}
 
+          <div data-reveal>
+          <div className="mt-12 pt-10 border-t border-[#005333]/10">
             <p className="serif-title text-xl brand-green mb-2">{p.closing}</p>
 
             <a
-              data-reveal
-              data-delay="4"
               href={waJornada}
               target="_blank"
               rel="noopener noreferrer"
@@ -111,6 +129,7 @@ const EmpresasPreview: React.FC = () => {
             >
               {p.cta}
             </a>
+          </div>
           </div>
         </div>
       </div>

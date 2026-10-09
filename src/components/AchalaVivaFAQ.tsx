@@ -20,7 +20,7 @@ const faqs = [
   {
     Icon: HouseIcon,
     question: "¿Está incluido todo el equipamiento?",
-    answer: "Tu estadía en el Eco-refugio incluye la ropa de cama (sábanas y mantas cálidas) y todas las comidas de la estadía. Solo necesitás traer tu mochila personal, ropa cómoda, buen calzado de trekking y abrigo, ya que en la sierra la temperatura baja por la noche. Tenemos opciones sin gluten y podemos garantizar platos que no llevan gluten entre sus ingredientes, pero no un ambiente 100% libre de contaminación cruzada (cocinamos en una cocina y mesada compartida) — para celiaquía severa o intolerancia alta, contanos tu caso al reservar."
+    answer: "Tu estadía en el Refugio de Piedra incluye la ropa de cama (sábanas y mantas cálidas) y todas las comidas de la estadía. Solo necesitás traer tu mochila personal, ropa cómoda, buen calzado de trekking y abrigo, ya que en la sierra la temperatura baja por la noche. Tenemos opciones sin gluten y podemos garantizar platos que no llevan gluten entre sus ingredientes, pero no un ambiente 100% libre de contaminación cruzada (cocinamos en una cocina y mesada compartida) — para celiaquía severa o intolerancia alta, contanos tu caso al reservar."
   },
   {
     Icon: CarIcon,

@@ -28,12 +28,20 @@ export const SectionTestimonios: React.FC = () => {
         <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-3">
           {t.testimonials.items.map((item: any) => (
             <div key={item.id} className="h-full text-center bg-white md:bg-transparent p-6 md:p-0 rounded-xl md:rounded-none shadow-sm md:shadow-none">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
-                loading="lazy"
-              />
+              {/* Solo fotos reales de quien dejó la reseña; sin foto, iniciales
+                  (nunca fotos de stock que parezcan ser la persona). */}
+              {item.image ? (
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div aria-hidden="true" className="w-20 h-20 rounded-full mx-auto mb-4 bg-brand/10 text-brand font-serif text-2xl flex items-center justify-center">
+                  {String(item.name).split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
+                </div>
+              )}
               <p className="text-dark/80 italic mb-4">"{item.text}"</p>
               <p className="font-bold text-brand">{item.name}</p>
               <p className="text-sm text-dark/60">{item.role}</p>

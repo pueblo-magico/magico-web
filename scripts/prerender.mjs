@@ -14,15 +14,15 @@ const VOLUNTEER_IMAGE = `https://experienciamagico.com${CONTENT.es.volunteer.ima
 export const ROUTES = [
   {
     path: '/',
-    title: 'Pueblo Mágico — Eco‑Refugio & Glamping · Los Gigantes, Córdoba',
-    description: 'Ecocentro en Sierras Grandes de Córdoba: retiros, co-living, glamping en domos geodésicos, voluntariados y cocina de autor. 20 años regenerando la montaña.',
+    title: 'Pueblo Mágico — Ecolodge de Montaña · Los Gigantes, Córdoba',
+    description: 'Ecolodge de montaña en las Sierras Grandes de Córdoba: Refugio de Piedra, domos geodésicos y camping. Retiros, co-living y voluntariados. Energía solar, baños secos y compost.',
     image: 'https://experienciamagico.com/uploads/img_6948.webp',
     canonical: 'https://experienciamagico.com/',
   },
   {
     path: '/familion',
     title: 'Familion — Retiro Familiar en la Montaña · Los Gigantes, Córdoba | Pueblo Mágico',
-    description: 'Retiro familiar en Los Gigantes, Córdoba. 1 al 3 de Mayo. Adultos en red, niños en libertad, gastronomía de montaña y experiencias transformadoras.',
+    description: 'Retiro familiar en Los Gigantes, Córdoba. Adultos en red, niños en libertad, gastronomía de montaña y experiencias transformadoras. Consultá la próxima fecha.',
     image: 'https://experienciamagico.com/uploads/portada%20familion.webp',
     canonical: 'https://experienciamagico.com/familion',
   },
@@ -56,8 +56,8 @@ export const ROUTES = [
   },
   {
     path: '/estadia',
-    title: 'Estadías & Glamping — Reset Vital · Los Gigantes, Córdoba | Pueblo Mágico',
-    description: 'Glamping y retiro autoguiado en las Sierras de Córdoba. Domos geodésicos, habitaciones y camping. Desde $40.000/noche (ropa blanca + Reset Vital). Pensión completa Desde $95.000. 20% dto. lun–jue.',
+    title: 'Ecolodge de Montaña en Córdoba — Refugio de Piedra, Domos y Camping | Pueblo Mágico',
+    description: 'Ecolodge de montaña en Los Gigantes, Córdoba: Refugio de Piedra, domos geodésicos y camping. Energía solar, baños secos y compost. Desde $20.000/persona/noche con desayuno.',
     image: 'https://experienciamagico.com/uploads/campoentero.webp',
     canonical: 'https://experienciamagico.com/estadia',
   },
@@ -120,7 +120,7 @@ export const ROUTES = [
   {
     path: '/empresas',
     title: 'Empresas — Voluntariado Corporativo & RSE en las Sierras · Los Gigantes, Córdoba | Pueblo Mágico',
-    description: 'Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +15.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria.',
+    description: 'Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +25.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria.',
     image: 'https://experienciamagico.com/uploads/dji_0074.webp',
     canonical: 'https://experienciamagico.com/empresas',
   },
@@ -153,23 +153,9 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/organizamos-tu-experiencia',
   },
   {
-    path: '/winter-camp',
-    title: 'Winter Camp — Vacaciones de Invierno en Pueblo Mágico | Pueblo Mágico',
-    description: 'Estadía libre todo el invierno 2026 (julio, agosto y septiembre), desde $63.000 por noche (3+ noches en efectivo). Precios promocionales de invierno. Pensión completa, temazcal, fogones y comunidad en la montaña nevada. Para familias y emprendedores. Los Gigantes, Córdoba.',
-    image: 'https://experienciamagico.com/uploads/fogon_nocturno.webp',
-    canonical: 'https://experienciamagico.com/winter-camp',
-  },
-  {
-    path: '/winter-redirection',
-    title: 'Winter Redirection — Emprendedores en la Montaña · Invierno 2026 | Pueblo Mágico',
-    description: 'Julio, agosto o septiembre en la montaña para emprendedores y líderes que necesitan claridad y perspectiva. Precios promocionales de invierno. Desde $63.000 por noche en efectivo. Los Gigantes, Córdoba.',
-    image: 'https://experienciamagico.com/uploads/Invierno/DJI_20250629135712_0164_D_CHAPA2025.webp',
-    canonical: 'https://experienciamagico.com/winter-redirection',
-  },
-  {
     path: '/coliving',
     title: 'Coliving Mágico — Vivir, Trabajar y Reconectar · Los Gigantes, Córdoba | Pueblo Mágico',
-    description: 'Coliving en las Sierras de Córdoba para bienestar y estilo de vida. Formatos de 3, 5 y 10 noches, y Pase Libre Mensual desde $180.000. Pensión completa, WiFi satelital y Programa Reset Vital incluidos.',
+    description: 'Coliving en las Sierras de Córdoba para bienestar y estilo de vida. Formatos de 10 y 20 noches, y Pase Libre Mensual a $480.000. Pensión completa, WiFi satelital y Programa Reset Vital incluidos.',
     image: 'https://experienciamagico.com/uploads/coworking.webp',
     canonical: 'https://experienciamagico.com/coliving',
   },
@@ -185,6 +171,15 @@ export const ROUTES = [
 if (!existsSync(DIST)) {
   console.error('dist/ not found — run `vite build` first');
   process.exit(1);
+}
+
+// Cada ruta se escribe como archivo plano "<ruta>.html" (no "<ruta>/index.html"):
+// Cloudflare Pages sirve /empresas.html en /empresas con 200, y /empresas/
+// redirige a /empresas. Con carpeta + index.html pasaba al revés (/empresas →
+// 308 → /empresas/), y el canonical, el sitemap y los links del menú (todos
+// sin barra) apuntaban a una URL que redirige.
+function htmlFileFor(route) {
+  return route.path === '/' ? join(DIST, 'index.html') : join(DIST, `${route.path.slice(1)}.html`);
 }
 
 // ─── Phase 1: Meta tag injection (fast, no browser needed) ───────────────────
@@ -249,66 +244,6 @@ function buildJsonLD(route) {
     "geo": { "@type": "GeoCoordinates", "latitude": -31.5, "longitude": -64.7 }
   };
 
-  if (route.path === '/winter-camp') {
-    return `<script type="application/ld+json">${JSON.stringify([
-      base,
-      {
-        "@context": "https://schema.org",
-        "@type": "Event",
-        "name": "Winter Camp · Vacaciones de Invierno 2026",
-        "description": route.description,
-        "url": route.canonical,
-        "image": route.image,
-        "startDate": "2026-07-01",
-        "endDate": "2026-09-30",
-        "eventStatus": "https://schema.org/EventScheduled",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        "location": {
-          "@type": "Place",
-          "name": "Pueblo Mágico",
-          "address": { "@type": "PostalAddress", "addressLocality": "Los Gigantes", "addressRegion": "Córdoba", "addressCountry": "AR" },
-          "geo": { "@type": "GeoCoordinates", "latitude": -31.5, "longitude": -64.7 }
-        },
-        "organizer": { "@type": "Organization", "name": "Pueblo Mágico", "url": "https://experienciamagico.com" },
-        "offers": [
-          { "@type": "Offer", "name": "1 noche", "price": "90000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock" },
-          { "@type": "Offer", "name": "2 noches", "price": "160000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock" },
-          { "@type": "Offer", "name": "3+ noches", "price": "190000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock" }
-        ]
-      }
-    ])}</script>`;
-  }
-
-  if (route.path === '/winter-redirection') {
-    return `<script type="application/ld+json">${JSON.stringify([
-      base,
-      {
-        "@context": "https://schema.org",
-        "@type": "Event",
-        "name": "Winter Redirection · Emprendedores en la Montaña 2026",
-        "description": route.description,
-        "url": route.canonical,
-        "image": route.image,
-        "startDate": "2026-07-01",
-        "endDate": "2026-09-30",
-        "eventStatus": "https://schema.org/EventScheduled",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-        "location": {
-          "@type": "Place",
-          "name": "Pueblo Mágico",
-          "address": { "@type": "PostalAddress", "addressLocality": "Los Gigantes", "addressRegion": "Córdoba", "addressCountry": "AR" },
-          "geo": { "@type": "GeoCoordinates", "latitude": -31.5, "longitude": -64.7 }
-        },
-        "organizer": { "@type": "Organization", "name": "Pueblo Mágico", "url": "https://experienciamagico.com" },
-        "offers": [
-          { "@type": "Offer", "name": "1 noche", "price": "90000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock" },
-          { "@type": "Offer", "name": "2 noches", "price": "160000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock" },
-          { "@type": "Offer", "name": "3+ noches", "price": "190000", "priceCurrency": "ARS", "availability": "https://schema.org/InStock" }
-        ]
-      }
-    ])}</script>`;
-  }
-
   return `<script type="application/ld+json">${JSON.stringify(base)}</script>`;
 }
 
@@ -340,23 +275,16 @@ for (const route of ROUTES) {
     .replace(/<meta name="description" content="[^"]*" \/>/, `<meta name="description" content="${route.description}" />`)
     .replace('</head>', `${seoBlock}\n  ${jsonLD}\n</head>`);
 
-  if (route.path === '/') {
-    writeFileSync(join(DIST, 'index.html'), html);
-  } else {
-    const dir = join(DIST, route.path.slice(1));
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'index.html'), html);
-  }
+  const file = htmlFileFor(route);
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, html);
 
   console.log(`  ✓ meta: ${route.path}`);
 }
 
 // ─── Phase 1b: Make Vite CSS non-render-blocking ─────────────────────────────
 const CSS_BLOCKING = /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g;
-const allHtmlFiles = [
-  join(DIST, 'index.html'),
-  ...ROUTES.filter(r => r.path !== '/').map(r => join(DIST, r.path.slice(1), 'index.html')),
-];
+const allHtmlFiles = ROUTES.map(htmlFileFor);
 
 console.log('\nMaking CSS non-blocking...');
 for (const file of allHtmlFiles) {
@@ -399,9 +327,10 @@ async function startStaticServer(port) {
     let urlPath = req.url.split('?')[0].split('#')[0];
     if (urlPath === '' || urlPath === '/') urlPath = '/index.html';
 
-    // Try exact file, then /path/index.html, then SPA fallback
+    // Try exact file, then /path.html (rutas prerenderizadas), then /path/index.html, then SPA fallback
     const candidates = [
       join(DIST, urlPath),
+      join(DIST, `${urlPath}.html`),
       join(DIST, urlPath, 'index.html'),
       join(DIST, 'index.html'),
     ];
@@ -474,11 +403,7 @@ async function runPlaywrightSnapshots() {
 
       const html = await page.content();
 
-      const destPath = route.path === '/'
-        ? join(DIST, 'index.html')
-        : join(DIST, route.path.slice(1), 'index.html');
-
-      writeFileSync(destPath, html);
+      writeFileSync(htmlFileFor(route), html);
       console.log(`  ✓ snapshot: ${route.path}`);
     } catch (e) {
       console.warn(`  ⚠ snapshot failed for ${route.path}: ${e.message.split('\n')[0]}`);

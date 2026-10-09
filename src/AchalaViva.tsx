@@ -220,7 +220,7 @@ const AchalaViva: React.FC = () => {
               {
                 num: "02",
                 title: "Descanso Premium",
-                text: "Eco-refugio y domos geodésicos en medio del bosque nativo. Ropa blanca, biocosmética y agua caliente 24h. Cuidado humano real.",
+                text: "Refugio de Piedra y domos geodésicos en medio del bosque nativo. Ropa blanca, biocosmética y agua caliente 24h. Cuidado humano real.",
               },
               {
                 num: "03",

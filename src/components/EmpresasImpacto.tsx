@@ -35,6 +35,20 @@ const EmpresasImpacto: React.FC = () => {
           ))}
         </div>
 
+        <div data-reveal data-delay="1">
+          <div className="mb-12">
+            <p className="font-medium uppercase tracking-[0.2em] text-[11px] text-[#D4AF37] mb-5">{im.practices_title}</p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {im.practices.map((p: any, i: number) => (
+                <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+                  <div className="text-white font-semibold mb-1">{p.title}</div>
+                  <p className="text-white/60 text-sm leading-relaxed">{p.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div data-reveal data-delay="2" className="rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/[0.07] p-8 md:p-10">
           <p className="text-white/80 text-base leading-relaxed mb-4">{im.partners_intro}</p>
           <div className="flex flex-wrap gap-3 mb-5">

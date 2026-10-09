@@ -40,8 +40,8 @@ const Main: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const TITLE = 'Pueblo Mágico — Eco‑Refugio & Glamping · Los Gigantes, Córdoba';
-    const DESC  = 'Ecocentro en Sierras Grandes de Córdoba: retiros, co-living, glamping en domos geodésicos, voluntariados y cocina de autor. 20 años regenerando la montaña.';
+    const TITLE = 'Pueblo Mágico — Ecolodge de Montaña · Los Gigantes, Córdoba';
+    const DESC  = 'Ecolodge de montaña en las Sierras Grandes de Córdoba: Refugio de Piedra, domos geodésicos y camping. Retiros, co-living y voluntariados. Energía solar, baños secos y compost.';
     const URL   = SITE_URL + ROUTES.HOME;
     const IMG   = `${SITE_URL}/uploads/img_6948.webp`;
     const prevTitle = document.title;
@@ -118,8 +118,13 @@ const Main: React.FC = () => {
         "worstRating": "1"
       },
       "amenityFeature": [
+        { "@type": "LocationFeatureSpecification", "name": "Refugio de Piedra: recepción, salón y comedor; habitaciones compartidas o una entera para tu grupo" },
         { "@type": "LocationFeatureSpecification", "name": "Glamping en domos geodésicos" },
-        { "@type": "LocationFeatureSpecification", "name": "Energía solar" },
+        { "@type": "LocationFeatureSpecification", "name": "Camping" },
+        { "@type": "LocationFeatureSpecification", "name": "Energía solar casi al 100%" },
+        { "@type": "LocationFeatureSpecification", "name": "Baños secos que no contaminan el agua" },
+        { "@type": "LocationFeatureSpecification", "name": "Compostamos todos los residuos compostables" },
+        { "@type": "LocationFeatureSpecification", "name": "+25.000 árboles nativos plantados" },
         { "@type": "LocationFeatureSpecification", "name": "Retiros y voluntariados" },
         { "@type": "LocationFeatureSpecification", "name": "Coworking con Starlink" },
         { "@type": "LocationFeatureSpecification", "name": "Cocina de autor orgánica" }

@@ -3,9 +3,9 @@ import { WA_CICLO_VITAL_FEMENINO } from '../data/config';
 import { ROUTES } from '../routes';
 
 const BENEFICIOS = [
-  { label: 'Regeneración activa', desc: '+15.000 árboles plantados transforman el aire que respirás' },
+  { label: 'Regeneración activa', desc: '+25.000 árboles nativos plantados transforman el aire que respirás' },
   { label: 'Comunidad real', desc: '25 años de coherencia manifestando el propósito' },
-  { label: 'Energía solar', desc: '100% sustentable, sin huella de carbono' },
+  { label: 'Energía solar', desc: 'Casi el 100% de la energía viene del sol' },
 ];
 
 const CicloVitalFemeninoLugar: React.FC = () => {

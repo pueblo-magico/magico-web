@@ -92,7 +92,7 @@ const DossierAulaVerde = () => (
 
       <Text style={styles.sectionTitle}>¿Quiénes Somos?</Text>
       <Text style={styles.text}>
-        Pueblo Mágico es un eco-refugio premium en Sierras Grandes, concebido para brindar experiencias vivenciales desconectadas de las pantallas y 100% integradas a la naturaleza, enfocadas en el aprendizaje dinámico y el desarrollo personal grupal.
+        Pueblo Mágico es un ecolodge de montaña en Sierras Grandes, concebido para brindar experiencias vivenciales desconectadas de las pantallas y 100% integradas a la naturaleza, enfocadas en el aprendizaje dinámico y el desarrollo personal grupal.
       </Text>
 
       <Text style={styles.sectionTitle}>Nuestra Propuesta Diferencial</Text>

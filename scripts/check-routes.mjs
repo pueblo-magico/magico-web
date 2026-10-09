@@ -27,8 +27,6 @@ const ROUTE_PATHS = [
   '/inti-raymi',
   '/pachamama-fest',
   '/organizamos-tu-experiencia',
-  '/winter-camp',
-  '/winter-redirection',
   '/coliving',
   '/ciclo-vital-femenino',
   '/reset-vital',
