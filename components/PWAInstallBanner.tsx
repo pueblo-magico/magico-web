@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Download, X } from 'lucide-react';
 import { canInstall, onInstallReady, promptInstall } from '../src/lib/pwa';
+import { useFloatingUiSurface } from './FloatingUiContext';
 
 export const PWAInstallBanner: React.FC = () => {
   const { pathname } = useLocation();
@@ -9,6 +10,7 @@ export const PWAInstallBanner: React.FC = () => {
   const [dismissed, setDismissed] = useState(false);
 
   const isResetVital = pathname === '/reset-vital';
+  const ownsFloatingUi = useFloatingUiSurface('pwa', visible && !isResetVital);
 
   useEffect(() => {
     if (dismissed) return;
@@ -21,7 +23,7 @@ export const PWAInstallBanner: React.FC = () => {
   }, [dismissed]);
 
   // No mostrar en /reset-vital (esa página tiene su propio banner)
-  if (isResetVital || !visible) return null;
+  if (isResetVital || !visible || !ownsFloatingUi) return null;
 
   const handleInstall = async () => {
     const accepted = await promptInstall();

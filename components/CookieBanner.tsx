@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ROUTES } from '../src/routes';
+import { useFloatingUiSurface } from './FloatingUiContext';
 
 const STORAGE_KEY = 'cookie-consent';
 
 export const CookieBanner: React.FC = () => {
   const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
+  const ownsFloatingUi = useFloatingUiSurface('cookie', visible);
 
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
@@ -33,7 +35,7 @@ export const CookieBanner: React.FC = () => {
     setVisible(false);
   };
 
-  if (!visible) return null;
+  if (!visible || !ownsFloatingUi) return null;
 
   return (
     <div

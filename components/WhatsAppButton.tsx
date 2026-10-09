@@ -1,8 +1,12 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useFloatingUi } from './FloatingUiContext';
 
 export const WhatsAppButton: React.FC = () => {
   const { t } = useLanguage();
+  const { activeSurface } = useFloatingUi();
+
+  if (activeSurface) return null;
 
   return (
     <a

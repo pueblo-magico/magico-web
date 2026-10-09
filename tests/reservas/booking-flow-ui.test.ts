@@ -63,7 +63,7 @@ test('conserva una reserva activa sin PII y muestra acceso persistente al cerrar
   assert.match(source, /writeActiveReservation/);
   assert.match(source, /readActiveReservation/);
   assert.match(source, /clearActiveReservation/);
-  assert.match(source, /!open && viewportEligible && reservation && \(/);
+  assert.match(source, /!open && viewportEligible && ownsFloatingUi && reservation && \(/);
   assert.match(source, /booking-active-reservation/);
   assert.match(source, /\/reserva-pendiente/);
   assert.match(source, /if \(!viewportEligible \|\| !code/);
@@ -74,6 +74,23 @@ test('conserva una reserva activa sin PII y muestra acceso persistente al cerrar
   assert.doesNotMatch(source, /context:\s*\{[^}]*guest/s);
   assert.doesNotMatch(source, /context:\s*\{[^}]*payerDni/s);
   assert.match(styles, /\.booking-active-reservation\s*\{[^}]*position:\s*fixed/s);
+});
+
+test('coordina las superficies flotantes por prioridad sin offsets acoplados', () => {
+  const context = readFileSync(new URL('../../components/FloatingUiContext.tsx', import.meta.url), 'utf8');
+  const root = readFileSync(new URL('../../index.tsx', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const pwa = readFileSync(new URL('../../components/PWAInstallBanner.tsx', import.meta.url), 'utf8');
+  const whatsapp = readFileSync(new URL('../../components/WhatsAppButton.tsx', import.meta.url), 'utf8');
+  const cookies = readFileSync(new URL('../../components/CookieBanner.tsx', import.meta.url), 'utf8');
+
+  assert.match(context, /\['cookie', 'reservation', 'pwa'\]/);
+  assert.match(context, /ReadonlySet<string>/);
+  assert.match(root, /<FloatingUiProvider>/);
+  assert.match(widget, /useFloatingUiSurface\(\s*'reservation'/s);
+  assert.match(pwa, /useFloatingUiSurface\('pwa', visible && !isResetVital\)/);
+  assert.match(cookies, /useFloatingUiSurface\('cookie', visible\)/);
+  assert.match(whatsapp, /if \(activeSurface\) return null/);
 });
 
 test('mantiene sincronizada la página pública cuando vence la retención', () => {
