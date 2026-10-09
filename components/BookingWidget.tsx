@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  AlertCircle, ArrowLeft, BedDouble, CalendarDays, CheckCircle2, Clock3,
-  Copy, CreditCard, Landmark, Loader2, MessageCircle, Minus, Plus, ShieldCheck, Users, Utensils, X,
+  AlertCircle, ArrowLeft, ArrowRight, BedDouble, CalendarDays, CheckCircle2, ChevronRight, Clock3,
+  Copy, CreditCard, Landmark, Loader2, Mail, MessageCircle, Minus, Phone, Plus, ShieldCheck,
+  UserRound, Users, Utensils, X,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { WA_MAGICO } from '../src/data/config';
@@ -40,7 +41,9 @@ const COPY = {
     heroReview: 'Revisá tu reserva', heroReviewCopy: 'Comprobá los datos antes de crear la reserva.',
     startingAt: 'Precio y disponibilidad en tiempo real', nights: 'noches',
     datesTitle: 'Fechas y personas', checkIn: 'Llegada', checkOut: 'Salida', people: 'Personas',
-    dateHelp: 'La salida debe ser posterior a la llegada.', continue: 'Continuar', back: 'Volver',
+    dateHelp: 'La salida debe ser posterior a la llegada.', continue: 'Continuar', back: 'Volver', edit: 'Editar',
+    dateNoticeTitle: 'Disponibilidad en tiempo real', dateNotice: 'Verificamos las fechas, el alojamiento y el precio antes de crear la reserva.',
+    selectionPending: 'El precio se calcula al verificar disponibilidad.', selectionTitle: 'Tu reserva',
     stayTitle: 'Elegí cómo querés quedarte', accommodation: 'Alojamiento', domo: 'Domo',
     refugio: 'Refugio de piedra', mode: 'Modalidad', compartida: 'Compartida', privada: 'Privada',
     meals: 'Comidas', desayuno_incluido: 'Con desayuno', pension_completa: 'Pensión completa',
@@ -49,14 +52,16 @@ const COPY = {
     noOptions: 'No pudimos cargar los alojamientos.',
     domeCopy: 'Dormí rodeado de naturaleza.', refugeCopy: 'Calidez simple en el refugio.',
     unavailable: 'No hay disponibilidad para esa combinación. Probá con otras fechas u opciones.',
-    contactSupport: 'Consultar por WhatsApp', reviewTitle: 'Revisá y completá tus datos',
+    contactSupport: 'Consultar por WhatsApp', reviewTitle: 'Contanos quién viene',
     name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email', optional: 'Opcional',
+    contactIntro: 'Completá tus datos para crear la reserva. No necesitás una cuenta.',
     paymentMethod: 'Forma de pago', checkoutMethod: 'Mercado Pago', transferMethod: 'Transferencia',
     dni: 'DNI del titular de la cuenta', dniHelp: 'Debe coincidir con el DNI informado por la cuenta desde la que hacés la transferencia.',
     total: 'Total de la estadía', deposit: 'Seña', balance: 'Saldo al llegar',
     quoteValid: 'Cotización válida durante', consentPrefix: 'Leí y acepto los',
     terms: 'Términos y Condiciones', privacy: 'Política de Privacidad', reserve: 'Crear reserva',
     reserving: 'Creando reserva…', privacyNote: 'Usamos tus datos únicamente para gestionar esta reserva.',
+    secureNote: 'La disponibilidad y el precio se verificaron automáticamente.',
     pendingTitle: 'Tu lugar está retenido',
     pendingCopy: 'La reserva se confirma cuando verificamos la recepción de la seña.',
     confirmedTitle: '¡Reserva confirmada!',
@@ -90,7 +95,9 @@ const COPY = {
     heroReview: 'Review your booking', heroReviewCopy: 'Check the details before creating your reservation.',
     startingAt: 'Live pricing and availability', nights: 'nights',
     datesTitle: 'Dates and guests', checkIn: 'Arrival', checkOut: 'Departure', people: 'Guests',
-    dateHelp: 'Departure must be after arrival.', continue: 'Continue', back: 'Back',
+    dateHelp: 'Departure must be after arrival.', continue: 'Continue', back: 'Back', edit: 'Edit',
+    dateNoticeTitle: 'Live availability', dateNotice: 'We verify dates, accommodation and price before creating the reservation.',
+    selectionPending: 'The price is calculated after checking availability.', selectionTitle: 'Your reservation',
     stayTitle: 'Choose how you want to stay', accommodation: 'Accommodation', domo: 'Dome',
     refugio: 'Stone shelter', mode: 'Room type', compartida: 'Shared', privada: 'Private',
     meals: 'Meals', desayuno_incluido: 'Breakfast included', pension_completa: 'Full board',
@@ -99,14 +106,15 @@ const COPY = {
     noOptions: 'We could not load accommodation options.',
     domeCopy: 'Sleep surrounded by nature.', refugeCopy: 'Simple warmth in the stone shelter.',
     unavailable: 'There is no availability for that combination. Try other dates or options.',
-    contactSupport: 'Ask on WhatsApp', reviewTitle: 'Review and complete your details',
+    contactSupport: 'Ask on WhatsApp', reviewTitle: 'Tell us who is coming',
     name: 'Full name', phone: 'WhatsApp', email: 'Email', optional: 'Optional',
+    contactIntro: 'Enter your details to create the reservation. You do not need an account.',
     paymentMethod: 'Payment method', checkoutMethod: 'Mercado Pago', transferMethod: 'Bank transfer',
     dni: "Account holder's DNI", dniHelp: 'It must match the DNI reported by the account used for the transfer.',
     total: 'Stay total', deposit: 'Deposit', balance: 'Balance on arrival', quoteValid: 'Quote valid for',
     consentPrefix: 'I have read and accept the', terms: 'Terms and Conditions', privacy: 'Privacy Policy',
     reserve: 'Create reservation', reserving: 'Creating reservation…',
-    privacyNote: 'We only use your details to manage this reservation.', pendingTitle: 'Your place is being held',
+    privacyNote: 'We only use your details to manage this reservation.', secureNote: 'Availability and pricing were verified automatically.', pendingTitle: 'Your place is being held',
     pendingCopy: 'Your reservation is confirmed once we verify the deposit.', reservationCode: 'Reservation code',
     confirmedTitle: 'Booking confirmed!',
     confirmedCopy: 'Your place is reserved. Keep the booking code for any questions.',
@@ -190,6 +198,17 @@ function formatMoney(cents: number, currency: string, language: 'es' | 'en') {
   return new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
     style: 'currency', currency, maximumFractionDigits: 0,
   }).format(cents / 100);
+}
+
+function formatBookingDate(value: string, language: 'es' | 'en', includeYear = false) {
+  if (!value) return '—';
+  const date = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(language === 'es' ? 'es-AR' : 'en-US', {
+    day: 'numeric',
+    month: 'short',
+    ...(includeYear ? { year: 'numeric' as const } : {}),
+  }).format(date).replace('.', '');
 }
 
 function apiErrorMessage(error: unknown, fallback: string, language: 'es' | 'en'): string {
@@ -349,6 +368,14 @@ export const BookingWidget: React.FC<{
       launcherRef.current?.focus();
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const frame = window.requestAnimationFrame(() => {
+      dialogRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, step, reservation?.reserva.codigo]);
 
   useEffect(() => {
     if (!quote?.cotizacion.expiresAt) return;
@@ -563,213 +590,179 @@ export const BookingWidget: React.FC<{
         : c.heroReviewCopy;
 
   const bookingFlow = (
-    <section ref={dialogRef} className="booking-dialog" role="dialog" aria-modal="true" aria-labelledby="booking-title" tabIndex={-1}>
-            <header className="booking-flow__header">
-              <p className="booking-flow__eyebrow">{c.launcherEyebrow}</p>
-              <h2 id="booking-title">{headerTitle}</h2>
-              {!reservation && step === 1 && <strong className="booking-flow__price-lead">{c.startingAt}</strong>}
-              <p className="booking-flow__intro">{headerCopy}</p>
-              <button className="booking-icon-button booking-flow__close" type="button" onClick={() => setOpen(false)} aria-label={c.close}><X aria-hidden="true" /></button>
-            </header>
+    <section ref={dialogRef} className={`booking-dialog ${reservation ? 'booking-dialog--result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="booking-title" tabIndex={-1}>
+      <header className={`booking-flow__header ${reservationConfirmed ? 'booking-flow__header--confirmed' : ''}`}>
+        <div className="booking-flow__header-copy">
+          <p className="booking-flow__eyebrow">{reservation ? c.reservationCode : c.launcherEyebrow}</p>
+          <h2 id="booking-title">{headerTitle}</h2>
+          {!reservation && step === 1 && <strong className="booking-flow__price-lead">{c.startingAt}</strong>}
+          <p className="booking-flow__intro">{headerCopy}</p>
+        </div>
+        <button className="booking-icon-button booking-flow__close" type="button" onClick={() => setOpen(false)} aria-label={c.close}><X aria-hidden="true" /></button>
+      </header>
 
-            {!reservation && (
-              <nav className="booking-steps" aria-label={c.title}>
-                {c.steps.map((label, index) => {
-                  const number = (index + 1) as Step;
-                  const state = number === step ? 'booking-step--active' : number < step ? 'booking-step--done' : '';
-                  return <span key={label} className={`booking-step ${state}`} data-step={number} aria-current={number === step ? 'step' : undefined}>{label}</span>;
-                })}
-              </nav>
+      {!reservation && (
+        <nav className="booking-steps" aria-label={c.title}>
+          {c.steps.map((label, index) => {
+            const number = (index + 1) as Step;
+            const state = number === step ? 'booking-step--active' : number < step ? 'booking-step--done' : '';
+            return (
+              <span key={label} className={`booking-step ${state}`} data-step={number} aria-current={number === step ? 'step' : undefined}>
+                <span className="booking-step__number">{number < step ? <CheckCircle2 aria-hidden="true" /> : number}</span>
+                <span>{label}</span>
+              </span>
+            );
+          })}
+        </nav>
+      )}
+
+      <div className="booking-flow__body" aria-live="polite">
+        {reservation ? (
+          <div className="booking-panel booking-result">
+            <div className="booking-result__hero">
+              <div className="booking-result__icon">{reservationConfirmed ? <CheckCircle2 size={42} aria-hidden="true" /> : reservationExpired ? <AlertCircle size={42} aria-hidden="true" /> : <Clock3 size={38} aria-hidden="true" />}</div>
+              <div>
+                <span className="booking-result__status">{reservationConfirmed ? c.activeConfirmed : reservationExpired ? c.activeExpired : c.manualConfirmation}</span>
+                <h3>{reservationTitle}</h3>
+                <p>{reservationCopy}</p>
+              </div>
+            </div>
+            <p className="booking-result__code">{c.reservationCode}: <strong>{reservation.reserva.codigo}</strong></p>
+            {reservationConfirmed ? (
+              <div className="booking-notice booking-notice--success"><CheckCircle2 size={20} aria-hidden="true" /> {c.confirmedNotice}</div>
+            ) : reservationExpired ? (
+              <div className="booking-notice booking-notice--error"><AlertCircle size={20} aria-hidden="true" /> {c.expired}</div>
+            ) : reservationPending && (
+              <div className="booking-countdown"><Clock3 size={18} aria-hidden="true" /> {c.retention}: <strong>{formatRemaining(reservationSeconds)}</strong></div>
             )}
 
-            <div className="booking-flow__body" aria-live="polite">
-              {reservation ? (
-                <div className="booking-panel booking-result">
-                  <div className="booking-result__icon"><CheckCircle2 size={38} aria-hidden="true" /></div>
-                  <h3>{reservationTitle}</h3>
-                  <p>{reservationCopy}</p>
-                  <p className="booking-result__code">{c.reservationCode}: <strong>{reservation.reserva.codigo}</strong></p>
-                  {reservationConfirmed ? (
-                    <div className="booking-notice booking-notice--success"><CheckCircle2 size={20} aria-hidden="true" /> {c.confirmedNotice}</div>
-                  ) : reservationExpired ? (
-                    <div className="booking-notice booking-notice--error"><AlertCircle size={20} aria-hidden="true" /> {c.expired}</div>
-                  ) : reservationPending && (
-                    <div className="booking-countdown"><Clock3 size={18} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</div>
-                  )}
-
-                  {quote && (
-                    <div className="booking-summary booking-summary--result">
-                      <div className="booking-summary__row"><span>{checkIn} → {checkOut} · {people} {c.people.toLowerCase()}</span><strong>{c[type]} · {c[mode]}</strong></div>
-                      <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
-                      <div className="booking-summary__row"><span>{c.deposit}</span><strong>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</strong></div>
-                      <div className="booking-summary__row"><span>{c.balance}</span><strong>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</strong></div>
-                    </div>
-                  )}
-
-                  {reservationPending && (reservation.pago?.estado === 'ready' && reservation.pago.checkout_url ? (
-                    <a
-                      className="booking-button booking-button--payment"
-                      href={reservation.pago.checkout_url}
-                      rel="noopener noreferrer"
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <ShieldCheck size={20} aria-hidden="true" /> {c.payDeposit}
-                    </a>
-                  ) : reservation.pago?.estado === 'pending' ? (
-                    <div className="booking-notice">
-                      <Loader2 className="booking-loading" size={20} />
-                      <span>{c.paymentPending}</span>
-                      <button className="booking-link-button" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button>
-                    </div>
-                  ) : reservation.pago?.estado === 'failed' ? (
-                    <button className="booking-button booking-button--secondary" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button>
-                  ) : null)}
-
-                  {reservationPending && reservation.transferencia?.estado === 'ready' && reservation.transferencia.destino ? (
-                    <div className="booking-payment">
-                      <div className="booking-payment__heading">
-                        <strong>{c.transferToMp}</strong>
-                        <span>{c.manualConfirmation}</span>
-                      </div>
-                      <p className="booking-payment__instructions">{c.transferInstructions}</p>
-                      {reservation.transferencia.destino.titular && (
-                        <div className="booking-payment__value">
-                          <span className="booking-payment__text"><span>{c.accountHolder}:</span><strong>{reservation.transferencia.destino.titular}</strong></span>
-                        </div>
-                      )}
-                      {reservation.transferencia.destino.alias && (
-                        <div className="booking-payment__value">
-                          <span className="booking-payment__text"><span>{c.alias}:</span><strong>{reservation.transferencia.destino.alias}</strong></span>
-                          <button className="booking-copy-button" type="button" onClick={() => copyValue('alias', reservation.transferencia?.destino?.alias)} aria-label={`${c.copy} ${c.alias}`}>{copied === 'alias' ? c.copied : <Copy size={18} />}</button>
-                        </div>
-                      )}
-                      {reservation.transferencia.destino.cvu && (
-                        <div className="booking-payment__value">
-                          <span className="booking-payment__text"><span>{c.cvu}:</span><strong className="booking-payment__identifier">{reservation.transferencia.destino.cvu}</strong></span>
-                          <button className="booking-copy-button" type="button" onClick={() => copyValue('cvu', reservation.transferencia?.destino?.cvu)} aria-label={`${c.copy} ${c.cvu}`}>{copied === 'cvu' ? c.copied : <Copy size={18} />}</button>
-                        </div>
-                      )}
-                    </div>
-                  ) : reservationPending && reservation.pago?.estado !== 'ready' && reservation.pago?.estado !== 'pending' && (
-                    reservation.cuenta_cobro.estado === 'ready' && reservation.cuenta_cobro.destino ? (
-                    <div className="booking-payment">
-                      <strong>{c.paymentTitle}</strong>
-                      {reservation.cuenta_cobro.simulado && <span className="booking-notice">{c.mockWarning}</span>}
-                      {reservation.cuenta_cobro.destino.alias && (
-                        <div className="booking-payment__value">
-                          <span className="booking-payment__text"><span>{c.alias}:</span><strong>{reservation.cuenta_cobro.destino.alias}</strong></span>
-                          <button className="booking-copy-button" type="button" onClick={() => copyValue('alias', reservation.cuenta_cobro.destino?.alias)} aria-label={`${c.copy} ${c.alias}`}>{copied === 'alias' ? c.copied : <Copy size={18} />}</button>
-                        </div>
-                      )}
-                      {reservation.cuenta_cobro.destino.cvu && (
-                        <div className="booking-payment__value">
-                          <span className="booking-payment__text"><span>{c.cvu}:</span><strong className="booking-payment__identifier">{reservation.cuenta_cobro.destino.cvu}</strong></span>
-                          <button className="booking-copy-button" type="button" onClick={() => copyValue('cvu', reservation.cuenta_cobro.destino?.cvu)} aria-label={`${c.copy} ${c.cvu}`}>{copied === 'cvu' ? c.copied : <Copy size={18} />}</button>
-                        </div>
-                      )}
-                    </div>
-                  ) : <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /> {c.manualPayment}</div>
-                  )}
-
-                  <div className="booking-actions">
-                    <button className="booking-button booking-button--secondary" type="button" onClick={startAgain}>{c.newBooking}</button>
-                    <a className="booking-button" href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}><MessageCircle size={19} /> {c.whatsapp}</a>
-                  </div>
+            {quote && (
+              <div className="booking-summary booking-summary--result">
+                <div className="booking-summary__headline">
+                  <span>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)} · {stayNights} {c.nights} · {people} {c.people.toLowerCase()}</span>
+                  <strong>{c[type]} · {c[mode]} · {c[mealPlan]}</strong>
                 </div>
-              ) : step === 1 ? (
+                <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
+                <div className="booking-summary__row"><span>{c.deposit}</span><strong>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</strong></div>
+                <div className="booking-summary__row"><span>{c.balance}</span><strong>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</strong></div>
+              </div>
+            )}
+
+            {reservationPending && (reservation.pago?.estado === 'ready' && reservation.pago.checkout_url ? (
+              <a className="booking-button booking-button--payment" href={reservation.pago.checkout_url} rel="noopener noreferrer"><ShieldCheck size={20} aria-hidden="true" /> {c.payDeposit}</a>
+            ) : reservation.pago?.estado === 'pending' ? (
+              <div className="booking-notice"><Loader2 className="booking-loading" size={20} /><span>{c.paymentPending}</span><button className="booking-link-button" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button></div>
+            ) : reservation.pago?.estado === 'failed' ? (
+              <button className="booking-button booking-button--secondary" type="button" disabled={submitting} onClick={retryPayment}>{c.retryPayment}</button>
+            ) : null)}
+
+            {reservationPending && reservation.transferencia?.estado === 'ready' && reservation.transferencia.destino ? (
+              <div className="booking-payment">
+                <div className="booking-payment__heading"><strong>{c.transferToMp}</strong><span>{c.manualConfirmation}</span></div>
+                <p className="booking-payment__instructions">{c.transferInstructions}</p>
+                {reservation.transferencia.destino.titular && <div className="booking-payment__value"><span className="booking-payment__text"><span>{c.accountHolder}</span><strong>{reservation.transferencia.destino.titular}</strong></span></div>}
+                {reservation.transferencia.destino.alias && <div className="booking-payment__value"><span className="booking-payment__text"><span>{c.alias}</span><strong>{reservation.transferencia.destino.alias}</strong></span><button className="booking-copy-button" type="button" onClick={() => copyValue('alias', reservation.transferencia?.destino?.alias)} aria-label={`${c.copy} ${c.alias}`}>{copied === 'alias' ? c.copied : <Copy size={18} />}</button></div>}
+                {reservation.transferencia.destino.cvu && <div className="booking-payment__value"><span className="booking-payment__text"><span>{c.cvu}</span><strong className="booking-payment__identifier">{reservation.transferencia.destino.cvu}</strong></span><button className="booking-copy-button" type="button" onClick={() => copyValue('cvu', reservation.transferencia?.destino?.cvu)} aria-label={`${c.copy} ${c.cvu}`}>{copied === 'cvu' ? c.copied : <Copy size={18} />}</button></div>}
+              </div>
+            ) : reservationPending && reservation.pago?.estado !== 'ready' && reservation.pago?.estado !== 'pending' && (
+              reservation.cuenta_cobro.estado === 'ready' && reservation.cuenta_cobro.destino ? (
+                <div className="booking-payment">
+                  <div className="booking-payment__heading"><strong>{c.paymentTitle}</strong>{reservation.cuenta_cobro.simulado && <span>{c.mockWarning}</span>}</div>
+                  {reservation.cuenta_cobro.destino.alias && <div className="booking-payment__value"><span className="booking-payment__text"><span>{c.alias}</span><strong>{reservation.cuenta_cobro.destino.alias}</strong></span><button className="booking-copy-button" type="button" onClick={() => copyValue('alias', reservation.cuenta_cobro.destino?.alias)} aria-label={`${c.copy} ${c.alias}`}>{copied === 'alias' ? c.copied : <Copy size={18} />}</button></div>}
+                  {reservation.cuenta_cobro.destino.cvu && <div className="booking-payment__value"><span className="booking-payment__text"><span>{c.cvu}</span><strong className="booking-payment__identifier">{reservation.cuenta_cobro.destino.cvu}</strong></span><button className="booking-copy-button" type="button" onClick={() => copyValue('cvu', reservation.cuenta_cobro.destino?.cvu)} aria-label={`${c.copy} ${c.cvu}`}>{copied === 'cvu' ? c.copied : <Copy size={18} />}</button></div>}
+                </div>
+              ) : <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /> {c.manualPayment}</div>
+            )}
+
+            <div className="booking-actions booking-actions--result">
+              <a className="booking-button booking-button--secondary" href={reservationStatusUrl}>{c.viewStatus}</a>
+              <a className="booking-button" href={whatsappUrl} target="_blank" rel="noopener noreferrer"><MessageCircle size={19} /> {c.whatsapp}</a>
+              <button className="booking-link-button" type="button" onClick={startAgain}>{c.newBooking}</button>
+            </div>
+          </div>
+        ) : (
+          <div className="booking-content-grid">
+            <div className="booking-main">
+              {step === 1 ? (
                 <div className="booking-panel">
-                  <p className="booking-section-title"><CalendarDays size={16} /> {c.datesTitle}</p>
+                  <div className="booking-panel__heading"><div><p className="booking-section-title"><CalendarDays size={18} /> {c.datesTitle}</p><h3>{language === 'es' ? 'Elegí tus fechas' : 'Choose your dates'}</h3></div></div>
                   <div className="booking-date-grid">
-                    <label className="booking-date-card"><CalendarDays size={28} /><span><small>{c.checkIn}</small><input aria-label={c.checkIn} type="date" min={today} value={checkIn} onChange={event => { setCheckIn(event.target.value); if (checkOut && event.target.value >= checkOut) setCheckOut(''); resetQuote(); }} required /></span></label>
-                    <label className="booking-date-card"><CalendarDays size={28} /><span><small>{c.checkOut}</small><input aria-label={c.checkOut} type="date" min={checkIn || today} value={checkOut} onChange={event => { setCheckOut(event.target.value); resetQuote(); }} required /></span></label>
+                    <label className="booking-date-card"><CalendarDays size={30} /><span><small>{c.checkIn}</small><input aria-label={c.checkIn} type="date" min={today} value={checkIn} onChange={event => { setCheckIn(event.target.value); if (checkOut && event.target.value >= checkOut) setCheckOut(''); resetQuote(); }} required /></span><ChevronRight aria-hidden="true" /></label>
+                    <label className="booking-date-card"><CalendarDays size={30} /><span><small>{c.checkOut}</small><input aria-label={c.checkOut} type="date" min={checkIn || today} value={checkOut} onChange={event => { setCheckOut(event.target.value); resetQuote(); }} required /></span><ChevronRight aria-hidden="true" /></label>
                   </div>
                   {stayNights > 0 && <div className="booking-night-count"><BedDouble size={20} /> {stayNights} {c.nights}</div>}
                   <div className="booking-guests-row">
-                    <span><Users size={27} /> <strong>{c.people}</strong></span>
-                    <div className="booking-counter" aria-label={c.people}>
-                      <button type="button" aria-label={`${c.people} -`} onClick={() => { setPeople(value => Math.max(1, value - 1)); resetQuote(); }}><Minus /></button>
-                      <output aria-live="polite">{people}</output>
-                      <button type="button" aria-label={`${c.people} +`} onClick={() => { setPeople(value => value + 1); resetQuote(); }}><Plus /></button>
-                    </div>
+                    <span><Users size={28} /><span><strong>{c.people}</strong><small>{language === 'es' ? '¿Quiénes vienen?' : 'Who is coming?'}</small></span></span>
+                    <div className="booking-counter" aria-label={c.people}><button type="button" aria-label={`${c.people} -`} onClick={() => { setPeople(value => Math.max(1, value - 1)); resetQuote(); }}><Minus /></button><output aria-live="polite">{people}</output><button type="button" aria-label={`${c.people} +`} onClick={() => { setPeople(value => value + 1); resetQuote(); }}><Plus /></button></div>
                   </div>
+                  <div className="booking-notice booking-notice--gold"><CalendarDays size={22} /><span><strong>{c.dateNoticeTitle}</strong>{c.dateNotice}</span></div>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
-                  <div className="booking-actions"><button className="booking-button" type="button" onClick={goToStay}>{c.continue}</button></div>
+                  <div className="booking-actions"><button className="booking-button" type="button" onClick={goToStay}>{c.continue}<ArrowRight size={18} /></button></div>
                 </div>
               ) : step === 2 ? (
                 <div className="booking-panel">
-                  <p className="booking-section-title"><BedDouble size={16} /> {c.stayTitle}</p>
+                  <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => { setStep(1); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><h3>{c.stayTitle}</h3></div>
                   {loadingOptions ? <div className="booking-notice"><Loader2 className="booking-loading" size={20} /> {c.loadingOptions}</div> : (
                     <>
-                      <p className="booking-section-title" style={{ marginTop: 20 }}>{c.accommodation}</p>
+                      <p className="booking-section-title">{c.accommodation}</p>
                       <div className="booking-stay-grid">{availableTypes.map(option => (
                         <button key={option} type="button" className={`booking-stay-card ${type === option ? 'booking-choice--selected' : ''}`} aria-pressed={type === option} onClick={() => { setType(option); resetQuote(); }}>
                           <img src={option === 'domo' ? '/uploads/domos_2.jpg' : '/uploads/habitaciones.webp'} alt="" />
                           <span><strong>{c[option]}</strong><small>{option === 'domo' ? c.domeCopy : c.refugeCopy}</small></span>
-                          <CheckCircle2 className="booking-stay-card__check" size={25} aria-hidden="true" />
+                          <CheckCircle2 className="booking-stay-card__check" size={27} aria-hidden="true" />
                         </button>
                       ))}</div>
                       <p className="booking-section-title">{c.mode}</p>
-                      <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={22} /> {c[option]}</button>)}</div>
+                      <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={23} /><span>{c[option]}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                       <p className="booking-section-title">{c.meals}</p>
-                      <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={22} /><span>{c[option]}<br /><small>{option === 'desayuno_incluido' ? c.breakfastHelp : c.fullBoardHelp}</small></span></button>)}</div>
+                      <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={23} /><span><strong>{c[option]}</strong><small>{option === 'desayuno_incluido' ? c.breakfastHelp : c.fullBoardHelp}</small></span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                     </>
                   )}
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /><span>{error.message}{error.code === 'NO_DISPONIBLE' && <> <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{c.contactSupport}</a></>}</span></div>}
-                  {!loadingOptions && optionsLoaded && availableTypes.length === 0 && (
-                    <button className="booking-button booking-button--secondary" type="button" onClick={retryOptions}>{c.retry}</button>
-                  )}
-                  <div className="booking-actions">
-                    <button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(1); setError(null); }}><ArrowLeft size={17} /> {c.back}</button>
-                    <button className="booking-button" type="button" disabled={loadingOptions || loadingQuote || availableModes.length === 0} onClick={quoteStay}>{loadingQuote ? <><Loader2 className="booking-loading" size={18} /> {c.quote}</> : c.quote}</button>
-                  </div>
+                  {!loadingOptions && optionsLoaded && availableTypes.length === 0 && <button className="booking-button booking-button--secondary" type="button" onClick={retryOptions}>{c.retry}</button>}
+                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(1); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="button" disabled={loadingOptions || loadingQuote || availableModes.length === 0} onClick={quoteStay}>{loadingQuote ? <><Loader2 className="booking-loading" size={18} /> {c.quote}</> : <>{c.quote}<ArrowRight size={18} /></>}</button></div>
                 </div>
               ) : quote ? (
                 <form className="booking-panel" onSubmit={submitReservation}>
-                  <p className="booking-section-title"><Users size={16} /> {c.reviewTitle}</p>
-                  <div className="booking-summary">
-                    <div className="booking-summary__row"><span>{checkIn} → {checkOut} · {people} {c.people.toLowerCase()}</span><strong>{c[type]} · {c[mode]}</strong></div>
-                    <div className="booking-summary__row"><span>{c[mealPlan]}</span><strong>{formatMoney(quote.precio.alimentacion_centavos, quote.precio.moneda, language)}</strong></div>
-                    <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
-                    <div className="booking-summary__row"><span>{c.deposit}</span><strong>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</strong></div>
-                    <div className="booking-summary__row"><span>{c.balance}</span><strong>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</strong></div>
+                  <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><h3>{c.reviewTitle}</h3><p>{c.contactIntro}</p></div>
+                  <div className="booking-review-cards">
+                    <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => setStep(1)}>{c.edit}</button></div>
+                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {c[mode]}</strong><em>{c[mealPlan]}</em></span><button type="button" onClick={() => setStep(2)}>{c.edit}</button></div>
                   </div>
-                  <div className="booking-notice"><Clock3 size={20} /> {quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</div>
+                  <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
                   <div className="booking-grid">
-                    <label className="booking-field booking-field--full">{c.name}<input value={guest.name} onChange={event => setGuest({ ...guest, name: event.target.value })} autoComplete="name" required /></label>
-                    <label className="booking-field">{c.phone}<input type="tel" value={guest.phone} onChange={event => setGuest({ ...guest, phone: event.target.value })} autoComplete="tel" required /></label>
-                    <label className="booking-field">{c.email} <small>{c.optional}</small><input type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} autoComplete="email" /></label>
+                    <label className="booking-field booking-field--full">{c.name}<span><UserRound /><input value={guest.name} onChange={event => setGuest({ ...guest, name: event.target.value })} autoComplete="name" required /></span></label>
+                    <label className="booking-field">{c.phone}<span><Phone /><input type="tel" value={guest.phone} onChange={event => setGuest({ ...guest, phone: event.target.value })} autoComplete="tel" required /></span></label>
+                    <label className="booking-field">{c.email} <small>{c.optional}</small><span><Mail /><input type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} autoComplete="email" /></span></label>
                   </div>
-                  <p className="booking-section-title" style={{ marginTop: 20 }}>{c.paymentMethod}</p>
-                  <div className="booking-choice-grid">
-                    {quote.metodos_pago.map(option => (
-                      <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>
-                        {option === 'mercado_pago_checkout' ? <CreditCard size={22} /> : <Landmark size={22} />}
-                        {option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}
-                      </button>
-                    ))}
-                  </div>
-                  {paymentMethod === 'transferencia_mp' && (
-                    <label className="booking-field booking-field--full booking-dni-field">
-                      {c.dni}
-                      <input inputMode="numeric" value={payerDni} onChange={event => setPayerDni(event.target.value)} autoComplete="off" pattern="[0-9. -]{7,12}" required />
-                      <small>{c.dniHelp}</small>
-                    </label>
-                  )}
-                  <div className="booking-notice booking-notice--success"><ShieldCheck size={20} /> {c.privacyNote}</div>
+                  <p className="booking-section-title">{c.paymentMethod}</p>
+                  <div className="booking-choice-grid booking-payment-methods">{quote.metodos_pago.map(option => <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>{option === 'mercado_pago_checkout' ? <CreditCard size={23} /> : <Landmark size={23} />}<span>{option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                  {paymentMethod === 'transferencia_mp' && <label className="booking-field booking-field--full booking-dni-field">{c.dni}<span><UserRound /><input inputMode="numeric" value={payerDni} onChange={event => setPayerDni(event.target.value)} autoComplete="off" pattern="[0-9. -]{7,12}" required /></span><small>{c.dniHelp}</small></label>}
+                  <div className="booking-notice"><ShieldCheck size={20} /> {c.privacyNote}</div>
                   <label className="booking-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank">{c.privacy}</a>.</span></label>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
-                  <div className="booking-actions">
-                    <button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button>
-                    <button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : c.reserve}</button>
-                  </div>
+                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
                 </form>
               ) : (
-                <div className="booking-panel">
-                  <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error?.message || c.expired}</div>
-                  <div className="booking-actions"><button className="booking-button" type="button" onClick={() => { setStep(2); setError(null); }}>{c.retry}</button></div>
-                </div>
+                <div className="booking-panel"><div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error?.message || c.expired}</div><div className="booking-actions"><button className="booking-button" type="button" onClick={() => { setStep(2); setError(null); }}>{c.retry}</button></div></div>
               )}
             </div>
+
+            <aside className="booking-sidebar" aria-label={c.selectionTitle}>
+              <p className="booking-section-title">{c.selectionTitle}</p>
+              <div className="booking-sidebar__visual" aria-hidden="true"><img src={type === 'domo' ? '/uploads/domos_2.jpg' : '/uploads/habitaciones.webp'} alt="" /></div>
+              <h3>{c[type]} · {c[mode]}</h3>
+              <ul>
+                <li><CalendarDays /> <span>{checkIn && checkOut ? `${formatBookingDate(checkIn, language, true)} — ${formatBookingDate(checkOut, language, true)}` : c.datesTitle}</span></li>
+                <li><Users /> <span>{people} {c.people.toLowerCase()}</span></li>
+                <li><Utensils /> <span>{c[mealPlan]}</span></li>
+              </ul>
+              {quote ? <div className="booking-sidebar__price"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong><div><span>{c.deposit}</span><b>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</b></div><div><span>{c.balance}</span><b>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</b></div></div> : <p className="booking-sidebar__pending">{c.selectionPending}</p>}
+              <div className="booking-sidebar__trust"><ShieldCheck /><span>{c.dateNotice}</span></div>
+            </aside>
+          </div>
+        )}
+      </div>
     </section>
   );
 
@@ -777,13 +770,14 @@ export const BookingWidget: React.FC<{
     <>
       <div className={`booking-widget ${open ? 'booking-widget--open' : ''}`}>
         {!open && (
-          <div className="booking-launcher" style={compact ? { padding: 14 } : undefined}>
-            <p className="booking-launcher__eyebrow">{c.launcherEyebrow}</p>
-            <h3 className="booking-launcher__title">{c.launcherTitle}</h3>
-            <p className="booking-launcher__copy">{c.launcherCopy}</p>
-            <button ref={launcherRef} className="booking-button" type="button" onClick={() => setOpen(true)}>
-              <CalendarDays size={18} aria-hidden="true" /> {c.launcherButton}
-            </button>
+          <div className="booking-launcher" data-compact={compact || undefined}>
+            <div className="booking-launcher__content">
+              <p className="booking-launcher__eyebrow">{c.launcherEyebrow}</p>
+              <h3 className="booking-launcher__title">{c.launcherTitle}</h3>
+              <strong className="booking-launcher__price">{language === 'es' ? 'Desde $20.000 por persona/noche' : 'From ARS 20,000 per person/night'}</strong>
+              <p className="booking-launcher__copy">{c.launcherCopy}</p>
+            </div>
+            <button ref={launcherRef} className="booking-button" type="button" onClick={() => setOpen(true)}><CalendarDays size={19} aria-hidden="true" /> {c.launcherButton}<ArrowRight size={18} /></button>
           </div>
         )}
       </div>

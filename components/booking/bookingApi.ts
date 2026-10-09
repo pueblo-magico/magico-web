@@ -108,6 +108,9 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
 
 export async function listPublicAccommodations(): Promise<PublicAccommodation[]> {
   const response = await requestJson<{ data: PublicAccommodation[] }>('/api/v1/public/alojamientos?contexto=general');
+  if (!Array.isArray(response.data)) {
+    throw new BookingApiError(502, 'RESPUESTA_INVALIDA', 'No pudimos cargar los alojamientos.', true);
+  }
   return response.data;
 }
 

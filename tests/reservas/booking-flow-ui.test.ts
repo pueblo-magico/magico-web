@@ -7,9 +7,27 @@ import {
   createPublicReservation,
   formatRemaining,
   getPublicReservationStatus,
+  listPublicAccommodations,
   localTodayIso,
   remainingSeconds,
 } from '../../components/booking/bookingApi.ts';
+
+test('rechaza una respuesta inválida del catálogo público sin romper el widget', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({}), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
+
+  try {
+    await assert.rejects(
+      listPublicAccommodations(),
+      (error: unknown) => error instanceof Error && 'code' in error && error.code === 'RESPUESTA_INVALIDA',
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test('la carga de alojamientos no se cancela al activar su propio indicador', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
