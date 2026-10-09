@@ -56,6 +56,22 @@ test('el widget actualiza una reserva pendiente y retira las instrucciones de pa
   assert.match(source, /reservationPending && reservation\.transferencia\?\.estado === 'ready'/);
 });
 
+test('conserva una reserva activa sin PII y muestra acceso persistente al cerrar el modal', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(source, /magico\.active-reservation\.v1/);
+  assert.match(source, /writeActiveReservation/);
+  assert.match(source, /readActiveReservation/);
+  assert.match(source, /clearActiveReservation/);
+  assert.match(source, /!open && viewportEligible && reservation && \(/);
+  assert.match(source, /booking-active-reservation/);
+  assert.match(source, /\/reserva-pendiente/);
+  assert.match(source, /if \(!viewportEligible \|\| !code/);
+  assert.doesNotMatch(source, /context:\s*\{[^}]*guest/s);
+  assert.doesNotMatch(source, /context:\s*\{[^}]*payerDni/s);
+  assert.match(styles, /\.booking-active-reservation\s*\{[^}]*position:\s*fixed/s);
+});
+
 test('oculta el encabezado promocional mientras el checkout está abierto', () => {
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
@@ -63,7 +79,8 @@ test('oculta el encabezado promocional mientras el checkout está abierto', () =
 
   assert.match(widget, /onOpenChange\?\.\(open\)/);
   assert.match(home, /!desktopBookingOpen && <div/);
-  assert.match(home, /<BookingWidget onOpenChange=\{setDesktopBookingOpen\}/);
+  assert.match(home, /<BookingWidget compact activeViewport="mobile" onOpenChange=\{setCompactBookingOpen\}/);
+  assert.match(home, /<BookingWidget activeViewport="desktop" onOpenChange=\{setDesktopBookingOpen\}/);
   assert.match(stay, /!bookingOpen && <div/);
   assert.match(stay, /<BookingWidget onOpenChange=\{setBookingOpen\}/);
 });

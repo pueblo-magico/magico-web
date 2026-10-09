@@ -94,7 +94,7 @@ export const HeroNuevo: React.FC = () => {
             </p>
           </div>}
           <div style={{ background: 'rgba(255,255,255,0.97)' }}>
-            <BookingWidget compact onOpenChange={setCompactBookingOpen} />
+            <BookingWidget compact activeViewport="mobile" onOpenChange={setCompactBookingOpen} />
           </div>
         </div>
 
@@ -202,7 +202,7 @@ export const HeroNuevo: React.FC = () => {
               </p>
             </div>}
             <div style={{ background: 'rgba(255,255,255,0.96)' }}>
-              <BookingWidget onOpenChange={setDesktopBookingOpen} />
+              <BookingWidget activeViewport="desktop" onOpenChange={setDesktopBookingOpen} />
             </div>
           </div>
         </div>

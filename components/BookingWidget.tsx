@@ -74,7 +74,8 @@ const COPY = {
     alias: 'Alias', cvu: 'CVU', copy: 'Copiar', copied: 'Copiado',
     manualPayment: 'El equipo te enviará las instrucciones de pago. Tu reserva ya quedó registrada.',
     whatsapp: 'Abrir conversación', newBooking: 'Nueva reserva', genericError: 'No pudimos completar la solicitud.',
-    retry: 'Reintentar',
+    retry: 'Reintentar', activePending: 'Reserva pendiente', activeConfirmed: 'Reserva confirmada',
+    activeClosed: 'Reserva finalizada', openReservation: 'Abrir reserva', viewStatus: 'Ver estado',
   },
   en: {
     launcherEyebrow: 'Book online', launcherTitle: 'Find your place in the mountains',
@@ -119,11 +120,64 @@ const COPY = {
     alias: 'Alias', cvu: 'CVU', copy: 'Copy', copied: 'Copied',
     manualPayment: 'Our team will send payment instructions. Your reservation has already been registered.',
     whatsapp: 'Open conversation', newBooking: 'New reservation', genericError: 'We could not complete the request.',
-    retry: 'Try again',
+    retry: 'Try again', activePending: 'Pending booking', activeConfirmed: 'Booking confirmed',
+    activeClosed: 'Booking closed', openReservation: 'Open booking', viewStatus: 'View status',
   },
 } as const;
 
 type Step = 1 | 2 | 3;
+
+const ACTIVE_RESERVATION_STORAGE_KEY = 'magico.active-reservation.v1';
+const ACTIVE_RESERVATION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type ActiveReservationSnapshot = {
+  version: 1;
+  savedAt: number;
+  reservation: ReservationResponse;
+  quote: QuoteResponse | null;
+  context: {
+    checkIn: string;
+    checkOut: string;
+    people: number;
+    type: 'domo' | 'refugio';
+    mode: BookingMode;
+    mealPlan: MealPlan;
+    paymentMethod: PaymentMethod;
+  };
+};
+
+function readActiveReservation(): ActiveReservationSnapshot | null {
+  try {
+    const raw = window.localStorage.getItem(ACTIVE_RESERVATION_STORAGE_KEY);
+    if (!raw) return null;
+    const snapshot = JSON.parse(raw) as ActiveReservationSnapshot;
+    const code = snapshot?.reservation?.reserva?.codigo;
+    const context = snapshot?.context;
+    if (snapshot.version !== 1 || !/^RES-[0-9a-f-]{36}$/i.test(code || '') ||
+        !Number.isFinite(snapshot.savedAt) || Date.now() - snapshot.savedAt > ACTIVE_RESERVATION_MAX_AGE_MS ||
+        !context || typeof context.checkIn !== 'string' || typeof context.checkOut !== 'string' ||
+        !Number.isSafeInteger(context.people) || context.people < 1 ||
+        !['domo', 'refugio'].includes(context.type) ||
+        !['compartida', 'privada'].includes(context.mode) ||
+        !['desayuno_incluido', 'pension_completa'].includes(context.mealPlan) ||
+        !['mercado_pago_checkout', 'transferencia_mp'].includes(context.paymentMethod)) {
+      window.localStorage.removeItem(ACTIVE_RESERVATION_STORAGE_KEY);
+      return null;
+    }
+    return snapshot;
+  } catch {
+    try { window.localStorage.removeItem(ACTIVE_RESERVATION_STORAGE_KEY); } catch { /* optional browser recovery */ }
+    return null;
+  }
+}
+
+function writeActiveReservation(snapshot: ActiveReservationSnapshot) {
+  try { window.localStorage.setItem(ACTIVE_RESERVATION_STORAGE_KEY, JSON.stringify(snapshot)); } catch { /* optional browser recovery */ }
+}
+
+function clearActiveReservation() {
+  try { window.localStorage.removeItem(ACTIVE_RESERVATION_STORAGE_KEY); } catch { /* optional browser recovery */ }
+}
 
 function formatMoney(cents: number, currency: string, language: 'es' | 'en') {
   return new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
@@ -138,7 +192,8 @@ function apiErrorMessage(error: unknown, fallback: string, language: 'es' | 'en'
 export const BookingWidget: React.FC<{
   compact?: boolean;
   onOpenChange?: (open: boolean) => void;
-}> = ({ compact = false, onOpenChange }) => {
+  activeViewport?: 'all' | 'mobile' | 'desktop';
+}> = ({ compact = false, onOpenChange, activeViewport = 'all' }) => {
   const { language } = useLanguage();
   const c = COPY[language];
   const today = localTodayIso();
@@ -165,6 +220,7 @@ export const BookingWidget: React.FC<{
   const [reservationSeconds, setReservationSeconds] = useState(0);
   const [error, setError] = useState<{ message: string; code?: string } | null>(null);
   const [copied, setCopied] = useState('');
+  const [viewportEligible, setViewportEligible] = useState(activeViewport === 'all');
   const idempotencyKey = useRef(createBookingAttemptKey());
   const launcherRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
@@ -172,6 +228,46 @@ export const BookingWidget: React.FC<{
   useEffect(() => {
     onOpenChange?.(open);
   }, [onOpenChange, open]);
+
+  useEffect(() => {
+    if (activeViewport === 'all') {
+      setViewportEligible(true);
+      return;
+    }
+    const desktopQuery = window.matchMedia('(min-width: 1024px)');
+    const updateEligibility = () => setViewportEligible(
+      activeViewport === 'desktop' ? desktopQuery.matches : !desktopQuery.matches,
+    );
+    updateEligibility();
+    desktopQuery.addEventListener('change', updateEligibility);
+    return () => desktopQuery.removeEventListener('change', updateEligibility);
+  }, [activeViewport]);
+
+  useEffect(() => {
+    const snapshot = readActiveReservation();
+    if (!snapshot) return;
+    setReservation(snapshot.reservation);
+    setQuote(snapshot.quote);
+    setCheckIn(snapshot.context.checkIn);
+    setCheckOut(snapshot.context.checkOut);
+    setPeople(snapshot.context.people);
+    setType(snapshot.context.type);
+    setMode(snapshot.context.mode);
+    setMealPlan(snapshot.context.mealPlan);
+    setPaymentMethod(snapshot.context.paymentMethod);
+    setStep(3);
+  }, []);
+
+  useEffect(() => {
+    if (!reservation) return;
+    writeActiveReservation({
+      version: 1,
+      savedAt: Date.now(),
+      reservation,
+      quote,
+      context: { checkIn, checkOut, people, type, mode, mealPlan, paymentMethod },
+    });
+  }, [reservation, quote, checkIn, checkOut, people, type, mode, mealPlan, paymentMethod]);
 
   const availableTypes = useMemo(() => {
     const unique = new Set(accommodations.map(item => item.tipo));
@@ -269,7 +365,7 @@ export const BookingWidget: React.FC<{
 
   useEffect(() => {
     const code = reservation?.reserva.codigo;
-    if (!open || !code || reservation.reserva.estado !== 'pendiente_pago') return;
+    if (!viewportEligible || !code || reservation.reserva.estado !== 'pendiente_pago') return;
 
     let cancelled = false;
     let checking = false;
@@ -305,7 +401,7 @@ export const BookingWidget: React.FC<{
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [open, reservation?.reserva.codigo, reservation?.reserva.estado]);
+  }, [viewportEligible, reservation?.reserva.codigo, reservation?.reserva.estado]);
 
   const quoteRequest: QuoteRequest = {
     check_in: checkIn, check_out: checkOut, personas: people,
@@ -406,6 +502,7 @@ export const BookingWidget: React.FC<{
 
   function startAgain() {
     setStep(1); setQuote(null); setReservation(null); setError(null); setConsent(false);
+    clearActiveReservation();
     idempotencyKey.current = createBookingAttemptKey();
   }
 
@@ -427,6 +524,9 @@ export const BookingWidget: React.FC<{
   const reservationConfirmed = reservation?.reserva.estado === 'confirmada';
   const reservationTitle = reservationConfirmed ? c.confirmedTitle : reservationPending ? c.pendingTitle : c.closedTitle;
   const reservationCopy = reservationConfirmed ? c.confirmedCopy : reservationPending ? c.pendingCopy : c.closedCopy;
+  const reservationStatusUrl = reservation
+    ? `${reservationPending ? '/reserva-pendiente' : reservationConfirmed ? '/reserva-confirmada' : '/reserva-fallida'}?reserva=${encodeURIComponent(reservation.reserva.codigo)}`
+    : '';
   const headerTitle = reservation ? reservationTitle : step === 1 ? c.heroDates : step === 2 ? c.heroStay : c.heroReview;
   const headerCopy = reservation
     ? reservationCopy
@@ -659,6 +759,23 @@ export const BookingWidget: React.FC<{
           </div>
         )}
       </div>
+
+      {!open && viewportEligible && reservation && (
+        <aside className={`booking-active-reservation ${reservationConfirmed ? 'booking-active-reservation--confirmed' : ''}`} aria-live="polite">
+          <button className="booking-active-reservation__open" type="button" onClick={() => setOpen(true)} aria-label={c.openReservation}>
+            <span className="booking-active-reservation__icon">
+              {reservationConfirmed ? <CheckCircle2 size={22} aria-hidden="true" /> : <MessageCircle size={22} aria-hidden="true" />}
+            </span>
+            <span className="booking-active-reservation__content">
+              <strong>{reservationConfirmed ? c.activeConfirmed : reservationPending ? c.activePending : c.activeClosed}</strong>
+              <small>{reservation.reserva.codigo}</small>
+              {reservationPending && reservationSeconds > 0 && <span><Clock3 size={14} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</span>}
+            </span>
+            <span className="booking-active-reservation__action">{c.openReservation}</span>
+          </button>
+          <a className="booking-active-reservation__link" href={reservationStatusUrl}>{c.viewStatus}</a>
+        </aside>
+      )}
 
       {open && createPortal(
         <div className="booking-overlay" role="presentation" onMouseDown={event => event.target === event.currentTarget && setOpen(false)}>
