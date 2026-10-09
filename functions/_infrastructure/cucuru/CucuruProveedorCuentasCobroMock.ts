@@ -17,11 +17,14 @@ function destinoDeterminista(customerId: string): DestinoCobroProveedor {
 
 /** Adaptador determinista para desarrollo y Preview. No realiza llamadas de red. */
 export class CucuruProveedorCuentasCobroMock implements ProveedorCuentasCobro {
-  async buscarPorCustomerId(): Promise<DestinoCobroProveedor | null> {
+  async buscarPorCustomerId(_customerId: string): Promise<DestinoCobroProveedor | null> {
     return null;
   }
 
-  async crear({ customerId }: { customerId: string }): Promise<DestinoCobroProveedor> {
+  async crear({ customerId }: {
+    customerId: string;
+    idempotencyKey: string;
+  }): Promise<DestinoCobroProveedor> {
     return destinoDeterminista(customerId);
   }
 
@@ -31,6 +34,7 @@ export class CucuruProveedorCuentasCobroMock implements ProveedorCuentasCobro {
   }: {
     cuenta: DestinoCobroProveedor;
     alias: string;
+    idempotencyKey: string;
   }): Promise<DestinoCobroProveedor> {
     return { ...cuenta, alias };
   }

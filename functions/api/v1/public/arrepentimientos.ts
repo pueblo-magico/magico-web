@@ -31,7 +31,7 @@ async function crear(request: Request, env: any, requestId: string): Promise<Res
     correlationId: requestId,
   }, new D1RepositorioSolicitudesArrepentimiento(env.DB));
 
-  if (!resultado.ok) {
+  if (resultado.ok === false) {
     return jsonPublico(request, METODOS, {
       error: { codigo: resultado.codigo, mensaje: resultado.mensaje, reintentable: false },
       meta: { version: 'v1' },

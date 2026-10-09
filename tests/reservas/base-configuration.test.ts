@@ -119,6 +119,7 @@ test('la creación pública usa el plazo efectivo y conserva el vencimiento calc
     clienteTelefono: null, clienteEmail: null, idempotencyKey: 'config-hold-0001',
   }, {
     async buscarIdempotencia() { return null; },
+    async buscarConsultaIntegracion() { return null; },
     async obtenerCotizacion() {
       return {
         id: 1, codigo: 'COT-CONFIG-1', tipo: 'domo' as const, modalidad: 'privada' as const,
