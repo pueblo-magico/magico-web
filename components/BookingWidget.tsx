@@ -26,7 +26,7 @@ import {
   remainingSeconds,
 } from './booking/bookingApi';
 import './BookingWidget.css';
-import { useFloatingUiSurface } from './FloatingUiContext';
+import { FloatingUiPortal } from './FloatingUiContext';
 
 export const G = { green: '#005333', gold: '#D4AF37', muted: '#4A6070' };
 
@@ -231,10 +231,6 @@ export const BookingWidget: React.FC<{
   const idempotencyKey = useRef(createBookingAttemptKey());
   const launcherRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
-  const ownsFloatingUi = useFloatingUiSurface(
-    'reservation',
-    viewportEligible && (open || Boolean(reservation)),
-  );
 
   useEffect(() => {
     onOpenChange?.(open);
@@ -792,8 +788,9 @@ export const BookingWidget: React.FC<{
         )}
       </div>
 
-      {!open && viewportEligible && ownsFloatingUi && reservation && (
-        <aside className={`booking-active-reservation ${reservationConfirmed ? 'booking-active-reservation--confirmed' : ''} ${reservationExpired ? 'booking-active-reservation--expired' : ''}`} aria-live="polite">
+      {!open && viewportEligible && reservation && (
+        <FloatingUiPortal surface="reservation">
+          <aside className={`booking-active-reservation ${reservationConfirmed ? 'booking-active-reservation--confirmed' : ''} ${reservationExpired ? 'booking-active-reservation--expired' : ''}`} aria-live="polite">
           <button className="booking-active-reservation__open" type="button" onClick={() => setOpen(true)} aria-label={c.openReservation}>
             <span className="booking-active-reservation__icon">
               {reservationConfirmed
@@ -813,7 +810,8 @@ export const BookingWidget: React.FC<{
             <a className="booking-active-reservation__link" href={reservationStatusUrl}>{c.viewStatus}</a>
             {reservationExpired && <button className="booking-active-reservation__discard" type="button" onClick={startAgain}>{c.discard}</button>}
           </div>
-        </aside>
+          </aside>
+        </FloatingUiPortal>
       )}
 
       {open && createPortal(

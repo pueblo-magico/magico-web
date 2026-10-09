@@ -703,11 +703,7 @@
 }
 
 .booking-active-reservation {
-  position: fixed;
-  z-index: 2147482000;
-  right: 24px;
-  bottom: 24px;
-  width: min(390px, calc(100vw - 32px));
+  width: 100%;
   overflow: hidden;
   border: 1px solid rgba(0, 83, 51, .22);
   border-radius: 22px;
@@ -846,13 +842,6 @@
 }
 
 @media (max-width: 640px) {
-  .booking-active-reservation {
-    right: 14px;
-    bottom: calc(14px + env(safe-area-inset-bottom));
-    left: 14px;
-    width: auto;
-  }
-
   .booking-active-reservation__open {
     grid-template-columns: auto 1fr;
   }

@@ -1,55 +1,39 @@
-import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import './FloatingUiContext.css';
 
-export type FloatingUiSurface = 'cookie' | 'reservation' | 'pwa';
-
-const SURFACE_PRIORITY: FloatingUiSurface[] = ['cookie', 'reservation', 'pwa'];
+export type FloatingUiSurface = 'cookie' | 'pwa' | 'reservation' | 'whatsapp';
 
 type FloatingUiContextValue = {
-  activeSurface: FloatingUiSurface | null;
-  setSurfaceActive: (surface: FloatingUiSurface, sourceId: string, active: boolean) => void;
+  stackRoot: HTMLDivElement | null;
 };
 
 const FloatingUiContext = createContext<FloatingUiContextValue>({
-  activeSurface: null,
-  setSurfaceActive: () => undefined,
+  stackRoot: null,
 });
 
 export const FloatingUiProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [sources, setSources] = useState<Record<FloatingUiSurface, ReadonlySet<string>>>(() => ({
-    cookie: new Set(),
-    reservation: new Set(),
-    pwa: new Set(),
-  }));
+  const [stackRoot, setStackRoot] = useState<HTMLDivElement | null>(null);
+  const value = useMemo(() => ({ stackRoot }), [stackRoot]);
 
-  const setSurfaceActive = useCallback((surface: FloatingUiSurface, sourceId: string, active: boolean) => {
-    setSources(current => {
-      const existing = current[surface];
-      if (existing.has(sourceId) === active) return current;
-      const next = new Set(existing);
-      if (active) next.add(sourceId);
-      else next.delete(sourceId);
-      return { ...current, [surface]: next };
-    });
-  }, []);
-
-  const activeSurface = SURFACE_PRIORITY.find(surface => sources[surface].size > 0) || null;
-  const value = useMemo(() => ({ activeSurface, setSurfaceActive }), [activeSurface, setSurfaceActive]);
-
-  return <FloatingUiContext.Provider value={value}>{children}</FloatingUiContext.Provider>;
+  return (
+    <FloatingUiContext.Provider value={value}>
+      {children}
+      <div ref={setStackRoot} className="floating-ui-stack" aria-label="Accesos rápidos" />
+    </FloatingUiContext.Provider>
+  );
 };
 
-export function useFloatingUi() {
-  return useContext(FloatingUiContext);
-}
+type FloatingUiPortalProps = React.PropsWithChildren<{ surface: FloatingUiSurface }>;
 
-export function useFloatingUiSurface(surface: FloatingUiSurface, active: boolean) {
-  const sourceId = useId();
-  const { activeSurface, setSurfaceActive } = useFloatingUi();
+export const FloatingUiPortal: React.FC<FloatingUiPortalProps> = ({ surface, children }) => {
+  const { stackRoot } = useContext(FloatingUiContext);
+  if (!stackRoot) return null;
 
-  useEffect(() => {
-    setSurfaceActive(surface, sourceId, active);
-    return () => setSurfaceActive(surface, sourceId, false);
-  }, [active, setSurfaceActive, sourceId, surface]);
-
-  return activeSurface === surface;
-}
+  return createPortal(
+    <div className={`floating-ui-stack__item floating-ui-stack__item--${surface}`}>
+      {children}
+    </div>,
+    stackRoot,
+  );
+};

@@ -1,0 +1,31 @@
+.floating-ui-stack {
+  position: fixed;
+  z-index: 2147482000;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  width: min(390px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  overflow-y: auto;
+  pointer-events: none;
+  scrollbar-width: thin;
+}
+
+.floating-ui-stack__item {
+  flex: 0 0 auto;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.floating-ui-stack__item--cookie { order: 10; }
+.floating-ui-stack__item--pwa { order: 20; }
+.floating-ui-stack__item--reservation { order: 30; }
+
+.floating-ui-stack__item--whatsapp {
+  order: 40;
+  width: auto;
+  align-self: flex-end;
+}
