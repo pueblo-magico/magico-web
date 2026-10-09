@@ -95,7 +95,9 @@ test('apila las superficies flotantes y mantiene WhatsApp accesible debajo de la
   assert.match(cookies, /<FloatingUiPortal surface="cookie">/);
   assert.match(whatsapp, /<FloatingUiPortal surface="whatsapp">/);
   assert.doesNotMatch(whatsapp, /if \(activeSurface\) return null/);
+  assert.match(whatsapp, /origin-bottom-right/);
   assert.match(stackStyles, /\.floating-ui-stack\s*\{[^}]*position:\s*fixed[^}]*flex-direction:\s*column/s);
+  assert.doesNotMatch(stackStyles, /overflow-[xy]:\s*(auto|scroll)/);
   assert.match(stackStyles, /\.floating-ui-stack__item--reservation\s*\{\s*order:\s*30/);
   assert.match(stackStyles, /\.floating-ui-stack__item--whatsapp\s*\{[^}]*order:\s*40/s);
 });

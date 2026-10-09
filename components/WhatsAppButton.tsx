@@ -10,7 +10,7 @@ export const WhatsAppButton: React.FC = () => {
         href={t.contact.values.whatsapp}
         target="_blank"
         rel="noreferrer"
-        className="w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform duration-300 group"
+        className="w-12 h-12 origin-bottom-right bg-[#25D366] rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform duration-300 group"
         aria-label={t.ui.contactWhatsapp}
       >
       <svg

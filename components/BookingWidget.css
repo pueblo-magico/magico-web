@@ -704,6 +704,7 @@
 
 .booking-active-reservation {
   width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
   border: 1px solid rgba(0, 83, 51, .22);
   border-radius: 22px;
