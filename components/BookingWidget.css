@@ -777,24 +777,48 @@
   font-weight: 800;
 }
 
-.booking-active-reservation__link {
-  display: block;
-  padding: 10px 18px 12px;
+.booking-active-reservation__footer {
+  display: flex;
   border-top: 1px solid rgba(0, 83, 51, .1);
+}
+
+.booking-active-reservation__link,
+.booking-active-reservation__discard {
+  flex: 1;
+  padding: 10px 18px 12px;
+  border: 0;
+  background: transparent;
   color: #00653e;
+  cursor: pointer;
+  font-family: inherit;
   font-size: .76rem;
   font-weight: 800;
   text-align: center;
   text-decoration: none;
 }
 
-.booking-active-reservation__link:hover {
+.booking-active-reservation__discard {
+  border-left: 1px solid rgba(0, 83, 51, .1);
+  color: #9c392f;
+}
+
+.booking-active-reservation__link:hover,
+.booking-active-reservation__discard:hover {
   background: rgba(0, 83, 51, .05);
   text-decoration: underline;
 }
 
 .booking-active-reservation--confirmed {
   border-color: rgba(0, 128, 82, .34);
+}
+
+.booking-active-reservation--expired {
+  border-color: rgba(181, 59, 49, .3);
+}
+
+.booking-active-reservation--expired .booking-active-reservation__icon {
+  background: #fff0ed;
+  color: #a4382f;
 }
 
 .booking-button--payment {

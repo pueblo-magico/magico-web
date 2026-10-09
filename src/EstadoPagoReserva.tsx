@@ -5,6 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { WA_MAGICO } from './data/config';
 import {
   getPublicReservationStatus,
+  remainingSeconds,
   type PublicReservationStatus,
 } from '../components/booking/bookingApi';
 import './EstadoPagoReserva.css';
@@ -19,6 +20,8 @@ const COPY = {
     confirmedCopy: 'Tu reserva está confirmada. Guardá el código para cualquier consulta.',
     pending: 'Pago pendiente de confirmación',
     pendingCopy: 'Tu lugar sigue retenido mientras esperamos la confirmación del pago.',
+    expired: 'La retención venció',
+    expiredCopy: 'El lugar ya no está retenido y esta reserva ya no admite pagos.',
     failed: 'El pago no se confirmó',
     failedCopy: 'No confirmamos ningún cobro. Podés volver a la estadía y pedir ayuda para completar la reserva.',
     code: 'Código de reserva', back: 'Volver a estadías', help: 'Necesito ayuda', notFound: 'No pudimos consultar esta reserva.',
@@ -30,6 +33,8 @@ const COPY = {
     confirmedCopy: 'Your reservation is confirmed. Keep the code for any questions.',
     pending: 'Payment pending confirmation',
     pendingCopy: 'Your place remains held while we wait for payment confirmation.',
+    expired: 'The hold has expired',
+    expiredCopy: 'Your place is no longer being held and this booking no longer accepts payments.',
     failed: 'Payment was not confirmed',
     failedCopy: 'We have not confirmed any charge. Return to the stay page or ask for help to complete the reservation.',
     code: 'Reservation code', back: 'Back to stays', help: 'I need help', notFound: 'We could not retrieve this reservation.',
@@ -44,6 +49,7 @@ export default function EstadoPagoReserva({ returnState }: { returnState: Return
   const [status, setStatus] = useState<PublicReservationStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     if (!code) { setLoading(false); setFailed(true); return; }
@@ -71,11 +77,22 @@ export default function EstadoPagoReserva({ returnState }: { returnState: Return
     return () => { cancelled = true; if (timer) window.clearTimeout(timer); };
   }, [code]);
 
+  useEffect(() => {
+    if (status?.reserva.estado !== 'pendiente_pago' || !status.reserva.expires_at) return;
+    const tick = () => setNow(Date.now());
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [status?.reserva.estado, status?.reserva.expires_at]);
+
   const confirmed = status?.reserva.estado === 'confirmada';
   const rejected = status?.reserva.estado === 'rechazada' || status?.pago.estado === 'rechazado';
-  const visual = confirmed ? 'confirmed' : rejected || returnState === 'failure' ? 'failed' : 'pending';
-  const title = loading ? c.checking : visual === 'confirmed' ? c.confirmed : visual === 'failed' ? c.failed : c.pending;
-  const copy = loading ? c.checkingCopy : visual === 'confirmed' ? c.confirmedCopy : visual === 'failed' ? c.failedCopy : c.pendingCopy;
+  const expired = status?.reserva.estado === 'pendiente_pago' && Boolean(
+    status.reserva.expires_at && remainingSeconds(status.reserva.expires_at, now) === 0,
+  );
+  const visual = confirmed ? 'confirmed' : rejected || expired || returnState === 'failure' ? 'failed' : 'pending';
+  const title = loading ? c.checking : confirmed ? c.confirmed : expired ? c.expired : visual === 'failed' ? c.failed : c.pending;
+  const copy = loading ? c.checkingCopy : confirmed ? c.confirmedCopy : expired ? c.expiredCopy : visual === 'failed' ? c.failedCopy : c.pendingCopy;
   const Icon = loading ? Loader2 : visual === 'confirmed' ? CheckCircle2 : visual === 'failed' ? AlertCircle : Clock3;
 
   return (

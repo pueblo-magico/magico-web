@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Tree, UsersThree, Mountains } from '@phosphor-icons/react';
 import { BookingWidget, G } from './BookingWidget';
+import { WithdrawalAccessLink } from './WithdrawalAccessLink';
 
 const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { t } = useLanguage();
@@ -97,6 +98,7 @@ export const HeroNuevo: React.FC = () => {
             <BookingWidget compact activeViewport="mobile" onOpenChange={setCompactBookingOpen} />
           </div>
         </div>
+        <WithdrawalAccessLink embedded inverse />
 
         {/* Prueba social + links */}
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 16px', marginTop: 14 }}>
@@ -205,6 +207,7 @@ export const HeroNuevo: React.FC = () => {
               <BookingWidget activeViewport="desktop" onOpenChange={setDesktopBookingOpen} />
             </div>
           </div>
+          <WithdrawalAccessLink embedded inverse />
         </div>
 
       </div>

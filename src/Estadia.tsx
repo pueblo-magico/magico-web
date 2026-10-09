@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
 import { BookingWidget } from '../components/BookingWidget';
+import { WithdrawalAccessLink } from '../components/WithdrawalAccessLink';
 import {
   Bed, ForkKnife, Leaf, WifiHigh, Tree, UsersThree,
   CheckCircle, ArrowRight, Sun, Mountains, Campfire,
@@ -260,6 +261,7 @@ const Alojamientos: React.FC = () => {
               </div>}
               <BookingWidget onOpenChange={setBookingOpen} />
             </div>
+            <WithdrawalAccessLink embedded />
           </div>
         </div>
       </div>

@@ -50,7 +50,7 @@ test('el widget actualiza una reserva pendiente y retira las instrucciones de pa
   assert.match(source, /getPublicReservationStatus\(code\)/);
   assert.match(source, /window\.setInterval\(refreshStatus, 10_000\)/);
   assert.match(source, /document\.addEventListener\('visibilitychange', onVisibilityChange\)/);
-  assert.match(source, /reservationConfirmed \? c\.confirmedTitle/);
+  assert.match(source, /reservationConfirmed\s*\?\s*c\.confirmedTitle/);
   assert.match(source, /reservationConfirmed \? \(/);
   assert.match(source, /reservationPending && \(reservation\.pago\?\.estado/);
   assert.match(source, /reservationPending && reservation\.transferencia\?\.estado === 'ready'/);
@@ -67,9 +67,30 @@ test('conserva una reserva activa sin PII y muestra acceso persistente al cerrar
   assert.match(source, /booking-active-reservation/);
   assert.match(source, /\/reserva-pendiente/);
   assert.match(source, /if \(!viewportEligible \|\| !code/);
+  assert.match(source, /reservationExpired = Boolean/);
+  assert.match(source, /remainingSeconds\(reservation\.reserva\.expires_at\) === 0/);
+  assert.match(source, /reservationExpired && <button className="booking-active-reservation__discard"/);
+  assert.match(source, /reservationExpired\s*\?\s*c\.expiredTitle/);
   assert.doesNotMatch(source, /context:\s*\{[^}]*guest/s);
   assert.doesNotMatch(source, /context:\s*\{[^}]*payerDni/s);
   assert.match(styles, /\.booking-active-reservation\s*\{[^}]*position:\s*fixed/s);
+});
+
+test('mantiene sincronizada la página pública cuando vence la retención', () => {
+  const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
+  assert.match(source, /remainingSeconds\(status\.reserva\.expires_at, now\) === 0/);
+  assert.match(source, /expired \? c\.expired/);
+  assert.match(source, /window\.setInterval\(tick, 1000\)/);
+});
+
+test('ubica el botón de arrepentimiento debajo de los widgets de reserva principales', () => {
+  const access = readFileSync(new URL('../../components/WithdrawalAccessLink.tsx', import.meta.url), 'utf8');
+  const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  assert.match(access, /embedded\?: boolean/);
+  assert.match(access, /location\.pathname === '\/' \|\| location\.pathname === ROUTES\.ESTADIA/);
+  assert.equal((home.match(/<WithdrawalAccessLink embedded inverse \/>/g) || []).length, 2);
+  assert.match(stay, /<WithdrawalAccessLink embedded \/>/);
 });
 
 test('oculta el encabezado promocional mientras el checkout está abierto', () => {

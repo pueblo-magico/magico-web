@@ -63,6 +63,8 @@ const COPY = {
     confirmedNotice: 'La reserva fue confirmada. No realices otro pago desde esta pantalla.',
     closedTitle: 'La reserva ya no está pendiente',
     closedCopy: 'Esta reserva ya no admite pagos. Iniciá una nueva reserva o comunicate con el equipo.',
+    expiredTitle: 'La retención venció',
+    expiredCopy: 'El lugar ya no está retenido. Podés descartar esta reserva o iniciar una nueva.',
     reservationCode: 'Código de reserva', retention: 'Tiempo restante para realizar la seña',
     expired: 'La retención venció. Iniciá una nueva reserva para verificar disponibilidad nuevamente.',
     paymentTitle: 'Destino de transferencia', mockWarning: 'Simulado · no usar para cobros reales',
@@ -75,7 +77,8 @@ const COPY = {
     manualPayment: 'El equipo te enviará las instrucciones de pago. Tu reserva ya quedó registrada.',
     whatsapp: 'Abrir conversación', newBooking: 'Nueva reserva', genericError: 'No pudimos completar la solicitud.',
     retry: 'Reintentar', activePending: 'Reserva pendiente', activeConfirmed: 'Reserva confirmada',
-    activeClosed: 'Reserva finalizada', openReservation: 'Abrir reserva', viewStatus: 'Ver estado',
+    activeExpired: 'Retención vencida', activeClosed: 'Reserva finalizada', openReservation: 'Abrir reserva',
+    viewStatus: 'Ver estado', discard: 'Descartar',
   },
   en: {
     launcherEyebrow: 'Book online', launcherTitle: 'Find your place in the mountains',
@@ -109,6 +112,8 @@ const COPY = {
     confirmedNotice: 'The booking has been confirmed. Do not make another payment from this screen.',
     closedTitle: 'This booking is no longer pending',
     closedCopy: 'This booking no longer accepts payments. Start a new booking or contact our team.',
+    expiredTitle: 'The hold has expired',
+    expiredCopy: 'Your place is no longer being held. You can dismiss this booking or start a new one.',
     retention: 'Time remaining to make the deposit',
     expired: 'The hold has expired. Start a new reservation to check availability again.',
     paymentTitle: 'Transfer destination', mockWarning: 'Simulation · do not use for real payments',
@@ -121,7 +126,8 @@ const COPY = {
     manualPayment: 'Our team will send payment instructions. Your reservation has already been registered.',
     whatsapp: 'Open conversation', newBooking: 'New reservation', genericError: 'We could not complete the request.',
     retry: 'Try again', activePending: 'Pending booking', activeConfirmed: 'Booking confirmed',
-    activeClosed: 'Booking closed', openReservation: 'Open booking', viewStatus: 'View status',
+    activeExpired: 'Hold expired', activeClosed: 'Booking closed', openReservation: 'Open booking',
+    viewStatus: 'View status', discard: 'Dismiss',
   },
 } as const;
 
@@ -365,12 +371,15 @@ export const BookingWidget: React.FC<{
 
   useEffect(() => {
     const code = reservation?.reserva.codigo;
-    if (!viewportEligible || !code || reservation.reserva.estado !== 'pendiente_pago') return;
+    const expiresAt = reservation?.reserva.expires_at;
+    if (!viewportEligible || !code || reservation.reserva.estado !== 'pendiente_pago' ||
+        (expiresAt && remainingSeconds(expiresAt) === 0)) return;
 
     let cancelled = false;
     let checking = false;
     const refreshStatus = async () => {
-      if (checking || document.visibilityState === 'hidden') return;
+      if (checking || document.visibilityState === 'hidden' ||
+          (expiresAt && remainingSeconds(expiresAt) === 0)) return;
       checking = true;
       try {
         const status = await getPublicReservationStatus(code);
@@ -401,7 +410,7 @@ export const BookingWidget: React.FC<{
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [viewportEligible, reservation?.reserva.codigo, reservation?.reserva.estado]);
+  }, [viewportEligible, reservation?.reserva.codigo, reservation?.reserva.estado, reservation?.reserva.expires_at]);
 
   const quoteRequest: QuoteRequest = {
     check_in: checkIn, check_out: checkOut, personas: people,
@@ -520,10 +529,26 @@ export const BookingWidget: React.FC<{
   const stayNights = checkIn && checkOut
     ? Math.max(0, Math.round((Date.parse(`${checkOut}T12:00:00Z`) - Date.parse(`${checkIn}T12:00:00Z`)) / 86_400_000))
     : 0;
-  const reservationPending = reservation?.reserva.estado === 'pendiente_pago';
+  const reservationServerPending = reservation?.reserva.estado === 'pendiente_pago';
+  const reservationExpired = Boolean(
+    reservationServerPending && reservation?.reserva.expires_at && remainingSeconds(reservation.reserva.expires_at) === 0,
+  );
+  const reservationPending = reservationServerPending && !reservationExpired;
   const reservationConfirmed = reservation?.reserva.estado === 'confirmada';
-  const reservationTitle = reservationConfirmed ? c.confirmedTitle : reservationPending ? c.pendingTitle : c.closedTitle;
-  const reservationCopy = reservationConfirmed ? c.confirmedCopy : reservationPending ? c.pendingCopy : c.closedCopy;
+  const reservationTitle = reservationConfirmed
+    ? c.confirmedTitle
+    : reservationExpired
+      ? c.expiredTitle
+      : reservationPending
+        ? c.pendingTitle
+        : c.closedTitle;
+  const reservationCopy = reservationConfirmed
+    ? c.confirmedCopy
+    : reservationExpired
+      ? c.expiredCopy
+      : reservationPending
+        ? c.pendingCopy
+        : c.closedCopy;
   const reservationStatusUrl = reservation
     ? `${reservationPending ? '/reserva-pendiente' : reservationConfirmed ? '/reserva-confirmada' : '/reserva-fallida'}?reserva=${encodeURIComponent(reservation.reserva.codigo)}`
     : '';
@@ -565,9 +590,11 @@ export const BookingWidget: React.FC<{
                   <p className="booking-result__code">{c.reservationCode}: <strong>{reservation.reserva.codigo}</strong></p>
                   {reservationConfirmed ? (
                     <div className="booking-notice booking-notice--success"><CheckCircle2 size={20} aria-hidden="true" /> {c.confirmedNotice}</div>
-                  ) : reservationPending && (reservationSeconds > 0
-                    ? <div className="booking-countdown"><Clock3 size={18} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</div>
-                    : <div className="booking-notice booking-notice--error"><AlertCircle size={20} aria-hidden="true" /> {c.expired}</div>)}
+                  ) : reservationExpired ? (
+                    <div className="booking-notice booking-notice--error"><AlertCircle size={20} aria-hidden="true" /> {c.expired}</div>
+                  ) : reservationPending && (
+                    <div className="booking-countdown"><Clock3 size={18} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</div>
+                  )}
 
                   {quote && (
                     <div className="booking-summary booking-summary--result">
@@ -761,19 +788,26 @@ export const BookingWidget: React.FC<{
       </div>
 
       {!open && viewportEligible && reservation && (
-        <aside className={`booking-active-reservation ${reservationConfirmed ? 'booking-active-reservation--confirmed' : ''}`} aria-live="polite">
+        <aside className={`booking-active-reservation ${reservationConfirmed ? 'booking-active-reservation--confirmed' : ''} ${reservationExpired ? 'booking-active-reservation--expired' : ''}`} aria-live="polite">
           <button className="booking-active-reservation__open" type="button" onClick={() => setOpen(true)} aria-label={c.openReservation}>
             <span className="booking-active-reservation__icon">
-              {reservationConfirmed ? <CheckCircle2 size={22} aria-hidden="true" /> : <MessageCircle size={22} aria-hidden="true" />}
+              {reservationConfirmed
+                ? <CheckCircle2 size={22} aria-hidden="true" />
+                : reservationExpired
+                  ? <AlertCircle size={22} aria-hidden="true" />
+                  : <MessageCircle size={22} aria-hidden="true" />}
             </span>
             <span className="booking-active-reservation__content">
-              <strong>{reservationConfirmed ? c.activeConfirmed : reservationPending ? c.activePending : c.activeClosed}</strong>
+              <strong>{reservationConfirmed ? c.activeConfirmed : reservationExpired ? c.activeExpired : reservationPending ? c.activePending : c.activeClosed}</strong>
               <small>{reservation.reserva.codigo}</small>
               {reservationPending && reservationSeconds > 0 && <span><Clock3 size={14} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</span>}
             </span>
             <span className="booking-active-reservation__action">{c.openReservation}</span>
           </button>
-          <a className="booking-active-reservation__link" href={reservationStatusUrl}>{c.viewStatus}</a>
+          <div className="booking-active-reservation__footer">
+            <a className="booking-active-reservation__link" href={reservationStatusUrl}>{c.viewStatus}</a>
+            {reservationExpired && <button className="booking-active-reservation__discard" type="button" onClick={startAgain}>{c.discard}</button>}
+          </div>
         </aside>
       )}
 
