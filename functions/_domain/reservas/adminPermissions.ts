@@ -13,6 +13,7 @@ export type PermisoAdmin =
   | 'reservas.bloqueos.gestionar'
   | 'reservas.capacidad.solicitar'
   | 'reservas.capacidad.autorizar'
+  | 'reservas.retenciones.expirar'
   | 'integraciones.airbnb.sincronizar'
   | 'integraciones.outbox.leer'
   | 'integraciones.outbox.despachar'
@@ -32,6 +33,7 @@ const TODOS_LOS_PERMISOS: readonly PermisoAdmin[] = [
   'reservas.politicas.gestionar', 'reservas.bloqueos.gestionar',
   'reservas.configuracion.leer', 'reservas.configuracion.gestionar',
   'reservas.capacidad.solicitar', 'reservas.capacidad.autorizar',
+  'reservas.retenciones.expirar',
   'integraciones.airbnb.sincronizar', 'integraciones.outbox.leer',
   'integraciones.outbox.despachar', 'integraciones.outbox.reprocesar',
   'consultas.leer', 'metricas.leer',

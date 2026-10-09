@@ -8,6 +8,7 @@ import { construirAlertasOperativas } from '../../functions/_domain/reservas/mvp
 import { D1RepositorioOperacionesMvp } from '../../functions/_infrastructure/d1/D1RepositorioOperacionesMvp.ts';
 import { onRequestGet as consultarEstado } from '../../functions/api/v1/admin/integraciones/estado.ts';
 import { onRequestPost as reprocesarComunicacion } from '../../functions/api/v1/admin/integraciones/comunicaciones/reprocesar.ts';
+import { onRequestPost as expirarRetencionesAdmin } from '../../functions/api/v1/admin/integraciones/retenciones/expirar.ts';
 import { createSessionToken } from '../../functions/_lib/session.ts';
 
 function baseCompleta() {
@@ -202,4 +203,70 @@ test('sólo super admin reprocesa una comunicación con motivo y auditoría', as
     WHERE accion = 'reprocesar_intencion_comunicacion' AND motivo = 'Canal validado por operaciones'
   `).get()?.n, 1);
   sqlite.close();
+});
+
+test('sólo super admin libera retenciones vencidas manualmente y deja auditoría', async () => {
+  const { sqlite, db } = baseCompleta();
+  sembrarFallas(sqlite);
+  sqlite.exec(`
+    UPDATE retenciones_reserva SET expires_at = '2000-01-01T00:00:00.000Z';
+    UPDATE reservas SET hold_expires_at = '2000-01-01T00:00:00.000Z';
+    INSERT INTO usuarios_admin (email, password_hash, rol) VALUES
+      ('viewer@test', 'x', 'viewer'), ('admin@test', 'x', 'super_admin');
+  `);
+  const secret = 'session-secret-seguro-de-al-menos-32-caracteres';
+  const csrf = 'csrf-ops-expire';
+  const viewer = await createSessionToken('viewer@test', secret, csrf);
+  const admin = await createSessionToken('admin@test', secret, csrf);
+  const request = (token: string, csrfHeader = csrf) => new Request(
+    'https://test/api/v1/admin/integraciones/retenciones/expirar', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfHeader,
+        Cookie: `pm_admin_session=${encodeURIComponent(token)}; pm_admin_csrf=${csrf}`,
+      },
+    }
+  );
+  const sinCsrf = await expirarRetencionesAdmin({
+    request: request(admin, ''), env: { DB: db, SESSION_SECRET: secret },
+  });
+  assert.equal(sinCsrf.status, 403);
+  const prohibido = await expirarRetencionesAdmin({
+    request: request(viewer), env: { DB: db, SESSION_SECRET: secret },
+  });
+  assert.equal(prohibido.status, 403);
+
+  const exitoso = await expirarRetencionesAdmin({
+    request: request(admin), env: { DB: db, SESSION_SECRET: secret },
+  });
+  assert.equal(exitoso.status, 200);
+  assert.equal((await exitoso.json() as any).data.expiradas, 1);
+  const reserva = sqlite.prepare(`
+    SELECT estado, estado_flujo FROM reservas WHERE codigo = 'RES-OPS-1'
+  `).get();
+  assert.equal(reserva?.estado, 'cancelada');
+  assert.equal(reserva?.estado_flujo, 'vencida');
+  assert.equal(sqlite.prepare(`
+    SELECT estado FROM retenciones_reserva LIMIT 1
+  `).get()?.estado, 'vencida');
+  assert.equal(sqlite.prepare(`
+    SELECT COUNT(*) n FROM auditoria_admin
+    WHERE accion = 'expirar_retenciones_manual'
+      AND email = 'admin@test'
+      AND metadata_json = '{"expiradas":1}'
+  `).get()?.n, 1);
+
+  const repetido = await expirarRetencionesAdmin({
+    request: request(admin), env: { DB: db, SESSION_SECRET: secret },
+  });
+  assert.equal(repetido.status, 200);
+  assert.equal((await repetido.json() as any).data.expiradas, 0);
+  sqlite.close();
+});
+
+test('el panel ofrece liberar retenciones vencidas con confirmación explícita', () => {
+  const source = readFileSync(new URL('../../src/PanelReservas.tsx', import.meta.url), 'utf8');
+  assert.match(source, /Liberar retenciones vencidas/);
+  assert.match(source, /window\.confirm/);
+  assert.match(source, /\/api\/v1\/admin\/integraciones\/retenciones\/expirar/);
 });

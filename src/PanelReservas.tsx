@@ -2325,6 +2325,31 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
     }
   };
 
+  const expirarRetencionesVencidas = async () => {
+    const cantidad = operaciones?.reservas.retencionesVencidasSinProcesar || 0;
+    if (cantidad === 0) return;
+    if (!window.confirm(
+      `Se liberará el inventario de ${cantidad} reserva${cantidad === 1 ? '' : 's'} cuya retención ya venció. ¿Continuar?`
+    )) return;
+    setProcesando(true);
+    setError('');
+    setMensaje('');
+    try {
+      const res = await adminFetch('/api/v1/admin/integraciones/retenciones/expirar', { method: 'POST' });
+      const body: any = await res.json();
+      if (!res.ok) throw new Error(body.error?.mensaje || body.error || `HTTP ${res.status}`);
+      const expiradas = Number(body.data?.expiradas || 0);
+      setMensaje(expiradas === 1
+        ? 'Se liberó 1 retención vencida y el cambio quedó auditado.'
+        : `Se liberaron ${expiradas} retenciones vencidas y el cambio quedó auditado.`);
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudieron liberar las retenciones vencidas.');
+    } finally {
+      setProcesando(false);
+    }
+  };
+
   const reprocesar = async (eventId: string) => {
     setProcesando(true);
     setError('');
@@ -2431,6 +2456,22 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
           hint={operaciones ? `${operaciones.pagos.aplicadosLast24h} aplicados` : undefined} />
         <MetricCard compact label="Pagos a conciliar" value={operaciones ? String(operaciones.pagos.inconsistentesLast24h) : '—'} />
       </div>
+
+      {esSuperAdmin && (
+        <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-amber-900">Liberar inventario vencido</p>
+            <p className="mt-0.5 text-xs text-amber-800">
+              Vence las retenciones fuera de término y vuelve a dejar disponibles sus plazas.
+            </p>
+          </div>
+          <button type="button" onClick={expirarRetencionesVencidas}
+            disabled={procesando || !operaciones || operaciones.reservas.retencionesVencidasSinProcesar === 0}
+            className={`shrink-0 rounded-lg border border-amber-400 bg-white px-3 py-2 text-xs font-semibold text-amber-900 disabled:opacity-50 ${FOCUS_RING}`}>
+            Liberar retenciones vencidas
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <MetricCard compact label="Pendientes" value={estado ? String(estado.resumen.pending) : '—'} />
