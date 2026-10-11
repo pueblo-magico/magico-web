@@ -36,3 +36,16 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /<SeccionArrepentimientos puedeGestionar=\{puedeEditar\} \/>/);
   assert.match(source, /<SeccionIntegraciones esSuperAdmin=\{esSuperAdmin\} \/>/);
 });
+
+test('separa los eventos de integraciones en categorías accesibles sin ocultar sus acciones', () => {
+  assert.match(source, /type CategoriaEventosIntegracion = 'eventos' \| 'comunicaciones' \| 'mercado_pago'/);
+  assert.match(source, /role="tablist" aria-label="Categorías de eventos de integración"/);
+  assert.match(source, /label: 'Eventos recientes'/);
+  assert.match(source, /label: 'Comunicaciones de reservas'/);
+  assert.match(source, /label: 'Mercado Pago reciente'/);
+  assert.match(source, /categoriaEventosActiva === 'eventos'/);
+  assert.match(source, /categoriaEventosActiva === 'comunicaciones'/);
+  assert.match(source, /categoriaEventosActiva === 'mercado_pago'/);
+  assert.match(source, /reprocesar\(evento\.eventId\)/);
+  assert.match(source, /reprocesarComunicacion\(intencion\.intencionUid\)/);
+});

@@ -2229,6 +2229,7 @@ type EstadoIntegracionesApi = {
   eventos: EventoIntegracionOperativo[];
 };
 type EstadoComunicacionOperativa = 'pendiente' | 'procesando' | 'entregada' | 'sin_canal' | 'dead_letter';
+type CategoriaEventosIntegracion = 'eventos' | 'comunicaciones' | 'mercado_pago';
 type EstadoOperacionesMvpApi = {
   reservas: {
     pendientesPago: number;
@@ -2285,6 +2286,7 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
   const [eventoReproceso, setEventoReproceso] = useState<string | null>(null);
   const [intencionReproceso, setIntencionReproceso] = useState<string | null>(null);
   const [motivo, setMotivo] = useState('');
+  const [categoriaEventosActiva, setCategoriaEventosActiva] = useState<CategoriaEventosIntegracion>('eventos');
 
   const cargar = async () => {
     setCargando(true);
@@ -2487,7 +2489,42 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
         <p className="text-xs text-gray-500">Pendiente más antiguo: hace {fmtDuracion(estado.oldestPendingAgeSeconds)}.</p>
       )}
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white p-1 shadow-sm" role="tablist" aria-label="Categorías de eventos de integración">
+        <div className="flex min-w-max gap-1">
+          {([
+            { key: 'eventos', label: 'Eventos recientes', cantidad: estado?.eventos.length || 0 },
+            { key: 'comunicaciones', label: 'Comunicaciones de reservas', cantidad: operaciones?.comunicaciones.intenciones.length || 0 },
+            { key: 'mercado_pago', label: 'Mercado Pago reciente', cantidad: operaciones?.pagos.eventos.length || 0 },
+          ] as Array<{ key: CategoriaEventosIntegracion; label: string; cantidad: number }>).map(categoria => (
+            <button
+              key={categoria.key}
+              type="button"
+              role="tab"
+              aria-selected={categoriaEventosActiva === categoria.key}
+              aria-controls={`integraciones-panel-${categoria.key}`}
+              id={`integraciones-tab-${categoria.key}`}
+              onClick={() => setCategoriaEventosActiva(categoria.key)}
+              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors ${FOCUS_RING} ${
+                categoriaEventosActiva === categoria.key
+                  ? 'bg-brand text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              {categoria.label}
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${categoriaEventosActiva === categoria.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                {categoria.cantidad}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {categoriaEventosActiva === 'eventos' && <section
+        id="integraciones-panel-eventos"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-eventos"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
         <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Eventos recientes</h3>
         </div>
@@ -2546,9 +2583,14 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             )}
           </ul>
         )}
-      </section>
+      </section>}
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      {categoriaEventosActiva === 'comunicaciones' && <section
+        id="integraciones-panel-comunicaciones"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-comunicaciones"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
         <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Comunicaciones de reservas</h3>
           <p className="mt-1 text-xs text-gray-500">Intenciones durables, sin datos personales. El canal de correo se habilita por separado.</p>
@@ -2602,9 +2644,14 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             <li className="px-5 py-8 text-center text-sm text-gray-400">Todavía no hay comunicaciones registradas.</li>
           )}
         </ul>
-      </section>
+      </section>}
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      {categoriaEventosActiva === 'mercado_pago' && <section
+        id="integraciones-panel-mercado_pago"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-mercado_pago"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
         <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Mercado Pago reciente</h3>
         </div>
@@ -2624,7 +2671,7 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             <li className="px-5 py-8 text-center text-sm text-gray-400">No hay webhooks de Mercado Pago registrados.</li>
           )}
         </ul>
-      </section>
+      </section>}
     </div>
   );
 };
