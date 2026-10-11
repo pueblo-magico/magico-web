@@ -2400,7 +2400,16 @@ type EstadoIntegracionesApi = {
   eventos: EventoIntegracionOperativo[];
 };
 type EstadoComunicacionOperativa = 'pendiente' | 'procesando' | 'entregada' | 'sin_canal' | 'dead_letter';
-type CategoriaEventosIntegracion = 'eventos' | 'comunicaciones' | 'mercado_pago';
+type CategoriaEventosIntegracion = 'eventos' | 'comunicaciones' | 'mercado_pago' | 'aplicaciones';
+type AplicacionApiAdmin = {
+  codigo: string; nombre: string; tipo: string; estado: string; configurada: boolean;
+  registrado_at: string | null; first_used_at: string | null; last_used_at: string | null;
+  request_count: number;
+  endpoints: Array<{
+    method: string; path: string; first_used_at: string | null;
+    last_used_at: string | null; request_count: number;
+  }>;
+};
 type EstadoOperacionesMvpApi = {
   reservas: {
     pendientesPago: number;
@@ -2458,6 +2467,8 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
   const [intencionReproceso, setIntencionReproceso] = useState<string | null>(null);
   const [motivo, setMotivo] = useState('');
   const [categoriaEventosActiva, setCategoriaEventosActiva] = useState<CategoriaEventosIntegracion>('eventos');
+  const [aplicaciones, setAplicaciones] = useState<AplicacionApiAdmin[] | null>(null);
+  const [cargandoAplicaciones, setCargandoAplicaciones] = useState(false);
 
   const cargar = async () => {
     setCargando(true);
@@ -2480,6 +2491,27 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
   };
 
   useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cargarAplicaciones = async () => {
+    if (!esSuperAdmin) return;
+    setCargandoAplicaciones(true);
+    setError('');
+    try {
+      const response = await adminFetch('/api/v1/admin/integraciones/aplicaciones');
+      const body: any = await response.json();
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      setAplicaciones(body.data?.aplicaciones || []);
+    } catch (cause: any) {
+      setError(cause.message || 'No se pudo consultar el registro de aplicaciones API.');
+    } finally {
+      setCargandoAplicaciones(false);
+    }
+  };
+
+  useEffect(() => {
+    if (categoriaEventosActiva === 'aplicaciones' && aplicaciones === null) cargarAplicaciones();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoriaEventosActiva, esSuperAdmin]);
 
   const despachar = async () => {
     setProcesando(true);
@@ -2666,6 +2698,7 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             { key: 'eventos', label: 'Eventos recientes', cantidad: estado?.eventos.length || 0 },
             { key: 'comunicaciones', label: 'Comunicaciones de reservas', cantidad: operaciones?.comunicaciones.intenciones.length || 0 },
             { key: 'mercado_pago', label: 'Mercado Pago reciente', cantidad: operaciones?.pagos.eventos.length || 0 },
+            ...(esSuperAdmin ? [{ key: 'aplicaciones' as const, label: 'Aplicaciones API', cantidad: aplicaciones?.length || 0 }] : []),
           ] as Array<{ key: CategoriaEventosIntegracion; label: string; cantidad: number }>).map(categoria => (
             <button
               key={categoria.key}
@@ -2842,6 +2875,56 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             <li className="px-5 py-8 text-center text-sm text-gray-400">No hay webhooks de Mercado Pago registrados.</li>
           )}
         </ul>
+      </section>}
+
+      {categoriaEventosActiva === 'aplicaciones' && esSuperAdmin && <section
+        id="integraciones-panel-aplicaciones"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-aplicaciones"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Aplicaciones registradas y endpoints</h3>
+            <p className="mt-1 text-xs text-gray-500">El seguimiento comienza desde la fecha de registro mostrada. Nunca se exponen credenciales ni valores secretos.</p>
+          </div>
+          <button type="button" onClick={cargarAplicaciones} disabled={cargandoAplicaciones}
+            className={`inline-flex items-center gap-1.5 self-start rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50 ${FOCUS_RING}`}>
+            <RefreshCw size={14} className={cargandoAplicaciones ? 'animate-spin' : ''} aria-hidden="true" /> Actualizar registro
+          </button>
+        </div>
+        {cargandoAplicaciones && aplicaciones === null ? <div className="flex justify-center py-12"><RefreshCw className="animate-spin text-gray-300" aria-label="Cargando aplicaciones" /></div> :
+          <ul className="divide-y divide-gray-100">{(aplicaciones || []).map(aplicacion => <li key={aplicacion.codigo} className="px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong className="text-sm text-gray-800">{aplicacion.nombre}</strong>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${aplicacion.configurada ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{aplicacion.configurada ? 'Configurada' : 'Sin credencial'}</span>
+                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">{aplicacion.tipo.replace('_', ' ')}</span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Código: {aplicacion.codigo} · registrada {aplicacion.registrado_at ? fmtFechaHora(aplicacion.registrado_at) : 'sin fecha disponible'}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-xs lg:text-right">
+                <div><span className="block text-gray-400">Primer uso</span><strong className="font-medium text-gray-700">{aplicacion.first_used_at ? fmtFechaHora(aplicacion.first_used_at) : 'Sin uso'}</strong></div>
+                <div><span className="block text-gray-400">Último uso</span><strong className="font-medium text-gray-700">{aplicacion.last_used_at ? fmtFechaHora(aplicacion.last_used_at) : 'Sin uso'}</strong></div>
+                <div><span className="block text-gray-400">Solicitudes</span><strong className="font-medium text-gray-700">{aplicacion.request_count}</strong></div>
+              </div>
+            </div>
+            {aplicacion.endpoints.length > 0 ? <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+              <table className="min-w-[720px] w-full text-left text-xs">
+                <thead className="bg-gray-50 text-gray-500"><tr><th className="px-3 py-2">Método</th><th className="px-3 py-2">Endpoint</th><th className="px-3 py-2">Primer uso</th><th className="px-3 py-2">Último uso</th><th className="px-3 py-2 text-right">Solicitudes</th></tr></thead>
+                <tbody>{aplicacion.endpoints.map(endpoint => <tr key={`${endpoint.method}-${endpoint.path}`} className="border-t border-gray-100">
+                  <td className="px-3 py-2"><span className="rounded bg-gray-100 px-2 py-1 font-mono font-semibold text-gray-700">{endpoint.method}</span></td>
+                  <td className="px-3 py-2 font-mono text-gray-700">{endpoint.path}</td>
+                  <td className="px-3 py-2 text-gray-500">{endpoint.first_used_at ? fmtFechaHora(endpoint.first_used_at) : '—'}</td>
+                  <td className="px-3 py-2 text-gray-500">{endpoint.last_used_at ? fmtFechaHora(endpoint.last_used_at) : '—'}</td>
+                  <td className="px-3 py-2 text-right font-semibold text-gray-700">{endpoint.request_count}</td>
+                </tr>)}</tbody>
+              </table>
+            </div> : <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500">Identidad registrada, sin endpoint implementado actualmente.</p>}
+          </li>)}
+          {!cargandoAplicaciones && aplicaciones?.length === 0 && <li className="px-5 py-10 text-center text-sm text-gray-400">No hay aplicaciones registradas.</li>}
+          </ul>}
       </section>}
     </div>
   );

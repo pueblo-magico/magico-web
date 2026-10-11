@@ -18,6 +18,7 @@ export type PermisoAdmin =
   | 'integraciones.outbox.leer'
   | 'integraciones.outbox.despachar'
   | 'integraciones.outbox.reprocesar'
+  | 'integraciones.clientes.leer'
   | 'consultas.leer'
   | 'metricas.leer'
   | 'usuarios.gestionar'
@@ -36,6 +37,7 @@ const TODOS_LOS_PERMISOS: readonly PermisoAdmin[] = [
   'reservas.retenciones.expirar',
   'integraciones.airbnb.sincronizar', 'integraciones.outbox.leer',
   'integraciones.outbox.despachar', 'integraciones.outbox.reprocesar',
+  'integraciones.clientes.leer',
   'consultas.leer', 'metricas.leer',
   'usuarios.gestionar', 'auditoria.leer',
   'datos_personales.exportar', 'datos_personales.anonimizar',

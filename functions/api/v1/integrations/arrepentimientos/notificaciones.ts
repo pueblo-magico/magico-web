@@ -6,6 +6,7 @@ import { D1RepositorioNotificacionesArrepentimiento } from '../../../../_infrast
 import {
   autenticarIntegracionReservas,
   errorIntegracion,
+  registrarUsoIntegracionReservas,
   respuestaIntegracion,
 } from '../../../../_interfaces/http/integrationApiV1.ts';
 import { observarSolicitud } from '../../../../_interfaces/http/observability.ts';
@@ -14,6 +15,7 @@ import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../_interfaces/h
 async function procesar(request: Request, env: any): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'comunicaciones:entregar');
   if (identidad instanceof Response) return identidad;
+  await registrarUsoIntegracionReservas(request, env, identidad);
   let body: Record<string, any>;
   try {
     body = await leerJsonSeguro(request);

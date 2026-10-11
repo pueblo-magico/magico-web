@@ -4,6 +4,7 @@ import { cucuruHabilitado } from '../../../../_domain/reservas/collectionAccount
 import { CucuruClienteHttp } from '../../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
 import { resolverModoCuentasCobro } from '../../../../_infrastructure/cucuru/CucuruProveedorCuentasCobroMock.ts';
 import { D1RepositorioBackfillCucuru } from '../../../../_infrastructure/d1/D1RepositorioBackfillCucuru.ts';
+import { registrarUsoAplicacionApi } from '../../../../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import { D1RepositorioConciliacionCucuru } from '../../../../_infrastructure/d1/D1RepositorioConciliacionCucuru.ts';
 import { jsonReserva as json } from '../../../../_interfaces/http/reservasHttp.ts';
 import { autenticarServicio } from '../../../../_interfaces/http/serviceAuth.ts';
@@ -14,6 +15,7 @@ export async function onRequestPost({ request, env }: any) {
   if (!autenticarServicio('n8n', secreto, env, 'pagos:conciliar')) {
     return json({ error: 'No autorizado.' }, 401);
   }
+  await registrarUsoAplicacionApi(env.DB, 'n8n', request.method, '/api/v1/integrations/cucuru/backfill');
   if (!cucuruHabilitado(env.CUCURU_TRANSFER_ENABLED)) {
     return json({ error: 'Cucuru está desactivado.' }, 409);
   }

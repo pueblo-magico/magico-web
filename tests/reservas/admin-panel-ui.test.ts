@@ -52,14 +52,18 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
 });
 
 test('separa los eventos de integraciones en categorías accesibles sin ocultar sus acciones', () => {
-  assert.match(source, /type CategoriaEventosIntegracion = 'eventos' \| 'comunicaciones' \| 'mercado_pago'/);
+  assert.match(source, /type CategoriaEventosIntegracion = 'eventos' \| 'comunicaciones' \| 'mercado_pago' \| 'aplicaciones'/);
   assert.match(source, /role="tablist" aria-label="Categorías de eventos de integración"/);
   assert.match(source, /label: 'Eventos recientes'/);
   assert.match(source, /label: 'Comunicaciones de reservas'/);
   assert.match(source, /label: 'Mercado Pago reciente'/);
+  assert.match(source, /label: 'Aplicaciones API'/);
   assert.match(source, /categoriaEventosActiva === 'eventos'/);
   assert.match(source, /categoriaEventosActiva === 'comunicaciones'/);
   assert.match(source, /categoriaEventosActiva === 'mercado_pago'/);
+  assert.match(source, /categoriaEventosActiva === 'aplicaciones'/);
+  assert.match(source, /\/api\/v1\/admin\/integraciones\/aplicaciones/);
+  assert.match(source, /Aplicaciones registradas y endpoints/);
   assert.match(source, /reprocesar\(evento\.eventId\)/);
   assert.match(source, /reprocesarComunicacion\(intencion\.intencionUid\)/);
 });

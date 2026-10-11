@@ -15,6 +15,7 @@
 
 import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMercadoPago.ts';
 import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
+import { registrarUsoAplicacionApi } from '../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { ErrorProveedorPagosTransitorio } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
@@ -81,6 +82,7 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
     return new Response('Firma inválida', { status: 401 });
   }
+  await registrarUsoAplicacionApi(env.DB, 'mercado_pago', request.method, '/api/webhook-mp');
 
   try {
     await procesarPagoMercadoPago(

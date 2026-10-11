@@ -3,6 +3,7 @@ import { cotizarEstadia } from '../../../../_lib/cotizador.ts';
 import {
   autenticarIntegracionReservas,
   errorIntegracion,
+  registrarUsoIntegracionReservas,
   respuestaIntegracion,
 } from '../../../../_interfaces/http/integrationApiV1.ts';
 import { observarSolicitud } from '../../../../_interfaces/http/observability.ts';
@@ -12,6 +13,7 @@ import { leerJsonSeguro } from '../../../../_interfaces/http/requestSecurity.ts'
 async function cotizar(request: Request, env: any): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'reservas:cotizar');
   if (identidad instanceof Response) return identidad;
+  await registrarUsoIntegracionReservas(request, env, identidad);
   const limitada = respuestaLimite(await consumirLimite(
     request, env, 'integracion.v1.cotizaciones', 60, 60, `integracion:${identidad}`
   ));

@@ -5,6 +5,7 @@ import { D1RepositorioDisponibilidad } from '../../../../_infrastructure/d1/D1Re
 import {
   autenticarIntegracionReservas,
   errorIntegracion,
+  registrarUsoIntegracionReservas,
   respuestaIntegracion,
 } from '../../../../_interfaces/http/integrationApiV1.ts';
 import { observarSolicitud } from '../../../../_interfaces/http/observability.ts';
@@ -25,6 +26,7 @@ const statusPorCodigo: Record<string, number> = {
 async function crear(request: Request, env: any): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'reservas:crear');
   if (identidad instanceof Response) return identidad;
+  await registrarUsoIntegracionReservas(request, env, identidad);
   const limitada = respuestaLimite(await consumirLimite(
     request, env, 'integracion.v1.reservas', 30, 60, `integracion:${identidad}`
   ));
