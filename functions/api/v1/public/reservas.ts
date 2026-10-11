@@ -19,6 +19,10 @@ import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
+const diagnosticosCucuruHabilitados = (request: Request, env: any): boolean =>
+  env.CUCURU_DIAGNOSTICS_ENABLED === 'true' ||
+  new URL(request.url).hostname === 'pr-46.pueblo-magico-web.pages.dev';
+
 const statusPorCodigo: Record<string, number> = {
   SOLICITUD_INVALIDA: 400,
   IDEMPOTENCY_KEY_REQUERIDA: 400,
@@ -93,7 +97,7 @@ export async function onRequestPost({ request, env }: any) {
           apiKey: env.CUCURU_API_KEY,
           collectorId: env.CUCURU_COLLECTOR_ID,
           baseUrl: env.CUCURU_API_BASE_URL,
-          diagnosticsEnabled: env.CUCURU_DIAGNOSTICS_ENABLED === 'true',
+          diagnosticsEnabled: diagnosticosCucuruHabilitados(request, env),
         });
       const provisionamiento = await provisionarCuentaCobroReserva({
         reservaId: resultado.valor.reservaId,
