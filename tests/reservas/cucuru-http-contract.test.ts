@@ -190,6 +190,61 @@ test('clasifica el estado HTTP de Cucuru sin persistir el cuerpo del proveedor',
   );
 });
 
+test('diagnostica respuestas HTTP solo con activación explícita y datos sanitizados', async () => {
+  const errores: string[] = [];
+  const consoleErrorOriginal = console.error;
+  console.error = (...args: unknown[]) => errores.push(args.map(String).join(' '));
+  try {
+    const response = () => new Response(JSON.stringify({
+      message: 'denied',
+      api_key: configuracion.apiKey,
+      collector_id: configuracion.collectorId,
+      token: 'token-super-secreto',
+    }), {
+      status: 403,
+      headers: {
+        'Content-Type': 'application/json',
+        'Server': 'security-gateway',
+        'Set-Cookie': 'sesion=secreta',
+        'X-Request-ID': 'cucuru-request-123',
+      },
+    });
+    const desactivado = new CucuruClienteHttp(configuracion, async () => response());
+    await assert.rejects(
+      desactivado.buscarPorCustomerId('pm-reserva-diagnostico-off'),
+      (error: any) => error.codigo === 'CUCURU_HTTP_403'
+    );
+    assert.equal(errores.length, 0);
+
+    const activado = new CucuruClienteHttp({
+      ...configuracion,
+      diagnosticsEnabled: true,
+    }, async () => response());
+    await assert.rejects(
+      activado.buscarPorCustomerId('pm-reserva-diagnostico-on'),
+      (error: any) => error.codigo === 'CUCURU_HTTP_403'
+    );
+
+    assert.equal(errores.length, 1);
+    const diagnostico = JSON.parse(errores[0]);
+    assert.equal(diagnostico.evento, 'cucuru_http_error_diagnostic');
+    assert.equal(diagnostico.operacion, 'GET');
+    assert.equal(diagnostico.path, '/app/v1/Collection/accounts');
+    assert.equal(diagnostico.status, 403);
+    assert.deepEqual(diagnostico.response_headers, {
+      'content-type': 'application/json',
+      'server': 'security-gateway',
+      'x-request-id': 'cucuru-request-123',
+    });
+    assert.equal('set-cookie' in diagnostico.response_headers, false);
+    assert.doesNotMatch(diagnostico.response_body_preview, /api-key-prueba|collector-prueba|token-super-secreto/);
+    assert.match(diagnostico.response_body_preview, /\[REDACTED\]/);
+    assert.equal(diagnostico.response_body_truncated, false);
+  } finally {
+    console.error = consoleErrorOriginal;
+  }
+});
+
 test('normaliza Collections paginadas sin depender de transfer_data ni datos del pagador', async () => {
   const payload = {
     collection_id: 'collection-1',

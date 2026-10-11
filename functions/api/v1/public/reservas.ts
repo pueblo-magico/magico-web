@@ -93,6 +93,7 @@ export async function onRequestPost({ request, env }: any) {
           apiKey: env.CUCURU_API_KEY,
           collectorId: env.CUCURU_COLLECTOR_ID,
           baseUrl: env.CUCURU_API_BASE_URL,
+          diagnosticsEnabled: env.CUCURU_DIAGNOSTICS_ENABLED === 'true',
         });
       const provisionamiento = await provisionarCuentaCobroReserva({
         reservaId: resultado.valor.reservaId,
