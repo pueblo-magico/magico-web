@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
 import {
-  Badge, Button, Card, EmptyState, StatCard, Table, TableBody, TableCell,
+  Badge, Button, Card, EmptyState, Input, Select, StatCard, Table, TableBody, TableCell,
   TableContainer, TableHead, TableHeader, TableRow,
 } from '@pueblo-magico/react-ui';
 import './PanelReservas.css';
@@ -1592,7 +1592,8 @@ type ConfiguracionBaseApi = {
   }>;
   inventario: Array<{
     codigo: string; nombre: string; tipo: string; capacidadComercial: number;
-    capacidadOperativaMaxima: number; estado: string;
+    capacidadOperativaMaxima: number; reservableGeneral: boolean; reservableRetiro: boolean;
+    estado: string; actualizadoAt: string;
     modalidades: Array<{
       id: number; modalidad: string; contexto: string; unidadVenta: string;
       habilitada: boolean; actualizadoAt: string;
@@ -1628,6 +1629,15 @@ type ConfiguracionBaseApi = {
 
 type BorradorTarifaUi = NonNullable<ConfiguracionBaseApi['tarifa']>;
 type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
+type BorradorInventarioUi = ConfiguracionBaseApi['inventario'];
+
+const opcionesModalidadParaEspacio = (espacio: BorradorInventarioUi[number]) => {
+  if (espacio.tipo === 'camping') return [{ value: 'camping', label: 'Camping' }];
+  if (espacio.tipo === 'bell_tent') return [{ value: 'privada', label: 'Privada' }, { value: 'camping', label: 'Camping' }];
+  if (espacio.tipo === 'domo') return [{ value: 'privada', label: 'Privada' }, { value: 'compartida', label: 'Compartida' }];
+  if (espacio.codigo === 'refugio-habitacion-4') return [{ value: 'privada', label: 'Privada' }, { value: 'compartida', label: 'Compartida' }];
+  return [{ value: 'compartida', label: 'Compartida' }];
+};
 
 const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmin }) => {
   const [configuracion, setConfiguracion] = useState<ConfiguracionBaseApi | null>(null);
@@ -1636,6 +1646,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
   const [motivoComercial, setMotivoComercial] = useState('');
   const [tarifaDraft, setTarifaDraft] = useState<BorradorTarifaUi | null>(null);
   const [politicaDraft, setPoliticaDraft] = useState<BorradorPoliticaUi | null>(null);
+  const [inventarioDraft, setInventarioDraft] = useState<BorradorInventarioUi>([]);
   const [vigenciaPolitica, setVigenciaPolitica] = useState('');
   const [preciosComida, setPreciosComida] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
@@ -1654,6 +1665,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
       setValor(String(body.data?.parametros?.[0]?.valor ?? 15));
       setTarifaDraft(body.data?.tarifa ? JSON.parse(JSON.stringify(body.data.tarifa)) : null);
       setPoliticaDraft(body.data?.politicaCancelacion ? JSON.parse(JSON.stringify(body.data.politicaCancelacion)) : null);
+      setInventarioDraft(JSON.parse(JSON.stringify(body.data?.inventario || [])));
       setVigenciaPolitica(body.data?.politicaCancelacion?.vigenciaDesde?.slice(0, 16) || new Date(Date.now() + 60_000).toISOString().slice(0, 16));
       setPreciosComida(Object.fromEntries((body.data?.alimentacion || []).map((item: ConfiguracionBaseApi['alimentacion'][number]) => [
         item.codigo, String(item.precioComidaCentavos / 100),
@@ -1708,16 +1720,48 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     }, 'Plazo actualizado. Sólo afecta reservas nuevas.');
   };
 
-  const cambiarModalidad = async (item: ConfiguracionBaseApi['inventario'][number]['modalidades'][number]) => {
+  const guardarModalidad = async (item: ConfiguracionBaseApi['inventario'][number]['modalidades'][number]) => {
     await ejecutar(`modalidad-${item.id}`, async () => {
       await requestJson('/api/v1/admin/configuracion-reservas', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          accion: 'actualizar_modalidad', id: item.id, habilitada: !item.habilitada,
-          expected_habilitada: item.habilitada, motivo: motivoComercial.trim(),
+          accion: 'actualizar_modalidad', id: item.id, modalidad: item.modalidad,
+          contexto: item.contexto, unidad_venta: item.unidadVenta, habilitada: item.habilitada,
+          expected_updated_at: item.actualizadoAt, motivo: motivoComercial.trim(),
         }),
       });
-    }, `Modalidad ${item.habilitada ? 'deshabilitada' : 'habilitada'} para ventas nuevas.`);
+    }, 'Modalidad y condiciones de venta actualizadas para operaciones nuevas.');
+  };
+
+  const guardarEspacio = async (espacio: ConfiguracionBaseApi['inventario'][number]) => {
+    await ejecutar(`espacio-${espacio.codigo}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_espacio', codigo: espacio.codigo,
+          capacidad_comercial: espacio.capacidadComercial,
+          capacidad_operativa_maxima: espacio.capacidadOperativaMaxima,
+          reservable_general: espacio.reservableGeneral, reservable_retiro: espacio.reservableRetiro,
+          estado: espacio.estado, expected_updated_at: espacio.actualizadoAt,
+          motivo: motivoComercial.trim(),
+        }),
+      });
+    }, 'Condiciones del alojamiento actualizadas para operaciones nuevas.');
+  };
+
+  const actualizarEspacioDraft = (codigo: string, cambio: Partial<BorradorInventarioUi[number]>) => {
+    setInventarioDraft(actual => actual.map(item => item.codigo === codigo ? { ...item, ...cambio } : item));
+  };
+
+  const actualizarModalidadDraft = (
+    codigo: string,
+    id: number,
+    cambio: Partial<BorradorInventarioUi[number]['modalidades'][number]>
+  ) => {
+    setInventarioDraft(actual => actual.map(espacio => espacio.codigo !== codigo ? espacio : {
+      ...espacio,
+      modalidades: espacio.modalidades.map(item => item.id === id ? { ...item, ...cambio } : item),
+    }));
   };
 
   const publicarComida = async (item: ConfiguracionBaseApi['alimentacion'][number]) => {
@@ -1896,15 +1940,76 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
 
       <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Modalidades de reserva</summary>
-        <div className="border-t border-gray-100">
-          {(configuracion?.inventario || []).map(espacio => <div key={espacio.codigo} className="border-b border-gray-100 p-5 last:border-0">
-            <div className="flex flex-col justify-between gap-1 sm:flex-row"><strong>{espacio.nombre}</strong><span className="text-xs text-gray-500">Capacidad comercial {espacio.capacidadComercial} · máximo físico {espacio.capacidadOperativaMaxima}</span></div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">{espacio.modalidades.map(item => <div key={item.id} className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-xs">
-              <span><strong className="capitalize">{item.modalidad}</strong><br /><span className="text-gray-500">{item.contexto} · venta por {item.unidadVenta}</span></span>
-              <button type="button" disabled={!esSuperAdmin || motivoComercial.trim().length < 5 || guardando !== null} onClick={() => cambiarModalidad(item)} className={`rounded-full px-3 py-1 font-semibold disabled:opacity-50 ${item.habilitada ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'} ${FOCUS_RING}`}>{guardando === `modalidad-${item.id}` ? 'Guardando…' : item.habilitada ? 'Habilitada' : 'Deshabilitada'}</button>
-            </div>)}</div>
-          </div>)}
-          <p className="px-5 pb-4 text-xs text-gray-500">Deshabilitar una modalidad evita nuevas cotizaciones; no modifica reservas existentes. Las capacidades siguen siendo un control físico y operativo.</p>
+        <div className="space-y-4 border-t border-gray-100 p-5">
+          <p className="text-xs text-gray-500">Definí cuándo se puede vender cada alojamiento, su capacidad y la unidad que descuenta inventario. Los cambios afectan sólo operaciones nuevas.</p>
+          {inventarioDraft.map(espacio => {
+            const original = configuracion?.inventario.find(item => item.codigo === espacio.codigo);
+            const espacioModificado = Boolean(original) && JSON.stringify({
+              capacidadComercial: espacio.capacidadComercial,
+              capacidadOperativaMaxima: espacio.capacidadOperativaMaxima,
+              reservableGeneral: espacio.reservableGeneral,
+              reservableRetiro: espacio.reservableRetiro,
+              estado: espacio.estado,
+            }) !== JSON.stringify({
+              capacidadComercial: original?.capacidadComercial,
+              capacidadOperativaMaxima: original?.capacidadOperativaMaxima,
+              reservableGeneral: original?.reservableGeneral,
+              reservableRetiro: original?.reservableRetiro,
+              estado: original?.estado,
+            });
+            return <Card key={espacio.codigo} variant="outlined" className="space-y-4 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div><strong>{espacio.nombre}</strong><p className="text-xs text-gray-500">{espacio.codigo} · {espacio.tipo}</p></div>
+                <Badge variant={espacio.estado === 'activo' ? 'success' : espacio.estado === 'inactivo' ? 'danger' : 'warning'}>{espacio.estado === 'activo' ? 'Activo' : espacio.estado === 'inactivo' ? 'Inactivo' : 'Configuración pendiente'}</Badge>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <Input label="Capacidad comercial" type="number" value={String(espacio.capacidadComercial)} isDisabled={!esSuperAdmin}
+                  onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadComercial: Number(value) })} />
+                <Input label="Máximo físico/operativo" type="number" value={String(espacio.capacidadOperativaMaxima)} isDisabled={!esSuperAdmin}
+                  onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadOperativaMaxima: Number(value) })} />
+                <Select label="Estado comercial" placeholder="Elegí un estado" value={espacio.estado} isDisabled={!esSuperAdmin}
+                  options={[{ value: 'activo', label: 'Activo' }, { value: 'configuracion_pendiente', label: 'Configuración pendiente' }, { value: 'inactivo', label: 'Inactivo' }]}
+                  onChange={value => value && actualizarEspacioDraft(espacio.codigo, { estado: value })} />
+              </div>
+              <div className="flex flex-wrap gap-4 text-xs">
+                <label className="flex items-center gap-2"><input type="checkbox" checked={espacio.reservableGeneral} disabled={!esSuperAdmin}
+                  onChange={event => actualizarEspacioDraft(espacio.codigo, { reservableGeneral: event.target.checked })} /> Venta general</label>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={espacio.reservableRetiro} disabled={!esSuperAdmin}
+                  onChange={event => actualizarEspacioDraft(espacio.codigo, { reservableRetiro: event.target.checked })} /> Retiros</label>
+              </div>
+              {espacio.tipo === 'camping' && espacio.estado !== 'activo' && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Para activar Camping: definí una capacidad mayor a cero, habilitá al menos un contexto, guardá estas condiciones y luego habilitá su modalidad. También debe existir una regla de precio publicada para camping.</p>}
+              {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || motivoComercial.trim().length < 5 || !espacioModificado || espacio.capacidadOperativaMaxima < espacio.capacidadComercial}
+                isLoading={guardando === `espacio-${espacio.codigo}`} onPress={() => guardarEspacio(espacio)}>Guardar condiciones del alojamiento</Button>}
+              <div className="grid gap-3 lg:grid-cols-2">{espacio.modalidades.map(item => {
+                const originalModalidad = original?.modalidades.find(actual => actual.id === item.id);
+                const modalidadModificada = Boolean(originalModalidad) && JSON.stringify(item) !== JSON.stringify(originalModalidad);
+                const contextoPermitido = item.contexto === 'general' ? original?.reservableGeneral : original?.reservableRetiro;
+                const puedeHabilitar = original?.estado === 'activo' && (original?.capacidadComercial || 0) > 0 && Boolean(contextoPermitido);
+                return <Card key={item.id} tone="muted" className="space-y-3 p-3">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <Select label="Modalidad" placeholder="Elegí" value={item.modalidad} isDisabled={!esSuperAdmin}
+                      options={opcionesModalidadParaEspacio(espacio)}
+                      onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, {
+                        modalidad: value,
+                        unidadVenta: value === 'privada' ? 'espacio' : value === 'camping' ? 'parcela' : item.unidadVenta === 'parcela' ? 'cama' : item.unidadVenta,
+                      })} />
+                    <Select label="Contexto" placeholder="Elegí" value={item.contexto} isDisabled={!esSuperAdmin}
+                      options={[{ value: 'general', label: 'Venta general' }, { value: 'retiro', label: 'Retiro' }]}
+                      onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, { contexto: value })} />
+                    <Select label="Unidad de venta" placeholder="Elegí" value={item.unidadVenta} isDisabled={!esSuperAdmin}
+                      options={item.modalidad === 'privada' ? [{ value: 'espacio', label: 'Espacio completo' }] : item.modalidad === 'camping' ? [{ value: 'parcela', label: 'Parcela' }] : [{ value: 'cama', label: 'Cama' }, { value: 'espacio', label: 'Espacio completo' }]}
+                      onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, { unidadVenta: value })} />
+                  </div>
+                  <label className="flex items-center gap-2 text-xs font-semibold"><input type="checkbox" checked={item.habilitada} disabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
+                    onChange={event => actualizarModalidadDraft(espacio.codigo, item.id, { habilitada: event.target.checked })} /> Habilitada para reservas nuevas</label>
+                  {!puedeHabilitar && <p className="text-xs text-amber-700">Primero activá el alojamiento, asignale capacidad y habilitá el contexto seleccionado.</p>}
+                  {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || motivoComercial.trim().length < 5 || !modalidadModificada || (item.habilitada && !puedeHabilitar)}
+                    isLoading={guardando === `modalidad-${item.id}`} onPress={() => guardarModalidad(item)}>Guardar modalidad</Button>}
+                </Card>;
+              })}</div>
+            </Card>;
+          })}
+          <p className="text-xs text-gray-500">Deshabilitar una modalidad evita nuevas cotizaciones; no modifica reservas existentes. La activación comercial no reemplaza la regla de precio publicada ni crea unidades físicas.</p>
         </div>
       </details>
 
@@ -2005,6 +2110,7 @@ const ACCION_LABEL: Record<string, string> = {
   cancelar_estadia_no_comercial: 'Canceló una estadía no comercial',
   actualizar_configuracion_reservas: 'Actualizó configuración de reservas',
   actualizar_modalidad_comercial: 'Actualizó una modalidad comercial',
+  actualizar_espacio_comercial: 'Actualizó condiciones comerciales de un alojamiento',
   publicar_tarifa_alimentacion: 'Publicó una tarifa de alimentación',
   crear_borrador_tarifa: 'Creó un borrador de precios',
   publicar_plan_tarifa: 'Publicó precios y seña',
@@ -3217,7 +3323,7 @@ const PanelReservas: React.FC = () => {
 
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Navegación del panel">
-          <div className="admin-sidebar__brand"><span className="admin-sidebar__mark" aria-hidden="true" /><strong>PUEBLO MÁGICO</strong><small>Reservas</small></div>
+          <div className="admin-sidebar__brand"><img src="/uploads/pueblo_magico_logo_marron.svg" alt="Pueblo Mágico" /><small>Reservas</small></div>
           <nav className="admin-sidebar__nav" aria-label="Principal">{navPrincipal.map(navButton)}</nav>
           <p className="admin-sidebar__section">Operaciones</p>
           <nav className="admin-sidebar__nav" aria-label="Operaciones">{navOperaciones.map(navButton)}</nav>
@@ -3233,7 +3339,7 @@ const PanelReservas: React.FC = () => {
         <div className="admin-workspace">
           <header className="admin-topbar">
             <div className="admin-topbar__identity"><p>Administración de reservas</p><h1>Pueblo Mágico</h1></div>
-            <span className="admin-mobile-brand">Pueblo Mágico Reservas</span>
+            <span className="admin-mobile-brand"><img src="/uploads/pueblo_magico_logo_marron.svg" alt="Pueblo Mágico" /><span>Reservas</span></span>
             <div className="admin-topbar__actions">
               <span className="admin-date-chip"><CalendarDays size={16} aria-hidden="true" /> {fmtDateLong(fechaOperativaLocal(new Date()))}</span>
               {esSuperAdmin && (

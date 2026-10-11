@@ -66,9 +66,11 @@ import type {
 } from '../../_domain/reservas/collectionAccounts.ts';
 import type {
   CambioModalidadComercial,
+  CambioEspacioComercial,
   CambioParametroOperativo,
   CambioTarifaAlimentacion,
   ConfiguracionBaseReservas,
+  EspacioComercialActualizado,
   ModalidadComercialActualizada,
   ParametroOperativoReserva,
   TarifaAlimentacionActualizada,
@@ -262,6 +264,11 @@ export interface RepositorioConfiguracionBaseReservas {
     correlationId: string;
     operacionUid: string;
   }): Promise<ModalidadComercialActualizada | null>;
+  actualizarEspacio(entrada: CambioEspacioComercial & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<EspacioComercialActualizado | null>;
   publicarTarifaAlimentacion(entrada: CambioTarifaAlimentacion & {
     actorEmail: string;
     correlationId: string;

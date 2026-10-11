@@ -44,6 +44,12 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /Modalidades de reserva/);
   assert.match(source, /Política de cancelación/);
   assert.match(source, /accion: 'actualizar_modalidad'/);
+  assert.match(source, /accion: 'actualizar_espacio'/);
+  assert.match(source, /Capacidad comercial/);
+  assert.match(source, /Venta general/);
+  assert.match(source, /Estado comercial/);
+  assert.match(source, /opcionesModalidadParaEspacio/);
+  assert.match(source, /pueblo_magico_logo_marron\.svg/);
   assert.match(source, /accion: 'publicar_tarifa_alimentacion'/);
   assert.match(source, /requestJson\('\/api\/admin\/tarifas'/);
   assert.match(source, /requestJson\('\/api\/admin\/politicas-reserva'/);

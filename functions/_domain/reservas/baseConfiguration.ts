@@ -28,7 +28,10 @@ export type ConfiguracionBaseReservas = {
     tipo: string;
     capacidadComercial: number;
     capacidadOperativaMaxima: number;
+    reservableGeneral: boolean;
+    reservableRetiro: boolean;
     estado: string;
+    actualizadoAt: string;
     modalidades: Array<{
       id: number;
       modalidad: string;
@@ -92,9 +95,35 @@ export type ConfiguracionBaseReservas = {
 
 export type CambioModalidadComercial = {
   id: number;
+  modalidad: 'privada' | 'compartida' | 'camping';
+  contexto: 'general' | 'retiro';
+  unidadVenta: 'espacio' | 'cama' | 'parcela';
   habilitada: boolean;
-  expectedHabilitada: boolean;
+  expectedUpdatedAt: string;
   motivo: string;
+};
+
+export type CambioEspacioComercial = {
+  codigo: string;
+  capacidadComercial: number;
+  capacidadOperativaMaxima: number;
+  reservableGeneral: boolean;
+  reservableRetiro: boolean;
+  estado: 'activo' | 'configuracion_pendiente' | 'inactivo';
+  expectedUpdatedAt: string;
+  motivo: string;
+};
+
+export type EspacioComercialActualizado = {
+  codigo: string;
+  nombre: string;
+  tipo: string;
+  capacidadComercial: number;
+  capacidadOperativaMaxima: number;
+  reservableGeneral: boolean;
+  reservableRetiro: boolean;
+  estado: string;
+  actualizadoAt: string;
 };
 
 export type CambioTarifaAlimentacion = {
@@ -147,10 +176,35 @@ function validarMotivo(motivoEntrada: string): string {
 
 export function validarCambioModalidadComercial(entrada: CambioModalidadComercial): CambioModalidadComercial {
   if (!Number.isSafeInteger(entrada.id) || entrada.id < 1 ||
-      typeof entrada.habilitada !== 'boolean' || typeof entrada.expectedHabilitada !== 'boolean') {
+      !['privada', 'compartida', 'camping'].includes(entrada.modalidad) ||
+      !['general', 'retiro'].includes(entrada.contexto) ||
+      !['espacio', 'cama', 'parcela'].includes(entrada.unidadVenta) ||
+      typeof entrada.habilitada !== 'boolean' || !entrada.expectedUpdatedAt) {
     throw new ErrorReserva('DATOS_INVALIDOS', 'La modalidad comercial es inválida.');
   }
+  const unidadValida = entrada.modalidad === 'privada'
+    ? entrada.unidadVenta === 'espacio'
+    : entrada.modalidad === 'camping'
+      ? entrada.unidadVenta === 'parcela'
+      : ['cama', 'espacio'].includes(entrada.unidadVenta);
+  if (!unidadValida) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'La unidad de venta no corresponde a la modalidad elegida.');
+  }
   return { ...entrada, motivo: validarMotivo(entrada.motivo) };
+}
+
+export function validarCambioEspacioComercial(entrada: CambioEspacioComercial): CambioEspacioComercial {
+  if (!entrada.codigo?.trim() || !Number.isSafeInteger(entrada.capacidadComercial) ||
+      !Number.isSafeInteger(entrada.capacidadOperativaMaxima) || entrada.capacidadComercial < 0 ||
+      entrada.capacidadOperativaMaxima < entrada.capacidadComercial ||
+      typeof entrada.reservableGeneral !== 'boolean' || typeof entrada.reservableRetiro !== 'boolean' ||
+      !['activo', 'configuracion_pendiente', 'inactivo'].includes(entrada.estado) || !entrada.expectedUpdatedAt) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'Las condiciones comerciales del alojamiento son inválidas.');
+  }
+  if (entrada.estado === 'activo' && entrada.capacidadComercial < 1) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'Un alojamiento activo debe tener capacidad comercial mayor a cero.');
+  }
+  return { ...entrada, codigo: entrada.codigo.trim(), motivo: validarMotivo(entrada.motivo) };
 }
 
 export function validarCambioTarifaAlimentacion(entrada: CambioTarifaAlimentacion): CambioTarifaAlimentacion {

@@ -6,6 +6,7 @@ import test from 'node:test';
 import { crearReservaPublica } from '../../functions/_application/reservas/crearReservaPublica.ts';
 import {
   actualizarModalidadConfiguracion,
+  actualizarEspacioConfiguracion,
   actualizarParametroConfiguracion,
   publicarTarifaAlimentacionConfiguracion,
 } from '../../functions/_application/reservas/gestionarConfiguracionBase.ts';
@@ -84,7 +85,8 @@ test('valida límites y usa 15 minutos como fallback seguro', () => {
     codigo: 'payment_hold_minutes', valor: 30, expectedVersion: 1, motivo: 'no',
   }), /motivo debe tener/);
   assert.throws(() => validarCambioModalidadComercial({
-    id: 0, habilitada: true, expectedHabilitada: false, motivo: 'Cambio aprobado',
+    id: 0, modalidad: 'privada', contexto: 'general', unidadVenta: 'espacio',
+    habilitada: true, expectedUpdatedAt: '2026-01-01T00:00:00Z', motivo: 'Cambio aprobado',
   }), /modalidad comercial es inválida/);
   assert.throws(() => validarCambioTarifaAlimentacion({
     codigo: 'pension_completa', precioComidaCentavos: -1, expectedVersion: 1, motivo: 'Cambio aprobado',
@@ -135,14 +137,29 @@ test('super admin puede cambiar modalidades y publicar una nueva tarifa de alime
   assert.ok(modalidad);
 
   const actualizada = await actualizarModalidadConfiguracion({
-    id: modalidad.id, habilitada: !modalidad.habilitada, expectedHabilitada: modalidad.habilitada,
+    id: modalidad.id, modalidad: modalidad.modalidad as 'privada', contexto: modalidad.contexto as 'general',
+    unidadVenta: modalidad.unidadVenta as 'espacio', habilitada: !modalidad.habilitada,
+    expectedUpdatedAt: modalidad.actualizadoAt,
     motivo: 'Cambio comercial aprobado', actorEmail: 'admin@test', correlationId: 'req-modalidad-1',
   }, repositorio, () => 'op-modalidad-1');
   assert.equal(actualizada.habilitada, !modalidad.habilitada);
   await assert.rejects(actualizarModalidadConfiguracion({
-    id: modalidad.id, habilitada: modalidad.habilitada, expectedHabilitada: modalidad.habilitada,
+    id: modalidad.id, modalidad: modalidad.modalidad as 'privada', contexto: modalidad.contexto as 'general',
+    unidadVenta: modalidad.unidadVenta as 'espacio', habilitada: modalidad.habilitada,
+    expectedUpdatedAt: modalidad.actualizadoAt,
     motivo: 'Vista desactualizada', actorEmail: 'admin@test', correlationId: 'req-modalidad-2',
   }, repositorio), /modalidad cambió/);
+
+  const camping = inicial.inventario.find(item => item.codigo === 'camping-exterior');
+  assert.ok(camping);
+  const campingActualizado = await actualizarEspacioConfiguracion({
+    codigo: camping.codigo, capacidadComercial: 12, capacidadOperativaMaxima: 16,
+    reservableGeneral: true, reservableRetiro: true, estado: 'activo',
+    expectedUpdatedAt: camping.actualizadoAt, motivo: 'Habilitar venta de camping',
+    actorEmail: 'admin@test', correlationId: 'req-camping-1',
+  }, repositorio, () => 'op-camping-1');
+  assert.equal(campingActualizado.estado, 'activo');
+  assert.equal(campingActualizado.capacidadComercial, 12);
 
   const pension = inicial.alimentacion.find(item => item.codigo === 'pension_completa');
   assert.ok(pension);
@@ -242,16 +259,29 @@ test('el contrato permite lectura administrativa pero sólo super admin puede es
   assert.equal(actualizada.status, 200);
   assert.equal((await actualizada.json() as any).data.valor, 20);
 
-  const modalidad = sqlite.prepare(`SELECT id, habilitada FROM modalidades_espacio
-    WHERE contexto = 'general' ORDER BY id LIMIT 1`).get() as Record<string, unknown>;
   const requestAccion = (body: Record<string, unknown>) => new Request('https://test/api/v1/admin/configuracion-reservas', {
     method: 'PATCH', headers: { Cookie: cookie(tokenAdmin), 'X-CSRF-Token': csrf, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+
+  const campingEspacio = sqlite.prepare(`SELECT codigo, updated_at FROM espacios WHERE codigo = 'camping-exterior'`).get() as Record<string, unknown>;
+  const espacioResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'actualizar_espacio', codigo: String(campingEspacio.codigo), capacidad_comercial: 8,
+    capacidad_operativa_maxima: 12, reservable_general: true, reservable_retiro: true,
+    estado: 'activo', expected_updated_at: String(campingEspacio.updated_at),
+    motivo: 'Habilitar camping desde contrato',
+  }), env });
+  assert.equal(espacioResponse.status, 200);
+  assert.equal((await espacioResponse.json() as any).data.estado, 'activo');
+
+  const modalidad = sqlite.prepare(`SELECT id, modalidad, contexto, unidad_venta, habilitada, updated_at FROM modalidades_espacio
+    WHERE contexto = 'general' ORDER BY id LIMIT 1`).get() as Record<string, unknown>;
   const modalidadResponse = await actualizarConfiguracion({ request: requestAccion({
     accion: 'actualizar_modalidad', id: Number(modalidad.id),
+    modalidad: String(modalidad.modalidad), contexto: String(modalidad.contexto),
+    unidad_venta: String(modalidad.unidad_venta),
     habilitada: Number(modalidad.habilitada) !== 1,
-    expected_habilitada: Number(modalidad.habilitada) === 1,
+    expected_updated_at: String(modalidad.updated_at),
     motivo: 'Cambio comercial desde contrato',
   }), env });
   assert.equal(modalidadResponse.status, 200);

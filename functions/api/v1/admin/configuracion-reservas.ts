@@ -1,5 +1,6 @@
 import {
   actualizarModalidadConfiguracion,
+  actualizarEspacioConfiguracion,
   actualizarParametroConfiguracion,
   consultarConfiguracionBase,
   publicarTarifaAlimentacionConfiguracion,
@@ -49,11 +50,25 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
     }
     if (accion === 'actualizar_modalidad') {
       const modalidad = await actualizarModalidadConfiguracion({
-        id: Number(body.id), habilitada: body.habilitada === true,
-        expectedHabilitada: body.expected_habilitada === true,
+        id: Number(body.id), modalidad: String(body.modalidad || '') as any,
+        contexto: String(body.contexto || '') as any,
+        unidadVenta: String(body.unidad_venta || '') as any,
+        habilitada: body.habilitada === true, expectedUpdatedAt: String(body.expected_updated_at || ''),
         motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
       }, repositorio);
       return json({ data: modalidad, meta: { version: 'v1' } });
+    }
+    if (accion === 'actualizar_espacio') {
+      const espacio = await actualizarEspacioConfiguracion({
+        codigo: String(body.codigo || ''), capacidadComercial: Number(body.capacidad_comercial),
+        capacidadOperativaMaxima: Number(body.capacidad_operativa_maxima),
+        reservableGeneral: body.reservable_general === true,
+        reservableRetiro: body.reservable_retiro === true,
+        estado: String(body.estado || '') as any,
+        expectedUpdatedAt: String(body.expected_updated_at || ''),
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: espacio, meta: { version: 'v1' } });
     }
     if (accion === 'publicar_tarifa_alimentacion') {
       const tarifa = await publicarTarifaAlimentacionConfiguracion({
