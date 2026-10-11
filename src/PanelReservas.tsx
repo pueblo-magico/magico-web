@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
+import {
+  Badge, Button, Card, EmptyState, StatCard, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableHeader, TableRow,
+} from '@pueblo-magico/react-ui';
 import './PanelReservas.css';
 
 // Dashboard interno de reservas — /admin/reservas. La API valida sesión,
@@ -313,16 +317,16 @@ const waLink = (telefono: string) => `https://wa.me/${telefono.replace(/\D/g, ''
 const MetricCard: React.FC<{ label: string; value: string; accent?: 'brand' | 'gold' | 'red'; hint?: string; compact?: boolean; icon?: React.ReactNode }> = ({
   label, value, accent = 'brand', hint, compact, icon,
 }) => (
-  <div className={`admin-metric-card bg-white rounded-xl border border-gray-200 shadow-sm ${compact ? 'p-4' : 'p-5'}`}>
-    <div className="flex items-center gap-1.5 mb-2">
-      {icon}
-      <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 truncate">{label}</p>
-    </div>
-    <p className={`${compact ? 'text-xl sm:text-2xl' : 'text-2xl'} font-bold tabular-nums ${accent === 'gold' ? 'text-gold' : accent === 'red' ? 'text-red-600' : 'text-brand'}`}>
-      {value}
-    </p>
-    {hint && <p className="text-[11px] text-gray-400 mt-1">{hint}</p>}
-  </div>
+  <StatCard
+    className="admin-metric-card bg-white shadow-sm"
+    description={hint}
+    emphasis={accent === 'gold' ? 'accent' : accent === 'red' ? 'danger' : 'brand'}
+    icon={icon}
+    label={label}
+    size={compact ? 'compact' : 'default'}
+    value={value}
+    variant="metric"
+  />
 );
 
 function useEscapeKey(onEscape: () => void) {
@@ -2888,19 +2892,19 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Aplicaciones registradas y endpoints</h3>
             <p className="mt-1 text-xs text-gray-500">El seguimiento comienza desde la fecha de registro mostrada. Nunca se exponen credenciales ni valores secretos.</p>
           </div>
-          <button type="button" onClick={cargarAplicaciones} disabled={cargandoAplicaciones}
-            className={`inline-flex items-center gap-1.5 self-start rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50 ${FOCUS_RING}`}>
+          <Button type="button" onPress={cargarAplicaciones} isDisabled={cargandoAplicaciones}
+            size="sm" shape="rounded" variant="secondary" className="self-start">
             <RefreshCw size={14} className={cargandoAplicaciones ? 'animate-spin' : ''} aria-hidden="true" /> Actualizar registro
-          </button>
+          </Button>
         </div>
         {cargandoAplicaciones && aplicaciones === null ? <div className="flex justify-center py-12"><RefreshCw className="animate-spin text-gray-300" aria-label="Cargando aplicaciones" /></div> :
-          <ul className="divide-y divide-gray-100">{(aplicaciones || []).map(aplicacion => <li key={aplicacion.codigo} className="px-4 py-4 sm:px-5">
+          <ul className="divide-y divide-gray-100">{(aplicaciones || []).map(aplicacion => <Card as="li" variant="default" key={aplicacion.codigo} className="rounded-none border-0 px-4 py-4 shadow-none sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <strong className="text-sm text-gray-800">{aplicacion.nombre}</strong>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${aplicacion.configurada ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{aplicacion.configurada ? 'Configurada' : 'Sin credencial'}</span>
-                  <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">{aplicacion.tipo.replace('_', ' ')}</span>
+                  <Badge variant={aplicacion.configurada ? 'success' : 'neutral'}>{aplicacion.configurada ? 'Configurada' : 'Sin credencial'}</Badge>
+                  <Badge variant="outline">{aplicacion.tipo.replace('_', ' ')}</Badge>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">Código: {aplicacion.codigo} · registrada {aplicacion.registrado_at ? fmtFechaHora(aplicacion.registrado_at) : 'sin fecha disponible'}</p>
               </div>
@@ -2910,20 +2914,20 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
                 <div><span className="block text-gray-400">Solicitudes</span><strong className="font-medium text-gray-700">{aplicacion.request_count}</strong></div>
               </div>
             </div>
-            {aplicacion.endpoints.length > 0 ? <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
-              <table className="min-w-[720px] w-full text-left text-xs">
-                <thead className="bg-gray-50 text-gray-500"><tr><th className="px-3 py-2">Método</th><th className="px-3 py-2">Endpoint</th><th className="px-3 py-2">Primer uso</th><th className="px-3 py-2">Último uso</th><th className="px-3 py-2 text-right">Solicitudes</th></tr></thead>
-                <tbody>{aplicacion.endpoints.map(endpoint => <tr key={`${endpoint.method}-${endpoint.path}`} className="border-t border-gray-100">
-                  <td className="px-3 py-2"><span className="rounded bg-gray-100 px-2 py-1 font-mono font-semibold text-gray-700">{endpoint.method}</span></td>
-                  <td className="px-3 py-2 font-mono text-gray-700">{endpoint.path}</td>
-                  <td className="px-3 py-2 text-gray-500">{endpoint.first_used_at ? fmtFechaHora(endpoint.first_used_at) : '—'}</td>
-                  <td className="px-3 py-2 text-gray-500">{endpoint.last_used_at ? fmtFechaHora(endpoint.last_used_at) : '—'}</td>
-                  <td className="px-3 py-2 text-right font-semibold text-gray-700">{endpoint.request_count}</td>
-                </tr>)}</tbody>
-              </table>
-            </div> : <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500">Identidad registrada, sin endpoint implementado actualmente.</p>}
-          </li>)}
-          {!cargandoAplicaciones && aplicaciones?.length === 0 && <li className="px-5 py-10 text-center text-sm text-gray-400">No hay aplicaciones registradas.</li>}
+            {aplicacion.endpoints.length > 0 ? <TableContainer label={`Endpoints de ${aplicacion.nombre}`} className="mt-4 rounded-lg border border-gray-100">
+              <Table density="compact" className="min-w-[720px] text-xs">
+                <TableHeader><TableRow><TableHead>Método</TableHead><TableHead>Endpoint</TableHead><TableHead>Primer uso</TableHead><TableHead>Último uso</TableHead><TableHead className="text-right">Solicitudes</TableHead></TableRow></TableHeader>
+                <TableBody>{aplicacion.endpoints.map(endpoint => <TableRow key={`${endpoint.method}-${endpoint.path}`}>
+                  <TableCell><Badge variant="neutral"><span className="font-mono">{endpoint.method}</span></Badge></TableCell>
+                  <TableCell className="font-mono text-gray-700">{endpoint.path}</TableCell>
+                  <TableCell className="text-gray-500">{endpoint.first_used_at ? fmtFechaHora(endpoint.first_used_at) : '—'}</TableCell>
+                  <TableCell className="text-gray-500">{endpoint.last_used_at ? fmtFechaHora(endpoint.last_used_at) : '—'}</TableCell>
+                  <TableCell className="text-right font-semibold text-gray-700">{endpoint.request_count}</TableCell>
+                </TableRow>)}</TableBody>
+              </Table>
+            </TableContainer> : <EmptyState className="mt-3 rounded-lg bg-gray-50 px-3 py-2" alignment="start" size="compact" title="Identidad registrada, sin endpoint implementado actualmente." />}
+          </Card>)}
+          {!cargandoAplicaciones && aplicaciones?.length === 0 && <li><EmptyState size="compact" title="No hay aplicaciones registradas." /></li>}
           </ul>}
       </section>}
     </div>

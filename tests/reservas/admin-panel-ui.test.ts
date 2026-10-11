@@ -67,3 +67,11 @@ test('separa los eventos de integraciones en categorías accesibles sin ocultar 
   assert.match(source, /reprocesar\(evento\.eventId\)/);
   assert.match(source, /reprocesarComunicacion\(intencion\.intencionUid\)/);
 });
+
+test('reutiliza primitivas del paquete interno en el registro de aplicaciones', () => {
+  assert.match(source, /from '@pueblo-magico\/react-ui'/);
+  for (const component of ['Badge', 'Button', 'Card', 'EmptyState', 'StatCard', 'TableContainer']) {
+    assert.match(source, new RegExp(`<${component}`));
+  }
+  assert.doesNotMatch(source, /<table className="min-w-\[720px\]/);
+});
