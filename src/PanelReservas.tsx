@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
+import './PanelReservas.css';
 
 // Dashboard interno de reservas — /admin/reservas. La API valida sesión,
 // permisos por rol y CSRF en cada mutación; la UI nunca decide autorización.
@@ -312,7 +313,7 @@ const waLink = (telefono: string) => `https://wa.me/${telefono.replace(/\D/g, ''
 const MetricCard: React.FC<{ label: string; value: string; accent?: 'brand' | 'gold' | 'red'; hint?: string; compact?: boolean; icon?: React.ReactNode }> = ({
   label, value, accent = 'brand', hint, compact, icon,
 }) => (
-  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${compact ? 'p-4' : 'p-5'}`}>
+  <div className={`admin-metric-card bg-white rounded-xl border border-gray-200 shadow-sm ${compact ? 'p-4' : 'p-5'}`}>
     <div className="flex items-center gap-1.5 mb-2">
       {icon}
       <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 truncate">{label}</p>
@@ -2854,23 +2855,52 @@ const PanelReservas: React.FC = () => {
   const esSuperAdmin = auth.rol === 'super_admin';
   const puedeEditar = auth.rol === 'super_admin' || auth.rol === 'editor';
 
-  const TABS: { key: VistaActiva; label: string }[] = [
-    { key: 'operativa', label: 'Operativa' },
-    ...(puedeEditar ? [{ key: 'ocupacion' as VistaActiva, label: 'Bloqueos' }] : []),
-    { key: 'metricas', label: 'Métricas' },
-    { key: 'historial', label: 'Historial' },
-    { key: 'consultas', label: 'Consultas' },
-    { key: 'arrepentimientos', label: 'Arrepentimientos' },
-    { key: 'configuracion', label: 'Configuración' },
-    { key: 'integraciones', label: 'Integraciones' },
+  const vistaMeta: Record<VistaActiva, { titulo: string; descripcion: string }> = {
+    operativa: { titulo: 'Hoy en Pueblo Mágico', descripcion: 'Llegadas, salidas y ocupación que necesitan atención.' },
+    ocupacion: { titulo: 'Bloqueos y ocupación', descripcion: 'Gestioná mantenimiento, eventos y estadías internas sin perder trazabilidad.' },
+    metricas: { titulo: 'Reportes', descripcion: 'Indicadores operativos y financieros calculados con datos reales de reservas.' },
+    historial: { titulo: 'Reservas', descripcion: 'Buscá, revisá y gestioná cada estadía desde un solo lugar.' },
+    consultas: { titulo: 'Consultas', descripcion: 'Revisá las consultas que todavía no se convirtieron en reservas.' },
+    arrepentimientos: { titulo: 'Arrepentimientos', descripcion: 'Gestioná solicitudes y su seguimiento con acceso según tu rol.' },
+    configuracion: { titulo: 'Configuración', descripcion: 'Parámetros comerciales y operativos del sistema de reservas.' },
+    integraciones: { titulo: 'Integraciones', descripcion: 'Estado, eventos y reintentos de las conexiones externas.' },
+    usuarios: { titulo: 'Usuarios', descripcion: 'Administrá accesos y permisos del equipo.' },
+    actividad: { titulo: 'Actividad', descripcion: 'Consultá el registro de auditoría del sistema.' },
+  };
+
+  const navPrincipal: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
+    { key: 'operativa', label: 'Inicio', icon: <Home aria-hidden="true" /> },
+    { key: 'historial', label: 'Reservas', icon: <CalendarDays aria-hidden="true" /> },
+    ...(puedeEditar ? [{ key: 'ocupacion' as VistaActiva, label: 'Bloqueos', icon: <ClipboardList aria-hidden="true" /> }] : []),
+    { key: 'metricas', label: 'Reportes', icon: <BarChart3 aria-hidden="true" /> },
+  ];
+  const navOperaciones: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
+    { key: 'consultas', label: 'Consultas', icon: <MessageCircle aria-hidden="true" /> },
+    { key: 'arrepentimientos', label: 'Arrepentimientos', icon: <ShieldAlert aria-hidden="true" /> },
+  ];
+  const navSistema: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
+    { key: 'configuracion', label: 'Configuración', icon: <Settings aria-hidden="true" /> },
+    { key: 'integraciones', label: 'Integraciones', icon: <Link2 aria-hidden="true" /> },
     ...(esSuperAdmin ? [
-      { key: 'usuarios' as VistaActiva, label: 'Usuarios' },
-      { key: 'actividad' as VistaActiva, label: 'Actividad' },
+      { key: 'usuarios' as VistaActiva, label: 'Usuarios', icon: <Users aria-hidden="true" /> },
+      { key: 'actividad' as VistaActiva, label: 'Actividad', icon: <Activity aria-hidden="true" /> },
     ] : []),
   ];
+  const navItems = [...navPrincipal, ...navOperaciones, ...navSistema];
+  const navButton = ({ key, label, icon }: typeof navItems[number]) => (
+    <button
+      key={key}
+      type="button"
+      className={`admin-nav-button ${FOCUS_RING}`}
+      aria-current={vistaActiva === key ? 'page' : undefined}
+      onClick={() => setVistaActiva(key)}
+    >
+      {icon}<span>{label}</span>
+    </button>
+  );
 
   return (
-    <div className="admin-panel-scope min-h-screen bg-gray-50">
+    <div className="admin-panel-scope min-h-screen">
       <style>{`
         .admin-panel-scope, .admin-panel-scope * {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
@@ -2880,14 +2910,27 @@ const PanelReservas: React.FC = () => {
         }
       `}</style>
 
-      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between gap-2 mb-3 sm:mb-0">
-            <div>
-              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-400">Pueblo Mágico</p>
-              <h1 className="text-lg sm:text-xl font-bold text-brand">Dashboard de Reservas</h1>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="admin-shell">
+        <aside className="admin-sidebar" aria-label="Navegación del panel">
+          <div className="admin-sidebar__brand"><span className="admin-sidebar__mark" aria-hidden="true" /><strong>PUEBLO MÁGICO</strong><small>Reservas</small></div>
+          <nav className="admin-sidebar__nav" aria-label="Principal">{navPrincipal.map(navButton)}</nav>
+          <p className="admin-sidebar__section">Operaciones</p>
+          <nav className="admin-sidebar__nav" aria-label="Operaciones">{navOperaciones.map(navButton)}</nav>
+          <p className="admin-sidebar__section">Sistema</p>
+          <nav className="admin-sidebar__nav" aria-label="Sistema">{navSistema.map(navButton)}</nav>
+          <div className="admin-sidebar__user">
+            <span className="admin-sidebar__avatar">{auth.email.slice(0, 1)}</span>
+            <span><strong>{auth.email.split('@')[0]}</strong><small>{ROL_LABEL[auth.rol]}</small></span>
+            <button type="button" className={`admin-sidebar__logout ${FOCUS_RING}`} onClick={cerrarSesion} aria-label="Cerrar sesión" title={auth.email}><LogOut size={17} aria-hidden="true" /></button>
+          </div>
+        </aside>
+
+        <div className="admin-workspace">
+          <header className="admin-topbar">
+            <div className="admin-topbar__identity"><p>Administración de reservas</p><h1>Pueblo Mágico</h1></div>
+            <span className="admin-mobile-brand">Pueblo Mágico Reservas</span>
+            <div className="admin-topbar__actions">
+              <span className="admin-date-chip"><CalendarDays size={16} aria-hidden="true" /> {fmtDateLong(fechaOperativaLocal(new Date()))}</span>
               {esSuperAdmin && (
                 <button
                   onClick={() => descargarReporteServidor()}
@@ -2927,29 +2970,14 @@ const PanelReservas: React.FC = () => {
                 <span className="hidden sm:inline">Salir</span>
               </button>
             </div>
-          </div>
+          </header>
 
-          <div className="flex overflow-x-auto bg-gray-100 rounded-lg p-1 sm:inline-flex sm:mt-3" role="tablist" aria-label="Vista">
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={vistaActiva === t.key}
-                onClick={() => setVistaActiva(t.key)}
-                className={`flex-1 flex-shrink-0 sm:flex-none text-sm font-semibold px-3 sm:px-4 py-2 rounded-md transition-colors ${FOCUS_RING} ${
-                  vistaActiva === t.key ? 'bg-brand text-white' : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
+          <nav className="admin-mobile-nav" aria-label="Secciones del panel">{navItems.map(navButton)}</nav>
 
-      <InstalarBanner />
+          <InstalarBanner />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <main className="admin-content">
+            <div className="admin-view-heading"><h2>{vistaMeta[vistaActiva].titulo}</h2><p>{vistaMeta[vistaActiva].descripcion}</p></div>
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-6" role="alert">
             No se pudo cargar: {error}
@@ -2985,7 +3013,7 @@ const PanelReservas: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
+            <div className="admin-surface bg-white rounded-xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
               {!loading && reservas.length === 0 ? (
                 <div className="px-6 py-12 text-center">
                   <p className="text-sm font-semibold text-gray-600 mb-1">Todavía no hay reservas cargadas</p>
@@ -3139,7 +3167,7 @@ const PanelReservas: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="admin-surface bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <TablaHistorial reservas={reservasHistorialFiltradas} onSeleccionar={r => abrirPorId(r.id)} />
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
@@ -3170,7 +3198,7 @@ const PanelReservas: React.FC = () => {
             <p className="text-xs text-gray-400 mb-4">
               Llegaron al último paso del flujo de ManyChat (fecha, alojamiento y monto ya cotizados) pero no completaron el pago.
             </p>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="admin-surface bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <TablaConsultas consultas={consultas || []} />
             </div>
           </>
@@ -3182,7 +3210,9 @@ const PanelReservas: React.FC = () => {
         {vistaActiva === 'integraciones' && <SeccionIntegraciones esSuperAdmin={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}
-      </main>
+          </main>
+        </div>
+      </div>
 
       {celdaMultiple && (
         <ModalSeleccionarReserva
