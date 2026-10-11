@@ -4,10 +4,16 @@ import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import test from 'node:test';
 
 import { crearReservaPublica } from '../../functions/_application/reservas/crearReservaPublica.ts';
-import { actualizarParametroConfiguracion } from '../../functions/_application/reservas/gestionarConfiguracionBase.ts';
+import {
+  actualizarModalidadConfiguracion,
+  actualizarParametroConfiguracion,
+  publicarTarifaAlimentacionConfiguracion,
+} from '../../functions/_application/reservas/gestionarConfiguracionBase.ts';
 import {
   normalizarPaymentHoldMinutes,
+  validarCambioModalidadComercial,
   validarCambioParametroOperativo,
+  validarCambioTarifaAlimentacion,
 } from '../../functions/_domain/reservas/baseConfiguration.ts';
 import { D1RepositorioConfiguracionBaseReservas } from '../../functions/_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
 import { createSessionToken } from '../../functions/_lib/session.ts';
@@ -53,7 +59,7 @@ function d1(sqlite: DatabaseSync) {
       sqlite.exec('BEGIN');
       try {
         const results = statements.map(statement => ({
-          results: /^\s*UPDATE[\s\S]+RETURNING\s/i.test(statement.query)
+          results: /RETURNING\s/i.test(statement.query)
             ? sqlite.prepare(statement.query).all(...statement.values) as Record<string, unknown>[]
             : (sqlite.prepare(statement.query).run(...statement.values), []),
         }));
@@ -77,6 +83,12 @@ test('valida límites y usa 15 minutos como fallback seguro', () => {
   assert.throws(() => validarCambioParametroOperativo({
     codigo: 'payment_hold_minutes', valor: 30, expectedVersion: 1, motivo: 'no',
   }), /motivo debe tener/);
+  assert.throws(() => validarCambioModalidadComercial({
+    id: 0, habilitada: true, expectedHabilitada: false, motivo: 'Cambio aprobado',
+  }), /modalidad comercial es inválida/);
+  assert.throws(() => validarCambioTarifaAlimentacion({
+    codigo: 'pension_completa', precioComidaCentavos: -1, expectedVersion: 1, motivo: 'Cambio aprobado',
+  }), /tarifa de alimentación es inválida/);
 });
 
 test('lee fuentes efectivas y actualiza con versión y auditoría atómica', async () => {
@@ -87,6 +99,8 @@ test('lee fuentes efectivas y actualiza con versión y auditoría atómica', asy
   assert.equal(inicial.parametros[0].version, 1);
   assert.ok(inicial.inventario.some(item => item.codigo === 'domo-1' && item.capacidadComercial === 7));
   assert.equal(inicial.tarifa?.reglasSena, 2);
+  assert.equal(inicial.tarifa?.temporadas[0]?.reglas.length, 5);
+  assert.equal(inicial.tarifa?.senas.length, 2);
   assert.deepEqual(inicial.alimentacion.map(item => item.codigo), ['desayuno_incluido', 'pension_completa']);
   assert.throws(() => sqlite.prepare(`UPDATE parametros_operativos_reservas
     SET valor_entero = 121 WHERE codigo = 'payment_hold_minutes'`).run(), /constraint/i);
@@ -109,6 +123,40 @@ test('lee fuentes efectivas y actualiza con versión y auditoría atómica', asy
     codigo: 'payment_hold_minutes', valor: 45, expectedVersion: 1,
     motivo: 'Versión desactualizada', actorEmail: 'admin@test', correlationId: 'req-config-2',
   }, repositorio), /configuración cambió/);
+  sqlite.close();
+});
+
+test('super admin puede cambiar modalidades y publicar una nueva tarifa de alimentación con auditoría', async () => {
+  const sqlite = baseCompleta();
+  const repositorio = new D1RepositorioConfiguracionBaseReservas(d1(sqlite));
+  const inicial = await repositorio.obtenerEfectiva();
+  const modalidad = inicial.inventario.flatMap(item => item.modalidades)
+    .find(item => item.modalidad === 'privada' && item.contexto === 'general');
+  assert.ok(modalidad);
+
+  const actualizada = await actualizarModalidadConfiguracion({
+    id: modalidad.id, habilitada: !modalidad.habilitada, expectedHabilitada: modalidad.habilitada,
+    motivo: 'Cambio comercial aprobado', actorEmail: 'admin@test', correlationId: 'req-modalidad-1',
+  }, repositorio, () => 'op-modalidad-1');
+  assert.equal(actualizada.habilitada, !modalidad.habilitada);
+  await assert.rejects(actualizarModalidadConfiguracion({
+    id: modalidad.id, habilitada: modalidad.habilitada, expectedHabilitada: modalidad.habilitada,
+    motivo: 'Vista desactualizada', actorEmail: 'admin@test', correlationId: 'req-modalidad-2',
+  }, repositorio), /modalidad cambió/);
+
+  const pension = inicial.alimentacion.find(item => item.codigo === 'pension_completa');
+  assert.ok(pension);
+  const publicada = await publicarTarifaAlimentacionConfiguracion({
+    codigo: pension.codigo, precioComidaCentavos: 2_500_000, expectedVersion: pension.version,
+    motivo: 'Nuevo precio comercial', actorEmail: 'admin@test', correlationId: 'req-food-1',
+  }, repositorio, () => 'op-food-1');
+  assert.equal(publicada.version, pension.version + 1);
+  assert.equal(publicada.precioComidaCentavos, 2_500_000);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM tarifas_alimentacion WHERE codigo = 'pension_completa' AND estado = 'publicado'").get()?.n, 1);
+  assert.deepEqual(
+    sqlite.prepare("SELECT accion FROM auditoria_admin WHERE accion IN ('actualizar_modalidad_comercial', 'publicar_tarifa_alimentacion') ORDER BY id").all().map(row => row.accion),
+    ['actualizar_modalidad_comercial', 'publicar_tarifa_alimentacion']
+  );
   sqlite.close();
 });
 
@@ -193,5 +241,28 @@ test('el contrato permite lectura administrativa pero sólo super admin puede es
   const actualizada = await actualizarConfiguracion({ request: requestPatch(tokenAdmin), env });
   assert.equal(actualizada.status, 200);
   assert.equal((await actualizada.json() as any).data.valor, 20);
+
+  const modalidad = sqlite.prepare(`SELECT id, habilitada FROM modalidades_espacio
+    WHERE contexto = 'general' ORDER BY id LIMIT 1`).get() as Record<string, unknown>;
+  const requestAccion = (body: Record<string, unknown>) => new Request('https://test/api/v1/admin/configuracion-reservas', {
+    method: 'PATCH', headers: { Cookie: cookie(tokenAdmin), 'X-CSRF-Token': csrf, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const modalidadResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'actualizar_modalidad', id: Number(modalidad.id),
+    habilitada: Number(modalidad.habilitada) !== 1,
+    expected_habilitada: Number(modalidad.habilitada) === 1,
+    motivo: 'Cambio comercial desde contrato',
+  }), env });
+  assert.equal(modalidadResponse.status, 200);
+
+  const tarifa = sqlite.prepare("SELECT version FROM tarifas_alimentacion WHERE codigo = 'pension_completa' AND estado = 'publicado'").get() as Record<string, unknown>;
+  const alimentacionResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'publicar_tarifa_alimentacion', codigo: 'pension_completa',
+    precio_comida_centavos: 2_600_000, expected_version: Number(tarifa.version),
+    motivo: 'Cambio comercial desde contrato',
+  }), env });
+  assert.equal(alimentacionResponse.status, 200);
+  assert.equal((await alimentacionResponse.json() as any).data.precioComidaCentavos, 2_600_000);
   sqlite.close();
 });

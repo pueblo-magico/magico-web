@@ -1589,27 +1589,53 @@ type ConfiguracionBaseApi = {
   inventario: Array<{
     codigo: string; nombre: string; tipo: string; capacidadComercial: number;
     capacidadOperativaMaxima: number; estado: string;
-    modalidades: Array<{ modalidad: string; contexto: string; unidadVenta: string }>;
+    modalidades: Array<{
+      id: number; modalidad: string; contexto: string; unidadVenta: string;
+      habilitada: boolean; actualizadoAt: string;
+    }>;
   }>;
   tarifa: null | {
-    codigo: string; nombre: string; moneda: string; version: number;
+    id: number; codigo: string; nombre: string; moneda: string; version: number;
     reglasPrecio: number; reglasSena: number; publicadoAt: string;
+    temporadas: Array<{
+      codigo: string; nombre: string; fechaDesde: string; fechaHasta: string; prioridad: number;
+      reglas: Array<{
+        tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
+        modalidad: 'cualquiera' | 'privada' | 'compartida' | 'camping';
+        ocupacionMin: number; ocupacionMax: number;
+        baseCalculo: 'unidad_noche' | 'persona_noche'; importeCentavos: number;
+        exclusividadDesde: number | null; exclusividadHasta: number | null;
+      }>;
+    }>;
+    senas: Array<{
+      subtotalDesdeCentavos: number; subtotalHastaCentavos: number | null;
+      tipo: 'porcentaje_bps' | 'importe_fijo'; valor: number;
+    }>;
   };
   politicaCancelacion: null | {
     codigo: string; nombre: string; version: number; estado: string; vigenciaDesde: string | null;
+    reglas: Array<{ horasMinimasAntes: number; porcentajeDevolucionBps: number }>;
   };
   alimentacion: Array<{
-    codigo: string; moneda: string; version: number; precioComidaCentavos: number;
-    comidasAdicionalesPorPersonaNoche: number;
+    id: number; codigo: 'desayuno_incluido' | 'pension_completa'; moneda: string; version: number;
+    precioComidaCentavos: number; comidasAdicionalesPorPersonaNoche: number; publicadoAt: string;
   }>;
 };
 
-const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEditar }) => {
+type BorradorTarifaUi = NonNullable<ConfiguracionBaseApi['tarifa']>;
+type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
+
+const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmin }) => {
   const [configuracion, setConfiguracion] = useState<ConfiguracionBaseApi | null>(null);
   const [valor, setValor] = useState('15');
   const [motivo, setMotivo] = useState('');
+  const [motivoComercial, setMotivoComercial] = useState('');
+  const [tarifaDraft, setTarifaDraft] = useState<BorradorTarifaUi | null>(null);
+  const [politicaDraft, setPoliticaDraft] = useState<BorradorPoliticaUi | null>(null);
+  const [vigenciaPolitica, setVigenciaPolitica] = useState('');
+  const [preciosComida, setPreciosComida] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
-  const [guardando, setGuardando] = useState(false);
+  const [guardando, setGuardando] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
 
@@ -1622,6 +1648,12 @@ const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEdi
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       setConfiguracion(body.data);
       setValor(String(body.data?.parametros?.[0]?.valor ?? 15));
+      setTarifaDraft(body.data?.tarifa ? JSON.parse(JSON.stringify(body.data.tarifa)) : null);
+      setPoliticaDraft(body.data?.politicaCancelacion ? JSON.parse(JSON.stringify(body.data.politicaCancelacion)) : null);
+      setVigenciaPolitica(body.data?.politicaCancelacion?.vigenciaDesde?.slice(0, 16) || new Date(Date.now() + 60_000).toISOString().slice(0, 16));
+      setPreciosComida(Object.fromEntries((body.data?.alimentacion || []).map((item: ConfiguracionBaseApi['alimentacion'][number]) => [
+        item.codigo, String(item.precioComidaCentavos / 100),
+      ])));
     } catch (e: any) {
       setError(e.message || 'No se pudo cargar la configuración.');
     } finally {
@@ -1632,32 +1664,142 @@ const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEdi
   useEffect(() => { cargar(); }, []);
 
   const parametro = configuracion?.parametros.find(item => item.codigo === 'payment_hold_minutes');
-  const guardar = async () => {
-    if (!parametro) return;
-    setGuardando(true);
+  const ejecutar = async (clave: string, accion: () => Promise<void>, exito: string) => {
+    setGuardando(clave);
     setError('');
     setMensaje('');
     try {
-      const res = await adminFetch('/api/v1/admin/configuracion-reservas', {
+      await accion();
+      setMensaje(exito);
+      await cargar();
+    } catch (e: any) {
+      setError(e.message || 'No se pudo actualizar la configuración.');
+    } finally {
+      setGuardando(null);
+    }
+  };
+
+  const requestJson = async (url: string, init: RequestInit) => {
+    const res = await adminFetch(url, init);
+    const body: any = await res.json();
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    return body;
+  };
+
+  const guardarPlazo = async () => {
+    if (!parametro) return;
+    await ejecutar('plazo', async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          accion: 'actualizar_parametro',
           codigo: parametro.codigo,
           valor: Number(valor),
           expected_version: parametro.version,
           motivo: motivo.trim(),
         }),
       });
-      const body: any = await res.json();
-      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       setMotivo('');
-      setMensaje('Configuración actualizada. Sólo afecta reservas nuevas.');
-      await cargar();
-    } catch (e: any) {
-      setError(e.message || 'No se pudo actualizar la configuración.');
-    } finally {
-      setGuardando(false);
-    }
+    }, 'Plazo actualizado. Sólo afecta reservas nuevas.');
+  };
+
+  const cambiarModalidad = async (item: ConfiguracionBaseApi['inventario'][number]['modalidades'][number]) => {
+    await ejecutar(`modalidad-${item.id}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_modalidad', id: item.id, habilitada: !item.habilitada,
+          expected_habilitada: item.habilitada, motivo: motivoComercial.trim(),
+        }),
+      });
+    }, `Modalidad ${item.habilitada ? 'deshabilitada' : 'habilitada'} para ventas nuevas.`);
+  };
+
+  const publicarComida = async (item: ConfiguracionBaseApi['alimentacion'][number]) => {
+    await ejecutar(`comida-${item.codigo}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'publicar_tarifa_alimentacion', codigo: item.codigo,
+          precio_comida_centavos: Math.round(Number(preciosComida[item.codigo]) * 100),
+          expected_version: item.version, motivo: motivoComercial.trim(),
+        }),
+      });
+    }, 'Tarifa de alimentación publicada como una nueva versión.');
+  };
+
+  const actualizarTemporada = (indice: number, cambio: Partial<BorradorTarifaUi['temporadas'][number]>) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual, temporadas: actual.temporadas.map((item, i) => i === indice ? { ...item, ...cambio } : item),
+    } : actual);
+  };
+
+  const actualizarReglaPrecio = (temporadaIndice: number, reglaIndice: number, cambio: Partial<BorradorTarifaUi['temporadas'][number]['reglas'][number]>) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual,
+      temporadas: actual.temporadas.map((temporada, i) => i !== temporadaIndice ? temporada : {
+        ...temporada, reglas: temporada.reglas.map((regla, j) => j === reglaIndice ? { ...regla, ...cambio } : regla),
+      }),
+    } : actual);
+  };
+
+  const actualizarSena = (indice: number, cambio: Partial<BorradorTarifaUi['senas'][number]>) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual, senas: actual.senas.map((item, i) => i === indice ? { ...item, ...cambio } : item),
+    } : actual);
+  };
+
+  const publicarTarifa = async () => {
+    if (!tarifaDraft || !window.confirm('Se publicará una nueva versión de precios y seña para reservas futuras. ¿Continuar?')) return;
+    await ejecutar('tarifa', async () => {
+      const borrador = await requestJson('/api/admin/tarifas', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'crear_borrador', plan: {
+          codigo: tarifaDraft.codigo, nombre: tarifaDraft.nombre, moneda: tarifaDraft.moneda,
+          temporadas: tarifaDraft.temporadas.map(temporada => ({
+            codigo: temporada.codigo, nombre: temporada.nombre,
+            fecha_desde: temporada.fechaDesde, fecha_hasta: temporada.fechaHasta, prioridad: temporada.prioridad,
+            reglas: temporada.reglas.map(regla => ({
+              tipo_alojamiento: regla.tipoAlojamiento, modalidad: regla.modalidad,
+              ocupacion_min: regla.ocupacionMin, ocupacion_max: regla.ocupacionMax,
+              base_calculo: regla.baseCalculo, importe_centavos: regla.importeCentavos,
+              exclusividad_desde: regla.exclusividadDesde, exclusividad_hasta: regla.exclusividadHasta,
+            })),
+          })),
+          senas: tarifaDraft.senas.map(regla => ({
+            subtotal_desde_centavos: regla.subtotalDesdeCentavos,
+            subtotal_hasta_centavos: regla.subtotalHastaCentavos,
+            tipo: regla.tipo, valor: regla.valor,
+          })),
+        } }),
+      });
+      await requestJson('/api/admin/tarifas', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'publicar', plan_id: borrador.plan.id }),
+      });
+    }, 'Nueva versión de precios y seña publicada.');
+  };
+
+  const publicarPolitica = async () => {
+    if (!politicaDraft || !window.confirm('Se publicará una nueva política para operaciones futuras. ¿Continuar?')) return;
+    await ejecutar('politica', async () => {
+      const borrador = await requestJson('/api/admin/politicas-reserva', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'crear_borrador', politica: {
+          codigo: politicaDraft.codigo, nombre: politicaDraft.nombre,
+          vigencia_desde: new Date(vigenciaPolitica).toISOString(),
+          reglas: politicaDraft.reglas.map(regla => ({
+            horas_minimas_antes: regla.horasMinimasAntes,
+            porcentaje_devolucion_bps: regla.porcentajeDevolucionBps,
+          })),
+        } }),
+      });
+      await requestJson('/api/admin/politicas-reserva', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'publicar', politica_id: borrador.politica.id }),
+      });
+    }, 'Nueva política de cancelación publicada.');
   };
 
   if (cargando && !configuracion) {
@@ -1667,104 +1809,127 @@ const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEdi
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Configuración base</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Configuración comercial</h2>
         <p className="mt-1 text-xs text-gray-500">
-          Valores efectivos usados por reservas. No se muestran secretos. Los cambios afectan sólo operaciones futuras.
+          Valores efectivos usados al cotizar y vender. Cada publicación crea una versión auditable y afecta sólo operaciones futuras.
         </p>
+        {!esSuperAdmin && <p className="mt-2 text-xs font-semibold text-amber-700">Vista de solo lectura. Sólo un superadministrador puede publicar cambios.</p>}
       </div>
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
       {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
 
-      {parametro && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Retención de pago</p>
-              <p className="mt-1 text-2xl font-bold text-brand">{parametro.valor} minutos</p>
-              <p className="mt-1 text-xs text-gray-400">
-                Versión {parametro.version} · unidad: {parametro.unidad} · fuente: {parametro.fuente}
-                {parametro.actualizadoAt ? ` · vigente desde ${fmtFechaHora(parametro.actualizadoAt)}` : ''}
-              </p>
-            </div>
-            {puedeEditar && <div className="grid w-full gap-2 sm:max-w-md">
-              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_minutes">
-                Nuevo plazo ({parametro.minimo}–{parametro.maximo} minutos)
-              </label>
-              <input
-                id="config_hold_minutes" type="number" min={parametro.minimo} max={parametro.maximo}
-                value={valor} onChange={event => setValor(event.target.value)}
-                disabled={!parametro.editable || guardando}
-                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
-              />
-              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_reason">Motivo del cambio</label>
-              <textarea
-                id="config_hold_reason" rows={2} maxLength={500} value={motivo}
-                onChange={event => setMotivo(event.target.value)} disabled={!parametro.editable || guardando}
-                placeholder="Ej. Ajuste operativo aprobado"
-                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
-              />
-              <button
-                type="button" onClick={guardar}
-                disabled={!parametro.editable || guardando || motivo.trim().length < 5 || Number(valor) === parametro.valor}
-                className={`justify-self-end rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}
-              >
-                {guardando ? 'Guardando…' : 'Guardar plazo'}
-              </button>
-            </div>}
-          </div>
+      {esSuperAdmin && (
+        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <label className="text-xs font-semibold text-amber-900" htmlFor="config_commercial_reason">Motivo para cambios de modalidad o alimentación</label>
+          <input id="config_commercial_reason" value={motivoComercial} onChange={event => setMotivoComercial(event.target.value)}
+            placeholder="Ej. Ajuste comercial aprobado" maxLength={500}
+            className={`mt-2 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm ${FOCUS_RING}`} />
         </section>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Tarifa publicada</p>
-          {configuracion?.tarifa ? (
-            <><p className="mt-2 font-semibold text-gray-800">{configuracion.tarifa.nombre}</p>
-            <p className="text-xs text-gray-500">{configuracion.tarifa.codigo} · v{configuracion.tarifa.version} · {configuracion.tarifa.moneda}</p>
-            <p className="mt-2 text-xs text-gray-500">{configuracion.tarifa.reglasPrecio} reglas de precio · {configuracion.tarifa.reglasSena} reglas de seña</p></>
-          ) : <p className="mt-2 text-sm text-amber-700">Sin tarifa publicada.</p>}
-        </section>
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Política de cancelación</p>
-          {configuracion?.politicaCancelacion ? (
-            <><p className="mt-2 font-semibold text-gray-800">{configuracion.politicaCancelacion.nombre}</p>
-            <p className="text-xs text-gray-500">{configuracion.politicaCancelacion.codigo} · v{configuracion.politicaCancelacion.version}</p>
-            <p className="mt-2 text-xs text-gray-500">Estado: {configuracion.politicaCancelacion.estado}
-              {configuracion.politicaCancelacion.vigenciaDesde ? ` · vigente desde ${fmtDateLong(configuracion.politicaCancelacion.vigenciaDesde.slice(0, 10))}` : ''}
-            </p></>
-          ) : <p className="mt-2 text-sm text-amber-700">Sin política configurada.</p>}
-        </section>
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Alimentación</p>
-          <ul className="mt-2 space-y-2 text-xs text-gray-600">
-            {(configuracion?.alimentacion || []).map(item => (
-              <li key={item.codigo}><strong>{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</strong><br />
-                v{item.version} · {fmtMoney(item.precioComidaCentavos / 100)} por comida · {item.comidasAdicionalesPorPersonaNoche} adicionales</li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Inventario y modalidades efectivas</p>
-        </div>
-        <ul className="divide-y divide-gray-100">
-          {(configuracion?.inventario || []).map(espacio => (
-            <li key={espacio.codigo} className="px-5 py-3 text-sm">
-              <div className="flex flex-col justify-between gap-1 sm:flex-row">
-                <span className="font-semibold text-gray-800">{espacio.nombre} <span className="font-normal text-gray-400">({espacio.codigo})</span></span>
-                <span className="text-xs text-gray-500">Comercial {espacio.capacidadComercial} · máximo {espacio.capacidadOperativaMaxima} · {espacio.estado}</span>
+      <details open className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Precios y seña</summary>
+        <div className="space-y-5 border-t border-gray-100 p-5">
+          {!tarifaDraft ? <p className="text-sm text-amber-700">Sin tarifa publicada.</p> : <>
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="text-xs font-semibold text-gray-600">Nombre del plan
+                <input value={tarifaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setTarifaDraft({ ...tarifaDraft, nombre: event.target.value })}
+                  className={`mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`} />
+              </label>
+              <div className="text-xs text-gray-500"><strong className="block text-gray-700">Código</strong>{tarifaDraft.codigo}</div>
+              <div className="text-xs text-gray-500"><strong className="block text-gray-700">Versión vigente</strong>v{tarifaDraft.version} · {tarifaDraft.moneda}</div>
+            </div>
+            {tarifaDraft.temporadas.map((temporada, temporadaIndice) => (
+              <div key={`${temporada.codigo}-${temporadaIndice}`} className="rounded-lg border border-gray-200 p-4">
+                <div className="grid gap-3 md:grid-cols-5">
+                  <label className="text-xs font-semibold text-gray-600">Temporada
+                    <input value={temporada.nombre} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { nombre: event.target.value })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <label className="text-xs font-semibold text-gray-600">Desde
+                    <input type="date" value={temporada.fechaDesde} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { fechaDesde: event.target.value })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <label className="text-xs font-semibold text-gray-600">Hasta
+                    <input type="date" value={temporada.fechaHasta} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { fechaHasta: event.target.value })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <label className="text-xs font-semibold text-gray-600">Prioridad
+                    <input type="number" min={0} value={temporada.prioridad} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { prioridad: Number(event.target.value) })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <div className="text-xs text-gray-500"><strong className="block text-gray-700">Código</strong>{temporada.codigo}</div>
+                </div>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-[880px] w-full text-left text-xs">
+                    <thead><tr className="border-b text-gray-500"><th className="py-2">Alojamiento</th><th>Modalidad</th><th>Ocupación</th><th>Base</th><th>Precio ARS</th><th>Exclusividad</th></tr></thead>
+                    <tbody>{temporada.reglas.map((regla, reglaIndice) => (
+                      <tr key={reglaIndice} className="border-b border-gray-100">
+                        <td className="py-2"><select value={regla.tipoAlojamiento} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { tipoAlojamiento: event.target.value as any })} className="rounded border px-2 py-1"><option value="domo">Domo</option><option value="refugio">Refugio</option><option value="camping">Camping</option><option value="bell_tent">Carpa</option></select></td>
+                        <td><select value={regla.modalidad} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { modalidad: event.target.value as any })} className="rounded border px-2 py-1"><option value="cualquiera">Cualquiera</option><option value="privada">Privada</option><option value="compartida">Compartida</option><option value="camping">Camping</option></select></td>
+                        <td><input aria-label="Ocupación mínima" type="number" min={1} value={regla.ocupacionMin} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { ocupacionMin: Number(event.target.value) })} className="w-14 rounded border px-2 py-1" /> – <input aria-label="Ocupación máxima" type="number" min={1} value={regla.ocupacionMax} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { ocupacionMax: Number(event.target.value) })} className="w-14 rounded border px-2 py-1" /></td>
+                        <td><select value={regla.baseCalculo} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { baseCalculo: event.target.value as any })} className="rounded border px-2 py-1"><option value="persona_noche">Persona/noche</option><option value="unidad_noche">Unidad/noche</option></select></td>
+                        <td><input aria-label="Precio en ARS" type="number" min={0} value={regla.importeCentavos / 100} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { importeCentavos: Math.round(Number(event.target.value) * 100) })} className="w-28 rounded border px-2 py-1" /></td>
+                        <td><input aria-label="Exclusividad desde" type="number" min={1} placeholder="Desde" value={regla.exclusividadDesde ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { exclusividadDesde: event.target.value ? Number(event.target.value) : null })} className="w-20 rounded border px-2 py-1" /> – <input aria-label="Exclusividad hasta" type="number" min={1} placeholder="Hasta" value={regla.exclusividadHasta ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { exclusividadHasta: event.target.value ? Number(event.target.value) : null })} className="w-20 rounded border px-2 py-1" /></td>
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                </div>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                {espacio.modalidades.length > 0
-                  ? espacio.modalidades.map(item => `${item.modalidad}/${item.contexto} por ${item.unidadVenta}`).join(' · ')
-                  : 'Sin modalidades habilitadas'}
-              </p>
-            </li>
-          ))}
-        </ul>
+            ))}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Reglas de seña</p>
+              <div className="mt-2 space-y-2">{tarifaDraft.senas.map((regla, indice) => (
+                <div key={indice} className="grid gap-2 rounded-lg bg-gray-50 p-3 sm:grid-cols-4">
+                  <label className="text-xs text-gray-600">Subtotal desde (ARS)<input type="number" min={0} value={regla.subtotalDesdeCentavos / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { subtotalDesdeCentavos: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Subtotal hasta (ARS)<input type="number" min={0} placeholder="Sin límite" value={regla.subtotalHastaCentavos == null ? '' : regla.subtotalHastaCentavos / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { subtotalHastaCentavos: event.target.value ? Math.round(Number(event.target.value) * 100) : null })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Tipo<select value={regla.tipo} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { tipo: event.target.value as any })} className="mt-1 w-full rounded border px-2 py-1"><option value="porcentaje_bps">Porcentaje</option><option value="importe_fijo">Importe fijo</option></select></label>
+                  <label className="text-xs text-gray-600">{regla.tipo === 'porcentaje_bps' ? 'Porcentaje' : 'Importe (ARS)'}<input type="number" min={0} max={regla.tipo === 'porcentaje_bps' ? 100 : undefined} value={regla.tipo === 'porcentaje_bps' ? regla.valor / 100 : regla.valor / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { valor: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                </div>
+              ))}</div>
+            </div>
+            {esSuperAdmin && <button type="button" onClick={publicarTarifa} disabled={guardando !== null} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'tarifa' ? 'Publicando…' : 'Publicar nueva versión de precios y seña'}</button>}
+          </>}
+        </div>
+      </details>
+
+      <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Modalidades de reserva</summary>
+        <div className="border-t border-gray-100">
+          {(configuracion?.inventario || []).map(espacio => <div key={espacio.codigo} className="border-b border-gray-100 p-5 last:border-0">
+            <div className="flex flex-col justify-between gap-1 sm:flex-row"><strong>{espacio.nombre}</strong><span className="text-xs text-gray-500">Capacidad comercial {espacio.capacidadComercial} · máximo físico {espacio.capacidadOperativaMaxima}</span></div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">{espacio.modalidades.map(item => <div key={item.id} className="flex items-center justify-between rounded-lg border border-gray-200 p-3 text-xs">
+              <span><strong className="capitalize">{item.modalidad}</strong><br /><span className="text-gray-500">{item.contexto} · venta por {item.unidadVenta}</span></span>
+              <button type="button" disabled={!esSuperAdmin || motivoComercial.trim().length < 5 || guardando !== null} onClick={() => cambiarModalidad(item)} className={`rounded-full px-3 py-1 font-semibold disabled:opacity-50 ${item.habilitada ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'} ${FOCUS_RING}`}>{guardando === `modalidad-${item.id}` ? 'Guardando…' : item.habilitada ? 'Habilitada' : 'Deshabilitada'}</button>
+            </div>)}</div>
+          </div>)}
+          <p className="px-5 pb-4 text-xs text-gray-500">Deshabilitar una modalidad evita nuevas cotizaciones; no modifica reservas existentes. Las capacidades siguen siendo un control físico y operativo.</p>
+        </div>
+      </details>
+
+      <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Alimentación</summary>
+        <div className="grid gap-3 border-t border-gray-100 p-5 sm:grid-cols-2">{(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-4">
+          <p className="font-semibold">{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</p>
+          <p className="text-xs text-gray-500">v{item.version} · {item.comidasAdicionalesPorPersonaNoche} comidas adicionales por persona/noche</p>
+          <label className="mt-3 block text-xs font-semibold text-gray-600">Precio por comida (ARS)<input type="number" min={0} value={preciosComida[item.codigo] ?? ''} disabled={!esSuperAdmin} onChange={event => setPreciosComida(actual => ({ ...actual, [item.codigo]: event.target.value }))} className={`mt-1 w-full rounded border px-3 py-2 text-sm ${FOCUS_RING}`} /></label>
+          {esSuperAdmin && <button type="button" onClick={() => publicarComida(item)} disabled={guardando !== null || motivoComercial.trim().length < 5 || Math.round(Number(preciosComida[item.codigo]) * 100) === item.precioComidaCentavos} className={`mt-3 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand disabled:opacity-50 ${FOCUS_RING}`}>{guardando === `comida-${item.codigo}` ? 'Publicando…' : 'Publicar nueva versión'}</button>}
+        </div>)}</div>
+      </details>
+
+      <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Política de cancelación</summary>
+        <div className="space-y-4 border-t border-gray-100 p-5">{!politicaDraft ? <p className="text-sm text-amber-700">Sin política configurada.</p> : <>
+          <div className="grid gap-3 sm:grid-cols-3"><label className="text-xs font-semibold text-gray-600">Nombre<input value={politicaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, nombre: event.target.value })} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div className="text-xs text-gray-500"><strong className="block text-gray-700">Código y versión</strong>{politicaDraft.codigo} · v{politicaDraft.version}</div><label className="text-xs font-semibold text-gray-600">Vigente desde<input type="datetime-local" value={vigenciaPolitica} disabled={!esSuperAdmin} onChange={event => setVigenciaPolitica(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label></div>
+          <div className="space-y-2">{politicaDraft.reglas.map((regla, indice) => <div key={indice} className="grid gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-2"><label className="text-xs text-gray-600">Horas mínimas antes del check-in<input type="number" min={0} value={regla.horasMinimasAntes} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, horasMinimasAntes: Number(event.target.value) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label><label className="text-xs text-gray-600">Devolución (%)<input type="number" min={0} max={100} value={regla.porcentajeDevolucionBps / 100} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, porcentajeDevolucionBps: Math.round(Number(event.target.value) * 100) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label></div>)}</div>
+          {esSuperAdmin && <button type="button" onClick={publicarPolitica} disabled={guardando !== null || !vigenciaPolitica} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'politica' ? 'Publicando…' : 'Publicar nueva política'}</button>}
+        </>}</div>
+      </details>
+
+      {parametro && <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Retención para completar el pago · {parametro.valor} minutos</summary>
+        <div className="grid gap-3 border-t border-gray-100 p-5 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><label className="text-xs font-semibold text-gray-600">Nuevo plazo<input type="number" min={parametro.minimo} max={parametro.maximo} value={valor} onChange={event => setValor(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div><label className="text-xs font-semibold text-gray-600">Motivo<input value={motivo} onChange={event => setMotivo(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><button type="button" onClick={guardarPlazo} disabled={guardando !== null || motivo.trim().length < 5 || Number(valor) === parametro.valor} className="mt-2 rounded bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{guardando === 'plazo' ? 'Guardando…' : 'Guardar plazo'}</button></div></>}</div>
+      </details>}
+
+      <section className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-xs text-gray-600">
+        <strong className="text-gray-800">Fuera de esta pantalla:</strong> credenciales y activación de proveedores de pago permanecen en variables seguras del entorno. Las capacidades físicas y excepciones de capacidad siguen el flujo operativo auditado.
       </section>
     </div>
   );
@@ -1835,6 +2000,12 @@ const ACCION_LABEL: Record<string, string> = {
   crear_estadia_no_comercial: 'Registró una estadía no comercial',
   cancelar_estadia_no_comercial: 'Canceló una estadía no comercial',
   actualizar_configuracion_reservas: 'Actualizó configuración de reservas',
+  actualizar_modalidad_comercial: 'Actualizó una modalidad comercial',
+  publicar_tarifa_alimentacion: 'Publicó una tarifa de alimentación',
+  crear_borrador_tarifa: 'Creó un borrador de precios',
+  publicar_plan_tarifa: 'Publicó precios y seña',
+  crear_borrador_politica_cancelacion: 'Creó un borrador de cancelación',
+  publicar_politica_cancelacion: 'Publicó una política de cancelación',
 };
 
 const fmtFechaHora = (iso: string) => {
@@ -3253,7 +3424,7 @@ const PanelReservas: React.FC = () => {
 
         {vistaActiva === 'arrepentimientos' && <SeccionArrepentimientos puedeGestionar={puedeEditar} />}
 
-        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase puedeEditar={esSuperAdmin} />}
+        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase esSuperAdmin={esSuperAdmin} />}
         {vistaActiva === 'integraciones' && <SeccionIntegraciones esSuperAdmin={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}

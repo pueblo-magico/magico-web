@@ -65,9 +65,13 @@ import type {
   DestinoCobroProveedor,
 } from '../../_domain/reservas/collectionAccounts.ts';
 import type {
+  CambioModalidadComercial,
   CambioParametroOperativo,
+  CambioTarifaAlimentacion,
   ConfiguracionBaseReservas,
+  ModalidadComercialActualizada,
   ParametroOperativoReserva,
+  TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
 import type {
   EstadoOperativoOutbox,
@@ -253,6 +257,16 @@ export interface RepositorioConfiguracionBaseReservas {
     correlationId: string;
     operacionUid: string;
   }): Promise<ParametroOperativoReserva | null>;
+  actualizarModalidad(entrada: CambioModalidadComercial & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ModalidadComercialActualizada | null>;
+  publicarTarifaAlimentacion(entrada: CambioTarifaAlimentacion & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<TarifaAlimentacionActualizada | null>;
 }
 
 export interface RepositorioRetencionesReserva {

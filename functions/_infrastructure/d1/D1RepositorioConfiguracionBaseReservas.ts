@@ -3,7 +3,9 @@ import {
   PAYMENT_HOLD_MINUTES,
   normalizarPaymentHoldMinutes,
   type ConfiguracionBaseReservas,
+  type ModalidadComercialActualizada,
   type ParametroOperativoReserva,
+  type TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
 
 type Result = { results?: Record<string, unknown>[] };
@@ -32,6 +34,18 @@ function mapearParametro(row: Record<string, unknown> | null): ParametroOperativ
   };
 }
 
+function mapearTarifaAlimentacion(row: Record<string, unknown>): TarifaAlimentacionActualizada {
+  return {
+    id: Number(row.id),
+    codigo: row.codigo as TarifaAlimentacionActualizada['codigo'],
+    moneda: String(row.moneda),
+    version: Number(row.version),
+    precioComidaCentavos: Number(row.precio_comida_centavos),
+    comidasAdicionalesPorPersonaNoche: Number(row.comidas_adicionales_por_persona_noche),
+    publicadoAt: String(row.publicado_at),
+  };
+}
+
 export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfiguracionBaseReservas {
   private readonly db: Database;
 
@@ -48,20 +62,21 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
   }
 
   async obtenerEfectiva(): Promise<ConfiguracionBaseReservas> {
-    const [parametro, inventario, tarifa, politica, alimentacion] = await Promise.all([
+    const [parametro, inventario, tarifa, reglasTarifa, senasTarifa, politica, alimentacion] = await Promise.all([
       this.db.prepare(`
         SELECT codigo, valor_entero, unidad, version, updated_at
         FROM parametros_operativos_reservas WHERE codigo = 'payment_hold_minutes'
       `).first(),
       this.db.prepare(`
         SELECT e.codigo, e.nombre, e.tipo, e.capacidad_comercial,
-          e.capacidad_operativa_maxima, e.estado, me.modalidad, me.contexto, me.unidad_venta
+          e.capacidad_operativa_maxima, e.estado, me.id, me.modalidad, me.contexto,
+          me.unidad_venta, me.habilitada, me.updated_at
         FROM espacios e
-        LEFT JOIN modalidades_espacio me ON me.espacio_id = e.id AND me.habilitada = 1
+        LEFT JOIN modalidades_espacio me ON me.espacio_id = e.id
         ORDER BY e.codigo, me.contexto, me.modalidad
       `).all(),
       this.db.prepare(`
-        SELECT p.codigo, p.nombre, p.moneda, p.version, p.publicado_at,
+        SELECT p.id, p.codigo, p.nombre, p.moneda, p.version, p.publicado_at,
           (SELECT COUNT(*) FROM reglas_precio rp JOIN temporadas t ON t.id = rp.temporada_id
            WHERE t.plan_tarifa_id = p.id) reglas_precio,
           (SELECT COUNT(*) FROM reglas_sena rs WHERE rs.plan_tarifa_id = p.id) reglas_sena
@@ -69,13 +84,36 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         ORDER BY p.publicado_at DESC, p.id DESC LIMIT 1
       `).first(),
       this.db.prepare(`
-        SELECT codigo, nombre, version, estado, vigencia_desde
+        SELECT t.codigo temporada_codigo, t.nombre temporada_nombre, t.fecha_desde,
+          t.fecha_hasta, t.prioridad, rp.tipo_alojamiento, rp.modalidad,
+          rp.ocupacion_min, rp.ocupacion_max, rp.base_calculo, rp.importe_centavos,
+          rp.exclusividad_desde, rp.exclusividad_hasta
+        FROM planes_tarifa p
+        JOIN temporadas t ON t.plan_tarifa_id = p.id
+        JOIN reglas_precio rp ON rp.temporada_id = t.id
+        WHERE p.id = (
+          SELECT id FROM planes_tarifa WHERE estado = 'publicado'
+          ORDER BY publicado_at DESC, id DESC LIMIT 1
+        )
+        ORDER BY t.prioridad DESC, t.id, rp.id
+      `).all(),
+      this.db.prepare(`
+        SELECT rs.subtotal_desde_centavos, rs.subtotal_hasta_centavos, rs.tipo, rs.valor
+        FROM planes_tarifa p JOIN reglas_sena rs ON rs.plan_tarifa_id = p.id
+        WHERE p.id = (
+          SELECT id FROM planes_tarifa WHERE estado = 'publicado'
+          ORDER BY publicado_at DESC, id DESC LIMIT 1
+        )
+        ORDER BY rs.subtotal_desde_centavos
+      `).all(),
+      this.db.prepare(`
+        SELECT codigo, nombre, version, estado, vigencia_desde, reglas_json
         FROM politicas_cancelacion
         ORDER BY CASE WHEN estado = 'publicada' THEN 0 ELSE 1 END, version DESC LIMIT 1
       `).first(),
       this.db.prepare(`
-        SELECT codigo, moneda, version, precio_comida_centavos,
-          comidas_adicionales_por_persona_noche
+        SELECT id, codigo, moneda, version, precio_comida_centavos,
+          comidas_adicionales_por_persona_noche, publicado_at
         FROM tarifas_alimentacion WHERE estado = 'publicado' ORDER BY codigo
       `).all(),
     ]);
@@ -94,28 +132,64 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         espacios.set(codigo, espacio);
       }
       if (row.modalidad != null) espacio.modalidades.push({
-        modalidad: String(row.modalidad), contexto: String(row.contexto), unidadVenta: String(row.unidad_venta),
+        id: Number(row.id), modalidad: String(row.modalidad), contexto: String(row.contexto),
+        unidadVenta: String(row.unidad_venta), habilitada: Number(row.habilitada) === 1,
+        actualizadoAt: String(row.updated_at),
       });
+    }
+
+    const temporadas = new Map<string, NonNullable<ConfiguracionBaseReservas['tarifa']>['temporadas'][number]>();
+    for (const row of reglasTarifa.results || []) {
+      const codigo = String(row.temporada_codigo);
+      let temporada = temporadas.get(codigo);
+      if (!temporada) {
+        temporada = {
+          codigo, nombre: String(row.temporada_nombre), fechaDesde: String(row.fecha_desde),
+          fechaHasta: String(row.fecha_hasta), prioridad: Number(row.prioridad), reglas: [],
+        };
+        temporadas.set(codigo, temporada);
+      }
+      temporada.reglas.push({
+        tipoAlojamiento: row.tipo_alojamiento as any, modalidad: row.modalidad as any,
+        ocupacionMin: Number(row.ocupacion_min), ocupacionMax: Number(row.ocupacion_max),
+        baseCalculo: row.base_calculo as any, importeCentavos: Number(row.importe_centavos),
+        exclusividadDesde: row.exclusividad_desde == null ? null : Number(row.exclusividad_desde),
+        exclusividadHasta: row.exclusividad_hasta == null ? null : Number(row.exclusividad_hasta),
+      });
+    }
+
+    let reglasPolitica: Array<{ horasMinimasAntes: number; porcentajeDevolucionBps: number }> = [];
+    if (politica?.reglas_json) {
+      try {
+        const documento = JSON.parse(String(politica.reglas_json));
+        reglasPolitica = Array.isArray(documento?.reglas) ? documento.reglas.map((regla: any) => ({
+          horasMinimasAntes: Number(regla.horas_minimas_antes),
+          porcentajeDevolucionBps: Number(regla.porcentaje_devolucion_bps),
+        })) : [];
+      } catch { reglasPolitica = []; }
     }
 
     return {
       parametros: [mapearParametro(parametro)],
       inventario: [...espacios.values()],
       tarifa: tarifa ? {
-        codigo: String(tarifa.codigo), nombre: String(tarifa.nombre), moneda: String(tarifa.moneda),
+        id: Number(tarifa.id), codigo: String(tarifa.codigo), nombre: String(tarifa.nombre), moneda: String(tarifa.moneda),
         version: Number(tarifa.version), reglasPrecio: Number(tarifa.reglas_precio),
         reglasSena: Number(tarifa.reglas_sena), publicadoAt: String(tarifa.publicado_at),
+        temporadas: [...temporadas.values()],
+        senas: (senasTarifa.results || []).map(row => ({
+          subtotalDesdeCentavos: Number(row.subtotal_desde_centavos),
+          subtotalHastaCentavos: row.subtotal_hasta_centavos == null ? null : Number(row.subtotal_hasta_centavos),
+          tipo: row.tipo as 'porcentaje_bps' | 'importe_fijo', valor: Number(row.valor),
+        })),
       } : null,
       politicaCancelacion: politica ? {
         codigo: String(politica.codigo), nombre: String(politica.nombre), version: Number(politica.version),
         estado: String(politica.estado),
         vigenciaDesde: politica.vigencia_desde == null ? null : String(politica.vigencia_desde),
+        reglas: reglasPolitica,
       } : null,
-      alimentacion: (alimentacion.results || []).map(row => ({
-        codigo: String(row.codigo), moneda: String(row.moneda), version: Number(row.version),
-        precioComidaCentavos: Number(row.precio_comida_centavos),
-        comidasAdicionalesPorPersonaNoche: Number(row.comidas_adicionales_por_persona_noche),
-      })),
+      alimentacion: (alimentacion.results || []).map(mapearTarifaAlimentacion),
     };
   }
 
@@ -154,5 +228,86 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
     ]);
     const row = resultados[0]?.results?.[0];
     return row ? mapearParametro(row) : null;
+  }
+
+  async actualizarModalidad(
+    entrada: Parameters<RepositorioConfiguracionBaseReservas['actualizarModalidad']>[0]
+  ): Promise<ModalidadComercialActualizada | null> {
+    const anterior = await this.db.prepare(`
+      SELECT me.id, me.habilitada, me.modalidad, me.contexto, me.unidad_venta, e.codigo espacio_codigo
+      FROM modalidades_espacio me JOIN espacios e ON e.id = me.espacio_id WHERE me.id = ?
+    `).bind(entrada.id).first();
+    if (!anterior || (Number(anterior.habilitada) === 1) !== entrada.expectedHabilitada) return null;
+
+    const resultados = await this.db.batch([
+      this.db.prepare(`
+        UPDATE modalidades_espacio
+        SET habilitada = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE id = ? AND habilitada = ?
+        RETURNING id, modalidad, contexto, unidad_venta, habilitada, updated_at
+      `).bind(entrada.habilitada ? 1 : 0, entrada.id, entrada.expectedHabilitada ? 1 : 0),
+      this.db.prepare(`
+        INSERT INTO auditoria_admin (
+          email, accion, actor_tipo, entidad_tipo, entidad_id, motivo, correlation_id, metadata_json
+        ) SELECT ?, 'actualizar_modalidad_comercial', 'usuario', 'modalidad_espacio', ?, ?, ?,
+          json_object('espacio_codigo', ?, 'modalidad', ?, 'contexto', ?, 'unidad_venta', ?,
+            'habilitada_anterior', ?, 'habilitada_nueva', ?)
+        WHERE changes() = 1
+      `).bind(
+        entrada.actorEmail, String(entrada.id), entrada.motivo, entrada.correlationId,
+        String(anterior.espacio_codigo), String(anterior.modalidad), String(anterior.contexto),
+        String(anterior.unidad_venta), entrada.expectedHabilitada ? 1 : 0, entrada.habilitada ? 1 : 0
+      ),
+    ]);
+    const row = resultados[0]?.results?.[0];
+    return row ? {
+      id: Number(row.id), espacioCodigo: String(anterior.espacio_codigo),
+      modalidad: String(row.modalidad), contexto: String(row.contexto), unidadVenta: String(row.unidad_venta),
+      habilitada: Number(row.habilitada) === 1, actualizadoAt: String(row.updated_at),
+    } : null;
+  }
+
+  async publicarTarifaAlimentacion(
+    entrada: Parameters<RepositorioConfiguracionBaseReservas['publicarTarifaAlimentacion']>[0]
+  ): Promise<TarifaAlimentacionActualizada | null> {
+    const anterior = await this.db.prepare(`
+      SELECT id, codigo, moneda, version, precio_comida_centavos,
+        comidas_adicionales_por_persona_noche
+      FROM tarifas_alimentacion WHERE codigo = ? AND estado = 'publicado'
+    `).bind(entrada.codigo).first();
+    if (!anterior || Number(anterior.version) !== entrada.expectedVersion) return null;
+
+    const resultados = await this.db.batch([
+      this.db.prepare(`
+        UPDATE tarifas_alimentacion SET estado = 'retirado'
+        WHERE id = ? AND estado = 'publicado' AND version = ?
+      `).bind(Number(anterior.id), entrada.expectedVersion),
+      this.db.prepare(`
+        INSERT INTO tarifas_alimentacion (
+          codigo, moneda, version, precio_comida_centavos,
+          comidas_adicionales_por_persona_noche, estado, publicado_at
+        ) SELECT ?, ?, ?, ?, ?, 'publicado', strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE changes() = 1
+        RETURNING id, codigo, moneda, version, precio_comida_centavos,
+          comidas_adicionales_por_persona_noche, publicado_at
+      `).bind(
+        entrada.codigo, String(anterior.moneda), entrada.expectedVersion + 1,
+        entrada.precioComidaCentavos, Number(anterior.comidas_adicionales_por_persona_noche)
+      ),
+      this.db.prepare(`
+        INSERT INTO auditoria_admin (
+          email, accion, actor_tipo, entidad_tipo, entidad_id, motivo, correlation_id, metadata_json
+        ) SELECT ?, 'publicar_tarifa_alimentacion', 'usuario', 'tarifa_alimentacion', ?, ?, ?,
+          json_object('codigo', ?, 'version_anterior', ?, 'version_nueva', ?,
+            'precio_anterior_centavos', ?, 'precio_nuevo_centavos', ?)
+        WHERE changes() = 1
+      `).bind(
+        entrada.actorEmail, entrada.codigo, entrada.motivo, entrada.correlationId, entrada.codigo,
+        entrada.expectedVersion, entrada.expectedVersion + 1, Number(anterior.precio_comida_centavos),
+        entrada.precioComidaCentavos
+      ),
+    ]);
+    const row = resultados[1]?.results?.[0];
+    return row ? mapearTarifaAlimentacion(row) : null;
   }
 }

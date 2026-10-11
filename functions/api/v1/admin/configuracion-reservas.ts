@@ -1,6 +1,8 @@
 import {
+  actualizarModalidadConfiguracion,
   actualizarParametroConfiguracion,
   consultarConfiguracionBase,
+  publicarTarifaAlimentacionConfiguracion,
 } from '../../../_application/reservas/gestionarConfiguracionBase.ts';
 import { D1RepositorioConfiguracionBaseReservas } from '../../../_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
 import { observarSolicitud } from '../../../_interfaces/http/observability.ts';
@@ -35,15 +37,34 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
     return respuestaJsonInvalido(error);
   }
   try {
-    const parametro = await actualizarParametroConfiguracion({
-      codigo: String(body.codigo || '') as 'payment_hold_minutes',
-      valor: Number(body.valor),
-      expectedVersion: Number(body.expected_version),
-      motivo: String(body.motivo || ''),
-      actorEmail: auth.email,
-      correlationId,
-    }, new D1RepositorioConfiguracionBaseReservas(env.DB));
-    return json({ data: parametro, meta: { version: 'v1' } });
+    const repositorio = new D1RepositorioConfiguracionBaseReservas(env.DB);
+    const accion = String(body.accion || 'actualizar_parametro');
+    if (accion === 'actualizar_parametro') {
+      const parametro = await actualizarParametroConfiguracion({
+        codigo: String(body.codigo || '') as 'payment_hold_minutes',
+        valor: Number(body.valor), expectedVersion: Number(body.expected_version),
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: parametro, meta: { version: 'v1' } });
+    }
+    if (accion === 'actualizar_modalidad') {
+      const modalidad = await actualizarModalidadConfiguracion({
+        id: Number(body.id), habilitada: body.habilitada === true,
+        expectedHabilitada: body.expected_habilitada === true,
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: modalidad, meta: { version: 'v1' } });
+    }
+    if (accion === 'publicar_tarifa_alimentacion') {
+      const tarifa = await publicarTarifaAlimentacionConfiguracion({
+        codigo: String(body.codigo || '') as 'desayuno_incluido' | 'pension_completa',
+        precioComidaCentavos: Number(body.precio_comida_centavos),
+        expectedVersion: Number(body.expected_version), motivo: String(body.motivo || ''),
+        actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: tarifa, meta: { version: 'v1' } });
+    }
+    return json({ error: 'Acción de configuración no soportada.' }, 400);
   } catch (error) {
     return respuestaErrorReserva(error, {
       codigo: 'ERROR_INTERNO', mensaje: 'No se pudo actualizar la configuración.', status: 500,

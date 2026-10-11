@@ -35,6 +35,20 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /<SeccionOcupacionOperativa \/>/);
   assert.match(source, /<SeccionArrepentimientos puedeGestionar=\{puedeEditar\} \/>/);
   assert.match(source, /<SeccionIntegraciones esSuperAdmin=\{esSuperAdmin\} \/>/);
+  assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} \/>/);
+});
+
+test('permite al superadmin versionar la configuración comercial sin exponer secretos', () => {
+  assert.match(source, /Configuración comercial/);
+  assert.match(source, /Precios y seña/);
+  assert.match(source, /Modalidades de reserva/);
+  assert.match(source, /Política de cancelación/);
+  assert.match(source, /accion: 'actualizar_modalidad'/);
+  assert.match(source, /accion: 'publicar_tarifa_alimentacion'/);
+  assert.match(source, /requestJson\('\/api\/admin\/tarifas'/);
+  assert.match(source, /requestJson\('\/api\/admin\/politicas-reserva'/);
+  assert.match(source, /Sólo un superadministrador puede publicar cambios/);
+  assert.match(source, /credenciales y activación de proveedores de pago permanecen en variables seguras/);
 });
 
 test('separa los eventos de integraciones en categorías accesibles sin ocultar sus acciones', () => {
