@@ -61,6 +61,33 @@
 .admin-panel-scope .admin-metric-card { border-color: var(--admin-line); border-radius: 14px; box-shadow: 0 8px 28px rgba(20, 58, 48, .045); }
 .admin-panel-scope .admin-surface { border-color: var(--admin-line); border-radius: 14px; box-shadow: 0 10px 34px rgba(20, 58, 48, .05); }
 
+.admin-config { display: grid; gap: 12px; }
+.admin-config__intro { margin-bottom: 2px; }
+.admin-config__reason { display: grid; grid-template-columns: minmax(190px, auto) minmax(240px, 1fr); align-items: center; gap: 12px; padding: 11px 13px; }
+.admin-config__section { overflow: clip; }
+.admin-config__section > summary { display: flex; min-height: 58px; align-items: center; gap: 12px; padding: 10px 16px; color: #203d49; cursor: pointer; list-style: none; }
+.admin-config__section > summary::-webkit-details-marker { display: none; }
+.admin-config__section > summary span { display: grid; min-width: 0; gap: 1px; }
+.admin-config__section > summary strong { font-size: 14px; line-height: 1.25; }
+.admin-config__section > summary small { overflow: hidden; color: var(--admin-muted); font-size: 11px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.admin-config__section > summary::after { width: 8px; height: 8px; flex: 0 0 auto; margin-left: auto; border-right: 2px solid #718178; border-bottom: 2px solid #718178; content: ''; transform: rotate(45deg) translateY(-2px); transition: transform 160ms ease; }
+.admin-config__section[open] > summary::after { transform: rotate(225deg) translate(-2px, -1px); }
+.admin-config__section > summary:hover { background: #f8faf8; }
+.admin-config__section-body { padding: 14px 16px 16px; }
+.admin-config__lodging { padding: 12px !important; }
+.admin-config__lodging-fields { display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 10px; }
+.admin-config__modalities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.admin-config__modality { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'fields fields' 'toggle action' 'warning warning'; align-items: center; gap: 9px 12px; padding: 11px !important; }
+.admin-config__modality-fields { display: grid; grid-area: fields; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.admin-config__modality-toggle { display: flex; grid-area: toggle; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; }
+.admin-config__modality-warning { grid-area: warning; margin: 0; }
+.admin-config__modality-action { grid-area: action; white-space: nowrap; }
+.admin-config .pm-input-field, .admin-config .pm-select-field { gap: 4px; min-width: 0; }
+.admin-config .pm-input-field__label, .admin-config .pm-select-field__label { font-size: 11px; line-height: 1.25; }
+.admin-config .pm-input-field__control, .admin-config .pm-select-field__trigger { min-height: 36px; padding: 7px 10px; font-size: 12px; }
+.admin-config .pm-select-field__trigger { gap: 6px; }
+.admin-config .pm-select-field__value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 @media (max-width: 1023px) {
   .admin-sidebar { display: none; }
   .admin-workspace { margin-left: 0; }
@@ -77,6 +104,7 @@
   .admin-mobile-nav .admin-nav-button svg { width: 16px; }
   .admin-content { padding: 22px 14px 38px; }
   .admin-view-heading { margin-bottom: 18px; }
+  .admin-config__modalities { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -84,4 +112,10 @@
   .admin-topbar { justify-content: space-between; }
   .admin-topbar__actions > button span { display: none; }
   .admin-view-heading h2 { font-size: 34px; }
+  .admin-config__reason { grid-template-columns: 1fr; gap: 6px; }
+  .admin-config__section > summary { min-height: 54px; padding: 9px 12px; }
+  .admin-config__section-body { padding: 12px; }
+  .admin-config__lodging-fields, .admin-config__modality-fields { grid-template-columns: 1fr; }
+  .admin-config__modality { grid-template-columns: 1fr; grid-template-areas: 'fields' 'toggle' 'warning' 'action'; }
+  .admin-config__modality-action { width: 100%; }
 }

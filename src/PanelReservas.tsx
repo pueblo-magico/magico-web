@@ -1855,8 +1855,8 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="admin-config">
+      <div className="admin-config__intro">
         <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Configuración comercial</h2>
         <p className="mt-1 text-xs text-gray-500">
           Valores efectivos usados al cotizar y vender. Cada publicación crea una versión auditable y afecta sólo operaciones futuras.
@@ -1868,17 +1868,17 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
       {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
 
       {esSuperAdmin && (
-        <section className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <label className="text-xs font-semibold text-amber-900" htmlFor="config_commercial_reason">Motivo para cambios de modalidad o alimentación</label>
+        <section className="admin-config__reason rounded-xl border border-amber-200 bg-amber-50">
+          <label className="text-xs font-semibold text-amber-900" htmlFor="config_commercial_reason">Motivo de los cambios</label>
           <input id="config_commercial_reason" value={motivoComercial} onChange={event => setMotivoComercial(event.target.value)}
             placeholder="Ej. Ajuste comercial aprobado" maxLength={500}
-            className={`mt-2 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm ${FOCUS_RING}`} />
+            className={`w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm ${FOCUS_RING}`} />
         </section>
       )}
 
-      <details open className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Precios y seña</summary>
-        <div className="space-y-5 border-t border-gray-100 p-5">
+      <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Precios y seña</strong><small>Tarifas, temporadas y anticipo requerido</small></span></summary>
+        <div className="admin-config__section-body space-y-4 border-t border-gray-100">
           {!tarifaDraft ? <p className="text-sm text-amber-700">Sin tarifa publicada.</p> : <>
             <div className="grid gap-3 md:grid-cols-3">
               <label className="text-xs font-semibold text-gray-600">Nombre del plan
@@ -1938,9 +1938,9 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
         </div>
       </details>
 
-      <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Modalidades de reserva</summary>
-        <div className="space-y-4 border-t border-gray-100 p-5">
+      <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Modalidades de reserva</strong><small>Alojamientos, capacidades y condiciones de venta</small></span></summary>
+        <div className="admin-config__section-body space-y-3 border-t border-gray-100">
           <p className="text-xs text-gray-500">Definí cuándo se puede vender cada alojamiento, su capacidad y la unidad que descuenta inventario. Los cambios afectan sólo operaciones nuevas.</p>
           {inventarioDraft.map(espacio => {
             const original = configuracion?.inventario.find(item => item.codigo === espacio.codigo);
@@ -1957,12 +1957,12 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
               reservableRetiro: original?.reservableRetiro,
               estado: original?.estado,
             });
-            return <Card key={espacio.codigo} variant="outlined" className="space-y-4 p-4">
+            return <Card key={espacio.codigo} variant="outlined" className="admin-config__lodging space-y-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div><strong>{espacio.nombre}</strong><p className="text-xs text-gray-500">{espacio.codigo} · {espacio.tipo}</p></div>
                 <Badge variant={espacio.estado === 'activo' ? 'success' : espacio.estado === 'inactivo' ? 'danger' : 'warning'}>{espacio.estado === 'activo' ? 'Activo' : espacio.estado === 'inactivo' ? 'Inactivo' : 'Configuración pendiente'}</Badge>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="admin-config__lodging-fields">
                 <Input label="Capacidad comercial" type="number" value={String(espacio.capacidadComercial)} isDisabled={!esSuperAdmin}
                   onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadComercial: Number(value) })} />
                 <Input label="Máximo físico/operativo" type="number" value={String(espacio.capacidadOperativaMaxima)} isDisabled={!esSuperAdmin}
@@ -1971,7 +1971,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                   options={[{ value: 'activo', label: 'Activo' }, { value: 'configuracion_pendiente', label: 'Configuración pendiente' }, { value: 'inactivo', label: 'Inactivo' }]}
                   onChange={value => value && actualizarEspacioDraft(espacio.codigo, { estado: value })} />
               </div>
-              <div className="flex flex-wrap gap-4 text-xs">
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
                 <label className="flex items-center gap-2"><input type="checkbox" checked={espacio.reservableGeneral} disabled={!esSuperAdmin}
                   onChange={event => actualizarEspacioDraft(espacio.codigo, { reservableGeneral: event.target.checked })} /> Venta general</label>
                 <label className="flex items-center gap-2"><input type="checkbox" checked={espacio.reservableRetiro} disabled={!esSuperAdmin}
@@ -1980,13 +1980,13 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
               {espacio.tipo === 'camping' && espacio.estado !== 'activo' && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Para activar Camping: definí una capacidad mayor a cero, habilitá al menos un contexto, guardá estas condiciones y luego habilitá su modalidad. También debe existir una regla de precio publicada para camping.</p>}
               {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || motivoComercial.trim().length < 5 || !espacioModificado || espacio.capacidadOperativaMaxima < espacio.capacidadComercial}
                 isLoading={guardando === `espacio-${espacio.codigo}`} onPress={() => guardarEspacio(espacio)}>Guardar condiciones del alojamiento</Button>}
-              <div className="grid gap-3 lg:grid-cols-2">{espacio.modalidades.map(item => {
+              <div className="admin-config__modalities">{espacio.modalidades.map(item => {
                 const originalModalidad = original?.modalidades.find(actual => actual.id === item.id);
                 const modalidadModificada = Boolean(originalModalidad) && JSON.stringify(item) !== JSON.stringify(originalModalidad);
                 const contextoPermitido = item.contexto === 'general' ? original?.reservableGeneral : original?.reservableRetiro;
                 const puedeHabilitar = original?.estado === 'activo' && (original?.capacidadComercial || 0) > 0 && Boolean(contextoPermitido);
-                return <Card key={item.id} tone="muted" className="space-y-3 p-3">
-                  <div className="grid gap-3 sm:grid-cols-3">
+                return <Card key={item.id} tone="muted" className="admin-config__modality">
+                  <div className="admin-config__modality-fields">
                     <Select label="Modalidad" placeholder="Elegí" value={item.modalidad} isDisabled={!esSuperAdmin}
                       options={opcionesModalidadParaEspacio(espacio)}
                       onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, {
@@ -2000,11 +2000,11 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                       options={item.modalidad === 'privada' ? [{ value: 'espacio', label: 'Espacio completo' }] : item.modalidad === 'camping' ? [{ value: 'parcela', label: 'Parcela' }] : [{ value: 'cama', label: 'Cama' }, { value: 'espacio', label: 'Espacio completo' }]}
                       onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, { unidadVenta: value })} />
                   </div>
-                  <label className="flex items-center gap-2 text-xs font-semibold"><input type="checkbox" checked={item.habilitada} disabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
+                  <label className="admin-config__modality-toggle"><input type="checkbox" checked={item.habilitada} disabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
                     onChange={event => actualizarModalidadDraft(espacio.codigo, item.id, { habilitada: event.target.checked })} /> Habilitada para reservas nuevas</label>
-                  {!puedeHabilitar && <p className="text-xs text-amber-700">Primero activá el alojamiento, asignale capacidad y habilitá el contexto seleccionado.</p>}
+                  {!puedeHabilitar && <p className="admin-config__modality-warning text-xs text-amber-700">Primero activá el alojamiento, asignale capacidad y habilitá el contexto seleccionado.</p>}
                   {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || motivoComercial.trim().length < 5 || !modalidadModificada || (item.habilitada && !puedeHabilitar)}
-                    isLoading={guardando === `modalidad-${item.id}`} onPress={() => guardarModalidad(item)}>Guardar modalidad</Button>}
+                    className="admin-config__modality-action" isLoading={guardando === `modalidad-${item.id}`} onPress={() => guardarModalidad(item)}>Guardar modalidad</Button>}
                 </Card>;
               })}</div>
             </Card>;
@@ -2013,9 +2013,9 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
         </div>
       </details>
 
-      <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Alimentación</summary>
-        <div className="grid gap-3 border-t border-gray-100 p-5 sm:grid-cols-2">{(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-4">
+      <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Alimentación</strong><small>Regímenes y precio por comida</small></span></summary>
+        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-2">{(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-3">
           <p className="font-semibold">{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</p>
           <p className="text-xs text-gray-500">v{item.version} · {item.comidasAdicionalesPorPersonaNoche} comidas adicionales por persona/noche</p>
           <label className="mt-3 block text-xs font-semibold text-gray-600">Precio por comida (ARS)<input type="number" min={0} value={preciosComida[item.codigo] ?? ''} disabled={!esSuperAdmin} onChange={event => setPreciosComida(actual => ({ ...actual, [item.codigo]: event.target.value }))} className={`mt-1 w-full rounded border px-3 py-2 text-sm ${FOCUS_RING}`} /></label>
@@ -2023,18 +2023,18 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
         </div>)}</div>
       </details>
 
-      <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Política de cancelación</summary>
-        <div className="space-y-4 border-t border-gray-100 p-5">{!politicaDraft ? <p className="text-sm text-amber-700">Sin política configurada.</p> : <>
+      <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Política de cancelación</strong><small>Vigencia y porcentajes de devolución</small></span></summary>
+        <div className="admin-config__section-body space-y-3 border-t border-gray-100">{!politicaDraft ? <p className="text-sm text-amber-700">Sin política configurada.</p> : <>
           <div className="grid gap-3 sm:grid-cols-3"><label className="text-xs font-semibold text-gray-600">Nombre<input value={politicaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, nombre: event.target.value })} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div className="text-xs text-gray-500"><strong className="block text-gray-700">Código y versión</strong>{politicaDraft.codigo} · v{politicaDraft.version}</div><label className="text-xs font-semibold text-gray-600">Vigente desde<input type="datetime-local" value={vigenciaPolitica} disabled={!esSuperAdmin} onChange={event => setVigenciaPolitica(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label></div>
           <div className="space-y-2">{politicaDraft.reglas.map((regla, indice) => <div key={indice} className="grid gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-2"><label className="text-xs text-gray-600">Horas mínimas antes del check-in<input type="number" min={0} value={regla.horasMinimasAntes} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, horasMinimasAntes: Number(event.target.value) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label><label className="text-xs text-gray-600">Devolución (%)<input type="number" min={0} max={100} value={regla.porcentajeDevolucionBps / 100} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, porcentajeDevolucionBps: Math.round(Number(event.target.value) * 100) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label></div>)}</div>
           {esSuperAdmin && <button type="button" onClick={publicarPolitica} disabled={guardando !== null || !vigenciaPolitica} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'politica' ? 'Publicando…' : 'Publicar nueva política'}</button>}
         </>}</div>
       </details>
 
-      {parametro && <details className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary className="cursor-pointer px-5 py-4 font-semibold text-gray-800">Retención para completar el pago · {parametro.valor} minutos</summary>
-        <div className="grid gap-3 border-t border-gray-100 p-5 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><label className="text-xs font-semibold text-gray-600">Nuevo plazo<input type="number" min={parametro.minimo} max={parametro.maximo} value={valor} onChange={event => setValor(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div><label className="text-xs font-semibold text-gray-600">Motivo<input value={motivo} onChange={event => setMotivo(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><button type="button" onClick={guardarPlazo} disabled={guardando !== null || motivo.trim().length < 5 || Number(valor) === parametro.valor} className="mt-2 rounded bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{guardando === 'plazo' ? 'Guardando…' : 'Guardar plazo'}</button></div></>}</div>
+      {parametro && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Retención de pago</strong><small>{parametro.valor} minutos para completar la seña</small></span></summary>
+        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><label className="text-xs font-semibold text-gray-600">Nuevo plazo<input type="number" min={parametro.minimo} max={parametro.maximo} value={valor} onChange={event => setValor(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div><label className="text-xs font-semibold text-gray-600">Motivo<input value={motivo} onChange={event => setMotivo(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><button type="button" onClick={guardarPlazo} disabled={guardando !== null || motivo.trim().length < 5 || Number(valor) === parametro.valor} className="mt-2 rounded bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{guardando === 'plazo' ? 'Guardando…' : 'Guardar plazo'}</button></div></>}</div>
       </details>}
 
       <section className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-xs text-gray-600">

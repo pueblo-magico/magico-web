@@ -59,6 +59,14 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /credenciales y activación de proveedores de pago permanecen en variables seguras/);
 });
 
+test('presenta la configuración en secciones compactas sin quebrar valores de modalidad', () => {
+  assert.match(source, /admin-config__section/);
+  assert.match(source, /admin-config__modality-fields/);
+  assert.match(styles, /\.admin-config__modalities\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
+  assert.match(styles, /\.admin-config \.pm-select-field__value\s*\{[^}]*white-space:\s*nowrap/s);
+  assert.match(styles, /@media \(max-width: 640px\)[\s\S]*\.admin-config__modality-fields\s*\{[^}]*grid-template-columns:\s*1fr/s);
+});
+
 test('separa los eventos de integraciones en categorías accesibles sin ocultar sus acciones', () => {
   assert.match(source, /type CategoriaEventosIntegracion = 'eventos' \| 'comunicaciones' \| 'mercado_pago' \| 'aplicaciones'/);
   assert.match(source, /role="tablist" aria-label="Categorías de eventos de integración"/);
