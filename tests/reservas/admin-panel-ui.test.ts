@@ -4,6 +4,8 @@ import test from 'node:test';
 
 const source = readFileSync(new URL('../../src/PanelReservas.tsx', import.meta.url), 'utf8');
 const styles = readFileSync(new URL('../../src/PanelReservas.css', import.meta.url), 'utf8');
+const appRoutes = readFileSync(new URL('../../index.tsx', import.meta.url), 'utf8');
+const prerender = readFileSync(new URL('../../scripts/prerender.mjs', import.meta.url), 'utf8');
 
 test('organiza el panel en sidebar y workspace responsivo', () => {
   assert.match(source, /className="admin-sidebar"/);
@@ -16,6 +18,18 @@ test('organiza el panel en sidebar y workspace responsivo', () => {
   assert.match(styles, /\.admin-sidebar__scroll\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/s);
   assert.match(styles, /@media \(max-width: 1023px\)[\s\S]*\.admin-sidebar\s*\{\s*display:\s*none/s);
   assert.match(styles, /\.admin-mobile-nav\s*\{[^}]*display:\s*none/s);
+});
+
+test('mantiene cada sección en una URL recargable y compatible con navegación del browser', () => {
+  assert.match(appRoutes, /path="\/admin\/reservas\/\*"/);
+  assert.match(source, /useLocation, useNavigate/);
+  assert.match(source, /configuracion: `\$\{ADMIN_RESERVAS_BASE\}\/configuracion`/);
+  assert.match(source, /onClick=\{\(\) => navigate\(RUTA_POR_VISTA\[key\]\)\}/);
+  assert.match(source, /vistaDesdeRuta\(location\.pathname\)/);
+  assert.match(prerender, /ADMIN_RESERVAS_SECTIONS/);
+  for (const section of ['listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos', 'configuracion', 'integraciones', 'usuarios', 'actividad']) {
+    assert.match(prerender, new RegExp(`['"]${section}['"]`));
+  }
 });
 
 test('mantiene accesibles todas las vistas existentes y sus permisos', () => {

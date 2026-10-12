@@ -228,6 +228,17 @@ mkdirSync(join(DIST, 'admin', 'reservas'), { recursive: true });
 writeFileSync(join(DIST, 'admin', 'reservas', 'index.html'), shellReservas);
 console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
 
+const ADMIN_RESERVAS_SECTIONS = [
+  'listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos',
+  'configuracion', 'integraciones', 'usuarios', 'actividad',
+];
+for (const section of ADMIN_RESERVAS_SECTIONS) {
+  const sectionDirectory = join(DIST, 'admin', 'reservas', section);
+  mkdirSync(sectionDirectory, { recursive: true });
+  writeFileSync(join(sectionDirectory, 'index.html'), shellReservas);
+}
+console.log(`  ✓ admin/reservas/{${ADMIN_RESERVAS_SECTIONS.join(',')}}/index.html`);
+
 // ─── Per-route JSON-LD builder ───────────────────────────────────────────────
 function buildJsonLD(route) {
   const base = {

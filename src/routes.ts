@@ -29,4 +29,5 @@ export const ROUTES = {
   VOLUNTARIADO: '/voluntariado',
   REFORESTACION: '/reforestacion',
   ADMIN_RESERVAS: '/admin/reservas',
+  ADMIN_RESERVAS_CONFIGURACION: '/admin/reservas/configuracion',
 };

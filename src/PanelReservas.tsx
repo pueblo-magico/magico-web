@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
 import {
   Badge, Button, Card, EmptyState, Input, Select, StatCard, Table, TableBody, TableCell,
@@ -28,6 +29,31 @@ import './PanelReservas.css';
 
 type TipoAlojamiento = 'domo' | 'refugio';
 type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'integraciones' | 'usuarios' | 'actividad';
+
+const ADMIN_RESERVAS_BASE = '/admin/reservas';
+const RUTA_POR_VISTA: Record<VistaActiva, string> = {
+  operativa: ADMIN_RESERVAS_BASE,
+  historial: `${ADMIN_RESERVAS_BASE}/listado`,
+  ocupacion: `${ADMIN_RESERVAS_BASE}/bloqueos`,
+  metricas: `${ADMIN_RESERVAS_BASE}/reportes`,
+  consultas: `${ADMIN_RESERVAS_BASE}/consultas`,
+  arrepentimientos: `${ADMIN_RESERVAS_BASE}/arrepentimientos`,
+  configuracion: `${ADMIN_RESERVAS_BASE}/configuracion`,
+  integraciones: `${ADMIN_RESERVAS_BASE}/integraciones`,
+  usuarios: `${ADMIN_RESERVAS_BASE}/usuarios`,
+  actividad: `${ADMIN_RESERVAS_BASE}/actividad`,
+};
+const VISTA_POR_SEGMENTO = Object.fromEntries(
+  Object.entries(RUTA_POR_VISTA).map(([vista, ruta]) => [ruta.slice(ADMIN_RESERVAS_BASE.length + 1), vista])
+) as Record<string, VistaActiva>;
+
+const vistaDesdeRuta = (pathname: string): VistaActiva | null => {
+  const rutaNormalizada = pathname.replace(/\/+$/, '') || '/';
+  if (rutaNormalizada === ADMIN_RESERVAS_BASE) return 'operativa';
+  if (!rutaNormalizada.startsWith(`${ADMIN_RESERVAS_BASE}/`)) return null;
+  const segmento = rutaNormalizada.slice(ADMIN_RESERVAS_BASE.length + 1);
+  return VISTA_POR_SEGMENTO[segmento] ?? null;
+};
 type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
 
 type Alojamiento = {
@@ -3041,9 +3067,12 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
 };
 
 const PanelReservas: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [auth, setAuth] = useState<{ email: string; rol: Rol } | null | 'cargando'>('cargando');
   const [sesionExpirada, setSesionExpirada] = useState(false);
-  const [vistaActiva, setVistaActiva] = useState<VistaActiva>('operativa');
+  const vistaEnRuta = vistaDesdeRuta(location.pathname);
+  const vistaActiva = vistaEnRuta ?? 'operativa';
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [reservasHistorial, setReservasHistorial] = useState<Reserva[] | null>(null);
   const [historialPagina, setHistorialPagina] = useState(1);
@@ -3134,6 +3163,21 @@ const PanelReservas: React.FC = () => {
       .then(data => setAuth({ email: data.email, rol: data.rol }))
       .catch(() => setAuth(null));
   }, []);
+
+  useEffect(() => {
+    if (vistaEnRuta === null) navigate(ADMIN_RESERVAS_BASE, { replace: true });
+  }, [navigate, vistaEnRuta]);
+
+  const rolEnSesion = typeof auth === 'object' && auth ? auth.rol : null;
+  useEffect(() => {
+    if (!rolEnSesion) return;
+    const puedeEditarRuta = rolEnSesion === 'super_admin' || rolEnSesion === 'editor';
+    const requiereEdicion = vistaActiva === 'ocupacion';
+    const requiereSuperAdmin = vistaActiva === 'usuarios' || vistaActiva === 'actividad';
+    if ((requiereEdicion && !puedeEditarRuta) || (requiereSuperAdmin && rolEnSesion !== 'super_admin')) {
+      navigate(ADMIN_RESERVAS_BASE, { replace: true });
+    }
+  }, [navigate, rolEnSesion, vistaActiva]);
 
   useEffect(() => {
     if (auth === 'cargando' || !auth) return;
@@ -3304,7 +3348,7 @@ const PanelReservas: React.FC = () => {
       type="button"
       className={`admin-nav-button ${FOCUS_RING}`}
       aria-current={vistaActiva === key ? 'page' : undefined}
-      onClick={() => setVistaActiva(key)}
+      onClick={() => navigate(RUTA_POR_VISTA[key])}
     >
       {icon}<span>{label}</span>
     </button>

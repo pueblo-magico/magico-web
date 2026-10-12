@@ -119,7 +119,7 @@ root.render(
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
               <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
               <Route path="/boton-de-arrepentimiento" element={<BotonArrepentimiento />} />
-              <Route path="/admin/reservas" element={<PanelReservas />} />
+              <Route path="/admin/reservas/*" element={<PanelReservas />} />
               <Route path="/reserva-confirmada" element={<EstadoPagoReserva returnState="success" />} />
               <Route path="/reserva-pendiente" element={<EstadoPagoReserva returnState="pending" />} />
               <Route path="/reserva-fallida" element={<EstadoPagoReserva returnState="failure" />} />
