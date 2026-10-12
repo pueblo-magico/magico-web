@@ -126,8 +126,11 @@ test('separa los eventos de integraciones en categorías accesibles sin ocultar 
 
 test('reutiliza primitivas del paquete interno en el registro de aplicaciones', () => {
   assert.match(source, /from '@pueblo-magico\/react-ui'/);
-  for (const component of ['Badge', 'Button', 'Card', 'EmptyState', 'StatCard', 'TableContainer']) {
+  for (const component of ['Badge', 'Button', 'Card', 'CodeBadge', 'DescriptionList', 'DescriptionListItem', 'EmptyState', 'LoadingState', 'StatCard', 'TableContainer']) {
     assert.match(source, new RegExp(`<${component}`));
   }
+  assert.match(source, /<LoadingState className="py-16" label="Cargando configuración"/);
+  assert.match(source, /<DescriptionList columns=\{3\} density="compact"/);
+  assert.match(source, /<CodeBadge tone="info">\{endpoint\.method\}<\/CodeBadge>/);
   assert.doesNotMatch(source, /<table className="min-w-\[720px\]/);
 });

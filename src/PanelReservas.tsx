@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
 import {
-  Badge, Button, Card, EmptyState, Input, Select, StatCard, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableHeader, TableRow,
+  Badge, Button, Card, CodeBadge, DescriptionList, DescriptionListItem, EmptyState, Input,
+  LoadingState, Select, StatCard, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableHeader, TableRow,
 } from '@pueblo-magico/react-ui';
 import './PanelReservas.css';
 
@@ -2078,7 +2079,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
   };
 
   if (cargando && !configuracion) {
-    return <div className="flex justify-center py-16"><RefreshCw className="animate-spin text-gray-400" aria-label="Cargando configuración" /></div>;
+    return <LoadingState className="py-16" label="Cargando configuración" />;
   }
 
   return (
@@ -3120,7 +3121,7 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Eventos recientes</h3>
         </div>
         {cargando && !estado ? (
-          <div className="flex justify-center py-12"><RefreshCw className="animate-spin text-gray-300" aria-label="Cargando eventos" /></div>
+          <LoadingState className="py-12" label="Cargando eventos" />
         ) : (
           <ul className="divide-y divide-gray-100">
             {(estado?.eventos || []).map(evento => {
@@ -3275,12 +3276,12 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Aplicaciones registradas y endpoints</h3>
             <p className="mt-1 text-xs text-gray-500">El seguimiento comienza desde la fecha de registro mostrada. Nunca se exponen credenciales ni valores secretos.</p>
           </div>
-          <Button type="button" onPress={cargarAplicaciones} isDisabled={cargandoAplicaciones}
+          <Button type="button" onPress={cargarAplicaciones} isDisabled={cargandoAplicaciones} isLoading={cargandoAplicaciones}
             size="sm" shape="rounded" variant="secondary" className="self-start">
-            <RefreshCw size={14} className={cargandoAplicaciones ? 'animate-spin' : ''} aria-hidden="true" /> Actualizar registro
+            {!cargandoAplicaciones && <RefreshCw size={14} aria-hidden="true" />} Actualizar registro
           </Button>
         </div>
-        {cargandoAplicaciones && aplicaciones === null ? <div className="flex justify-center py-12"><RefreshCw className="animate-spin text-gray-300" aria-label="Cargando aplicaciones" /></div> :
+        {cargandoAplicaciones && aplicaciones === null ? <LoadingState className="py-12" label="Cargando aplicaciones" /> :
           <ul className="divide-y divide-gray-100">{(aplicaciones || []).map(aplicacion => <Card as="li" variant="default" key={aplicacion.codigo} className="rounded-none border-0 px-4 py-4 shadow-none sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -3289,20 +3290,20 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
                   <Badge variant={aplicacion.configurada ? 'success' : 'neutral'}>{aplicacion.configurada ? 'Configurada' : 'Sin credencial'}</Badge>
                   <Badge variant="outline">{aplicacion.tipo.replace('_', ' ')}</Badge>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Código: {aplicacion.codigo} · registrada {aplicacion.registrado_at ? fmtFechaHora(aplicacion.registrado_at) : 'sin fecha disponible'}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-gray-500">Código: <CodeBadge>{aplicacion.codigo}</CodeBadge><span>· registrada {aplicacion.registrado_at ? fmtFechaHora(aplicacion.registrado_at) : 'sin fecha disponible'}</span></p>
               </div>
-              <div className="grid grid-cols-3 gap-4 text-xs lg:text-right">
-                <div><span className="block text-gray-400">Primer uso</span><strong className="font-medium text-gray-700">{aplicacion.first_used_at ? fmtFechaHora(aplicacion.first_used_at) : 'Sin uso'}</strong></div>
-                <div><span className="block text-gray-400">Último uso</span><strong className="font-medium text-gray-700">{aplicacion.last_used_at ? fmtFechaHora(aplicacion.last_used_at) : 'Sin uso'}</strong></div>
-                <div><span className="block text-gray-400">Solicitudes</span><strong className="font-medium text-gray-700">{aplicacion.request_count}</strong></div>
-              </div>
+              <DescriptionList columns={3} density="compact" className="min-w-full text-xs lg:min-w-[420px]">
+                <DescriptionListItem label="Primer uso">{aplicacion.first_used_at ? fmtFechaHora(aplicacion.first_used_at) : 'Sin uso'}</DescriptionListItem>
+                <DescriptionListItem label="Último uso">{aplicacion.last_used_at ? fmtFechaHora(aplicacion.last_used_at) : 'Sin uso'}</DescriptionListItem>
+                <DescriptionListItem label="Solicitudes">{aplicacion.request_count}</DescriptionListItem>
+              </DescriptionList>
             </div>
             {aplicacion.endpoints.length > 0 ? <TableContainer label={`Endpoints de ${aplicacion.nombre}`} className="mt-4 rounded-lg border border-gray-100">
               <Table density="compact" className="min-w-[720px] text-xs">
                 <TableHeader><TableRow><TableHead>Método</TableHead><TableHead>Endpoint</TableHead><TableHead>Primer uso</TableHead><TableHead>Último uso</TableHead><TableHead className="text-right">Solicitudes</TableHead></TableRow></TableHeader>
                 <TableBody>{aplicacion.endpoints.map(endpoint => <TableRow key={`${endpoint.method}-${endpoint.path}`}>
-                  <TableCell><Badge variant="neutral"><span className="font-mono">{endpoint.method}</span></Badge></TableCell>
-                  <TableCell className="font-mono text-gray-700">{endpoint.path}</TableCell>
+                  <TableCell><CodeBadge tone="info">{endpoint.method}</CodeBadge></TableCell>
+                  <TableCell><code className="font-mono text-gray-700">{endpoint.path}</code></TableCell>
                   <TableCell className="text-gray-500">{endpoint.first_used_at ? fmtFechaHora(endpoint.first_used_at) : '—'}</TableCell>
                   <TableCell className="text-gray-500">{endpoint.last_used_at ? fmtFechaHora(endpoint.last_used_at) : '—'}</TableCell>
                   <TableCell className="text-right font-semibold text-gray-700">{endpoint.request_count}</TableCell>
@@ -3543,7 +3544,7 @@ const PanelReservas: React.FC = () => {
   if (auth === 'cargando') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <RefreshCw className="animate-spin text-gray-300" size={28} aria-hidden="true" />
+        <LoadingState label="Cargando panel de reservas" />
       </div>
     );
   }
