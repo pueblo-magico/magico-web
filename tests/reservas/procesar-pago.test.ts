@@ -15,7 +15,7 @@ import {
   ErrorProveedorPagosTransitorio,
   MercadoPagoProveedorPagos,
 } from '../../functions/_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
-import { hashDni } from '../../functions/_lib/paymentIdentity.ts';
+import { hashDni, normalizarDni } from '../../functions/_lib/paymentIdentity.ts';
 
 function pagos(
   estado: string,
@@ -41,6 +41,21 @@ function repositorio(overrides: Partial<RepositorioEstadoPagoReserva> = {}): Rep
     ...overrides,
   };
 }
+
+test('normaliza documentos permitidos y rechaza formatos o longitudes inválidas', () => {
+  assert.equal(normalizarDni('12.345.678'), '12345678');
+  assert.equal(normalizarDni(1234567), '1234567');
+  assert.equal(normalizarDni(null), null);
+  assert.equal(normalizarDni('12A34567'), null);
+  assert.equal(normalizarDni('123456'), null);
+});
+
+test('rechaza secretos de conciliación demasiado cortos', async () => {
+  await assert.rejects(
+    hashDni('12345678', 'secreto-corto'),
+    /PAYMENT_RECONCILIATION_SECRET_INVALIDO/
+  );
+});
 
 test('confirma una sola vez ante entregas duplicadas sin invocar un canal', async () => {
   let primera = true;
