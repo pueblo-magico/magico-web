@@ -54,6 +54,19 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} \/>/);
 });
 
+test('acompaña los reportes con gráficos basados en métricas existentes', () => {
+  assert.match(source, /aria-label="Gráficos de reportes"/);
+  assert.match(source, /Composición de ingresos/);
+  assert.match(source, /Ocupación · próximos 14 días/);
+  assert.match(source, /Conversión ManyChat/);
+  assert.match(source, /Personas por tipo de estadía/);
+  assert.match(source, /role="img"/);
+  assert.match(source, /aria-label="Personas y noches por tipo de estadía"/);
+  assert.match(styles, /\.admin-report-charts\s*\{/);
+  assert.match(styles, /\.admin-report-ring\s*\{[^}]*conic-gradient/s);
+  assert.match(styles, /@media \(max-width: 640px\)[\s\S]*\.admin-report-charts\s*\{[^}]*grid-template-columns:\s*1fr/s);
+});
+
 test('permite al superadmin versionar la configuración comercial sin exponer secretos', () => {
   assert.match(source, /Configuración comercial/);
   assert.match(source, /Precios y seña/);

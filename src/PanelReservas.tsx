@@ -355,6 +355,62 @@ const MetricCard: React.FC<{ label: string; value: string; accent?: 'brand' | 'g
   />
 );
 
+const RingMetric: React.FC<{
+  label: string;
+  value: number | null;
+  detail: string;
+  accent?: 'brand' | 'gold';
+}> = ({ label, value, detail, accent = 'brand' }) => {
+  const normalized = value === null ? 0 : Math.max(0, Math.min(100, value));
+  return (
+    <Card className="admin-report-chart admin-report-ring-card">
+      <div
+        className={`admin-report-ring admin-report-ring--${accent}`}
+        style={{ '--report-value': `${normalized * 3.6}deg` } as React.CSSProperties}
+        role="img"
+        aria-label={`${label}: ${value === null ? 'sin datos' : `${value}%`}`}
+      >
+        <span>{value === null ? '—' : `${value}%`}</span>
+      </div>
+      <div className="admin-report-ring-card__copy">
+        <h3>{label}</h3>
+        <p>{detail}</p>
+      </div>
+    </Card>
+  );
+};
+
+const FinancialCompositionChart: React.FC<{ collected: number; pending: number }> = ({ collected, pending }) => {
+  const total = collected + pending;
+  const collectedPct = total > 0 ? (collected / total) * 100 : 0;
+  const pendingPct = total > 0 ? 100 - collectedPct : 0;
+  return (
+    <Card className="admin-report-chart admin-report-financial">
+      <div className="admin-report-chart__heading">
+        <div>
+          <p>Reservas confirmadas</p>
+          <h3>Composición de ingresos</h3>
+        </div>
+        <strong>{fmtMoney(total)}</strong>
+      </div>
+      <div
+        className={`admin-report-stacked-bar${total === 0 ? ' admin-report-stacked-bar--empty' : ''}`}
+        role="img"
+        aria-label={`Señas cobradas ${fmtMoney(collected)}; saldo pendiente ${fmtMoney(pending)}`}
+      >
+        {total > 0 && <>
+          <span className="admin-report-stacked-bar__collected" style={{ width: `${collectedPct}%` }} />
+          <span className="admin-report-stacked-bar__pending" style={{ width: `${pendingPct}%` }} />
+        </>}
+      </div>
+      <div className="admin-report-legend">
+        <span><i className="admin-report-key admin-report-key--brand" aria-hidden="true" />Señas cobradas <strong>{fmtMoney(collected)}</strong></span>
+        <span><i className="admin-report-key admin-report-key--gold" aria-hidden="true" />Saldo pendiente <strong>{fmtMoney(pending)}</strong></span>
+      </div>
+    </Card>
+  );
+};
+
 function useEscapeKey(onEscape: () => void) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onEscape(); };
@@ -2247,7 +2303,7 @@ type GrupoMetricaEstadia = {
 // Cards de "Métricas Operativas" — personas y noches por tipo_estadia desde
 // el 06/08, para que contabilidad cruce volumen de gente alojada/alimentada
 // contra gastos reales. Ver functions/api/admin/metricas.ts.
-const SeccionMetricasOperativas: React.FC = () => {
+const SeccionMetricasOperativas: React.FC<{ mostrarGrafico?: boolean }> = ({ mostrarGrafico = false }) => {
   const [grupos, setGrupos] = useState<GrupoMetricaEstadia[] | null>(null);
   const [error, setError] = useState('');
 
@@ -2279,6 +2335,33 @@ const SeccionMetricasOperativas: React.FC = () => {
           );
         })}
       </div>
+      {mostrarGrafico && grupos !== null && (() => {
+        const maxPersonas = Math.max(0, ...TIPOS_ESTADIA.map(t => grupos.find(g => g.tipo_estadia === t.value)?.total_personas || 0));
+        return (
+          <Card className="admin-report-chart admin-report-types">
+            <div className="admin-report-chart__heading">
+              <div>
+                <p>Desde el 06/08</p>
+                <h3>Personas por tipo de estadía</h3>
+              </div>
+            </div>
+            <ul className="admin-report-bars" aria-label="Personas y noches por tipo de estadía">
+              {TIPOS_ESTADIA.map(t => {
+                const grupo = grupos.find(g => g.tipo_estadia === t.value);
+                const personas = grupo?.total_personas || 0;
+                const noches = Math.round(grupo?.total_noches || 0);
+                const width = maxPersonas > 0 ? (personas / maxPersonas) * 100 : 0;
+                return (
+                  <li key={t.value}>
+                    <div className="admin-report-bars__label"><span>{t.label}</span><strong>{personas} personas · {noches} noches</strong></div>
+                    <div className="admin-report-bars__track" aria-hidden="true"><span style={{ width: `${width}%` }} /></div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        );
+      })()}
     </div>
   );
 };
@@ -3739,27 +3822,39 @@ const PanelReservas: React.FC = () => {
         {vistaActiva === 'ocupacion' && puedeEditar && <SeccionOcupacionOperativa />}
 
         {vistaActiva === 'metricas' && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <MetricCard label="Reservas confirmadas" value={metricas ? String(metricas.total_confirmadas) : '—'} />
-            <MetricCard label="Ingresos por señas" value={metricas ? fmtMoney(metricas.ingresos_senas) : '—'} accent="gold" />
-            <MetricCard label="Saldo pendiente a cobrar" value={metricas ? fmtMoney(metricas.saldo_pendiente_total) : '—'} hint="Al check-in, confirmadas" />
-            <MetricCard label="Total a facturar" value={metricas ? fmtMoney(metricas.total_a_facturar) : '—'} accent="gold" hint="Si se cobra todo" />
-            <MetricCard label="Ocupación (14 días)" value={ocupacionPct !== null ? `${ocupacionPct}%` : '—'} />
-            <MetricCard
-              label="Conversión ManyChat"
-              value={metricas?.conversion_manychat.pct !== null && metricas ? `${metricas.conversion_manychat.pct}%` : 'Sin datos'}
-              hint={metricas ? `${metricas.conversion_manychat.confirmadas} de ${metricas.conversion_manychat.total} pagaron` : undefined}
-            />
-            {esSuperAdmin && <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Exportar</p>
-              <button
-                onClick={() => descargarReporteServidor()}
-                className={`inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}
-              >
-                <Download size={15} aria-hidden="true" /> Descargar reporte minimizado
-              </button>
-            </div>}
-            {puedeEditar && <SeccionAirbnb alojamientos={alojamientos} onSincronizado={handleGuardado} />}
+          <div className="admin-reports">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <MetricCard label="Reservas confirmadas" value={metricas ? String(metricas.total_confirmadas) : '—'} />
+              <MetricCard label="Ingresos por señas" value={metricas ? fmtMoney(metricas.ingresos_senas) : '—'} accent="gold" />
+              <MetricCard label="Saldo pendiente a cobrar" value={metricas ? fmtMoney(metricas.saldo_pendiente_total) : '—'} hint="Al check-in, confirmadas" />
+              <MetricCard label="Total a facturar" value={metricas ? fmtMoney(metricas.total_a_facturar) : '—'} accent="gold" hint="Si se cobra todo" />
+            </div>
+
+            <div className="admin-report-charts" aria-label="Gráficos de reportes">
+              <FinancialCompositionChart collected={metricas?.ingresos_senas || 0} pending={metricas?.saldo_pendiente_total || 0} />
+              <RingMetric label="Ocupación · próximos 14 días" value={ocupacionPct} detail="Capacidad ocupada en la ventana visible" />
+              <RingMetric
+                label="Conversión ManyChat"
+                value={metricas?.conversion_manychat.pct ?? null}
+                detail={metricas ? `${metricas.conversion_manychat.confirmadas} de ${metricas.conversion_manychat.total} reservas pagaron` : 'Cargando datos'}
+                accent="gold"
+              />
+            </div>
+
+            <SeccionMetricasOperativas mostrarGrafico />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+              {esSuperAdmin && <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Exportar</p>
+                <button
+                  onClick={() => descargarReporteServidor()}
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}
+                >
+                  <Download size={15} aria-hidden="true" /> Descargar reporte minimizado
+                </button>
+              </div>}
+              {puedeEditar && <SeccionAirbnb alojamientos={alojamientos} onSincronizado={handleGuardado} />}
+            </div>
           </div>
         )}
 
