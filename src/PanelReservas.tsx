@@ -3324,11 +3324,13 @@ const PanelReservas: React.FC = () => {
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Navegación del panel">
           <div className="admin-sidebar__brand"><img src="/uploads/pueblo_magico_logo_marron.svg" alt="Pueblo Mágico" /><small>Reservas</small></div>
-          <nav className="admin-sidebar__nav" aria-label="Principal">{navPrincipal.map(navButton)}</nav>
-          <p className="admin-sidebar__section">Operaciones</p>
-          <nav className="admin-sidebar__nav" aria-label="Operaciones">{navOperaciones.map(navButton)}</nav>
-          <p className="admin-sidebar__section">Sistema</p>
-          <nav className="admin-sidebar__nav" aria-label="Sistema">{navSistema.map(navButton)}</nav>
+          <div className="admin-sidebar__scroll">
+            <nav className="admin-sidebar__nav" aria-label="Principal">{navPrincipal.map(navButton)}</nav>
+            <p className="admin-sidebar__section">Operaciones</p>
+            <nav className="admin-sidebar__nav" aria-label="Operaciones">{navOperaciones.map(navButton)}</nav>
+            <p className="admin-sidebar__section">Sistema</p>
+            <nav className="admin-sidebar__nav" aria-label="Sistema">{navSistema.map(navButton)}</nav>
+          </div>
           <div className="admin-sidebar__user">
             <span className="admin-sidebar__avatar">{auth.email.slice(0, 1)}</span>
             <span><strong>{auth.email.split('@')[0]}</strong><small>{ROL_LABEL[auth.rol]}</small></span>

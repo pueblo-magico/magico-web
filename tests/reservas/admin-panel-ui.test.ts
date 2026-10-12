@@ -10,8 +10,10 @@ test('organiza el panel en sidebar y workspace responsivo', () => {
   assert.match(source, /className="admin-workspace"/);
   assert.match(source, /className="admin-topbar"/);
   assert.match(source, /className="admin-mobile-nav"/);
+  assert.match(source, /className="admin-sidebar__scroll"/);
   assert.doesNotMatch(source, /admin-nav-button__alert/);
   assert.match(styles, /\.admin-sidebar\s*\{[^}]*position:\s*fixed/s);
+  assert.match(styles, /\.admin-sidebar__scroll\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/s);
   assert.match(styles, /@media \(max-width: 1023px\)[\s\S]*\.admin-sidebar\s*\{\s*display:\s*none/s);
   assert.match(styles, /\.admin-mobile-nav\s*\{[^}]*display:\s*none/s);
 });
