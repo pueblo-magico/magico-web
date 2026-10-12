@@ -65,16 +65,21 @@ test('crea, publica y audita una nueva versión retirando la anterior atómicame
   const repositorio = new D1RepositorioAdministracionTarifas(db);
   const auditoria = new D1RegistroAuditoriaReservas(db);
 
-  const creado = await crearBorradorTarifa(borrador, 'admin@test', repositorio, auditoria);
+  const motivo = 'Actualización anual aprobada';
+  const creado = await crearBorradorTarifa(borrador, 'admin@test', repositorio, auditoria, motivo);
   assert.equal(creado.version, 2);
   assert.equal(creado.estado, 'borrador');
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reglas_precio WHERE temporada_id IN (SELECT id FROM temporadas WHERE plan_tarifa_id = ?)').get(creado.id)?.n, 2);
 
-  const publicado = await publicarPlanTarifa(creado.id, 'admin@test', repositorio, auditoria);
+  const publicado = await publicarPlanTarifa(creado.id, 'admin@test', repositorio, auditoria, motivo);
   assert.equal(publicado.estado, 'publicado');
   assert.deepEqual(
     sqlite.prepare("SELECT version, estado FROM planes_tarifa WHERE codigo = 'alojamiento-base' ORDER BY version").all().map(row => ({ ...row })),
     [{ version: 1, estado: 'retirado' }, { version: 2, estado: 'publicado' }]
+  );
+  assert.deepEqual(
+    sqlite.prepare("SELECT motivo FROM auditoria_admin WHERE entidad_tipo = 'plan_tarifa' ORDER BY id").all().map(row => row.motivo),
+    [motivo, motivo]
   );
   assert.deepEqual(
     sqlite.prepare("SELECT accion FROM auditoria_admin WHERE entidad_tipo = 'plan_tarifa' ORDER BY id").all().map(row => row.accion),
@@ -149,6 +154,7 @@ test('el contrato administrativo exige sesión, CSRF y permiso para crear borrad
     method: 'POST', headers,
     body: JSON.stringify({
       accion: 'crear_borrador',
+      motivo: 'Nueva tarifa aprobada en QA',
       plan: {
         codigo: borrador.codigo, nombre: borrador.nombre, moneda: borrador.moneda,
         temporadas: borrador.temporadas.map(temporada => ({

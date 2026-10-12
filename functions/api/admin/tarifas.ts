@@ -52,14 +52,18 @@ export async function onRequestPost({ request, env }: any) {
   const repositorio = new D1RepositorioAdministracionTarifas(env.DB);
   const auditoria = new D1RegistroAuditoriaReservas(env.DB);
   try {
+    const motivo = String(body.motivo || '').trim();
+    if (['crear_borrador', 'publicar'].includes(body.accion) && (motivo.length < 5 || motivo.length > 500)) {
+      return json({ error: 'El motivo debe tener entre 5 y 500 caracteres.' }, 400);
+    }
     if (body.accion === 'crear_borrador') {
-      const plan = await crearBorradorTarifa(mapearPlan(body.plan), auth.email, repositorio, auditoria);
+      const plan = await crearBorradorTarifa(mapearPlan(body.plan), auth.email, repositorio, auditoria, motivo);
       return json({ ok: true, plan }, 201);
     }
     if (body.accion === 'publicar') {
       const planId = Number(body.plan_id);
       if (!Number.isSafeInteger(planId) || planId < 1) return json({ error: 'plan_id inválido.' }, 400);
-      const plan = await publicarPlanTarifa(planId, auth.email, repositorio, auditoria);
+      const plan = await publicarPlanTarifa(planId, auth.email, repositorio, auditoria, motivo);
       return json({ ok: true, plan });
     }
     return json({ error: 'accion debe ser crear_borrador o publicar.' }, 400);

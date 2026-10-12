@@ -1657,6 +1657,59 @@ type BorradorTarifaUi = NonNullable<ConfiguracionBaseApi['tarifa']>;
 type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
 type BorradorInventarioUi = ConfiguracionBaseApi['inventario'];
 
+type CambioConfiguracion = {
+  campo: string;
+  anterior: string;
+  nuevo: string;
+};
+
+type ConfirmacionConfiguracion = {
+  titulo: string;
+  descripcion: string;
+  cambios: CambioConfiguracion[];
+  etiquetaConfirmar: string;
+  ejecutar: (motivo: string) => Promise<boolean>;
+};
+
+const ETIQUETAS_CAMBIO: Record<string, string> = {
+  nombre: 'Nombre', moneda: 'Moneda', temporadas: 'Temporadas', reglas: 'Reglas', senas: 'Reglas de seña',
+  fechaDesde: 'Desde', fechaHasta: 'Hasta', prioridad: 'Prioridad', tipoAlojamiento: 'Alojamiento',
+  modalidad: 'Modalidad', ocupacionMin: 'Ocupación mínima', ocupacionMax: 'Ocupación máxima',
+  baseCalculo: 'Base de cálculo', importeCentavos: 'Importe', exclusividadDesde: 'Exclusividad desde',
+  exclusividadHasta: 'Exclusividad hasta', subtotalDesdeCentavos: 'Subtotal desde',
+  subtotalHastaCentavos: 'Subtotal hasta', tipo: 'Tipo', valor: 'Valor', vigenciaDesde: 'Vigencia desde',
+  horasMinimasAntes: 'Horas mínimas', porcentajeDevolucionBps: 'Devolución', capacidadComercial: 'Capacidad comercial',
+  capacidadOperativaMaxima: 'Máximo físico/operativo', reservableGeneral: 'Venta general',
+  reservableRetiro: 'Retiros', estado: 'Estado comercial', contexto: 'Contexto', unidadVenta: 'Unidad de venta',
+  habilitada: 'Habilitada para reservas nuevas', precioComidaCentavos: 'Precio por comida', paymentHoldMinutes: 'Plazo de retención',
+};
+
+const valorCambio = (valor: unknown): string => {
+  if (valor === null || valor === undefined || valor === '') return 'Sin definir';
+  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+  return String(valor);
+};
+
+const resumirCambios = (anterior: unknown, nuevo: unknown, ruta = ''): CambioConfiguracion[] => {
+  if (Array.isArray(anterior) || Array.isArray(nuevo)) {
+    const antes = Array.isArray(anterior) ? anterior : [];
+    const despues = Array.isArray(nuevo) ? nuevo : [];
+    return Array.from({ length: Math.max(antes.length, despues.length) }, (_, indice) =>
+      resumirCambios(antes[indice], despues[indice], `${ruta}${ruta ? ' · ' : ''}${indice + 1}`)
+    ).flat();
+  }
+  if (anterior && nuevo && typeof anterior === 'object' && typeof nuevo === 'object') {
+    const claves = Array.from(new Set([...Object.keys(anterior), ...Object.keys(nuevo)]));
+    return claves.flatMap(clave => {
+      if (['id', 'codigo', 'version', 'actualizadoAt', 'publicadoAt'].includes(clave)) return [];
+      const etiqueta = ETIQUETAS_CAMBIO[clave] || clave;
+      return resumirCambios((anterior as any)[clave], (nuevo as any)[clave], `${ruta}${ruta ? ' · ' : ''}${etiqueta}`);
+    });
+  }
+  if (Object.is(anterior, nuevo)) return [];
+  return [{ campo: ruta || 'Valor', anterior: valorCambio(anterior), nuevo: valorCambio(nuevo) }];
+};
+
 const opcionesModalidadParaEspacio = (espacio: BorradorInventarioUi[number]) => {
   if (espacio.tipo === 'camping') return [{ value: 'camping', label: 'Camping' }];
   if (espacio.tipo === 'bell_tent') return [{ value: 'privada', label: 'Privada' }, { value: 'camping', label: 'Camping' }];
@@ -1668,8 +1721,8 @@ const opcionesModalidadParaEspacio = (espacio: BorradorInventarioUi[number]) => 
 const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmin }) => {
   const [configuracion, setConfiguracion] = useState<ConfiguracionBaseApi | null>(null);
   const [valor, setValor] = useState('15');
-  const [motivo, setMotivo] = useState('');
-  const [motivoComercial, setMotivoComercial] = useState('');
+  const [confirmacion, setConfirmacion] = useState<ConfirmacionConfiguracion | null>(null);
+  const [motivoConfirmacion, setMotivoConfirmacion] = useState('');
   const [tarifaDraft, setTarifaDraft] = useState<BorradorTarifaUi | null>(null);
   const [politicaDraft, setPoliticaDraft] = useState<BorradorPoliticaUi | null>(null);
   const [inventarioDraft, setInventarioDraft] = useState<BorradorInventarioUi>([]);
@@ -1706,7 +1759,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
   useEffect(() => { cargar(); }, []);
 
   const parametro = configuracion?.parametros.find(item => item.codigo === 'payment_hold_minutes');
-  const ejecutar = async (clave: string, accion: () => Promise<void>, exito: string) => {
+  const ejecutar = async (clave: string, accion: () => Promise<void>, exito: string): Promise<boolean> => {
     setGuardando(clave);
     setError('');
     setMensaje('');
@@ -1714,8 +1767,10 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
       await accion();
       setMensaje(exito);
       await cargar();
+      return true;
     } catch (e: any) {
       setError(e.message || 'No se pudo actualizar la configuración.');
+      return false;
     } finally {
       setGuardando(null);
     }
@@ -1728,9 +1783,9 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     return body;
   };
 
-  const guardarPlazo = async () => {
-    if (!parametro) return;
-    await ejecutar('plazo', async () => {
+  const guardarPlazo = async (motivo: string) => {
+    if (!parametro) return false;
+    return ejecutar('plazo', async () => {
       await requestJson('/api/v1/admin/configuracion-reservas', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -1742,25 +1797,24 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
           motivo: motivo.trim(),
         }),
       });
-      setMotivo('');
     }, 'Plazo actualizado. Sólo afecta reservas nuevas.');
   };
 
-  const guardarModalidad = async (item: ConfiguracionBaseApi['inventario'][number]['modalidades'][number]) => {
-    await ejecutar(`modalidad-${item.id}`, async () => {
+  const guardarModalidad = async (item: ConfiguracionBaseApi['inventario'][number]['modalidades'][number], motivo: string) => {
+    return ejecutar(`modalidad-${item.id}`, async () => {
       await requestJson('/api/v1/admin/configuracion-reservas', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accion: 'actualizar_modalidad', id: item.id, modalidad: item.modalidad,
           contexto: item.contexto, unidad_venta: item.unidadVenta, habilitada: item.habilitada,
-          expected_updated_at: item.actualizadoAt, motivo: motivoComercial.trim(),
+          expected_updated_at: item.actualizadoAt, motivo: motivo.trim(),
         }),
       });
     }, 'Modalidad y condiciones de venta actualizadas para operaciones nuevas.');
   };
 
-  const guardarEspacio = async (espacio: ConfiguracionBaseApi['inventario'][number]) => {
-    await ejecutar(`espacio-${espacio.codigo}`, async () => {
+  const guardarEspacio = async (espacio: ConfiguracionBaseApi['inventario'][number], motivo: string) => {
+    return ejecutar(`espacio-${espacio.codigo}`, async () => {
       await requestJson('/api/v1/admin/configuracion-reservas', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1769,7 +1823,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
           capacidad_operativa_maxima: espacio.capacidadOperativaMaxima,
           reservable_general: espacio.reservableGeneral, reservable_retiro: espacio.reservableRetiro,
           estado: espacio.estado, expected_updated_at: espacio.actualizadoAt,
-          motivo: motivoComercial.trim(),
+          motivo: motivo.trim(),
         }),
       });
     }, 'Condiciones del alojamiento actualizadas para operaciones nuevas.');
@@ -1790,14 +1844,14 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     }));
   };
 
-  const publicarComida = async (item: ConfiguracionBaseApi['alimentacion'][number]) => {
-    await ejecutar(`comida-${item.codigo}`, async () => {
+  const publicarComida = async (item: ConfiguracionBaseApi['alimentacion'][number], motivo: string) => {
+    return ejecutar(`comida-${item.codigo}`, async () => {
       await requestJson('/api/v1/admin/configuracion-reservas', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accion: 'publicar_tarifa_alimentacion', codigo: item.codigo,
           precio_comida_centavos: Math.round(Number(preciosComida[item.codigo]) * 100),
-          expected_version: item.version, motivo: motivoComercial.trim(),
+          expected_version: item.version, motivo: motivo.trim(),
         }),
       });
     }, 'Tarifa de alimentación publicada como una nueva versión.');
@@ -1824,12 +1878,12 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     } : actual);
   };
 
-  const publicarTarifa = async () => {
-    if (!tarifaDraft || !window.confirm('Se publicará una nueva versión de precios y seña para reservas futuras. ¿Continuar?')) return;
-    await ejecutar('tarifa', async () => {
+  const publicarTarifa = async (motivo: string) => {
+    if (!tarifaDraft) return false;
+    return ejecutar('tarifa', async () => {
       const borrador = await requestJson('/api/admin/tarifas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'crear_borrador', plan: {
+        body: JSON.stringify({ accion: 'crear_borrador', motivo, plan: {
           codigo: tarifaDraft.codigo, nombre: tarifaDraft.nombre, moneda: tarifaDraft.moneda,
           temporadas: tarifaDraft.temporadas.map(temporada => ({
             codigo: temporada.codigo, nombre: temporada.nombre,
@@ -1850,17 +1904,17 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
       });
       await requestJson('/api/admin/tarifas', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'publicar', plan_id: borrador.plan.id }),
+        body: JSON.stringify({ accion: 'publicar', plan_id: borrador.plan.id, motivo }),
       });
     }, 'Nueva versión de precios y seña publicada.');
   };
 
-  const publicarPolitica = async () => {
-    if (!politicaDraft || !window.confirm('Se publicará una nueva política para operaciones futuras. ¿Continuar?')) return;
-    await ejecutar('politica', async () => {
+  const publicarPolitica = async (motivo: string) => {
+    if (!politicaDraft) return false;
+    return ejecutar('politica', async () => {
       const borrador = await requestJson('/api/admin/politicas-reserva', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'crear_borrador', politica: {
+        body: JSON.stringify({ accion: 'crear_borrador', motivo, politica: {
           codigo: politicaDraft.codigo, nombre: politicaDraft.nombre,
           vigencia_desde: new Date(vigenciaPolitica).toISOString(),
           reglas: politicaDraft.reglas.map(regla => ({
@@ -1871,9 +1925,100 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
       });
       await requestJson('/api/admin/politicas-reserva', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'publicar', politica_id: borrador.politica.id }),
+        body: JSON.stringify({ accion: 'publicar', politica_id: borrador.politica.id, motivo }),
       });
     }, 'Nueva política de cancelación publicada.');
+  };
+
+  const pedirConfirmacion = (datos: Omit<ConfirmacionConfiguracion, 'ejecutar'> & { ejecutar: (motivo: string) => Promise<boolean> }) => {
+    if (datos.cambios.length === 0) return;
+    setMotivoConfirmacion('');
+    setConfirmacion(datos);
+  };
+
+  const confirmarCambio = async () => {
+    if (!confirmacion || motivoConfirmacion.trim().length < 5) return;
+    const guardado = await confirmacion.ejecutar(motivoConfirmacion.trim());
+    if (guardado) {
+      setConfirmacion(null);
+      setMotivoConfirmacion('');
+    }
+  };
+
+  const confirmarTarifa = () => {
+    if (!tarifaDraft || !configuracion?.tarifa) return;
+    pedirConfirmacion({
+      titulo: 'Publicar precios y seña',
+      descripcion: 'Se creará una nueva versión para reservas futuras.',
+      cambios: resumirCambios(configuracion.tarifa, tarifaDraft),
+      etiquetaConfirmar: 'Publicar nueva versión',
+      ejecutar: publicarTarifa,
+    });
+  };
+
+  const confirmarPolitica = () => {
+    if (!politicaDraft || !configuracion?.politicaCancelacion) return;
+    pedirConfirmacion({
+      titulo: 'Publicar política de cancelación',
+      descripcion: 'La nueva versión se aplicará a operaciones futuras desde la vigencia indicada.',
+      cambios: resumirCambios(
+        { ...configuracion.politicaCancelacion, vigenciaDesde: configuracion.politicaCancelacion.vigenciaDesde?.slice(0, 16) || '' },
+        { ...politicaDraft, vigenciaDesde: vigenciaPolitica }
+      ),
+      etiquetaConfirmar: 'Publicar nueva política',
+      ejecutar: publicarPolitica,
+    });
+  };
+
+  const confirmarEspacio = (espacio: BorradorInventarioUi[number], original: BorradorInventarioUi[number]) => {
+    const seleccionar = (item: BorradorInventarioUi[number]) => ({
+      capacidadComercial: item.capacidadComercial,
+      capacidadOperativaMaxima: item.capacidadOperativaMaxima,
+      reservableGeneral: item.reservableGeneral,
+      reservableRetiro: item.reservableRetiro,
+      estado: item.estado,
+    });
+    pedirConfirmacion({
+      titulo: `Guardar condiciones de ${espacio.nombre}`,
+      descripcion: 'Estas condiciones afectarán sólo a operaciones nuevas.',
+      cambios: resumirCambios(seleccionar(original), seleccionar(espacio)),
+      etiquetaConfirmar: 'Guardar condiciones',
+      ejecutar: motivo => guardarEspacio(espacio, motivo),
+    });
+  };
+
+  const confirmarModalidad = (
+    espacio: BorradorInventarioUi[number],
+    item: BorradorInventarioUi[number]['modalidades'][number],
+    original: BorradorInventarioUi[number]['modalidades'][number]
+  ) => pedirConfirmacion({
+    titulo: `Guardar modalidad de ${espacio.nombre}`,
+    descripcion: 'La disponibilidad para reservas existentes no se modifica.',
+    cambios: resumirCambios(original, item),
+    etiquetaConfirmar: 'Guardar modalidad',
+    ejecutar: motivo => guardarModalidad(item, motivo),
+  });
+
+  const confirmarComida = (item: ConfiguracionBaseApi['alimentacion'][number]) => pedirConfirmacion({
+    titulo: `Publicar tarifa de ${item.codigo === 'pension_completa' ? 'pensión completa' : 'desayuno incluido'}`,
+    descripcion: 'Se publicará una nueva versión para operaciones futuras.',
+    cambios: resumirCambios(
+      { precioComidaCentavos: item.precioComidaCentavos / 100 },
+      { precioComidaCentavos: Number(preciosComida[item.codigo]) }
+    ).map(cambio => ({ ...cambio, anterior: `ARS ${cambio.anterior}`, nuevo: `ARS ${cambio.nuevo}` })),
+    etiquetaConfirmar: 'Publicar nueva versión',
+    ejecutar: motivo => publicarComida(item, motivo),
+  });
+
+  const confirmarPlazo = () => {
+    if (!parametro) return;
+    pedirConfirmacion({
+      titulo: 'Cambiar plazo de retención',
+      descripcion: 'El nuevo plazo se usará al iniciar reservas futuras.',
+      cambios: [{ campo: 'Plazo de retención', anterior: `${parametro.valor} minutos`, nuevo: `${Number(valor)} minutos` }],
+      etiquetaConfirmar: 'Guardar plazo',
+      ejecutar: guardarPlazo,
+    });
   };
 
   if (cargando && !configuracion) {
@@ -1892,15 +2037,6 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
       {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
-
-      {esSuperAdmin && (
-        <section className="admin-config__reason rounded-xl border border-amber-200 bg-amber-50">
-          <label className="text-xs font-semibold text-amber-900" htmlFor="config_commercial_reason">Motivo de los cambios</label>
-          <input id="config_commercial_reason" value={motivoComercial} onChange={event => setMotivoComercial(event.target.value)}
-            placeholder="Ej. Ajuste comercial aprobado" maxLength={500}
-            className={`w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm ${FOCUS_RING}`} />
-        </section>
-      )}
 
       <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Precios y seña</strong><small>Tarifas, temporadas y anticipo requerido</small></span></summary>
@@ -1959,7 +2095,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                 </div>
               ))}</div>
             </div>
-            {esSuperAdmin && <button type="button" onClick={publicarTarifa} disabled={guardando !== null} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'tarifa' ? 'Publicando…' : 'Publicar nueva versión de precios y seña'}</button>}
+            {esSuperAdmin && <button type="button" onClick={confirmarTarifa} disabled={guardando !== null || !configuracion?.tarifa || resumirCambios(configuracion.tarifa, tarifaDraft).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'tarifa' ? 'Publicando…' : 'Publicar nueva versión de precios y seña'}</button>}
           </>}
         </div>
       </details>
@@ -2004,8 +2140,8 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                   onChange={event => actualizarEspacioDraft(espacio.codigo, { reservableRetiro: event.target.checked })} /> Retiros</label>
               </div>
               {espacio.tipo === 'camping' && espacio.estado !== 'activo' && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Para activar Camping: definí una capacidad mayor a cero, habilitá al menos un contexto, guardá estas condiciones y luego habilitá su modalidad. También debe existir una regla de precio publicada para camping.</p>}
-              {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || motivoComercial.trim().length < 5 || !espacioModificado || espacio.capacidadOperativaMaxima < espacio.capacidadComercial}
-                isLoading={guardando === `espacio-${espacio.codigo}`} onPress={() => guardarEspacio(espacio)}>Guardar condiciones del alojamiento</Button>}
+              {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !espacioModificado || espacio.capacidadOperativaMaxima < espacio.capacidadComercial}
+                isLoading={guardando === `espacio-${espacio.codigo}`} onPress={() => original && confirmarEspacio(espacio, original)}>Guardar condiciones del alojamiento</Button>}
               <div className="admin-config__modalities">{espacio.modalidades.map(item => {
                 const originalModalidad = original?.modalidades.find(actual => actual.id === item.id);
                 const modalidadModificada = Boolean(originalModalidad) && JSON.stringify(item) !== JSON.stringify(originalModalidad);
@@ -2029,8 +2165,8 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                   <label className="admin-config__modality-toggle"><input type="checkbox" checked={item.habilitada} disabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
                     onChange={event => actualizarModalidadDraft(espacio.codigo, item.id, { habilitada: event.target.checked })} /> Habilitada para reservas nuevas</label>
                   {!puedeHabilitar && <p className="admin-config__modality-warning text-xs text-amber-700">Primero activá el alojamiento, asignale capacidad y habilitá el contexto seleccionado.</p>}
-                  {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || motivoComercial.trim().length < 5 || !modalidadModificada || (item.habilitada && !puedeHabilitar)}
-                    className="admin-config__modality-action" isLoading={guardando === `modalidad-${item.id}`} onPress={() => guardarModalidad(item)}>Guardar modalidad</Button>}
+                  {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modalidadModificada || (item.habilitada && !puedeHabilitar)}
+                    className="admin-config__modality-action" isLoading={guardando === `modalidad-${item.id}`} onPress={() => originalModalidad && confirmarModalidad(espacio, item, originalModalidad)}>Guardar modalidad</Button>}
                 </Card>;
               })}</div>
             </Card>;
@@ -2045,7 +2181,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
           <p className="font-semibold">{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</p>
           <p className="text-xs text-gray-500">v{item.version} · {item.comidasAdicionalesPorPersonaNoche} comidas adicionales por persona/noche</p>
           <label className="mt-3 block text-xs font-semibold text-gray-600">Precio por comida (ARS)<input type="number" min={0} value={preciosComida[item.codigo] ?? ''} disabled={!esSuperAdmin} onChange={event => setPreciosComida(actual => ({ ...actual, [item.codigo]: event.target.value }))} className={`mt-1 w-full rounded border px-3 py-2 text-sm ${FOCUS_RING}`} /></label>
-          {esSuperAdmin && <button type="button" onClick={() => publicarComida(item)} disabled={guardando !== null || motivoComercial.trim().length < 5 || Math.round(Number(preciosComida[item.codigo]) * 100) === item.precioComidaCentavos} className={`mt-3 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand disabled:opacity-50 ${FOCUS_RING}`}>{guardando === `comida-${item.codigo}` ? 'Publicando…' : 'Publicar nueva versión'}</button>}
+          {esSuperAdmin && <button type="button" onClick={() => confirmarComida(item)} disabled={guardando !== null || Math.round(Number(preciosComida[item.codigo]) * 100) === item.precioComidaCentavos} className={`mt-3 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand disabled:opacity-50 ${FOCUS_RING}`}>{guardando === `comida-${item.codigo}` ? 'Publicando…' : 'Publicar nueva versión'}</button>}
         </div>)}</div>
       </details>
 
@@ -2054,18 +2190,50 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
         <div className="admin-config__section-body space-y-3 border-t border-gray-100">{!politicaDraft ? <p className="text-sm text-amber-700">Sin política configurada.</p> : <>
           <div className="grid gap-3 sm:grid-cols-3"><label className="text-xs font-semibold text-gray-600">Nombre<input value={politicaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, nombre: event.target.value })} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div className="text-xs text-gray-500"><strong className="block text-gray-700">Código y versión</strong>{politicaDraft.codigo} · v{politicaDraft.version}</div><label className="text-xs font-semibold text-gray-600">Vigente desde<input type="datetime-local" value={vigenciaPolitica} disabled={!esSuperAdmin} onChange={event => setVigenciaPolitica(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label></div>
           <div className="space-y-2">{politicaDraft.reglas.map((regla, indice) => <div key={indice} className="grid gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-2"><label className="text-xs text-gray-600">Horas mínimas antes del check-in<input type="number" min={0} value={regla.horasMinimasAntes} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, horasMinimasAntes: Number(event.target.value) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label><label className="text-xs text-gray-600">Devolución (%)<input type="number" min={0} max={100} value={regla.porcentajeDevolucionBps / 100} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, porcentajeDevolucionBps: Math.round(Number(event.target.value) * 100) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label></div>)}</div>
-          {esSuperAdmin && <button type="button" onClick={publicarPolitica} disabled={guardando !== null || !vigenciaPolitica} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'politica' ? 'Publicando…' : 'Publicar nueva política'}</button>}
+          {esSuperAdmin && <button type="button" onClick={confirmarPolitica} disabled={guardando !== null || !vigenciaPolitica || !configuracion?.politicaCancelacion || resumirCambios({ ...configuracion.politicaCancelacion, vigenciaDesde: configuracion.politicaCancelacion.vigenciaDesde?.slice(0, 16) || '' }, { ...politicaDraft, vigenciaDesde: vigenciaPolitica }).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'politica' ? 'Publicando…' : 'Publicar nueva política'}</button>}
         </>}</div>
       </details>
 
       {parametro && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Retención de pago</strong><small>{parametro.valor} minutos para completar la seña</small></span></summary>
-        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><label className="text-xs font-semibold text-gray-600">Nuevo plazo<input type="number" min={parametro.minimo} max={parametro.maximo} value={valor} onChange={event => setValor(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div><label className="text-xs font-semibold text-gray-600">Motivo<input value={motivo} onChange={event => setMotivo(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><button type="button" onClick={guardarPlazo} disabled={guardando !== null || motivo.trim().length < 5 || Number(valor) === parametro.valor} className="mt-2 rounded bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{guardando === 'plazo' ? 'Guardando…' : 'Guardar plazo'}</button></div></>}</div>
+        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><label className="text-xs font-semibold text-gray-600">Nuevo plazo<input type="number" min={parametro.minimo} max={parametro.maximo} value={valor} onChange={event => setValor(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div className="flex items-end"><button type="button" onClick={confirmarPlazo} disabled={guardando !== null || Number(valor) === parametro.valor || Number(valor) < parametro.minimo || Number(valor) > parametro.maximo} className="rounded bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{guardando === 'plazo' ? 'Guardando…' : 'Guardar plazo'}</button></div></>}</div>
       </details>}
 
       <section className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-xs text-gray-600">
         <strong className="text-gray-800">Fuera de esta pantalla:</strong> credenciales y activación de proveedores de pago permanecen en variables seguras del entorno. Las capacidades físicas y excepciones de capacidad siguen el flujo operativo auditado.
       </section>
+
+      {confirmacion && (
+        <ModalBase onClose={() => guardando === null && setConfirmacion(null)} titulo={confirmacion.titulo} ancho="sm:max-w-3xl">
+          <p className="text-sm text-gray-600">{confirmacion.descripcion}</p>
+          <div className="admin-config-change-summary mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <div className="admin-config-change-summary__head" aria-hidden="true">
+              <span>Cambio</span><span>Valor anterior</span><span>Valor nuevo</span>
+            </div>
+            <div className="max-h-[42vh] overflow-y-auto">
+              {confirmacion.cambios.map((cambio, indice) => (
+                <div className="admin-config-change-summary__row" key={`${cambio.campo}-${indice}`}>
+                  <strong>{cambio.campo}</strong>
+                  <span className="admin-config-change-summary__old">{cambio.anterior}</span>
+                  <span className="admin-config-change-summary__new">{cambio.nuevo}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <label className="mt-4 block text-sm font-semibold text-gray-700" htmlFor="config_change_reason">
+            Motivo del cambio <span className="text-red-600" aria-hidden="true">*</span>
+          </label>
+          <textarea id="config_change_reason" rows={3} minLength={5} maxLength={500} required autoFocus
+            value={motivoConfirmacion} onChange={event => setMotivoConfirmacion(event.target.value)}
+            placeholder="Ej. Ajuste comercial aprobado por administración"
+            className={`mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`} />
+          <p className="mt-1 text-xs text-gray-500">Obligatorio · entre 5 y 500 caracteres. Quedará asociado al cambio en la auditoría.</p>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="secondary" isDisabled={guardando !== null} onPress={() => setConfirmacion(null)}>Cancelar</Button>
+            <Button isLoading={guardando !== null} isDisabled={guardando !== null || motivoConfirmacion.trim().length < 5} onPress={confirmarCambio}>{confirmacion.etiquetaConfirmar}</Button>
+          </div>
+        </ModalBase>
+      )}
     </div>
   );
 };

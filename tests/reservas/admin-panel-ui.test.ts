@@ -81,6 +81,19 @@ test('presenta la configuración en secciones compactas sin quebrar valores de m
   assert.match(styles, /@media \(max-width: 640px\)[\s\S]*\.admin-config__modality-fields\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });
 
+test('pide el motivo al confirmar y compara el valor anterior con el nuevo', () => {
+  assert.match(source, /type ConfirmacionConfiguracion/);
+  assert.match(source, /resumirCambios/);
+  assert.match(source, /Valor anterior/);
+  assert.match(source, /Valor nuevo/);
+  assert.match(source, /Motivo del cambio/);
+  assert.match(source, /motivoConfirmacion\.trim\(\)\.length < 5/);
+  assert.match(source, /Quedará asociado al cambio en la auditoría/);
+  assert.doesNotMatch(source, /config_commercial_reason/);
+  assert.doesNotMatch(source, /window\.confirm\('Se publicará una nueva/);
+  assert.match(styles, /\.admin-config-change-summary__row/);
+});
+
 test('separa los eventos de integraciones en categorías accesibles sin ocultar sus acciones', () => {
   assert.match(source, /type CategoriaEventosIntegracion = 'eventos' \| 'comunicaciones' \| 'mercado_pago' \| 'aplicaciones'/);
   assert.match(source, /role="tablist" aria-label="Categorías de eventos de integración"/);

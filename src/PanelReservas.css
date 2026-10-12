@@ -63,7 +63,6 @@
 
 .admin-config { display: grid; gap: 12px; }
 .admin-config__intro { margin-bottom: 2px; }
-.admin-config__reason { display: grid; grid-template-columns: minmax(190px, auto) minmax(240px, 1fr); align-items: center; gap: 12px; padding: 11px 13px; }
 .admin-config__section { overflow: clip; }
 .admin-config__section > summary { display: flex; min-height: 58px; align-items: center; gap: 12px; padding: 10px 16px; color: #203d49; cursor: pointer; list-style: none; }
 .admin-config__section > summary::-webkit-details-marker { display: none; }
@@ -87,6 +86,13 @@
 .admin-config .pm-input-field__control, .admin-config .pm-select-field__trigger { min-height: 36px; padding: 7px 10px; font-size: 12px; }
 .admin-config .pm-select-field__trigger { gap: 6px; }
 .admin-config .pm-select-field__value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-config-change-summary__head, .admin-config-change-summary__row { display: grid; grid-template-columns: minmax(150px, 1.15fr) minmax(130px, 1fr) minmax(130px, 1fr); }
+.admin-config-change-summary__head { background: #f5f7f5; color: #52645a; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.admin-config-change-summary__head span, .admin-config-change-summary__row > * { min-width: 0; padding: 9px 12px; overflow-wrap: anywhere; }
+.admin-config-change-summary__row { border-top: 1px solid #e5e7eb; color: #415047; font-size: 12px; }
+.admin-config-change-summary__row strong { color: #263b31; font-weight: 700; }
+.admin-config-change-summary__old { background: #fafafa; color: #6b7280; }
+.admin-config-change-summary__new { background: #eff8f2; color: #075f3c; font-weight: 650; }
 
 @media (max-width: 1023px) {
   .admin-sidebar { display: none; }
@@ -112,10 +118,15 @@
   .admin-topbar { justify-content: space-between; }
   .admin-topbar__actions > button span { display: none; }
   .admin-view-heading h2 { font-size: 34px; }
-  .admin-config__reason { grid-template-columns: 1fr; gap: 6px; }
   .admin-config__section > summary { min-height: 54px; padding: 9px 12px; }
   .admin-config__section-body { padding: 12px; }
   .admin-config__lodging-fields, .admin-config__modality-fields { grid-template-columns: 1fr; }
   .admin-config__modality { grid-template-columns: 1fr; grid-template-areas: 'fields' 'toggle' 'warning' 'action'; }
   .admin-config__modality-action { width: 100%; }
+  .admin-config-change-summary__head { display: none; }
+  .admin-config-change-summary__row { grid-template-columns: 1fr 1fr; }
+  .admin-config-change-summary__row strong { grid-column: 1 / -1; padding-bottom: 5px; }
+  .admin-config-change-summary__old::before, .admin-config-change-summary__new::before { display: block; margin-bottom: 2px; color: #718178; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .admin-config-change-summary__old::before { content: 'Anterior'; }
+  .admin-config-change-summary__new::before { content: 'Nuevo'; }
 }
