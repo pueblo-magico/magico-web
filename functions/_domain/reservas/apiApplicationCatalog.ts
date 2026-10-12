@@ -17,6 +17,7 @@ export const APLICACIONES_API_CATALOGO: readonly AplicacionApiCatalogo[] = [
       { method: 'POST', path: '/api/v1/integrations/reservas/expirar-retenciones' },
       { method: 'POST', path: '/api/v1/integrations/cucuru/backfill' },
       { method: 'POST', path: '/api/v1/integrations/arrepentimientos/notificaciones' },
+      { method: 'POST', path: '/api/v1/integrations/comunicaciones/notificaciones' },
     ],
   },
   {

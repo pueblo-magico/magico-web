@@ -553,7 +553,7 @@ test('persiste el idioma y selecciona plantillas versionadas para la reserva pú
   assert.equal(sqlite.prepare('SELECT idioma_comunicacion FROM reservas').get()?.idioma_comunicacion, 'en');
   assert.deepEqual(sqlite.prepare(`
     SELECT DISTINCT idioma, plantilla_version FROM comunicacion_intenciones ORDER BY idioma
-  `).all().map(row => ({ ...row })), [{ idioma: 'en', plantilla_version: 1 }]);
+  `).all().map(row => ({ ...row })), [{ idioma: 'en', plantilla_version: 2 }]);
 
   const invalidQuote = await cotizarDomo(db);
   const invalid = await crearReserva({

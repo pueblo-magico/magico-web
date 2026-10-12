@@ -4,6 +4,10 @@ import type {
   EstadoIntencionComunicacion,
   EstadoOperativoComunicaciones,
 } from '../../_domain/reservas/communicationIntents.ts';
+import type {
+  NotificacionReservaReclamada,
+  RepositorioNotificacionesReserva,
+} from '../../_application/reservas/gestionarNotificacionesReserva.ts';
 
 type Statement = {
   bind(...values: unknown[]): Statement;
@@ -31,7 +35,9 @@ function mapear(row: Record<string, unknown>): IntencionComunicacion {
   };
 }
 
-export class D1RepositorioIntencionesComunicacion implements RepositorioIntencionesComunicacion {
+export class D1RepositorioIntencionesComunicacion implements
+  RepositorioIntencionesComunicacion,
+  RepositorioNotificacionesReserva {
   private readonly db: Database;
 
   constructor(db: Database) { this.db = db; }
@@ -113,6 +119,120 @@ export class D1RepositorioIntencionesComunicacion implements RepositorioIntencio
       entrada.ahora, entrada.ahora, entrada.limite
     ).all();
     return (resultado.results || []).map(mapear);
+  }
+
+  async reclamarPorUid(
+    entrada: Parameters<RepositorioNotificacionesReserva['reclamarPorUid']>[0]
+  ): Promise<NotificacionReservaReclamada | null> {
+    await this.db.prepare(`
+      UPDATE comunicacion_intenciones
+      SET estado = 'procesando', claim_uid = ?, claimed_at = ?, claim_expires_at = ?,
+          attempts = attempts + 1
+      WHERE intencion_uid = ? AND (
+        (estado = 'pendiente' AND julianday(next_attempt_at) <= julianday(?) + (1.0 / 86400.0))
+        OR (estado = 'procesando' AND julianday(claim_expires_at) <= julianday(?))
+      )
+    `).bind(
+      entrada.claimUid, entrada.ahora, entrada.claimExpiresAt,
+      entrada.intencionUid, entrada.ahora, entrada.ahora
+    ).run();
+    const row = await this.db.prepare(`
+      SELECT i.intencion_uid, i.reserva_id, i.tipo, i.idioma, i.attempts,
+        r.cliente_email, r.codigo, r.estado_flujo, r.fecha_checkin, r.fecha_checkout,
+        r.cantidad_personas,
+        COALESCE(r.monto_sena_centavos, CAST(round(COALESCE(r.monto_sena, 0) * 100) AS INTEGER), 0)
+          monto_sena_centavos,
+        r.moneda, r.hold_expires_at, p.asunto_template, p.cuerpo_template,
+        json_extract(pg.metadata_json, '$.checkout_url') checkout_url
+      FROM comunicacion_intenciones i
+      JOIN reservas r ON r.id = i.reserva_id
+      JOIN comunicacion_plantillas p
+        ON p.codigo = i.plantilla_codigo
+       AND p.idioma = i.idioma
+       AND p.version = i.plantilla_version
+      LEFT JOIN pagos pg ON pg.id = (
+        SELECT id FROM pagos
+        WHERE reserva_id = r.id AND proveedor = 'mercado_pago'
+        ORDER BY id DESC LIMIT 1
+      )
+      WHERE i.intencion_uid = ? AND i.estado = 'procesando' AND i.claim_uid = ?
+      LIMIT 1
+    `).bind(entrada.intencionUid, entrada.claimUid).first();
+    if (!row) return null;
+    return {
+      intencionUid: String(row.intencion_uid),
+      reservaId: Number(row.reserva_id),
+      tipo: String(row.tipo) as NotificacionReservaReclamada['tipo'],
+      idioma: String(row.idioma) as 'es' | 'en',
+      attempts: Number(row.attempts),
+      email: row.cliente_email == null || !String(row.cliente_email).trim()
+        ? null
+        : String(row.cliente_email).trim(),
+      codigo: String(row.codigo),
+      estadoFlujo: String(row.estado_flujo),
+      fechaCheckin: String(row.fecha_checkin),
+      fechaCheckout: String(row.fecha_checkout),
+      cantidadPersonas: Number(row.cantidad_personas),
+      montoSenaCentavos: Number(row.monto_sena_centavos),
+      moneda: String(row.moneda),
+      expiresAt: row.hold_expires_at == null ? null : String(row.hold_expires_at),
+      checkoutUrl: row.checkout_url == null ? null : String(row.checkout_url),
+      asuntoTemplate: String(row.asunto_template),
+      cuerpoTemplate: String(row.cuerpo_template),
+    };
+  }
+
+  async finalizarEntrega(
+    entrada: Parameters<RepositorioNotificacionesReserva['finalizarEntrega']>[0]
+  ): Promise<boolean> {
+    const yaProcesada = await this.db.prepare(`
+      SELECT id FROM comunicacion_intentos
+      WHERE delivery_uid = ? AND intencion_uid = ?
+    `).bind(entrada.deliveryUid, entrada.intencionUid).first();
+    if (yaProcesada) return true;
+    const existe = await this.db.prepare(`
+      SELECT id FROM comunicacion_intenciones
+      WHERE intencion_uid = ? AND claim_uid = ? AND estado = 'procesando'
+    `).bind(entrada.intencionUid, entrada.claimUid).first();
+    if (!existe) return false;
+    const estado = entrada.resultado === 'entregada'
+      ? 'entregada'
+      : entrada.resultado === 'retry'
+        ? 'pendiente'
+        : entrada.resultado;
+    const statements = [
+      this.db.prepare(`
+        INSERT OR IGNORE INTO comunicacion_intentos (
+          intencion_uid, delivery_uid, canal, resultado, error_code,
+          started_at, completed_at
+        ) SELECT intencion_uid, ?, ?, ?, ?, claimed_at, ?
+          FROM comunicacion_intenciones WHERE intencion_uid = ? AND claim_uid = ?
+      `).bind(
+        entrada.deliveryUid, entrada.canal, entrada.resultado, entrada.errorCode,
+        entrada.completedAt, entrada.intencionUid, entrada.claimUid
+      ),
+      this.db.prepare(`
+        UPDATE comunicacion_intenciones
+        SET estado = ?, next_attempt_at = COALESCE(?, next_attempt_at),
+          claim_uid = NULL, claimed_at = NULL, claim_expires_at = NULL,
+          canal = ?, last_error_code = ?,
+          delivered_at = CASE WHEN ? = 'entregada' THEN ? ELSE delivered_at END
+        WHERE intencion_uid = ? AND claim_uid = ? AND estado = 'procesando'
+      `).bind(
+        estado, entrada.nextAttemptAt, entrada.canal, entrada.errorCode,
+        entrada.resultado, entrada.completedAt, entrada.intencionUid, entrada.claimUid
+      ),
+    ];
+    if (entrada.resultado === 'retry' && entrada.nextAttemptAt) {
+      statements.push(this.db.prepare(`
+        UPDATE integration_outbox
+        SET estado = 'pending', next_attempt_at = ?, claimed_at = NULL,
+          claim_uid = NULL, claim_expires_at = NULL, last_error_code = ?
+        WHERE event_id = ?
+      `).bind(entrada.nextAttemptAt, entrada.errorCode, entrada.intencionUid));
+    }
+    await this.db.batch(statements);
+    return true;
   }
 
   async marcarEntregada(

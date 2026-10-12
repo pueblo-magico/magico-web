@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
 import {
-  Badge, Button, Card, CodeBadge, DescriptionList, DescriptionListItem, EmptyState, Input,
-  LoadingState, Select, StatCard, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableHeader, TableRow,
+  Badge, Button, Card, Checkbox, CodeBadge, CopyButton, DateRangeField, DescriptionList,
+  DescriptionListItem, EmptyState, IconButton, Input, LoadingState, Modal, MoneyField, NumberField,
+  SearchField, Select, StatCard, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableHeader, TableRow, Textarea, ToggleGroup,
 } from '@pueblo-magico/react-ui';
 import './PanelReservas.css';
 
@@ -412,38 +413,17 @@ const FinancialCompositionChart: React.FC<{ collected: number; pending: number }
   );
 };
 
-function useEscapeKey(onEscape: () => void) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onEscape(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onEscape]);
-}
-
 const ModalBase: React.FC<{ onClose: () => void; children: React.ReactNode; titulo: string; ancho?: string }> = ({ onClose, children, titulo, ancho = 'sm:max-w-md' }) => {
-  useEscapeKey(onClose);
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
-      style={{ backgroundColor: 'rgba(15,20,18,0.55)' }}
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={titulo}
+    <Modal
+      closeLabel={`Cerrar ${titulo}`}
+      isOpen
+      onOpenChange={isOpen => { if (!isOpen) onClose(); }}
+      size={ancho === 'sm:max-w-3xl' ? 'wide' : 'default'}
+      title={titulo}
     >
-      <div
-        className={`bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full ${ancho} p-6 max-h-[90vh] overflow-y-auto`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-gray-800">{titulo}</h3>
-          <button onClick={onClose} className={`text-gray-400 hover:text-gray-700 rounded-full p-1 -m-1 ${FOCUS_RING}`} aria-label="Cerrar">
-            <X size={20} aria-hidden="true" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+      {children}
+    </Modal>
   );
 };
 
@@ -523,15 +503,7 @@ const ModalReserva: React.FC<{
   const [motivoExcepcion, setMotivoExcepcion] = useState('');
   const [planCamas, setPlanCamas] = useState('');
   const [gestionandoCapacidad, setGestionandoCapacidad] = useState(false);
-  const [destinoCopiado, setDestinoCopiado] = useState<'alias' | 'cvu' | null>(null);
-
   const setCampo = (campo: keyof FormReserva, valor: string) => setForm(f => ({ ...f, [campo]: valor }));
-
-  const copiarDestinoCobro = async (tipo: 'alias' | 'cvu', valor: string) => {
-    await navigator.clipboard.writeText(valor);
-    setDestinoCopiado(tipo);
-    window.setTimeout(() => setDestinoCopiado(actual => actual === tipo ? null : actual), 1600);
-  };
 
   const validar = (): string | null => {
     if (!form.cliente_nombre.trim()) return 'Falta el nombre del huésped.';
@@ -838,26 +810,32 @@ const ModalReserva: React.FC<{
               {reserva.cuenta_cobro.alias && (
                 <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
                   <span className="min-w-0"><span className="text-gray-500">Alias:</span> <strong className="break-all">{reserva.cuenta_cobro.alias}</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => copiarDestinoCobro('alias', reserva.cuenta_cobro!.alias!)}
-                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
-                  >
-                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'alias' ? 'Copiado' : 'Copiar'}
-                  </button>
+                  <CopyButton
+                    className="shrink-0"
+                    copiedLabel="Alias copiado"
+                    errorLabel="No se pudo copiar el alias"
+                    label="Copiar alias"
+                    showLabel
+                    size="sm"
+                    value={reserva.cuenta_cobro.alias}
+                    variant="ghost"
+                  />
                 </div>
               )}
 
               {reserva.cuenta_cobro.cvu && (
                 <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
                   <span className="min-w-0"><span className="text-gray-500">CVU:</span> <strong className="break-all tabular-nums">{reserva.cuenta_cobro.cvu}</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => copiarDestinoCobro('cvu', reserva.cuenta_cobro!.cvu!)}
-                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
-                  >
-                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'cvu' ? 'Copiado' : 'Copiar'}
-                  </button>
+                  <CopyButton
+                    className="shrink-0"
+                    copiedLabel="CVU copiado"
+                    errorLabel="No se pudo copiar el CVU"
+                    label="Copiar CVU"
+                    showLabel
+                    size="sm"
+                    value={reserva.cuenta_cobro.cvu}
+                    variant="ghost"
+                  />
                 </div>
               )}
 
@@ -1241,18 +1219,9 @@ const TablaConsultas: React.FC<{ consultas: Consulta[] }> = ({ consultas }) => (
 type ResumenSync = Record<string, { nuevas: number; actualizadas: number; canceladas: number } | { error: string }>;
 
 const SeccionAirbnb: React.FC<{ alojamientos: Alojamiento[]; onSincronizado: () => void }> = ({ alojamientos, onSincronizado }) => {
-  const [copiado, setCopiado] = useState<number | null>(null);
   const [sincronizando, setSincronizando] = useState(false);
   const [resumen, setResumen] = useState<ResumenSync | null>(null);
   const [error, setError] = useState('');
-
-  const copiarLink = (id: number) => {
-    const link = `${window.location.origin}/api/ical?alojamiento_id=${id}`;
-    navigator.clipboard.writeText(link).then(() => {
-      setCopiado(id);
-      setTimeout(() => setCopiado(null), 1800);
-    });
-  };
 
   const sincronizar = async () => {
     setSincronizando(true);
@@ -1277,16 +1246,20 @@ const SeccionAirbnb: React.FC<{ alojamientos: Alojamiento[]; onSincronizado: () 
 
       <div className="grid sm:grid-cols-3 gap-2 mb-4">
         {alojamientos.map(a => (
-          <button
+          <div
             key={a.id}
-            onClick={() => copiarLink(a.id)}
-            className={`flex items-center justify-between gap-2 text-xs border border-gray-200 rounded-lg px-3 py-2.5 hover:bg-gray-50 ${FOCUS_RING}`}
+            className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-xs"
           >
             <span className="flex items-center gap-1.5 text-gray-600"><Link2 size={13} className="text-gray-400 flex-shrink-0" aria-hidden="true" />{a.nombre}</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-brand flex-shrink-0">
-              <Copy size={12} aria-hidden="true" /> {copiado === a.id ? 'Copiado' : 'Copiar link'}
-            </span>
-          </button>
+            <CopyButton
+              copiedLabel="Link copiado"
+              errorLabel="No se pudo copiar el link"
+              label={`Copiar link de ${a.nombre}`}
+              size="sm"
+              value={`${window.location.origin}/api/ical?alojamiento_id=${a.id}`}
+              variant="ghost"
+            />
+          </div>
         ))}
       </div>
       <p className="text-[11px] text-gray-400 mb-4">
@@ -2182,19 +2155,21 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                 <Badge variant={espacio.estado === 'activo' ? 'success' : espacio.estado === 'inactivo' ? 'danger' : 'warning'}>{espacio.estado === 'activo' ? 'Activo' : espacio.estado === 'inactivo' ? 'Inactivo' : 'Configuración pendiente'}</Badge>
               </div>
               <div className="admin-config__lodging-fields">
-                <Input label="Capacidad comercial" type="number" value={String(espacio.capacidadComercial)} isDisabled={!esSuperAdmin}
-                  onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadComercial: Number(value) })} />
-                <Input label="Máximo físico/operativo" type="number" value={String(espacio.capacidadOperativaMaxima)} isDisabled={!esSuperAdmin}
-                  onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadOperativaMaxima: Number(value) })} />
+                <NumberField decrementLabel="Reducir capacidad comercial" incrementLabel="Aumentar capacidad comercial"
+                  isDisabled={!esSuperAdmin} label="Capacidad comercial" minValue={0} showStepper={false}
+                  value={espacio.capacidadComercial} onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadComercial: value })} />
+                <NumberField decrementLabel="Reducir máximo operativo" incrementLabel="Aumentar máximo operativo"
+                  isDisabled={!esSuperAdmin} label="Máximo físico/operativo" minValue={0} showStepper={false}
+                  value={espacio.capacidadOperativaMaxima} onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadOperativaMaxima: value })} />
                 <Select label="Estado comercial" placeholder="Elegí un estado" value={espacio.estado} isDisabled={!esSuperAdmin}
                   options={[{ value: 'activo', label: 'Activo' }, { value: 'configuracion_pendiente', label: 'Configuración pendiente' }, { value: 'inactivo', label: 'Inactivo' }]}
                   onChange={value => value && actualizarEspacioDraft(espacio.codigo, { estado: value })} />
               </div>
               <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
-                <label className="flex items-center gap-2"><input type="checkbox" checked={espacio.reservableGeneral} disabled={!esSuperAdmin}
-                  onChange={event => actualizarEspacioDraft(espacio.codigo, { reservableGeneral: event.target.checked })} /> Venta general</label>
-                <label className="flex items-center gap-2"><input type="checkbox" checked={espacio.reservableRetiro} disabled={!esSuperAdmin}
-                  onChange={event => actualizarEspacioDraft(espacio.codigo, { reservableRetiro: event.target.checked })} /> Retiros</label>
+                <Checkbox isSelected={espacio.reservableGeneral} isDisabled={!esSuperAdmin}
+                  onChange={isSelected => actualizarEspacioDraft(espacio.codigo, { reservableGeneral: isSelected })}>Venta general</Checkbox>
+                <Checkbox isSelected={espacio.reservableRetiro} isDisabled={!esSuperAdmin}
+                  onChange={isSelected => actualizarEspacioDraft(espacio.codigo, { reservableRetiro: isSelected })}>Retiros</Checkbox>
               </div>
               {espacio.tipo === 'camping' && espacio.estado !== 'activo' && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Para activar Camping: definí una capacidad mayor a cero, habilitá al menos un contexto, guardá estas condiciones y luego habilitá su modalidad. También debe existir una regla de precio publicada para camping.</p>}
               {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !espacioModificado || espacio.capacidadOperativaMaxima < espacio.capacidadComercial}
@@ -2219,8 +2194,8 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                       options={item.modalidad === 'privada' ? [{ value: 'espacio', label: 'Espacio completo' }] : item.modalidad === 'camping' ? [{ value: 'parcela', label: 'Parcela' }] : [{ value: 'cama', label: 'Cama' }, { value: 'espacio', label: 'Espacio completo' }]}
                       onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, { unidadVenta: value })} />
                   </div>
-                  <label className="admin-config__modality-toggle"><input type="checkbox" checked={item.habilitada} disabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
-                    onChange={event => actualizarModalidadDraft(espacio.codigo, item.id, { habilitada: event.target.checked })} /> Habilitada para reservas nuevas</label>
+                  <Checkbox className="admin-config__modality-toggle" isSelected={item.habilitada} isDisabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
+                    onChange={isSelected => actualizarModalidadDraft(espacio.codigo, item.id, { habilitada: isSelected })}>Habilitada para reservas nuevas</Checkbox>
                   {!puedeHabilitar && <p className="admin-config__modality-warning text-xs text-amber-700">Primero activá el alojamiento, asignale capacidad y habilitá el contexto seleccionado.</p>}
                   {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modalidadModificada || (item.habilitada && !puedeHabilitar)}
                     className="admin-config__modality-action" isLoading={guardando === `modalidad-${item.id}`} onPress={() => originalModalidad && confirmarModalidad(espacio, item, originalModalidad)}>Guardar modalidad</Button>}
@@ -2237,7 +2212,9 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
         <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-2">{(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-3">
           <p className="font-semibold">{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</p>
           <p className="text-xs text-gray-500">v{item.version} · {item.comidasAdicionalesPorPersonaNoche} comidas adicionales por persona/noche</p>
-          <label className="mt-3 block text-xs font-semibold text-gray-600">Precio por comida (ARS)<input type="number" min={0} value={preciosComida[item.codigo] ?? ''} disabled={!esSuperAdmin} onChange={event => setPreciosComida(actual => ({ ...actual, [item.codigo]: event.target.value }))} className={`mt-1 w-full rounded border px-3 py-2 text-sm ${FOCUS_RING}`} /></label>
+          <MoneyField className="mt-3" currency="ARS" decrementLabel="Reducir precio" incrementLabel="Aumentar precio"
+            isDisabled={!esSuperAdmin} label="Precio por comida" minValue={0} showStepper={false}
+            value={Number(preciosComida[item.codigo] || 0)} onChange={value => setPreciosComida(actual => ({ ...actual, [item.codigo]: String(value) }))} />
           {esSuperAdmin && <button type="button" onClick={() => confirmarComida(item)} disabled={guardando !== null || Math.round(Number(preciosComida[item.codigo]) * 100) === item.precioComidaCentavos} className={`mt-3 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand disabled:opacity-50 ${FOCUS_RING}`}>{guardando === `comida-${item.codigo}` ? 'Publicando…' : 'Publicar nueva versión'}</button>}
         </div>)}</div>
       </details>
@@ -2253,7 +2230,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
 
       {parametro && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Retención de pago</strong><small>{parametro.valor} minutos para completar la seña</small></span></summary>
-        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><label className="text-xs font-semibold text-gray-600">Nuevo plazo<input type="number" min={parametro.minimo} max={parametro.maximo} value={valor} onChange={event => setValor(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div className="flex items-end"><button type="button" onClick={confirmarPlazo} disabled={guardando !== null || Number(valor) === parametro.valor || Number(valor) < parametro.minimo || Number(valor) > parametro.maximo} className="rounded bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{guardando === 'plazo' ? 'Guardando…' : 'Guardar plazo'}</button></div></>}</div>
+        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><NumberField decrementLabel="Reducir plazo" incrementLabel="Aumentar plazo" label="Nuevo plazo" minValue={parametro.minimo} maxValue={parametro.maximo} showStepper={false} value={Number(valor)} onChange={value => setValor(String(value))} /><div className="flex items-end"><Button size="sm" isLoading={guardando === 'plazo'} onPress={confirmarPlazo} isDisabled={guardando !== null || Number(valor) === parametro.valor || Number(valor) < parametro.minimo || Number(valor) > parametro.maximo}>Guardar plazo</Button></div></>}</div>
       </details>}
 
       <section className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-xs text-gray-600">
@@ -2277,14 +2254,19 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
               ))}
             </div>
           </div>
-          <label className="mt-4 block text-sm font-semibold text-gray-700" htmlFor="config_change_reason">
-            Motivo del cambio <span className="text-red-600" aria-hidden="true">*</span>
-          </label>
-          <textarea id="config_change_reason" rows={3} minLength={5} maxLength={500} required autoFocus
-            value={motivoConfirmacion} onChange={event => setMotivoConfirmacion(event.target.value)}
+          <Textarea
+            autoFocus
+            className="mt-4"
+            description="Obligatorio · entre 5 y 500 caracteres. Quedará asociado al cambio en la auditoría."
+            isRequired
+            label="Motivo del cambio"
+            maxLength={500}
+            minLength={5}
+            onChange={setMotivoConfirmacion}
             placeholder="Ej. Ajuste comercial aprobado por administración"
-            className={`mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`} />
-          <p className="mt-1 text-xs text-gray-500">Obligatorio · entre 5 y 500 caracteres. Quedará asociado al cambio en la auditoría.</p>
+            rows={3}
+            value={motivoConfirmacion}
+          />
           <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="secondary" isDisabled={guardando !== null} onPress={() => setConfirmacion(null)}>Cancelar</Button>
             <Button isLoading={guardando !== null} isDisabled={guardando !== null || motivoConfirmacion.trim().length < 5} onPress={confirmarCambio}>{confirmacion.etiquetaConfirmar}</Button>
@@ -2517,11 +2499,18 @@ const SeccionOcupacionOperativa: React.FC = () => {
           <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Nueva ocupación</h2>
           <p className="text-xs text-gray-500 mt-1">Bloqueá inventario o registrá una estadía sin ingreso comercial.</p>
         </div>
-        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Clase de ocupación">
-          {([['bloqueo', 'Bloqueo'], ['estadia_no_comercial', 'Estadía interna']] as const).map(([value, label]) => (
-            <button key={value} type="button" onClick={() => cambiarClase(value)} className={`text-sm font-semibold rounded-lg px-3 py-2 border ${FOCUS_RING} ${clase === value ? 'bg-brand text-white border-brand' : 'border-gray-300 text-gray-600'}`}>{label}</button>
-          ))}
-        </div>
+        <ToggleGroup
+          disallowEmptySelection
+          label="Clase de ocupación"
+          labelVisibility="hidden"
+          onChange={values => values[0] && cambiarClase(values[0] as 'bloqueo' | 'estadia_no_comercial')}
+          options={[
+            { value: 'bloqueo', label: 'Bloqueo' },
+            { value: 'estadia_no_comercial', label: 'Estadía interna' },
+          ]}
+          selectionMode="single"
+          value={[clase]}
+        />
         <label className="block text-xs font-semibold text-gray-600">Inventario
           <select required className={`${INPUT_CLS} mt-1`} value={objetivo} onChange={e => setObjetivo(e.target.value)}>
             <option value="" disabled>Elegir espacio o unidad</option>
@@ -2533,14 +2522,17 @@ const SeccionOcupacionOperativa: React.FC = () => {
             </optgroup>
           </select>
         </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block text-xs font-semibold text-gray-600">Desde (inclusive)
-            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
-          </label>
-          <label className="block text-xs font-semibold text-gray-600">Hasta (checkout)
-            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
-          </label>
-        </div>
+        <DateRangeField
+          endLabel="Hasta (checkout)"
+          isRequired
+          label="Fechas de ocupación"
+          onChange={range => {
+            setFechaDesde(range?.start || '');
+            setFechaHasta(range?.end || '');
+          }}
+          startLabel="Desde (inclusive)"
+          value={fechaDesde && fechaHasta ? { start: fechaDesde, end: fechaHasta } : null}
+        />
         <label className="block text-xs font-semibold text-gray-600">Tipo
           <select className={`${INPUT_CLS} mt-1`} value={tipo} onChange={e => setTipo(e.target.value)}>
             {(clase === 'bloqueo'
@@ -2549,20 +2541,24 @@ const SeccionOcupacionOperativa: React.FC = () => {
           </select>
         </label>
         {clase === 'estadia_no_comercial' && (
-          <label className="block text-xs font-semibold text-gray-600">Personas
-            <input required min={1} type="number" className={`${INPUT_CLS} mt-1`} value={cantidadPersonas} onChange={e => setCantidadPersonas(Number(e.target.value))} />
-          </label>
+          <NumberField decrementLabel="Quitar persona" incrementLabel="Agregar persona" isRequired label="Personas"
+            minValue={1} onChange={setCantidadPersonas} value={cantidadPersonas} />
         )}
-        <label className="block text-xs font-semibold text-gray-600">{clase === 'bloqueo' ? 'Motivo' : 'Referencia operativa'}
-          <textarea required minLength={3} rows={3} className={`${INPUT_CLS} mt-1`} value={detalle} onChange={e => setDetalle(e.target.value)} placeholder={clase === 'bloqueo' ? 'Ej. reparación de techo' : 'Ej. voluntariado de huerta'} />
-        </label>
+        <Textarea isRequired label={clase === 'bloqueo' ? 'Motivo' : 'Referencia operativa'} minLength={3} rows={3}
+          value={detalle} onChange={setDetalle} placeholder={clase === 'bloqueo' ? 'Ej. reparación de techo' : 'Ej. voluntariado de huerta'} />
         <button disabled={guardando || cargando} className={`w-full text-sm font-semibold rounded-lg px-4 py-2.5 text-white bg-brand disabled:opacity-60 ${FOCUS_RING}`}>{guardando ? 'Guardando…' : 'Registrar ocupación'}</button>
       </form>
 
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-4 sm:px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
           <div><h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Bloqueos y estadías internas</h2><p className="text-xs text-gray-400 mt-1">El historial cancelado se conserva para auditoría.</p></div>
-          <button onClick={cargar} disabled={cargando} aria-label="Actualizar ocupación" className={`p-2 rounded-lg border border-gray-300 disabled:opacity-60 ${FOCUS_RING}`}><RefreshCw size={15} className={cargando ? 'animate-spin' : ''} /></button>
+          <IconButton
+            icon={<RefreshCw size={15} />}
+            isLoading={cargando}
+            label="Actualizar ocupación"
+            onPress={cargar}
+            variant="secondary"
+          />
         </div>
         {error && <p className="m-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">{error}</p>}
         <ul className="divide-y divide-gray-100">
@@ -2722,7 +2718,7 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
             <option value="">Todos los estados</option>
             {Object.entries(ESTADO_ARREPENTIMIENTO_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <button type="button" onClick={cargar} aria-label="Actualizar solicitudes" className={`rounded-lg border border-gray-300 p-2 ${FOCUS_RING}`}><RefreshCw size={15} /></button>
+          <IconButton icon={<RefreshCw size={15} />} label="Actualizar solicitudes" onPress={cargar} variant="secondary" />
         </div>
       </div>
       {error && <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -3661,14 +3657,13 @@ const PanelReservas: React.FC = () => {
                   <span className="hidden sm:inline">Nueva reserva</span>
                 </button>
               )}
-              <button
-                onClick={actualizar}
-                disabled={loading}
-                aria-label="Actualizar"
-                className={`inline-flex items-center gap-2 text-sm font-semibold border border-gray-300 rounded-lg px-3 py-2.5 hover:bg-gray-100 transition-colors disabled:opacity-60 ${FOCUS_RING}`}
-              >
-                <RefreshCw size={15} className={loading ? 'animate-spin' : ''} aria-hidden="true" />
-              </button>
+              <IconButton
+                icon={<RefreshCw size={15} />}
+                isLoading={loading}
+                label="Actualizar"
+                onPress={actualizar}
+                variant="secondary"
+              />
               <button
                 onClick={cerrarSesion}
                 aria-label="Cerrar sesión"
@@ -3866,17 +3861,14 @@ const PanelReservas: React.FC = () => {
                 Historial completo {loading && <span className="font-normal normal-case text-gray-400">(cargando…)</span>}
               </h2>
               <div className="flex gap-2">
-                <div className="relative flex-1 sm:flex-none">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
-                  <input
-                    type="search"
-                    value={busqueda}
-                    onChange={e => setBusqueda(e.target.value)}
-                    placeholder="Buscar por nombre…"
-                    aria-label="Buscar reservas"
-                    className={`text-sm border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 sm:py-2 w-full sm:w-64 ${FOCUS_RING}`}
-                  />
-                </div>
+                <SearchField
+                  className="admin-history-search flex-1 sm:flex-none sm:w-64"
+                  clearLabel="Limpiar búsqueda"
+                  label="Buscar reservas"
+                  onChange={setBusqueda}
+                  placeholder="Buscar por nombre…"
+                  value={busqueda}
+                />
                 {esSuperAdmin && (
                   <button
                     onClick={() => descargarReporteServidor(busqueda.trim() ? { titular: busqueda.trim() } : undefined)}

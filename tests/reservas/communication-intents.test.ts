@@ -13,6 +13,7 @@ import {
   proximoIntentoComunicacion,
 } from '../../functions/_domain/reservas/communicationIntents.ts';
 import { D1RepositorioIntencionesComunicacion } from '../../functions/_infrastructure/d1/D1RepositorioIntencionesComunicacion.ts';
+import { onRequestPost as entregarNotificacionReserva } from '../../functions/api/v1/integrations/comunicaciones/notificaciones.ts';
 
 function baseCompleta(): DatabaseSync {
   const db = new DatabaseSync(':memory:');
@@ -137,7 +138,7 @@ test('proyecta eventos de reserva a intenciones versionadas sin copiar PII', () 
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite);
   const eventos = [
-    ['reserva.creada', 'reserva_creada'],
+    ['reserva.creada_admin', 'reserva_creada'],
     ['reserva.retencion_iniciada', 'pago_pendiente'],
     ['pago.aprobado', 'pago_aprobado'],
     ['reserva.retencion_vencida', 'reserva_vencida'],
@@ -152,7 +153,7 @@ test('proyecta eventos de reserva a intenciones versionadas sin copiar PII', () 
   `).all() as Record<string, unknown>[];
   assert.deepEqual(intenciones.map(row => row.tipo), eventos.map(([, intencion]) => intencion));
   assert.equal(intenciones.every(row =>
-    row.idioma === 'es' && row.plantilla_version === 1 && row.estado === 'pendiente'
+    row.idioma === 'es' && row.plantilla_version === 2 && row.estado === 'pendiente'
   ), true);
 
   const envelopes = sqlite.prepare(`
@@ -161,37 +162,40 @@ test('proyecta eventos de reserva a intenciones versionadas sin copiar PII', () 
   `).all() as Array<{ payload_json: string }>;
   assert.equal(envelopes.length, 6);
   assert.doesNotMatch(JSON.stringify(envelopes), /pii-no-copiar|QA Comunicación/);
-  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM comunicacion_plantillas').get()?.n, 12);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM comunicacion_plantillas').get()?.n, 24);
   sqlite.prepare("UPDATE reservas SET idioma_comunicacion = 'en' WHERE id = ?").run(reservaId);
-  crearEvento(sqlite, reservaId, 'reserva.creada', 'com-source-en');
+  crearEvento(sqlite, reservaId, 'reserva.creada_admin', 'com-source-en');
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT idioma, plantilla_codigo, plantilla_version
     FROM comunicacion_intenciones WHERE source_event_uid = 'com-source-en'
-  `).get() }, { idioma: 'en', plantilla_codigo: 'reserva_creada', plantilla_version: 1 });
+  `).get() }, { idioma: 'en', plantilla_codigo: 'reserva_creada', plantilla_version: 2 });
   assert.throws(
-    () => sqlite.prepare("UPDATE comunicacion_plantillas SET cuerpo_template = 'cambio' WHERE id = 1").run(),
+    () => sqlite.prepare(`
+      UPDATE comunicacion_plantillas SET cuerpo_template = 'cambio'
+      WHERE codigo = 'reserva_creada' AND idioma = 'es' AND version = 2
+    `).run(),
     /publicada es inmutable/
   );
   sqlite.prepare(`
     UPDATE comunicacion_plantillas SET estado = 'retirada'
-    WHERE codigo = 'reserva_creada' AND idioma = 'es' AND version = 1
+    WHERE codigo = 'reserva_creada' AND idioma = 'es' AND version = 2
   `).run();
   sqlite.prepare(`
     INSERT INTO comunicacion_plantillas (
       codigo, intencion, idioma, version, estado, asunto_template, cuerpo_template, published_at
-    ) VALUES ('reserva_creada', 'reserva_creada', 'es', 2, 'publicada',
+    ) VALUES ('reserva_creada', 'reserva_creada', 'es', 3, 'publicada',
       'Reserva {{reserva_codigo}} recibida', 'Recibimos tu solicitud.',
       '2099-10-01T00:00:00.000Z')
   `).run();
   assert.equal(sqlite.prepare(`
     SELECT version FROM comunicacion_plantillas
     WHERE intencion = 'reserva_creada' AND idioma = 'es' AND estado = 'publicada'
-  `).get()?.version, 2);
+  `).get()?.version, 3);
 
   sqlite.prepare(`
     INSERT OR IGNORE INTO reserva_eventos (
       reserva_id, tipo, actor_tipo, evento_uid, version, agregado_tipo, agregado_id
-    ) VALUES (?, 'reserva.creada', 'sistema', 'com-source-en', 1, 'reserva', ?)
+    ) VALUES (?, 'reserva.creada_admin', 'sistema', 'com-source-en', 1, 'reserva', ?)
   `).run(reservaId, String(reservaId));
   assert.equal(sqlite.prepare(`
     SELECT COUNT(*) n FROM comunicacion_intenciones WHERE source_event_uid = 'com-source-en'
@@ -202,7 +206,7 @@ test('proyecta eventos de reserva a intenciones versionadas sin copiar PII', () 
 test('sin adaptador conserva la intención recuperable y no afecta la reserva', async () => {
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite);
-  crearEvento(sqlite, reservaId, 'reserva.creada', 'com-sin-canal');
+  crearEvento(sqlite, reservaId, 'reserva.creada_admin', 'com-sin-canal');
   const repositorio = new D1RepositorioIntencionesComunicacion(d1(sqlite));
 
   const resultado = await despacharIntencionesComunicacion(repositorio, null, {
@@ -285,7 +289,7 @@ test('reintenta errores seguros, agota en dead letter y permite recuperación', 
 test('un lease evita que dos despachos entreguen la misma intención', async () => {
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite);
-  crearEvento(sqlite, reservaId, 'reserva.creada', 'com-concurrente');
+  crearEvento(sqlite, reservaId, 'reserva.creada_admin', 'com-concurrente');
   const repositorio = new D1RepositorioIntencionesComunicacion(d1(sqlite));
   const ahora = '2099-10-01T10:00:00.000Z';
   const primera = await repositorio.reclamarLote({
@@ -304,5 +308,101 @@ test('un lease evita que dos despachos entreguen la misma intención', async () 
   });
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM comunicacion_intentos').get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT estado FROM comunicacion_intenciones').get()?.estado, 'entregada');
+  sqlite.close();
+});
+
+test('entrega por email el estado pendiente con datos y enlace recuperable', async () => {
+  const sqlite = baseCompleta();
+  const reservaId = crearReserva(sqlite);
+  sqlite.prepare(`
+    UPDATE reservas
+    SET monto_sena = 30000, monto_sena_centavos = 3000000,
+        hold_expires_at = '2099-10-01T10:15:00.000Z'
+    WHERE id = ?
+  `).run(reservaId);
+  crearEvento(sqlite, reservaId, 'reserva.retencion_iniciada', 'com-email-pending');
+  const env = {
+    DB: d1(sqlite),
+    N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-al-menos-32-caracteres',
+    RESERVAS_PUBLIC_SITE_URL: 'https://preview.pueblomagico.test',
+  };
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Integration-Id': 'n8n',
+    'X-Service-Secret': env.N8N_INBOUND_SECRET,
+  };
+  const invocar = (body: unknown) => entregarNotificacionReserva({
+    request: new Request('https://api.test/api/v1/integrations/comunicaciones/notificaciones', {
+      method: 'POST', headers, body: JSON.stringify(body),
+    }),
+    env,
+  });
+
+  const claim = await invocar({
+    accion: 'reclamar',
+    intencion_uid: 'comunicacion:com-email-pending',
+  });
+  assert.equal(claim.status, 200, await claim.clone().text());
+  const entrega: any = (await claim.json()).data;
+  assert.equal(entrega.canal, 'email');
+  assert.equal(entrega.estado, 'lista');
+  assert.equal(entrega.destinatario, 'pii-no-copiar@example.test');
+  assert.match(entrega.asunto, /RES-COM-1/);
+  assert.match(entrega.cuerpo, /2099-10-10/);
+  assert.match(entrega.cuerpo, /\$\s?30[.,]000|30\.000/);
+  assert.match(entrega.cuerpo, /https:\/\/preview\.pueblomagico\.test\/reserva-pendiente\?reserva=RES-COM-1/);
+  assert.doesNotMatch(entrega.cuerpo, /\{\{/);
+
+  const resultado = {
+    accion: 'resultado',
+    intencion_uid: entrega.intencion_uid,
+    claim_uid: entrega.claim_uid,
+    delivery_uid: entrega.delivery_uid,
+    resultado: 'entregada',
+  };
+  assert.equal((await invocar(resultado)).status, 200);
+  assert.equal((await invocar(resultado)).status, 200);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT estado, canal, last_error_code FROM comunicacion_intenciones
+  `).get() }, { estado: 'entregada', canal: 'email', last_error_code: null });
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM comunicacion_intentos').get()?.n, 1);
+  sqlite.close();
+});
+
+test('una reserva sin email queda visible como sin canal y no se reintenta', async () => {
+  const sqlite = baseCompleta();
+  const reservaId = crearReserva(sqlite);
+  sqlite.prepare('UPDATE reservas SET cliente_email = NULL WHERE id = ?').run(reservaId);
+  crearEvento(sqlite, reservaId, 'pago.aprobado', 'com-email-missing');
+  const env = {
+    DB: d1(sqlite),
+    N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-al-menos-32-caracteres',
+  };
+  const response = await entregarNotificacionReserva({
+    request: new Request('https://preview.test/api/v1/integrations/comunicaciones/notificaciones', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Integration-Id': 'n8n',
+        'X-Service-Secret': env.N8N_INBOUND_SECRET,
+      },
+      body: JSON.stringify({
+        accion: 'reclamar', intencion_uid: 'comunicacion:com-email-missing',
+      }),
+    }),
+    env,
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual((await response.json() as any).data, {
+    intencion_uid: 'comunicacion:com-email-missing',
+    estado: 'sin_canal',
+    canal: 'email',
+  });
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT estado, attempts, canal, last_error_code FROM comunicacion_intenciones
+  `).get() }, {
+    estado: 'sin_canal', attempts: 1, canal: 'email',
+    last_error_code: 'EMAIL_DESTINATION_MISSING',
+  });
   sqlite.close();
 });

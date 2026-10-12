@@ -1,5 +1,5 @@
 {
-  "name": "Reservas - emails de arrepentimiento",
+  "name": "Reservas - emails transaccionales",
   "nodes": [
     {
       "parameters": {
@@ -69,14 +69,20 @@
               "leftValue": "={{ $json.body.event_type }}",
               "rightValue": "arrepentimiento.notificacion_pendiente",
               "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "tipo-comunicacion-reserva",
+              "leftValue": "={{ $json.body.event_type }}",
+              "rightValue": "comunicacion.intencion_creada",
+              "operator": { "type": "string", "operation": "equals" }
             }
           ],
-          "combinator": "and"
+          "combinator": "or"
         },
         "options": {}
       },
       "id": "filtrar-evento-arrepentimiento",
-      "name": "Es email de arrepentimiento",
+      "name": "Es email transaccional",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [480, -40]
@@ -96,7 +102,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + ($json.body.event_type === 'arrepentimiento.notificacion_pendiente' ? '/api/v1/integrations/arrepentimientos/notificaciones' : '/api/v1/integrations/comunicaciones/notificaciones') }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -108,7 +114,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ accion: 'reclamar', notificacion_uid: $json.body.notification_id }) }}",
+        "body": "={{ JSON.stringify($json.body.event_type === 'arrepentimiento.notificacion_pendiente' ? { accion: 'reclamar', notificacion_uid: $json.body.notification_id } : { accion: 'reclamar', intencion_uid: $json.body.event_id }) }}",
         "options": { "timeout": 15000 }
       },
       "id": "reclamar-notificacion",
@@ -123,24 +129,68 @@
     },
     {
       "parameters": {
-        "fromEmail": "={{ $vars.RESERVAS_EMAIL_FROM }}",
-        "toEmail": "={{ $json.data.destinatario }}",
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "destinatario-email-disponible",
+              "leftValue": "={{ $json.data.destinatario || '' }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validar-destinatario-email",
+      "name": "Tiene destinatario email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [960, -100]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"accepted\":true,\"delivered\":false,\"reason\":\"no_email\"}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respuesta-sin-email",
+      "name": "Responder sin email",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1200, 20]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.data.destinatario }}",
         "subject": "={{ $json.data.asunto }}",
-        "emailFormat": "text",
-        "text": "={{ $json.data.cuerpo }}",
+        "emailType": "text",
+        "message": "={{ $json.data.cuerpo }}",
         "options": {}
       },
       "id": "enviar-email",
       "name": "Enviar email",
-      "type": "n8n-nodes-base.emailSend",
+      "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
-      "position": [980, -100],
+      "position": [1200, -180],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZOskHc6tMB6ArglC",
+          "name": "Gmail account"
+        }
+      },
       "onError": "continueErrorOutput"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + ($('Webhook eventos Reservas').item.json.body.event_type === 'arrepentimiento.notificacion_pendiente' ? '/api/v1/integrations/arrepentimientos/notificaciones' : '/api/v1/integrations/comunicaciones/notificaciones') }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -152,7 +202,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid, claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'entregada' }) }}",
+        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid || '', intencion_uid: $('Reclamar notificación').item.json.data.intencion_uid || '', claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'entregada' }) }}",
         "options": { "timeout": 15000 }
       },
       "id": "registrar-entregada",
@@ -207,7 +257,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + ($('Webhook eventos Reservas').item.json.body.event_type === 'arrepentimiento.notificacion_pendiente' ? '/api/v1/integrations/arrepentimientos/notificaciones' : '/api/v1/integrations/comunicaciones/notificaciones') }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -219,7 +269,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid, claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'dead_letter', error_code: 'EMAIL_DELIVERY_ERROR' }) }}",
+        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid || '', intencion_uid: $('Reclamar notificación').item.json.data.intencion_uid || '', claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'dead_letter', error_code: 'EMAIL_DELIVERY_ERROR' }) }}",
         "options": { "timeout": 15000 }
       },
       "id": "registrar-dead-letter",
@@ -247,7 +297,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $vars.RESERVAS_API_BASE_URL + '/api/v1/integrations/arrepentimientos/notificaciones' }}",
+        "url": "={{ $vars.RESERVAS_API_BASE_URL + ($('Webhook eventos Reservas').item.json.body.event_type === 'arrepentimiento.notificacion_pendiente' ? '/api/v1/integrations/arrepentimientos/notificaciones' : '/api/v1/integrations/comunicaciones/notificaciones') }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -259,7 +309,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid, claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'retry', error_code: 'EMAIL_DELIVERY_ERROR' }) }}",
+        "body": "={{ JSON.stringify({ accion: 'resultado', notificacion_uid: $('Reclamar notificación').item.json.data.notificacion_uid || '', intencion_uid: $('Reclamar notificación').item.json.data.intencion_uid || '', claim_uid: $('Reclamar notificación').item.json.data.claim_uid, delivery_uid: $('Reclamar notificación').item.json.data.delivery_uid, resultado: 'retry', error_code: 'EMAIL_DELIVERY_ERROR' }) }}",
         "options": { "timeout": 15000 }
       },
       "id": "registrar-retry",
@@ -291,18 +341,24 @@
     },
     "Validar secreto webhook": {
       "main": [
-        [{ "node": "Es email de arrepentimiento", "type": "main", "index": 0 }],
+        [{ "node": "Es email transaccional", "type": "main", "index": 0 }],
         [{ "node": "Responder 401", "type": "main", "index": 0 }]
       ]
     },
-    "Es email de arrepentimiento": {
+    "Es email transaccional": {
       "main": [
         [{ "node": "Reclamar notificación", "type": "main", "index": 0 }],
         [{ "node": "Responder evento ignorado", "type": "main", "index": 0 }]
       ]
     },
     "Reclamar notificación": {
-      "main": [[{ "node": "Enviar email", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Tiene destinatario email", "type": "main", "index": 0 }]]
+    },
+    "Tiene destinatario email": {
+      "main": [
+        [{ "node": "Enviar email", "type": "main", "index": 0 }],
+        [{ "node": "Responder sin email", "type": "main", "index": 0 }]
+      ]
     },
     "Enviar email": {
       "main": [

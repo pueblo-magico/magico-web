@@ -46,7 +46,7 @@ test('mantiene accesibles todas las vistas existentes y sus permisos', () => {
 test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /descargarReporteServidor\(\)/);
   assert.match(source, /setModalReserva\(\{ modo: 'crear', reserva: null \}\)/);
-  assert.match(source, /onClick=\{actualizar\}/);
+  assert.match(source, /onPress=\{actualizar\}/);
   assert.match(source, /onClick=\{cerrarSesion\}/);
   assert.match(source, /<SeccionOcupacionOperativa \/>/);
   assert.match(source, /<SeccionArrepentimientos puedeGestionar=\{puedeEditar\} \/>/);
@@ -126,7 +126,12 @@ test('separa los eventos de integraciones en categorías accesibles sin ocultar 
 
 test('reutiliza primitivas del paquete interno en el registro de aplicaciones', () => {
   assert.match(source, /from '@pueblo-magico\/react-ui'/);
-  for (const component of ['Badge', 'Button', 'Card', 'CodeBadge', 'DescriptionList', 'DescriptionListItem', 'EmptyState', 'LoadingState', 'StatCard', 'TableContainer']) {
+  for (const component of [
+    'Badge', 'Button', 'Card', 'Checkbox', 'CodeBadge', 'CopyButton', 'DateRangeField',
+    'DescriptionList', 'DescriptionListItem', 'EmptyState', 'IconButton', 'LoadingState',
+    'Modal', 'MoneyField', 'NumberField', 'SearchField', 'StatCard', 'TableContainer',
+    'Textarea', 'ToggleGroup',
+  ]) {
     assert.match(source, new RegExp(`<${component}`));
   }
   assert.match(source, /<LoadingState className="py-16" label="Cargando configuración"/);
