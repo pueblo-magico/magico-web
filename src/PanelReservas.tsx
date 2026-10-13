@@ -2553,7 +2553,7 @@ const SeccionOcupacionOperativa: React.FC = () => {
         <div className="px-4 sm:px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
           <div><h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Bloqueos y estadías internas</h2><p className="text-xs text-gray-400 mt-1">El historial cancelado se conserva para auditoría.</p></div>
           <IconButton
-            icon={<RefreshCw size={15} />}
+            icon={cargando ? null : <RefreshCw size={15} />}
             isLoading={cargando}
             label="Actualizar ocupación"
             onPress={cargar}
@@ -3658,7 +3658,7 @@ const PanelReservas: React.FC = () => {
                 </button>
               )}
               <IconButton
-                icon={<RefreshCw size={15} />}
+                icon={loading ? null : <RefreshCw size={15} />}
                 isLoading={loading}
                 label="Actualizar"
                 onPress={actualizar}

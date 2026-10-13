@@ -54,6 +54,11 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} \/>/);
 });
 
+test('reemplaza el icono de actualizar por el spinner durante la carga', () => {
+  assert.match(source, /icon=\{loading \? null : <RefreshCw size=\{15\} \/>\}/);
+  assert.match(source, /icon=\{cargando \? null : <RefreshCw size=\{15\} \/>\}/);
+});
+
 test('acompaña los reportes con gráficos basados en métricas existentes', () => {
   assert.match(source, /aria-label="Gráficos de reportes"/);
   assert.match(source, /Composición de ingresos/);
