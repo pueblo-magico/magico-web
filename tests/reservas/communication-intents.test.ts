@@ -9,6 +9,12 @@ import {
   reprocesarIntencionComunicacion,
 } from '../../functions/_application/reservas/gestionarIntencionesComunicacion.ts';
 import {
+  reclamarNotificacionReserva,
+  registrarResultadoNotificacionReserva,
+  type NotificacionReservaReclamada,
+  type RepositorioNotificacionesReserva,
+} from '../../functions/_application/reservas/gestionarNotificacionesReserva.ts';
+import {
   codigoErrorComunicacionSeguro,
   proximoIntentoComunicacion,
 } from '../../functions/_domain/reservas/communicationIntents.ts';
@@ -84,6 +90,143 @@ function crearEvento(
     ) VALUES (?, ?, 'sistema', 'qa', 'correlation-comunicacion', '{}', ?, 1, 'reserva', ?)
   `).run(reservaId, tipo, uid, String(reservaId));
 }
+
+function notificacionReclamada(
+  cambios: Partial<NotificacionReservaReclamada> = {}
+): NotificacionReservaReclamada {
+  return {
+    intencionUid: 'comunicacion:test-email',
+    reservaId: 1,
+    tipo: 'reserva_creada',
+    idioma: 'es',
+    attempts: 1,
+    email: 'huesped@example.test',
+    codigo: 'RES-EMAIL-1',
+    estadoFlujo: 'pendiente',
+    fechaCheckin: '2099-10-10',
+    fechaCheckout: '2099-10-12',
+    cantidadPersonas: 2,
+    montoSenaCentavos: 3000000,
+    moneda: 'ARS',
+    expiresAt: null,
+    checkoutUrl: null,
+    asuntoTemplate: 'Reserva {{reserva_codigo}}',
+    cuerpoTemplate: '{{status_url}} | {{payment_url}} | {{monto_sena}} | {{desconocida}}',
+    ...cambios,
+  };
+}
+
+function repositorioNotificacionesFalso(
+  reclamada: NotificacionReservaReclamada | null
+): RepositorioNotificacionesReserva & {
+  finalizaciones: Array<Parameters<RepositorioNotificacionesReserva['finalizarEntrega']>[0]>;
+} {
+  const finalizaciones: Array<Parameters<RepositorioNotificacionesReserva['finalizarEntrega']>[0]> = [];
+  return {
+    finalizaciones,
+    async reclamarPorUid() { return reclamada; },
+    async finalizarEntrega(entrada) {
+      finalizaciones.push(entrada);
+      return true;
+    },
+  };
+}
+
+test('valida reclamos y construye enlaces para cada estado de la reserva', async () => {
+  const repositorio = repositorioNotificacionesFalso(null);
+  const invocar = (intencionUid: string, publicSiteUrl: string) => reclamarNotificacionReserva(
+    { intencionUid, publicSiteUrl },
+    repositorio,
+    () => new Date('2099-10-01T10:00:00.000Z'),
+    () => 'claim-email'
+  );
+
+  await assert.rejects(() => invocar('', 'https://preview.test'),
+    (error: any) => error.codigo === 'DATOS_INVALIDOS' && error.status === 400);
+  await assert.rejects(() => invocar('x'.repeat(201), 'https://preview.test'),
+    (error: any) => error.codigo === 'DATOS_INVALIDOS');
+  await assert.rejects(() => invocar('comunicacion:test', 'no-es-url'),
+    (error: any) => error.codigo === 'DATOS_INVALIDOS');
+  await assert.rejects(() => invocar('comunicacion:test', 'ftp://preview.test'),
+    (error: any) => error.codigo === 'DATOS_INVALIDOS');
+  assert.equal(await invocar(' comunicacion:test ', 'https://preview.test'), null);
+
+  const casos = [
+    [
+      notificacionReclamada({ tipo: 'pago_aprobado', idioma: 'en', moneda: 'MONEDA_INVALIDA' }),
+      '/reserva-confirmada?reserva=RES-EMAIL-1',
+    ],
+    [
+      notificacionReclamada({
+        tipo: 'reserva_vencida',
+        checkoutUrl: 'https://pagos.example.test/checkout/1',
+      }),
+      '/reserva-fallida?reserva=RES-EMAIL-1',
+    ],
+    [
+      notificacionReclamada({ estadoFlujo: 'confirmada' }),
+      '/reserva-confirmada?reserva=RES-EMAIL-1',
+    ],
+  ] as const;
+
+  for (const [reclamada, rutaEsperada] of casos) {
+    const repoCaso = repositorioNotificacionesFalso(reclamada);
+    const entrega = await reclamarNotificacionReserva(
+      { intencionUid: reclamada.intencionUid, publicSiteUrl: 'https://preview.test/base/' },
+      repoCaso,
+      () => new Date('2099-10-01T10:00:00.000Z'),
+      () => 'claim-email'
+    );
+    assert.equal(entrega?.estado, 'lista');
+    assert.match((entrega as any).cuerpo, new RegExp(rutaEsperada.replace(/[?]/g, '\\?')));
+    assert.doesNotMatch((entrega as any).cuerpo, /\{\{desconocida\}\}/);
+  }
+});
+
+test('normaliza resultados de entrega, errores y reintentos', async () => {
+  const repositorio = repositorioNotificacionesFalso(null);
+  const ahora = () => new Date('2099-10-01T10:00:00.000Z');
+  const base = {
+    intencionUid: 'comunicacion:test-email',
+    claimUid: 'claim-email',
+    deliveryUid: 'entrega:test-email:1',
+  };
+
+  for (const entrada of [
+    { ...base, intencionUid: '' },
+    { ...base, claimUid: '' },
+    { ...base, deliveryUid: '' },
+  ]) {
+    await assert.rejects(
+      () => registrarResultadoNotificacionReserva({ ...entrada, resultado: 'entregada' }, repositorio, ahora),
+      (error: any) => error.codigo === 'DATOS_INVALIDOS' && error.status === 400
+    );
+  }
+
+  assert.equal(await registrarResultadoNotificacionReserva({
+    ...base, resultado: 'entregada', errorCode: 'IGNORADO',
+  }, repositorio, ahora), true);
+  assert.equal(await registrarResultadoNotificacionReserva({
+    ...base, resultado: 'retry', errorCode: 'smtp-no-seguro@example.test',
+  }, repositorio, ahora), true);
+  assert.equal(await registrarResultadoNotificacionReserva({
+    ...base, resultado: 'dead_letter', errorCode: 'SMTP_REJECTED',
+  }, repositorio, ahora), true);
+
+  assert.deepEqual(repositorio.finalizaciones.map(finalizacion => ({
+    resultado: finalizacion.resultado,
+    errorCode: finalizacion.errorCode,
+    nextAttemptAt: finalizacion.nextAttemptAt,
+  })), [
+    { resultado: 'entregada', errorCode: null, nextAttemptAt: null },
+    {
+      resultado: 'retry',
+      errorCode: 'EMAIL_DELIVERY_ERROR',
+      nextAttemptAt: '2099-10-01T10:05:00.000Z',
+    },
+    { resultado: 'dead_letter', errorCode: 'SMTP_REJECTED', nextAttemptAt: null },
+  ]);
+});
 
 test('normaliza errores y backoff sin exponer detalles del proveedor', () => {
   assert.equal(codigoErrorComunicacionSeguro({ codigo: 'SMTP_TIMEOUT' }), 'SMTP_TIMEOUT');
