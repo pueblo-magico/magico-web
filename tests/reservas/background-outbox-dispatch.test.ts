@@ -19,9 +19,15 @@ test('programa el despacho en segundo plano cuando la integración está configu
     envConfigurado,
     promesa => { tarea = promesa; },
     'test.reservation.create',
+    { reservationId: 42 },
     {
-      despachar: async () => {
+      resolverEventIds: async (_env, objetivo) => {
+        assert.deepEqual(objetivo, { reservationId: 42 });
+        return ['reserva:test-42'];
+      },
+      despachar: async (_env, eventIds) => {
         ejecuciones++;
+        assert.deepEqual(eventIds, ['reserva:test-42']);
         return { reclamados: 2, entregados: 2, reprogramados: 0, deadLetter: 0 };
       },
       logger: { info: mensaje => logs.push(String(mensaje)), error: mensaje => logs.push(String(mensaje)) },
@@ -37,11 +43,14 @@ test('programa el despacho en segundo plano cuando la integración está configu
 });
 
 test('no programa sin waitUntil o con el outbox desactivado', () => {
-  assert.equal(programarDespachoOutbox(envConfigurado, undefined, 'test'), false);
+  assert.equal(programarDespachoOutbox(
+    envConfigurado, undefined, 'test', { eventIds: ['evento:test'] }
+  ), false);
   assert.equal(programarDespachoOutbox(
     { ...envConfigurado, INTEGRATION_OUTBOX_ENABLED: 'false' },
     () => undefined,
-    'test'
+    'test',
+    { eventIds: ['evento:test'] }
   ), false);
 });
 
@@ -53,7 +62,9 @@ test('una falla de n8n se absorbe dentro de la tarea de segundo plano', async ()
     envConfigurado,
     promesa => { tarea = promesa; },
     'test.failure',
+    { eventIds: ['evento:falla'] },
     {
+      resolverEventIds: async (_env, objetivo) => 'eventIds' in objetivo ? objetivo.eventIds : [],
       despachar: async () => {
         throw Object.assign(new Error('No autorizado'), { codigo: 'INTEGRATION_HTTP_401' });
       },
@@ -66,4 +77,28 @@ test('una falla de n8n se absorbe dentro de la tarea de segundo plano', async ()
   await assert.doesNotReject(tarea);
   assert.match(errores[0], /INTEGRATION_HTTP_401/);
   assert.doesNotMatch(errores[0], /No autorizado/);
+});
+
+test('no ejecuta un lote global cuando el objetivo no produjo eventos', async () => {
+  let tarea: Promise<unknown> | undefined;
+  let ejecuciones = 0;
+  const programado = programarDespachoOutbox(
+    envConfigurado,
+    promesa => { tarea = promesa; },
+    'test.empty',
+    { eventIds: [] },
+    {
+      resolverEventIds: async () => [],
+      despachar: async () => {
+        ejecuciones++;
+        return { reclamados: 0, entregados: 0, reprogramados: 0, deadLetter: 0 };
+      },
+      logger: { info: () => undefined, error: () => undefined },
+    }
+  );
+
+  assert.equal(programado, true);
+  assert.ok(tarea);
+  await tarea;
+  assert.equal(ejecuciones, 0);
 });

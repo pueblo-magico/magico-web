@@ -73,7 +73,12 @@ async function crear(request: Request, env: any, waitUntil?: (promise: Promise<u
   }
   const cuentaCobro = await prepararCuentaCobroReservaHttp(env, resultado.valor.reservaId);
   if (!resultado.valor.idempotente) {
-    programarDespachoOutbox(env, waitUntil, 'integration.reservation.create');
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'integration.reservation.create',
+      { reservationId: resultado.valor.reservaId }
+    );
   }
   return respuestaIntegracion(identidad, {
     reserva: {

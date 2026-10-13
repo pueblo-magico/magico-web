@@ -8,7 +8,6 @@ import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../../_interface
 import { jsonReserva as json, respuestaErrorReserva } from '../../../../../_interfaces/http/reservasHttp.ts';
 import { requirePermission } from '../../../../../_lib/authGuard.ts';
 import type { ModalidadAlojamiento } from '../../../../../_domain/reservas/accommodationInventory.ts';
-import { programarDespachoOutbox } from '../../../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 async function bodySeguro(request: Request): Promise<Record<string, unknown> | Response> {
   try {
@@ -19,8 +18,7 @@ async function bodySeguro(request: Request): Promise<Record<string, unknown> | R
 }
 
 async function asignar(
-  request: Request, env: any, params: any, correlationId: string,
-  waitUntil?: (promise: Promise<unknown>) => void
+  request: Request, env: any, params: any, correlationId: string
 ): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.asignar');
   if (auth instanceof Response) return auth;
@@ -38,7 +36,6 @@ async function asignar(
       actorEmail: auth.email,
       correlationId,
     }, new D1RepositorioAsignacionInventario(env.DB));
-    programarDespachoOutbox(env, waitUntil, 'admin.inventory_assignment.replace');
     return json({ data: asignacion, meta: { version: 'v1' } });
   } catch (error) {
     return respuestaErrorReserva(error, {
@@ -60,8 +57,7 @@ async function consultar(request: Request, env: any, params: any): Promise<Respo
 }
 
 async function liberar(
-  request: Request, env: any, params: any, correlationId: string,
-  waitUntil?: (promise: Promise<unknown>) => void
+  request: Request, env: any, params: any, correlationId: string
 ): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.asignar');
   if (auth instanceof Response) return auth;
@@ -74,7 +70,6 @@ async function liberar(
       actorEmail: auth.email,
       correlationId,
     }, new D1RepositorioAsignacionInventario(env.DB));
-    programarDespachoOutbox(env, waitUntil, 'admin.inventory_assignment.release');
     return json({ data: asignacion, meta: { version: 'v1' } });
   } catch (error) {
     return respuestaErrorReserva(error, {
@@ -87,18 +82,18 @@ export async function onRequestGet({ request, env, params }: any): Promise<Respo
   return observarSolicitud(request, 'admin.inventory_assignment.read', () => consultar(request, env, params));
 }
 
-export async function onRequestPost({ request, env, params, waitUntil }: any): Promise<Response> {
+export async function onRequestPost({ request, env, params }: any): Promise<Response> {
   return observarSolicitud(
     request,
     'admin.inventory_assignment.replace',
-    contexto => asignar(request, env, params, contexto.requestId, waitUntil)
+    contexto => asignar(request, env, params, contexto.requestId)
   );
 }
 
-export async function onRequestDelete({ request, env, params, waitUntil }: any): Promise<Response> {
+export async function onRequestDelete({ request, env, params }: any): Promise<Response> {
   return observarSolicitud(
     request,
     'admin.inventory_assignment.release',
-    contexto => liberar(request, env, params, contexto.requestId, waitUntil)
+    contexto => liberar(request, env, params, contexto.requestId)
   );
 }

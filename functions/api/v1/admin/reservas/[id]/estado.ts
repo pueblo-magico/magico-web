@@ -5,11 +5,9 @@ import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../../_interface
 import { jsonReserva as json, respuestaErrorReserva } from '../../../../../_interfaces/http/reservasHttp.ts';
 import { requireAuth, tienePermiso } from '../../../../../_lib/authGuard.ts';
 import type { AccionEstadoReservaAdmin } from '../../../../../_domain/reservas/adminReservationManagement.ts';
-import { programarDespachoOutbox } from '../../../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 async function cambiar(
-  request: Request, env: any, params: any, correlationId: string,
-  waitUntil?: (promise: Promise<unknown>) => void
+  request: Request, env: any, params: any, correlationId: string
 ): Promise<Response> {
   const auth = await requireAuth(request, env);
   if (auth instanceof Response) return auth;
@@ -31,7 +29,6 @@ async function cambiar(
       actorEmail: auth.email,
       correlationId,
     }, new D1RepositorioGestionReservasAdmin(env.DB));
-    programarDespachoOutbox(env, waitUntil, 'admin.reservation.transition');
     return json({ data: reserva, meta: { version: 'v1' } });
   } catch (error) {
     return respuestaErrorReserva(error, {
@@ -40,9 +37,9 @@ async function cambiar(
   }
 }
 
-export async function onRequestPost({ request, env, params, waitUntil }: any): Promise<Response> {
+export async function onRequestPost({ request, env, params }: any): Promise<Response> {
   return observarSolicitud(
     request, 'admin.reservations.transition',
-    contexto => cambiar(request, env, params, contexto.requestId, waitUntil)
+    contexto => cambiar(request, env, params, contexto.requestId)
   );
 }

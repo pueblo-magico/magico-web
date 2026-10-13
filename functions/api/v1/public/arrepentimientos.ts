@@ -45,7 +45,12 @@ async function crear(
   }
 
   if (!resultado.idempotente) {
-    programarDespachoOutbox(env, waitUntil, 'public.withdrawal_request.create');
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'public.withdrawal_request.create',
+      { eventIds: resultado.valor.notificacionUid ? [resultado.valor.notificacionUid] : [] }
+    );
   }
 
   return jsonPublico(request, METODOS, {

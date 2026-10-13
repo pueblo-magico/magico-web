@@ -6,16 +6,21 @@ de Reservas.
 
 ## Modelo de ejecución
 
-Los cambios de reservas, pagos, asignaciones y arrepentimientos intentan despachar
-el outbox inmediatamente en segundo plano mediante `waitUntil`. La respuesta al
-cliente o al administrador no espera a n8n: si la entrega falla, el evento vuelve
-a `pending` con su política de reintentos.
+La creación de reservas y las notificaciones de arrepentimiento intentan despachar
+en segundo plano mediante `waitUntil` únicamente los eventos producidos por esa
+operación. Nunca reclaman el lote histórico general. La respuesta al cliente o al
+administrador no espera a n8n: si la entrega falla, el evento vuelve a `pending`
+con su política de reintentos.
 
 El workflow programado de outbox se mantiene activo como red de recuperación. Su
 función es procesar eventos que no pudieron salir en vivo, quedaron pendientes por
 una interrupción del runtime o ya alcanzaron su próximo intento. El vencimiento de
 retenciones continúa siendo un job programado porque depende del paso del tiempo,
 no de una acción nueva del usuario.
+
+Un evento en estado `delivered` no es elegible para el despacho inmediato ni para
+el job de recuperación. La entrega sólo puede repetirse después de un reproceso
+administrativo explícito de un evento en `dead_letter`.
 
 ## Frecuencia y endpoints
 

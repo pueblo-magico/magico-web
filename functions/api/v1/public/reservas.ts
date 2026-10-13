@@ -159,7 +159,12 @@ export async function onRequestPost({ request, env, waitUntil }: any) {
     },
   } : { proveedor: 'mercado_pago_cuenta', estado: 'disabled' };
   if (!resultado.valor.idempotente) {
-    programarDespachoOutbox(env, waitUntil, 'public.reservation.create');
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'public.reservation.create',
+      { reservationId: resultado.valor.reservaId }
+    );
   }
   return jsonPublico(request, 'POST', {
     data: {

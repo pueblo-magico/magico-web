@@ -5,27 +5,52 @@ import { HttpEntregadorEventosIntegracion } from '../../_infrastructure/integrat
 type WaitUntil = (promise: Promise<unknown>) => void;
 
 type DependenciasDespacho = {
-  despachar?: (env: Record<string, any>) => Promise<{
+  despachar?: (env: Record<string, any>, eventIds: string[]) => Promise<{
     reclamados: number;
     entregados: number;
     reprogramados: number;
     deadLetter: number;
   }>;
   logger?: Pick<Console, 'info' | 'error'>;
+  resolverEventIds?: (
+    env: Record<string, any>,
+    objetivo: ObjetivoDespachoOutbox
+  ) => Promise<string[]>;
 };
+
+export type ObjetivoDespachoOutbox =
+  | { eventIds: string[] }
+  | { reservationId: number };
 
 function habilitado(valor: unknown): boolean {
   return typeof valor === 'string' && valor.trim().toLowerCase() === 'true';
 }
 
-async function despacharPorDefecto(env: Record<string, any>) {
+async function resolverEventIdsPorDefecto(
+  env: Record<string, any>,
+  objetivo: ObjetivoDespachoOutbox
+): Promise<string[]> {
+  if ('eventIds' in objetivo) {
+    return [...new Set(objetivo.eventIds.map(id => id.trim()).filter(Boolean))].slice(0, 100);
+  }
+  if (!Number.isSafeInteger(objetivo.reservationId) || objetivo.reservationId < 1) return [];
+  const resultado = await env.DB.prepare(`
+    SELECT event_id FROM integration_outbox
+    WHERE estado = 'pending'
+      AND CAST(json_extract(payload_json, '$.reservation_id') AS INTEGER) = ?
+    ORDER BY created_at, id LIMIT 100
+  `).bind(objetivo.reservationId).all();
+  return (resultado.results || []).map((row: Record<string, unknown>) => String(row.event_id));
+}
+
+async function despacharPorDefecto(env: Record<string, any>, eventIds: string[]) {
   return despacharEventosIntegracion(
     new D1RepositorioOutboxIntegracion(env.DB),
     new HttpEntregadorEventosIntegracion({
       url: env.INTEGRATION_EVENTS_WEBHOOK_URL,
       secret: env.INTEGRATION_EVENTS_WEBHOOK_SECRET,
     }),
-    { consumer: 'integration_webhook_live', limite: 25 }
+    { consumer: 'integration_webhook_live', eventIds }
   );
 }
 
@@ -38,6 +63,7 @@ export function programarDespachoOutbox(
   env: Record<string, any>,
   waitUntil: WaitUntil | undefined,
   origen: string,
+  objetivo: ObjetivoDespachoOutbox,
   dependencias: DependenciasDespacho = {}
 ): boolean {
   if (
@@ -50,8 +76,12 @@ export function programarDespachoOutbox(
 
   const logger = dependencias.logger || console;
   const ejecutar = dependencias.despachar || despacharPorDefecto;
+  const resolverEventIds = dependencias.resolverEventIds || resolverEventIdsPorDefecto;
   const tarea = Promise.resolve()
-    .then(() => ejecutar(env))
+    .then(() => resolverEventIds(env, objetivo))
+    .then(eventIds => eventIds.length > 0
+      ? ejecutar(env, eventIds)
+      : { reclamados: 0, entregados: 0, reprogramados: 0, deadLetter: 0 })
     .then(resultado => {
       logger.info(JSON.stringify({
         evento: 'outbox_despacho_inmediato_completado',

@@ -736,6 +736,12 @@ export interface RepositorioOutboxIntegracion {
     ahora: string;
     claimExpiresAt: string;
   }): Promise<EventoOutboxIntegracion[]>;
+  reclamarEventos?(entrada: {
+    claimUid: string;
+    eventIds: string[];
+    ahora: string;
+    claimExpiresAt: string;
+  }): Promise<EventoOutboxIntegracion[]>;
   marcarEntregado(entrada: {
     eventId: string;
     claimUid: string;

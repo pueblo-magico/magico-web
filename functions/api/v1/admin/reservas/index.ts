@@ -65,7 +65,12 @@ async function crear(
       montoTotalCentavos: Number(body.monto_total_centavos),
       montoSenaCentavos: body.monto_sena_centavos == null ? null : Number(body.monto_sena_centavos),
     }, auth.email, correlationId, new D1RepositorioGestionReservasAdmin(env.DB));
-    programarDespachoOutbox(env, waitUntil, 'admin.reservation.create');
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'admin.reservation.create',
+      { reservationId: reserva.id }
+    );
     return json({ data: reserva, meta: { version: 'v1' } }, 201);
   } catch (error) {
     return respuestaErrorReserva(error, {

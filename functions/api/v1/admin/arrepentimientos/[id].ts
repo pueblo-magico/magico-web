@@ -42,7 +42,12 @@ async function actualizar(
       correlationId: requestId,
     }, new D1RepositorioSolicitudesArrepentimiento(env.DB), new D1RegistroAuditoriaReservas(env.DB));
     if (!item) return json({ error: 'La solicitud cambió o ya fue resuelta.' }, 409);
-    programarDespachoOutbox(env, waitUntil, 'admin.withdrawal_request.update');
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'admin.withdrawal_request.update',
+      { eventIds: item.notificacionUid ? [item.notificacionUid] : [] }
+    );
     return json({ data: { id: item.id, codigo: item.codigo, estado: item.estado }, meta: { version: 'v1' } });
   } catch (error) {
     const codigo = error instanceof Error ? error.message : '';
