@@ -12,6 +12,7 @@ import { observarSolicitud } from '../../../../_interfaces/http/observability.ts
 import { consumirLimite, respuestaLimite } from '../../../../_interfaces/http/rateLimit.ts';
 import { leerJsonSeguro } from '../../../../_interfaces/http/requestSecurity.ts';
 import { prepararCuentaCobroReservaHttp } from '../../../../_interfaces/http/reservationCollectionAccount.ts';
+import { programarDespachoOutbox } from '../../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 const statusPorCodigo: Record<string, number> = {
   SOLICITUD_INVALIDA: 400,
@@ -23,7 +24,7 @@ const statusPorCodigo: Record<string, number> = {
   INVENTARIO_NO_DISPONIBLE: 409,
 };
 
-async function crear(request: Request, env: any): Promise<Response> {
+async function crear(request: Request, env: any, waitUntil?: (promise: Promise<unknown>) => void): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'reservas:crear');
   if (identidad instanceof Response) return identidad;
   await registrarUsoIntegracionReservas(request, env, identidad);
@@ -71,6 +72,9 @@ async function crear(request: Request, env: any): Promise<Response> {
     );
   }
   const cuentaCobro = await prepararCuentaCobroReservaHttp(env, resultado.valor.reservaId);
+  if (!resultado.valor.idempotente) {
+    programarDespachoOutbox(env, waitUntil, 'integration.reservation.create');
+  }
   return respuestaIntegracion(identidad, {
     reserva: {
       codigo: resultado.valor.codigo,
@@ -84,6 +88,10 @@ async function crear(request: Request, env: any): Promise<Response> {
   }, resultado.valor.idempotente ? 200 : 201, { idempotente: resultado.valor.idempotente });
 }
 
-export async function onRequestPost({ request, env }: any): Promise<Response> {
-  return observarSolicitud(request, 'integration.v1.reservation.create', () => crear(request, env));
+export async function onRequestPost({ request, env, waitUntil }: any): Promise<Response> {
+  return observarSolicitud(
+    request,
+    'integration.v1.reservation.create',
+    () => crear(request, env, waitUntil)
+  );
 }

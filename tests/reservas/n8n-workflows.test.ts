@@ -55,7 +55,10 @@ test('el workflow autentica y admite arrepentimientos y comunicaciones de reserv
   const email = nodeByName(document, 'Enviar email');
   assert.equal(email.type, 'n8n-nodes-base.gmail');
   assert.equal(email.credentials.gmailOAuth2.name, 'Gmail account');
-  assert.equal(email.parameters.emailType, 'text');
+  assert.equal(email.parameters.emailType, 'html');
+  assert.match(email.parameters.message, /mensaje_humano/);
+  assert.match(email.parameters.message, /RECHAZADA/);
+  assert.match(email.parameters.message, /Mensaje del equipo de Pueblo Mágico/);
   assert.equal(email.onError, 'continueErrorOutput');
 });
 

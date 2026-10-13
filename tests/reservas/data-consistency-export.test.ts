@@ -134,6 +134,16 @@ test('la exportación v1 aplica permiso, filtros, minimización y auditoría', a
   assert.doesNotMatch(csvMinimizado, /Exportada QA|qa@example.com/);
   assert.match(csvMinimizado, /confirmada/);
 
+  const codigoReserva = String(sqlite.prepare("SELECT codigo FROM reservas WHERE cliente_nombre = 'Exportada QA'").get()?.codigo);
+  const porCodigo = await exportarReservas({
+    request: new Request(`https://test/api/v1/admin/reservas/exportar?titular=${encodeURIComponent(codigoReserva.toLowerCase())}`, {
+      headers: { Cookie: cookie(tokenAdmin) },
+    }), env,
+  });
+  assert.equal(porCodigo.status, 200);
+  assert.equal(porCodigo.headers.get('X-Export-Count'), '1');
+  assert.match(await porCodigo.text(), new RegExp(codigoReserva));
+
   const conPii = await exportarReservas({
     request: new Request('https://test/api/v1/admin/reservas/exportar?estado=pendiente&incluir_pii=true', {
       headers: { Cookie: cookie(tokenAdmin) },
@@ -149,6 +159,6 @@ test('la exportación v1 aplica permiso, filtros, minimización y auditoría', a
     }), env,
   });
   assert.equal(invalida.status, 400);
-  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM auditoria_admin WHERE accion = 'exportar_reservas'").get()?.n, 2);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM auditoria_admin WHERE accion = 'exportar_reservas'").get()?.n, 3);
   sqlite.close();
 });

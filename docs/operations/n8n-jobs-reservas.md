@@ -4,6 +4,19 @@ Este runbook implementa WRESERV-41. n8n sólo agenda y observa llamadas HTTP;
 las reglas de vencimiento, leases, reintentos e idempotencia permanecen dentro
 de Reservas.
 
+## Modelo de ejecución
+
+Los cambios de reservas, pagos, asignaciones y arrepentimientos intentan despachar
+el outbox inmediatamente en segundo plano mediante `waitUntil`. La respuesta al
+cliente o al administrador no espera a n8n: si la entrega falla, el evento vuelve
+a `pending` con su política de reintentos.
+
+El workflow programado de outbox se mantiene activo como red de recuperación. Su
+función es procesar eventos que no pudieron salir en vivo, quedaron pendientes por
+una interrupción del runtime o ya alcanzaron su próximo intento. El vencimiento de
+retenciones continúa siendo un job programado porque depende del paso del tiempo,
+no de una acción nueva del usuario.
+
 ## Frecuencia y endpoints
 
 Importar `docs/integrations/n8n-jobs-operativos.workflow.json`. El workflow

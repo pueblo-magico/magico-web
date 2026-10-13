@@ -67,6 +67,7 @@ type Alojamiento = {
 
 type Reserva = {
   id: number;
+  codigo: string;
   version: number;
   cliente_nombre: string;
   cliente_telefono: string | null;
@@ -119,7 +120,7 @@ type Reserva = {
 };
 
 type ReservaAdminV1 = {
-  id: number; version: number; titular: string;
+  id: number; codigo: string; version: number; titular: string;
   clienteTelefono: string | null; clienteEmail: string | null;
   fechaCheckin: string; fechaCheckout: string; cantidadPersonas: number;
   estado: string; estadoFlujo: string; canalOrigen: string | null;
@@ -138,6 +139,7 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
   const excepcion = item.excepciones?.[0];
   return {
     id: item.id,
+    codigo: item.codigo,
     version: item.version,
     cliente_nombre: item.titular,
     cliente_telefono: item.clienteTelefono,
@@ -325,6 +327,13 @@ const fmtDateShort = (iso: string) => {
 const fmtDateLong = (iso: string) => {
   const d = new Date(iso + 'T00:00:00Z');
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+};
+const fmtFechaHora = (iso: string) => {
+  const normalizado = iso.includes('T') ? iso : iso.replace(' ', 'T');
+  const instante = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalizado) ? normalizado : `${normalizado}Z`;
+  return new Date(instante).toLocaleString('es-AR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+  });
 };
 const diasDesde = (iso: string) => {
   const normalizado = iso.includes('T') ? iso : iso.replace(' ', 'T');
@@ -671,9 +680,10 @@ const ModalReserva: React.FC<{
       )}
 
       {modo === 'editar' && (
-        <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-          Acá podés corregir datos del huésped y el canal. Las fechas, importes y asignaciones se conservan para no alterar inventario ni trazabilidad.
-        </p>
+        <div className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+          <p className="font-semibold text-gray-700">{reserva?.codigo} · creada el {reserva ? fmtFechaHora(reserva.created_at) : '—'}</p>
+          <p className="mt-1">Acá podés corregir datos del huésped y el canal. Las fechas, importes y asignaciones se conservan para no alterar inventario ni trazabilidad.</p>
+        </div>
       )}
 
       {soloLectura && (
@@ -1069,6 +1079,7 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
       <table className="text-sm border-collapse w-full">
         <thead>
           <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500 bg-gray-50">
+            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Reserva</th>
             <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Huésped</th>
             <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Alojamiento</th>
             <th scope="col" className="border-b border-gray-200 px-3 py-2.5 tabular-nums">Fechas</th>
@@ -1081,6 +1092,12 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
         <tbody>
           {reservas.map(r => (
             <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <button onClick={() => onSeleccionar(r)} className={`font-mono text-xs font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}>
+                  {r.codigo}
+                </button>
+                <p className="text-[11px] text-gray-400 tabular-nums">Creada {fmtFechaHora(r.created_at)}</p>
+              </td>
               <td className="px-3 py-2.5">
                 <button onClick={() => onSeleccionar(r)} className={`font-semibold text-gray-800 hover:text-brand text-left rounded ${FOCUS_RING}`}>
                   {r.cliente_nombre}
@@ -1096,7 +1113,7 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
             </tr>
           ))}
           {reservas.length === 0 && (
-            <tr><td colSpan={7} className="px-3 py-8 text-center text-sm text-gray-400">Sin resultados para esa búsqueda.</td></tr>
+            <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-gray-400">Sin resultados para esa búsqueda.</td></tr>
           )}
         </tbody>
       </table>
@@ -1111,7 +1128,10 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
           className={`w-full text-left px-4 py-3.5 hover:bg-gray-50 ${FOCUS_RING}`}
         >
           <div className="flex items-start justify-between gap-2 mb-1">
-            <p className="font-semibold text-gray-800 text-sm truncate">{r.cliente_nombre}</p>
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-800 text-sm truncate">{r.cliente_nombre}</p>
+              <p className="font-mono text-[11px] font-semibold text-brand truncate">{r.codigo}</p>
+            </div>
             <EstadoBadge estado={r.estado} />
           </div>
           <p className="text-xs text-gray-500 tabular-nums mb-0.5">
@@ -1121,6 +1141,7 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
             <span>{r.canal_origen || 'Sin canal'}{r.unidad_asignada ? ` · ${r.unidad_asignada}` : ''}</span>
             <span className="font-semibold text-gray-600 tabular-nums">{fmtMoney(r.monto_total)}</span>
           </div>
+          <p className="mt-1 text-[11px] text-gray-400 tabular-nums">Creada {fmtFechaHora(r.created_at)}</p>
         </button>
       ))}
       {reservas.length === 0 && (
@@ -2376,11 +2397,6 @@ const ACCION_LABEL: Record<string, string> = {
   publicar_plan_tarifa: 'Publicó precios y seña',
   crear_borrador_politica_cancelacion: 'Creó un borrador de cancelación',
   publicar_politica_cancelacion: 'Publicó una política de cancelación',
-};
-
-const fmtFechaHora = (iso: string) => {
-  const d = new Date(iso.replace(' ', 'T') + (iso.endsWith('Z') ? '' : 'Z'));
-  return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
 };
 
 const TIPO_OCUPACION_LABEL: Record<string, string> = {
@@ -3866,7 +3882,7 @@ const PanelReservas: React.FC = () => {
                   clearLabel="Limpiar búsqueda"
                   label="Buscar reservas"
                   onChange={setBusqueda}
-                  placeholder="Buscar por nombre…"
+                  placeholder="Buscar por nombre o ID…"
                   value={busqueda}
                 />
                 {esSuperAdmin && (

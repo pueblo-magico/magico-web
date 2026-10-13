@@ -7,6 +7,7 @@ import { observarSolicitud } from '../../../../../_interfaces/http/observability
 import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../../_interfaces/http/requestSecurity.ts';
 import { jsonReserva as json, respuestaErrorReserva } from '../../../../../_interfaces/http/reservasHttp.ts';
 import { requirePermission } from '../../../../../_lib/authGuard.ts';
+import { programarDespachoOutbox } from '../../../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 async function consultar(request: Request, env: any, params: any): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.leer');
@@ -31,7 +32,8 @@ export async function onRequestGet({ request, env, params }: any): Promise<Respo
 }
 
 async function editar(
-  request: Request, env: any, params: any, correlationId: string
+  request: Request, env: any, params: any, correlationId: string,
+  waitUntil?: (promise: Promise<unknown>) => void
 ): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.editar');
   if (auth instanceof Response) return auth;
@@ -55,6 +57,7 @@ async function editar(
       actorEmail: auth.email,
       correlationId,
     }, new D1RepositorioGestionReservasAdmin(env.DB));
+    programarDespachoOutbox(env, waitUntil, 'admin.reservation.update');
     return json({ data: reserva, meta: { version: 'v1' } });
   } catch (error) {
     return respuestaErrorReserva(error, {
@@ -63,9 +66,9 @@ async function editar(
   }
 }
 
-export async function onRequestPatch({ request, env, params }: any): Promise<Response> {
+export async function onRequestPatch({ request, env, params, waitUntil }: any): Promise<Response> {
   return observarSolicitud(
     request, 'admin.reservations.update',
-    contexto => editar(request, env, params, contexto.requestId)
+    contexto => editar(request, env, params, contexto.requestId, waitUntil)
   );
 }

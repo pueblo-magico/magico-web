@@ -54,6 +54,13 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} \/>/);
 });
 
+test('muestra el identificador y la fecha de creación y permite buscarlos por código', () => {
+  assert.match(source, /placeholder="Buscar por nombre o ID…"/);
+  assert.match(source, /\{r\.codigo\}/);
+  assert.match(source, /Creada \{fmtFechaHora\(r\.created_at\)\}/);
+  assert.match(source, /codigo: item\.codigo/);
+});
+
 test('reemplaza el icono de actualizar por el spinner durante la carga', () => {
   assert.match(source, /icon=\{loading \? null : <RefreshCw size=\{15\} \/>\}/);
   assert.match(source, /icon=\{cargando \? null : <RefreshCw size=\{15\} \/>\}/);

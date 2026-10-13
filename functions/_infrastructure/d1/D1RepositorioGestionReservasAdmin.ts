@@ -69,7 +69,14 @@ function consultaFiltros(filtros: FiltrosReservasAdmin): { where: string; valore
   if (filtros.estado) agregar('r.estado_flujo = ?', filtros.estado);
   if (filtros.origen) agregar('LOWER(COALESCE(r.canal_origen, \'\')) = LOWER(?)', filtros.origen);
   if (filtros.espacioCodigo) agregar('e.codigo = ?', filtros.espacioCodigo);
-  if (filtros.titular) agregar('LOWER(r.cliente_nombre) LIKE LOWER(?)', `%${filtros.titular}%`);
+  if (filtros.titular) {
+    const termino = `%${filtros.titular}%`;
+    condiciones.push(`(
+      LOWER(r.cliente_nombre) LIKE LOWER(?) OR
+      LOWER(COALESCE(r.codigo, printf('RES-%08d', r.id))) LIKE LOWER(?)
+    )`);
+    valores.push(termino, termino);
+  }
   return { where: condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '', valores };
 }
 

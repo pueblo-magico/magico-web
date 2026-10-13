@@ -37,6 +37,9 @@ async function procesar(request: Request, env: any): Promise<Response> {
         destinatario: entrega.destinatario,
         asunto: entrega.asunto,
         cuerpo: entrega.cuerpo,
+        codigo: entrega.codigo,
+        estado: entrega.estado,
+        mensaje_humano: entrega.mensajeHumano,
         idioma: entrega.idioma,
         plantilla_version: entrega.plantillaVersion,
       });

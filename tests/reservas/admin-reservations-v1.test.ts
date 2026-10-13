@@ -95,6 +95,12 @@ test('lista reservas con paginación estable y filtros combinables', async () =>
   }, repositorio);
   assert.equal(filtrada.total, 6);
   assert.ok(filtrada.items.every(item => item.canalOrigen === 'Web' && item.espacioCodigo === 'domo-1'));
+  const porCodigo = await listarReservasAdmin({
+    pagina: 1, limite: 20, titular: filtrada.items[0].codigo.toLowerCase(),
+  }, repositorio);
+  assert.equal(porCodigo.total, 1);
+  assert.equal(porCodigo.items[0].codigo, filtrada.items[0].codigo);
+  assert.ok(porCodigo.items[0].createdAt);
   sqlite.close();
 });
 

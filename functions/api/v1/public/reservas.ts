@@ -16,6 +16,7 @@ import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfac
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
 import { hashDni, normalizarDni } from '../../../_lib/paymentIdentity.ts';
 import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../../../_lib/paymentMethods.ts';
+import { programarDespachoOutbox } from '../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
@@ -28,7 +29,7 @@ const statusPorCodigo: Record<string, number> = {
   INVENTARIO_NO_DISPONIBLE: 409,
 };
 
-export async function onRequestPost({ request, env }: any) {
+export async function onRequestPost({ request, env, waitUntil }: any) {
   const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.v1.reservas', 30, 60));
   if (limitada) return limitada;
   const lectura = await leerJsonPublico(request, 'POST');
@@ -157,6 +158,9 @@ export async function onRequestPost({ request, env }: any) {
       moneda: 'ARS',
     },
   } : { proveedor: 'mercado_pago_cuenta', estado: 'disabled' };
+  if (!resultado.valor.idempotente) {
+    programarDespachoOutbox(env, waitUntil, 'public.reservation.create');
+  }
   return jsonPublico(request, 'POST', {
     data: {
       reserva: {

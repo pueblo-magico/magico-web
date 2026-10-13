@@ -40,16 +40,23 @@ export interface RepositorioNotificacionesArrepentimiento {
 const COPIA = {
   es: {
     arrepentimiento_recibido: ['Recibimos tu solicitud {{codigo}}', 'Recibimos tu solicitud de arrepentimiento. Guardá el código {{codigo}} como constancia.'],
-    arrepentimiento_en_revision: ['Tu solicitud {{codigo}} está en revisión', 'Estamos revisando tu solicitud {{codigo}}. {{mensaje}}'],
-    arrepentimiento_resuelto: ['Resolvimos tu solicitud {{codigo}}', 'Tu solicitud {{codigo}} fue resuelta. {{mensaje}}'],
-    arrepentimiento_rechazado: ['Actualización de tu solicitud {{codigo}}', 'Tu solicitud {{codigo}} fue rechazada. {{mensaje}}'],
+    arrepentimiento_en_revision: ['Tu solicitud {{codigo}} está en revisión', 'Estamos revisando tu solicitud {{codigo}}.'],
+    arrepentimiento_resuelto: ['Resolvimos tu solicitud {{codigo}}', 'Tu solicitud {{codigo}} fue resuelta.'],
+    arrepentimiento_rechazado: ['Actualización de tu solicitud {{codigo}}', 'Tu solicitud {{codigo}} fue rechazada.'],
   },
   en: {
     arrepentimiento_recibido: ['We received your request {{codigo}}', 'We received your withdrawal request. Keep {{codigo}} as your receipt.'],
-    arrepentimiento_en_revision: ['Your request {{codigo}} is under review', 'We are reviewing your request {{codigo}}. {{mensaje}}'],
-    arrepentimiento_resuelto: ['We resolved your request {{codigo}}', 'Your request {{codigo}} was resolved. {{mensaje}}'],
-    arrepentimiento_rechazado: ['Update about your request {{codigo}}', 'Your request {{codigo}} was rejected. {{mensaje}}'],
+    arrepentimiento_en_revision: ['Your request {{codigo}} is under review', 'We are reviewing your request {{codigo}}.'],
+    arrepentimiento_resuelto: ['We resolved your request {{codigo}}', 'Your request {{codigo}} was resolved.'],
+    arrepentimiento_rechazado: ['Update about your request {{codigo}}', 'Your request {{codigo}} was rejected.'],
   },
+} as const;
+
+const ESTADO_POR_TIPO = {
+  arrepentimiento_recibido: 'recibida',
+  arrepentimiento_en_revision: 'en_revision',
+  arrepentimiento_resuelto: 'resuelta',
+  arrepentimiento_rechazado: 'rechazada',
 } as const;
 
 export const MAX_INTENTOS_EMAIL_ARREPENTIMIENTO = 3;
@@ -90,8 +97,11 @@ export async function reclamarNotificacionArrepentimiento(
     destinatario: reclamada.email,
     asunto: renderizar(asunto, reclamada.codigo, reclamada.mensajeCliente),
     cuerpo: renderizar(cuerpo, reclamada.codigo, reclamada.mensajeCliente),
+    codigo: reclamada.codigo,
+    estado: ESTADO_POR_TIPO[reclamada.tipo],
+    mensajeHumano: reclamada.mensajeCliente,
     idioma: reclamada.idioma,
-    plantillaVersion: 1,
+    plantillaVersion: 2,
   };
 }
 
