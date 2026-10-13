@@ -137,7 +137,7 @@ export async function createPublicQuote(input: QuoteRequest): Promise<QuoteRespo
 export async function createPublicReservation(input: {
   quoteCode: string;
   spaceCode: string;
-  guest: { name: string; phone: string; email?: string };
+  guest: { name: string; phone: string; email: string };
   paymentMethod: PaymentMethod;
   payerDni?: string;
   idempotencyKey: string;
@@ -148,7 +148,7 @@ export async function createPublicReservation(input: {
     body: JSON.stringify({
       cotizacion_codigo: input.quoteCode,
       espacio_codigo: input.spaceCode,
-      cliente: { nombre: input.guest.name, telefono: input.guest.phone, email: input.guest.email || null },
+      cliente: { nombre: input.guest.name, telefono: input.guest.phone, email: input.guest.email },
       pago: {
         metodo: input.paymentMethod,
         ...(input.paymentMethod === 'transferencia_mp' ? {

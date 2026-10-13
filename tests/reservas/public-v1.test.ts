@@ -323,6 +323,30 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   sqlite.close();
 });
 
+test('rechaza crear una reserva pública sin email', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const response = await crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-email-required-0001' },
+      body: JSON.stringify({
+        cotizacion_codigo: quote.data.cotizacion.codigo,
+        espacio_codigo: 'domo-1',
+        cliente: { nombre: 'Huésped sin email' },
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 400);
+  const body = await response.json() as any;
+  assert.equal(body.error.codigo, 'SOLICITUD_INVALIDA');
+  assert.match(body.error.mensaje, /email/i);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM reservas').get()?.cantidad, 0);
+  sqlite.close();
+});
+
 test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII', async () => {
   const { sqlite, db } = baseMigrada();
   const quote = await cotizarDomo(db);
@@ -680,7 +704,7 @@ test('la restricción D1 evita sobreventa aunque dos chequeos hayan visto dispon
     espacioCodigo: 'domo-1',
     clienteNombre: 'Carrera QA',
     clienteTelefono: null,
-    clienteEmail: null,
+    clienteEmail: 'expiry@example.test',
     idempotencyKey: 'qa-race-0002',
   }, new D1RepositorioCreacionReservaPublica(db), {
     async consultar() {

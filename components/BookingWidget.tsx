@@ -53,7 +53,7 @@ const COPY = {
     domeCopy: 'Dormí rodeado de naturaleza.', refugeCopy: 'Calidez simple en el refugio.',
     unavailable: 'No hay disponibilidad para esa combinación. Probá con otras fechas u opciones.',
     contactSupport: 'Consultar por WhatsApp', reviewTitle: 'Contanos quién viene',
-    name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email', optional: 'Opcional',
+    name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email',
     contactIntro: 'Completá tus datos para crear la reserva. No necesitás una cuenta.',
     paymentMethod: 'Forma de pago', checkoutMethod: 'Mercado Pago', transferMethod: 'Transferencia',
     dni: 'DNI del titular de la cuenta', dniHelp: 'Debe coincidir con el DNI informado por la cuenta desde la que hacés la transferencia.',
@@ -107,7 +107,7 @@ const COPY = {
     domeCopy: 'Sleep surrounded by nature.', refugeCopy: 'Simple warmth in the stone shelter.',
     unavailable: 'There is no availability for that combination. Try other dates or options.',
     contactSupport: 'Ask on WhatsApp', reviewTitle: 'Tell us who is coming',
-    name: 'Full name', phone: 'WhatsApp', email: 'Email', optional: 'Optional',
+    name: 'Full name', phone: 'WhatsApp', email: 'Email',
     contactIntro: 'Enter your details to create the reservation. You do not need an account.',
     paymentMethod: 'Payment method', checkoutMethod: 'Mercado Pago', transferMethod: 'Bank transfer',
     dni: "Account holder's DNI", dniHelp: 'It must match the DNI reported by the account used for the transfer.',
@@ -489,7 +489,7 @@ export const BookingWidget: React.FC<{
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault();
     const dniValido = /^\d{7,8}$/.test(payerDni.replace(/\D/g, ''));
-    if (!quote?.opcion || !guest.name.trim() || !guest.phone.trim() || !consent ||
+    if (!quote?.opcion || !guest.name.trim() || !guest.phone.trim() || !guest.email.trim() || !consent ||
         (paymentMethod === 'transferencia_mp' && !dniValido)) return;
     if (quoteSeconds <= 0) {
       setError({ message: c.expired, code: 'COTIZACION_VENCIDA' });
@@ -733,7 +733,7 @@ export const BookingWidget: React.FC<{
                   <div className="booking-grid">
                     <label className="booking-field booking-field--full">{c.name}<span><UserRound /><input value={guest.name} onChange={event => setGuest({ ...guest, name: event.target.value })} autoComplete="name" required /></span></label>
                     <label className="booking-field">{c.phone}<span><Phone /><input type="tel" value={guest.phone} onChange={event => setGuest({ ...guest, phone: event.target.value })} autoComplete="tel" required /></span></label>
-                    <label className="booking-field">{c.email} <small>{c.optional}</small><span><Mail /><input type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} autoComplete="email" /></span></label>
+                    <label className="booking-field">{c.email}<span><Mail /><input type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} autoComplete="email" required /></span></label>
                   </div>
                   <p className="booking-section-title">{c.paymentMethod}</p>
                   <div className="booking-choice-grid booking-payment-methods">{quote.metodos_pago.map(option => <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>{option === 'mercado_pago_checkout' ? <CreditCard size={23} /> : <Landmark size={23} />}<span>{option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
@@ -741,7 +741,7 @@ export const BookingWidget: React.FC<{
                   <div className="booking-notice"><ShieldCheck size={20} /> {c.privacyNote}</div>
                   <label className="booking-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank">{c.privacy}</a>.</span></label>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
-                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
+                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !guest.email.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
                 </form>
               ) : (
                 <div className="booking-panel"><div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error?.message || c.expired}</div><div className="booking-actions"><button className="booking-button" type="button" onClick={() => { setStep(2); setError(null); }}>{c.retry}</button></div></div>

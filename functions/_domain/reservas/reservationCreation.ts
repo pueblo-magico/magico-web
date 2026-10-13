@@ -5,7 +5,7 @@ export type SolicitudCrearReservaPublica = {
   espacioCodigo: string;
   clienteNombre: string;
   clienteTelefono: string | null;
-  clienteEmail: string | null;
+  clienteEmail: string;
   metodoPago?: 'mercado_pago_checkout' | 'transferencia_mp';
   pagadorDocumentoHash?: string | null;
   pagadorDocumentoUltimos4?: string | null;

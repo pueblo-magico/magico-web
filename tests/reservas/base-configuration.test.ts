@@ -181,7 +181,7 @@ test('la creación pública usa el plazo efectivo y conserva el vencimiento calc
   let holdExpiresAt = '';
   const resultado = await crearReservaPublica({
     cotizacionCodigo: 'COT-CONFIG-1', espacioCodigo: 'domo-1', clienteNombre: 'QA Config',
-    clienteTelefono: null, clienteEmail: null, idempotencyKey: 'config-hold-0001',
+    clienteTelefono: null, clienteEmail: 'config@example.test', idempotencyKey: 'config-hold-0001',
   }, {
     async buscarIdempotencia() { return null; },
     async buscarConsultaIntegracion() { return null; },

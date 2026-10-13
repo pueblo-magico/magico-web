@@ -52,6 +52,13 @@ test('muestra el flujo en un modal accesible en todos los tamaños y protege los
   assert.match(source, /Esperando acreditación/);
 });
 
+test('exige email para crear una reserva desde el flujo público', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  assert.match(source, /autoComplete="email" required/);
+  assert.match(source, /!guest\.email\.trim\(\)/);
+  assert.doesNotMatch(source, /\{c\.email\}\s*<small>\{c\.optional\}/);
+});
+
 test('el widget embebido conserva un lanzador compacto sin duplicar el hero', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
@@ -227,7 +234,7 @@ test('envía la clave idempotente y los datos mínimos al crear una reserva', as
   try {
     await createPublicReservation({
       quoteCode: 'COT-QA', spaceCode: 'domo-1',
-      guest: { name: 'Persona QA', phone: '+5493510000000', email: '' },
+      guest: { name: 'Persona QA', phone: '+5493510000000', email: 'persona@example.test' },
       paymentMethod: 'mercado_pago_checkout',
       idempotencyKey: 'web-reserva-qa',
     });
@@ -236,7 +243,7 @@ test('envía la clave idempotente y los datos mínimos al crear una reserva', as
     assert.deepEqual(JSON.parse(String(requestedInit?.body)), {
       cotizacion_codigo: 'COT-QA',
       espacio_codigo: 'domo-1',
-      cliente: { nombre: 'Persona QA', telefono: '+5493510000000', email: null },
+      cliente: { nombre: 'Persona QA', telefono: '+5493510000000', email: 'persona@example.test' },
       pago: { metodo: 'mercado_pago_checkout' },
     });
   } finally {

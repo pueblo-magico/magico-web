@@ -319,7 +319,7 @@ test('n8n no puede reutilizar una clave con otra referencia de contacto', async 
         cotizacion_codigo: cotizacion.data.cotizacion.codigo,
         espacio_codigo: cotizacion.data.opcion.espacio_codigo,
         contacto_id: contactoId,
-        cliente: { nombre: 'Titular n8n' },
+        cliente: { nombre: 'Titular n8n', email: 'titular-n8n@example.test' },
       }),
     }), env,
   });

@@ -50,7 +50,7 @@ async function crear(request: Request, env: any, waitUntil?: (promise: Promise<u
     espacioCodigo: String(body.espacio_codigo || ''),
     clienteNombre: String(cliente.nombre || ''),
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
-    clienteEmail: cliente.email ? String(cliente.email) : null,
+    clienteEmail: String(cliente.email || ''),
     idioma: body.idioma === undefined ? undefined : String(body.idioma) as 'es' | 'en',
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
     canalOrigen: 'n8n',

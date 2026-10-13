@@ -65,7 +65,7 @@ export async function onRequestPost({ request, env, waitUntil }: any) {
     espacioCodigo: String(body.espacio_codigo || ''),
     clienteNombre: String(cliente.nombre || ''),
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
-    clienteEmail: cliente.email ? String(cliente.email) : null,
+    clienteEmail: String(cliente.email || ''),
     metodoPago,
     pagadorDocumentoHash: documentoHash,
     pagadorDocumentoUltimos4: dni ? dni.slice(-4) : null,
