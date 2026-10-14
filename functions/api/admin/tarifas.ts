@@ -15,6 +15,9 @@ function mapearPlan(body: any): PlanTarifaBorrador {
       codigo: String(temporada?.codigo || ''), nombre: String(temporada?.nombre || ''),
       fechaDesde: String(temporada?.fecha_desde || ''), fechaHasta: String(temporada?.fecha_hasta || ''),
       prioridad: Number(temporada?.prioridad),
+      diasSemana: Array.isArray(temporada?.dias_semana)
+        ? temporada.dias_semana.map(Number)
+        : [1, 2, 3, 4, 5, 6, 7],
       reglas: Array.isArray(temporada?.reglas) ? temporada.reglas.map((regla: any) => ({
         tipoAlojamiento: regla?.tipo_alojamiento,
         modalidad: regla?.modalidad ?? 'cualquiera',

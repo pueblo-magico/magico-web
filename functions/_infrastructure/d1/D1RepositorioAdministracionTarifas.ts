@@ -17,6 +17,10 @@ type Database = {
 
 const CAMPOS = 'id, codigo, nombre, moneda, version, estado, publicado_at, created_at';
 
+function mascaraDias(dias: number[]): number {
+  return dias.reduce((mascara, dia) => mascara | (1 << (dia - 1)), 0);
+}
+
 function mapear(row: Record<string, unknown>): ResumenPlanTarifa {
   return {
     id: Number(row.id), codigo: String(row.codigo), nombre: String(row.nombre), moneda: String(row.moneda),
@@ -45,12 +49,14 @@ export class D1RepositorioAdministracionTarifas implements RepositorioAdministra
 
     for (const temporada of plan.temporadas) {
       statements.push(this.db.prepare(`
-        INSERT INTO temporadas (plan_tarifa_id, codigo, nombre, fecha_desde, fecha_hasta, prioridad)
-        SELECT id, ?, ?, ?, ?, ? FROM planes_tarifa
+        INSERT INTO temporadas (
+          plan_tarifa_id, codigo, nombre, fecha_desde, fecha_hasta, prioridad, dias_semana_mask
+        )
+        SELECT id, ?, ?, ?, ?, ?, ? FROM planes_tarifa
         WHERE codigo = ? AND estado = 'borrador' ORDER BY version DESC LIMIT 1
       `).bind(
         temporada.codigo, temporada.nombre.trim(), temporada.fechaDesde, temporada.fechaHasta,
-        temporada.prioridad, plan.codigo
+        temporada.prioridad, mascaraDias(temporada.diasSemana), plan.codigo
       ));
       for (const regla of temporada.reglas) {
         statements.push(this.db.prepare(`

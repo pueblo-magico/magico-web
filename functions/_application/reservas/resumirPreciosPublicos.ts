@@ -3,6 +3,11 @@ import { listarAlojamientosPublicos } from './listarAlojamientosPublicos.ts';
 
 const TIPOS_PUBLICOS = ['domo', 'refugio', 'camping'] as const;
 
+function diaSemanaIso(fecha: string): number {
+  const diaUtc = new Date(`${fecha}T00:00:00Z`).getUTCDay();
+  return diaUtc === 0 ? 7 : diaUtc;
+}
+
 function esTipoPublico(valor: string): valor is typeof TIPOS_PUBLICOS[number] {
   return TIPOS_PUBLICOS.includes(valor as typeof TIPOS_PUBLICOS[number]);
 }
@@ -47,6 +52,7 @@ export async function resumirPreciosPublicos(
       regla.tipoAlojamiento === tipo &&
       regla.fechaDesde <= fechaReferencia &&
       regla.fechaHasta >= fechaReferencia &&
+      regla.diasSemana.includes(diaSemanaIso(fechaReferencia)) &&
       (regla.modalidad === 'cualquiera' || opcion.modalidades.has(regla.modalidad))
     );
     return [{
@@ -57,6 +63,7 @@ export async function resumirPreciosPublicos(
         temporada_codigo: regla.temporadaCodigo,
         fecha_desde: regla.fechaDesde,
         fecha_hasta: regla.fechaHasta,
+        dias_semana: regla.diasSemana,
         modalidad: regla.modalidad,
         ocupacion_min: regla.ocupacionMin,
         ocupacion_max: regla.ocupacionMax,

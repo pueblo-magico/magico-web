@@ -50,6 +50,7 @@ const borrador: PlanTarifaBorrador = {
   codigo: 'alojamiento-base', nombre: 'Tarifa 2027', moneda: 'ARS',
   temporadas: [{
     codigo: 'base-2027', nombre: 'Base 2027', fechaDesde: '2027-01-01', fechaHasta: '2027-12-31', prioridad: 0,
+    diasSemana: [1, 2, 3, 4, 5, 6, 7],
     reglas: [
       { tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 2,
         baseCalculo: 'unidad_noche', importeCentavos: 9_000_000 },
@@ -114,6 +115,38 @@ test('rechaza reglas ambiguas antes de escribir y no publica dos veces', async (
     }],
   };
   await assert.rejects(() => crearBorradorTarifa(temporadasAmbiguas, 'admin@test', repositorio, auditoria), /temporadas ambiguas/);
+  sqlite.close();
+});
+
+test('permite precios distintos en días disjuntos y rechaza períodos que comparten días', async () => {
+  const { sqlite, db } = database();
+  const repositorio = new D1RepositorioAdministracionTarifas(db);
+  const auditoria = new D1RegistroAuditoriaReservas(db);
+  const entreSemana = {
+    ...borrador.temporadas[0],
+    codigo: 'base-semana',
+    diasSemana: [1, 2, 3, 4, 5],
+  };
+  const finSemana = {
+    ...borrador.temporadas[0],
+    codigo: 'base-fin-semana',
+    diasSemana: [6, 7],
+    reglas: borrador.temporadas[0].reglas.map(regla => ({ ...regla, importeCentavos: regla.importeCentavos + 1_000_000 })),
+  };
+  const creado = await crearBorradorTarifa({
+    ...borrador, codigo: 'dias-semana', temporadas: [entreSemana, finSemana],
+  }, 'admin@test', repositorio, auditoria, 'Precios diferenciados por día');
+  assert.equal(creado.estado, 'borrador');
+  assert.deepEqual(
+    sqlite.prepare('SELECT codigo, dias_semana_mask FROM temporadas WHERE plan_tarifa_id = ? ORDER BY codigo').all(creado.id).map(row => ({ ...row })),
+    [{ codigo: 'base-fin-semana', dias_semana_mask: 96 }, { codigo: 'base-semana', dias_semana_mask: 31 }],
+  );
+
+  await assert.rejects(() => crearBorradorTarifa({
+    ...borrador,
+    codigo: 'dias-solapados',
+    temporadas: [entreSemana, { ...finSemana, diasSemana: [5, 6, 7] }],
+  }, 'admin@test', repositorio, auditoria, 'Prueba de solapamiento'), /temporadas ambiguas/);
   sqlite.close();
 });
 

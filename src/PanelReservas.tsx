@@ -1751,6 +1751,7 @@ type ConfiguracionBaseApi = {
     reglasPrecio: number; reglasSena: number; publicadoAt: string;
     temporadas: Array<{
       codigo: string; nombre: string; fechaDesde: string; fechaHasta: string; prioridad: number;
+      diasSemana: number[];
       reglas: Array<{
         tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
         modalidad: 'cualquiera' | 'privada' | 'compartida' | 'camping';
@@ -1786,6 +1787,14 @@ const OPCIONES_ALOJAMIENTO_TARIFA: Array<{ value: TipoAlojamientoTarifa; label: 
   { value: 'bell_tent', label: 'Carpa equipada' },
 ];
 
+const DIAS_SEMANA_TARIFA = [
+  { value: 1, label: 'Lun' }, { value: 2, label: 'Mar' }, { value: 3, label: 'Mié' },
+  { value: 4, label: 'Jue' }, { value: 5, label: 'Vie' }, { value: 6, label: 'Sáb' },
+  { value: 7, label: 'Dom' },
+] as const;
+
+const TODOS_LOS_DIAS_TARIFA = DIAS_SEMANA_TARIFA.map(dia => dia.value);
+
 type CambioConfiguracion = {
   campo: string;
   anterior: string;
@@ -1802,7 +1811,8 @@ type ConfirmacionConfiguracion = {
 
 const ETIQUETAS_CAMBIO: Record<string, string> = {
   nombre: 'Nombre', moneda: 'Moneda', temporadas: 'Temporadas', reglas: 'Reglas', senas: 'Reglas de seña',
-  fechaDesde: 'Desde', fechaHasta: 'Hasta', prioridad: 'Prioridad', tipoAlojamiento: 'Alojamiento',
+  fechaDesde: 'Desde', fechaHasta: 'Hasta', prioridad: 'Prioridad', diasSemana: 'Días de aplicación',
+  tipoAlojamiento: 'Alojamiento',
   modalidad: 'Modalidad', ocupacionMin: 'Ocupación mínima', ocupacionMax: 'Ocupación máxima',
   baseCalculo: 'Base de cálculo', importeCentavos: 'Importe', exclusividadDesde: 'Exclusividad desde',
   exclusividadHasta: 'Exclusividad hasta', subtotalDesdeCentavos: 'Subtotal desde',
@@ -2025,6 +2035,66 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     } : actual);
   };
 
+  const alternarDiaTemporada = (indice: number, dia: number, seleccionado: boolean) => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const temporada = actual.temporadas[indice];
+      if (!temporada) return actual;
+      const actuales = temporada.diasSemana || TODOS_LOS_DIAS_TARIFA;
+      const diasSemana = seleccionado
+        ? Array.from(new Set([...actuales, dia])).sort((a, b) => a - b)
+        : actuales.filter(item => item !== dia);
+      if (diasSemana.length === 0) return actual;
+      return {
+        ...actual,
+        temporadas: actual.temporadas.map((item, posicion) =>
+          posicion === indice ? { ...item, diasSemana } : item
+        ),
+      };
+    });
+  };
+
+  const dividirTemporadaPorSemana = (indice: number) => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const temporada = actual.temporadas[indice];
+      if (!temporada) return actual;
+      const codigos = new Set(actual.temporadas.map(item => item.codigo));
+      const codigoBase = `${temporada.codigo.replace(/-(semana|fin-semana)$/i, '')}-fin-semana`.slice(0, 50);
+      let codigoFinSemana = codigoBase;
+      let sufijo = 2;
+      while (codigos.has(codigoFinSemana)) {
+        codigoFinSemana = `${codigoBase.slice(0, 47)}-${sufijo}`;
+        sufijo += 1;
+      }
+      const entreSemana = {
+        ...temporada,
+        nombre: `${temporada.nombre} · entre semana`,
+        diasSemana: [1, 2, 3, 4, 5],
+      };
+      const finSemana = {
+        ...temporada,
+        codigo: codigoFinSemana,
+        nombre: `${temporada.nombre} · fin de semana`,
+        diasSemana: [6, 7],
+        reglas: temporada.reglas.map(regla => ({ ...regla })),
+      };
+      return {
+        ...actual,
+        temporadas: actual.temporadas.flatMap((item, posicion) =>
+          posicion === indice ? [entreSemana, finSemana] : [item]
+        ),
+      };
+    });
+  };
+
+  const eliminarTemporada = (indice: number) => {
+    setTarifaDraft(actual => !actual || actual.temporadas.length <= 1 ? actual : {
+      ...actual,
+      temporadas: actual.temporadas.filter((_, posicion) => posicion !== indice),
+    });
+  };
+
   const actualizarReglaPrecio = (temporadaIndice: number, reglaIndice: number, cambio: Partial<BorradorTarifaUi['temporadas'][number]['reglas'][number]>) => {
     setTarifaDraft(actual => actual ? {
       ...actual,
@@ -2117,6 +2187,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
           temporadas: tarifaDraft.temporadas.map(temporada => ({
             codigo: temporada.codigo, nombre: temporada.nombre,
             fecha_desde: temporada.fechaDesde, fecha_hasta: temporada.fechaHasta, prioridad: temporada.prioridad,
+            dias_semana: temporada.diasSemana,
             reglas: temporada.reglas.map(regla => ({
               tipo_alojamiento: regla.tipoAlojamiento, modalidad: regla.modalidad,
               ocupacion_min: regla.ocupacionMin, ocupacion_max: regla.ocupacionMax,
@@ -2300,6 +2371,32 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                     <input type="number" min={0} value={temporada.prioridad} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { prioridad: Number(event.target.value) })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
                   </label>
                   <div className="text-xs text-gray-500"><strong className="block text-gray-700">Código</strong>{temporada.codigo}</div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-end justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2">
+                  <fieldset>
+                    <legend className="text-xs font-semibold text-gray-600">Días en los que se aplica este precio</legend>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                      {DIAS_SEMANA_TARIFA.map(dia => <Checkbox
+                        key={dia.value}
+                        isDisabled={!esSuperAdmin || (temporada.diasSemana?.length === 1 && temporada.diasSemana.includes(dia.value))}
+                        isSelected={(temporada.diasSemana || TODOS_LOS_DIAS_TARIFA).includes(dia.value)}
+                        onChange={seleccionado => alternarDiaTemporada(temporadaIndice, dia.value, seleccionado)}
+                      >{dia.label}</Checkbox>)}
+                    </div>
+                  </fieldset>
+                  {esSuperAdmin && <div className="flex flex-wrap gap-2">
+                    {(temporada.diasSemana || TODOS_LOS_DIAS_TARIFA).length === 7 && <Button
+                      size="sm"
+                      variant="secondary"
+                      onPress={() => dividirTemporadaPorSemana(temporadaIndice)}
+                    >Dividir semana / fin de semana</Button>}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      isDisabled={tarifaDraft.temporadas.length <= 1}
+                      onPress={() => eliminarTemporada(temporadaIndice)}
+                    ><Trash2 size={14} />Eliminar período</Button>
+                  </div>}
                 </div>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                   <div>

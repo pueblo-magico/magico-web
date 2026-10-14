@@ -27,6 +27,7 @@ test('migra las tarifas legacy como un plan publicado en centavos', () => {
     base_calculo: 'unidad_noche', importe_centavos: 15_000_000,
   });
   assert.equal(db.prepare('SELECT COUNT(*) n FROM reglas_sena').get()?.n, 2);
+  assert.equal(db.prepare("SELECT dias_semana_mask FROM temporadas WHERE codigo = 'base'").get()?.dias_semana_mask, 127);
   db.close();
 });
 

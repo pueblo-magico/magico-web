@@ -87,7 +87,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       `).first(),
       this.db.prepare(`
         SELECT t.codigo temporada_codigo, t.nombre temporada_nombre, t.fecha_desde,
-          t.fecha_hasta, t.prioridad, rp.tipo_alojamiento, rp.modalidad,
+          t.fecha_hasta, t.prioridad, t.dias_semana_mask, rp.tipo_alojamiento, rp.modalidad,
           rp.ocupacion_min, rp.ocupacion_max, rp.base_calculo, rp.importe_centavos,
           rp.exclusividad_desde, rp.exclusividad_hasta
         FROM planes_tarifa p
@@ -149,7 +149,11 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       if (!temporada) {
         temporada = {
           codigo, nombre: String(row.temporada_nombre), fechaDesde: String(row.fecha_desde),
-          fechaHasta: String(row.fecha_hasta), prioridad: Number(row.prioridad), reglas: [],
+          fechaHasta: String(row.fecha_hasta), prioridad: Number(row.prioridad),
+          diasSemana: [1, 2, 3, 4, 5, 6, 7].filter(dia =>
+            (Number(row.dias_semana_mask ?? 127) & (1 << (dia - 1))) !== 0
+          ),
+          reglas: [],
         };
         temporadas.set(codigo, temporada);
       }

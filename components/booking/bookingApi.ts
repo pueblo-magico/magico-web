@@ -15,6 +15,7 @@ export interface PublicPriceRule {
   temporada_codigo: string;
   fecha_desde: string;
   fecha_hasta: string;
+  dias_semana: number[];
   modalidad: 'cualquiera' | BookingMode;
   ocupacion_min: number;
   ocupacion_max: number;

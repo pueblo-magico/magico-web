@@ -18,6 +18,7 @@ export type TemporadaBorrador = {
   fechaDesde: string;
   fechaHasta: string;
   prioridad: number;
+  diasSemana: number[];
   reglas: ReglaPrecioBorrador[];
 };
 
@@ -41,6 +42,17 @@ const TIPOS_ALOJAMIENTO = new Set(['domo', 'refugio', 'camping', 'bell_tent']);
 const MODALIDADES = new Set(['cualquiera', 'privada', 'compartida', 'camping']);
 const BASES_CALCULO = new Set(['unidad_noche', 'persona_noche']);
 const TIPOS_SENA = new Set(['porcentaje_bps', 'importe_fijo']);
+const TODOS_LOS_DIAS = [1, 2, 3, 4, 5, 6, 7];
+
+function diasSemanaValidos(dias: number[]): boolean {
+  return Array.isArray(dias) && dias.length > 0 &&
+    new Set(dias).size === dias.length &&
+    dias.every(dia => Number.isSafeInteger(dia) && TODOS_LOS_DIAS.includes(dia));
+}
+
+function compartenDia(a: number[], b: number[]): boolean {
+  return a.some(dia => b.includes(dia));
+}
 
 function enteroNoNegativo(value: number): boolean {
   return Number.isSafeInteger(value) && value >= 0;
@@ -59,7 +71,8 @@ export function validarPlanTarifaBorrador(plan: PlanTarifaBorrador): void {
     if (!CODIGO.test(temporada.codigo) || codigos.has(temporada.codigo) ||
         !temporada.nombre?.trim() || !esFechaIso(temporada.fechaDesde) || !esFechaIso(temporada.fechaHasta) ||
         temporada.fechaHasta < temporada.fechaDesde ||
-        !Number.isSafeInteger(temporada.prioridad) || temporada.reglas.length === 0) {
+        !Number.isSafeInteger(temporada.prioridad) || !diasSemanaValidos(temporada.diasSemana) ||
+        temporada.reglas.length === 0) {
       throw new ErrorReserva('DATOS_INVALIDOS', 'La configuración de temporadas es inválida.');
     }
     codigos.add(temporada.codigo);
@@ -93,7 +106,8 @@ export function validarPlanTarifaBorrador(plan: PlanTarifaBorrador): void {
     for (let j = i + 1; j < plan.temporadas.length; j++) {
       const a = plan.temporadas[i];
       const b = plan.temporadas[j];
-      if (a.prioridad !== b.prioridad || a.fechaDesde > b.fechaHasta || b.fechaDesde > a.fechaHasta) continue;
+      if (a.prioridad !== b.prioridad || a.fechaDesde > b.fechaHasta || b.fechaDesde > a.fechaHasta ||
+          !compartenDia(a.diasSemana, b.diasSemana)) continue;
       const ambiguas = a.reglas.some(reglaA => b.reglas.some(reglaB =>
         reglaA.tipoAlojamiento === reglaB.tipoAlojamiento && reglaA.modalidad === reglaB.modalidad &&
         reglaA.ocupacionMin <= reglaB.ocupacionMax && reglaB.ocupacionMin <= reglaA.ocupacionMax

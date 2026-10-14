@@ -56,6 +56,7 @@ export type ConfiguracionBaseReservas = {
       fechaDesde: string;
       fechaHasta: string;
       prioridad: number;
+      diasSemana: number[];
       reglas: Array<{
         tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
         modalidad: 'cualquiera' | 'privada' | 'compartida' | 'camping';

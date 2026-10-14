@@ -9,9 +9,11 @@ const base: ConfiguracionTarifa = {
   planId: 1, codigo: 'base', version: 2, moneda: 'ARS',
   reglasPrecio: [
     { temporadaCodigo: 'baja', fechaDesde: '2026-01-01', fechaHasta: '2026-06-30', prioridad: 0,
+      diasSemana: [1, 2, 3, 4, 5, 6, 7],
       tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 7,
       baseCalculo: 'persona_noche', importeCentavos: 10_000, exclusividadDesde: 6, exclusividadHasta: 7 },
     { temporadaCodigo: 'alta', fechaDesde: '2026-07-01', fechaHasta: '2026-12-31', prioridad: 0,
+      diasSemana: [1, 2, 3, 4, 5, 6, 7],
       tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 7,
       baseCalculo: 'persona_noche', importeCentavos: 20_000, exclusividadDesde: 6, exclusividadHasta: 7 },
   ],
@@ -84,6 +86,28 @@ test('aplica porcentajes distintos a ambos lados de un umbral de seña', () => {
   assert.ok(!('error' in resultadoBandaInferior));
   assert.equal(resultadoBandaInferior.subtotalCentavos, 14_000_000);
   assert.equal(resultadoBandaInferior.senaCentavos, 4_200_000);
+});
+
+test('combina tarifa de semana y fin de semana noche por noche', () => {
+  const resultado = cotizarConPlan(
+    { tipo: 'domo', personas: 2, fechaEntrada: '2026-10-16', fechaSalida: '2026-10-19' },
+    {
+      ...base,
+      reglasPrecio: [
+        {
+          ...base.reglasPrecio[0], fechaDesde: '2026-01-01', fechaHasta: '2026-12-31',
+          diasSemana: [1, 2, 3, 4, 5], importeCentavos: 10_000,
+        },
+        {
+          ...base.reglasPrecio[0], temporadaCodigo: 'fin-semana', fechaDesde: '2026-01-01',
+          fechaHasta: '2026-12-31', diasSemana: [6, 7], importeCentavos: 20_000,
+        },
+      ],
+    },
+  );
+  assert.ok(!('error' in resultado));
+  assert.equal(resultado.subtotalCentavos, 100_000);
+  assert.deepEqual(resultado.noches.map(noche => noche.temporada), ['baja', 'fin-semana', 'fin-semana']);
 });
 
 test('el repositorio D1 carga y normaliza el plan publicado', async () => {

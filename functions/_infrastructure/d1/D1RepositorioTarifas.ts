@@ -9,6 +9,11 @@ type Statement = {
 
 type Database = { prepare(query: string): Statement };
 
+function diasDesdeMascara(valor: unknown): number[] {
+  const mascara = Number(valor ?? 127);
+  return [1, 2, 3, 4, 5, 6, 7].filter(dia => (mascara & (1 << (dia - 1))) !== 0);
+}
+
 export class D1RepositorioTarifas implements RepositorioTarifas {
   private readonly db: Database;
 
@@ -28,6 +33,7 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
     const [precios, senas] = await Promise.all([
       this.db.prepare(`
         SELECT t.codigo temporada_codigo, t.fecha_desde, t.fecha_hasta, t.prioridad,
+               t.dias_semana_mask,
                r.tipo_alojamiento, r.modalidad, r.ocupacion_min, r.ocupacion_max,
                r.base_calculo, r.importe_centavos, r.exclusividad_desde, r.exclusividad_hasta
         FROM reglas_precio r JOIN temporadas t ON t.id = r.temporada_id
@@ -48,6 +54,7 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
         temporadaCodigo: String(row.temporada_codigo),
         fechaDesde: String(row.fecha_desde), fechaHasta: String(row.fecha_hasta),
         prioridad: Number(row.prioridad),
+        diasSemana: diasDesdeMascara(row.dias_semana_mask),
         tipoAlojamiento: row.tipo_alojamiento as any, modalidad: row.modalidad as any,
         ocupacionMin: Number(row.ocupacion_min), ocupacionMax: Number(row.ocupacion_max),
         baseCalculo: row.base_calculo as any, importeCentavos: Number(row.importe_centavos),

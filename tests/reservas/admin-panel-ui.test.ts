@@ -144,6 +144,14 @@ test('permite administrar varias reglas de seña sin huecos ni superposiciones',
   assert.match(source, /subtotalHastaCentavos: indice === ordenadas\.length - 1/);
 });
 
+test('permite separar tarifas por días de semana sin ocultar las reglas existentes', () => {
+  assert.match(source, /Días en los que se aplica este precio/);
+  assert.match(source, /Dividir semana \/ fin de semana/);
+  assert.match(source, /dias_semana: temporada\.diasSemana/);
+  assert.match(source, /DIAS_SEMANA_TARIFA/);
+  assert.match(source, /Agregar tarifa/);
+});
+
 test('separa los eventos de integraciones en categorías accesibles sin ocultar sus acciones', () => {
   assert.match(source, /type CategoriaEventosIntegracion = 'eventos' \| 'comunicaciones' \| 'mercado_pago' \| 'aplicaciones'/);
   assert.match(source, /role="tablist" aria-label="Categorías de eventos de integración"/);

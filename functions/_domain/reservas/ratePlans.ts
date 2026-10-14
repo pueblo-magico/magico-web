@@ -5,6 +5,7 @@ export type ReglaPrecioVersionada = {
   fechaDesde: string;
   fechaHasta: string;
   prioridad: number;
+  diasSemana: number[];
   tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
   modalidad: 'cualquiera' | 'privada' | 'compartida' | 'camping';
   ocupacionMin: number;
@@ -58,6 +59,11 @@ function fechasNocturnas(desde: string, hasta: string): string[] {
   return fechas;
 }
 
+function diaSemanaIso(fecha: string): number {
+  const diaUtc = new Date(`${fecha}T00:00:00Z`).getUTCDay();
+  return diaUtc === 0 ? 7 : diaUtc;
+}
+
 export function cotizarConPlan(
   solicitud: SolicitudCotizacion,
   configuracion: ConfiguracionTarifa,
@@ -73,7 +79,8 @@ export function cotizarConPlan(
         (regla.modalidad === 'cualquiera' || regla.modalidad === solicitud.modalidad) &&
         solicitud.personas >= regla.ocupacionMin &&
         solicitud.personas <= regla.ocupacionMax &&
-        fecha >= regla.fechaDesde && fecha <= regla.fechaHasta
+        fecha >= regla.fechaDesde && fecha <= regla.fechaHasta &&
+        (regla.diasSemana || [1, 2, 3, 4, 5, 6, 7]).includes(diaSemanaIso(fecha))
       )
       .sort((a, b) => b.prioridad - a.prioridad);
     if (candidatas.length === 0) return { error: 'TARIFA_NO_CONFIGURADA' };
