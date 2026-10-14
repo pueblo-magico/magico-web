@@ -143,6 +143,8 @@ test('el resumen público de precios refleja sólo modalidades habilitadas y el 
   assert.equal(bodyInicial.data.plan.version, 1);
   assert.deepEqual(bodyInicial.data.opciones.map((item: any) => item.tipo_alojamiento), ['domo', 'refugio']);
   assert.equal(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas.length, 4);
+  assert.ok(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas
+    .every((item: any) => Number.isFinite(item.prioridad)));
   assert.equal(bodyInicial.data.alimentacion.pension_completa.adicional_por_persona_noche_centavos, 4_000_000);
 
   sqlite.exec(`

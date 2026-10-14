@@ -237,6 +237,9 @@ test('la página de estadía y la portada usan el plan tarifario público en vez
   assert.match(hero, /usePublicPricingSummary/);
   assert.match(api, /\/api\/v1\/public\/precios/);
   assert.match(widget, /usePublicPricingSummary/);
+  assert.match(widget, /usePublicPricingSummaries/);
+  assert.match(widget, /estimateBookingPrice/);
+  assert.match(widget, /c\.perPerson/);
   assert.doesNotMatch(stay, /Desde \$20\.000/);
   assert.doesNotMatch(inclusions, /ESTADIA_PRICES/);
   assert.doesNotMatch(hero, /\(t\.hero as any\)\.reservationPricing/);

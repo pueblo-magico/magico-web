@@ -63,6 +63,7 @@ export async function resumirPreciosPublicos(
         temporada_codigo: regla.temporadaCodigo,
         fecha_desde: regla.fechaDesde,
         fecha_hasta: regla.fechaHasta,
+        prioridad: regla.prioridad,
         dias_semana: regla.diasSemana,
         modalidad: regla.modalidad,
         ocupacion_min: regla.ocupacionMin,

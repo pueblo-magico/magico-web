@@ -29,7 +29,8 @@ import {
 } from './booking/bookingApi';
 import './BookingWidget.css';
 import { FloatingUiPortal } from './FloatingUiContext';
-import { usePublicPricingSummary } from './booking/usePublicPricingSummary';
+import { estimateBookingPrice, stayNightDates } from './booking/pricingPreview';
+import { usePublicPricingSummaries, usePublicPricingSummary } from './booking/usePublicPricingSummary';
 
 export const G = { green: '#005333', gold: '#D4AF37', muted: '#4A6070' };
 
@@ -59,7 +60,9 @@ const COPY = {
     contactIntro: 'Completá tus datos para crear la reserva. No necesitás una cuenta.',
     paymentMethod: 'Forma de pago', checkoutMethod: 'Mercado Pago', transferMethod: 'Transferencia',
     dni: 'DNI del titular de la cuenta', dniHelp: 'Debe coincidir con el DNI informado por la cuenta desde la que hacés la transferencia.',
-    total: 'Total de la estadía', deposit: 'Seña', balance: 'Saldo al llegar',
+    total: 'Total de la estadía', fromTotal: 'Total desde', fromNight: 'Desde por noche', perPerson: 'Por persona',
+    estimatedPrice: 'Estimado con las tarifas publicadas para tu selección.', startingPriceHelp: 'Elegí tus fechas para calcular el total de la estadía.',
+    unavailablePrice: 'No hay una tarifa publicada para esta selección.', deposit: 'Seña', balance: 'Saldo al llegar',
     quoteValid: 'Cotización válida durante', consentPrefix: 'Leí y acepto los',
     terms: 'Términos y Condiciones', privacy: 'Política de Privacidad', reserve: 'Crear reserva',
     reserving: 'Creando reserva…', privacyNote: 'Usamos tus datos únicamente para gestionar esta reserva.',
@@ -113,7 +116,9 @@ const COPY = {
     contactIntro: 'Enter your details to create the reservation. You do not need an account.',
     paymentMethod: 'Payment method', checkoutMethod: 'Mercado Pago', transferMethod: 'Bank transfer',
     dni: "Account holder's DNI", dniHelp: 'It must match the DNI reported by the account used for the transfer.',
-    total: 'Stay total', deposit: 'Deposit', balance: 'Balance on arrival', quoteValid: 'Quote valid for',
+    total: 'Stay total', fromTotal: 'Total from', fromNight: 'From per night', perPerson: 'Per person',
+    estimatedPrice: 'Estimated from the published rates for your selection.', startingPriceHelp: 'Choose your dates to calculate the stay total.',
+    unavailablePrice: 'There is no published rate for this selection.', deposit: 'Deposit', balance: 'Balance on arrival', quoteValid: 'Quote valid for',
     consentPrefix: 'I have read and accept the', terms: 'Terms and Conditions', privacy: 'Privacy Policy',
     reserve: 'Create reservation', reserving: 'Creating reservation…',
     privacyNote: 'We only use your details to manage this reservation.', secureNote: 'Availability and pricing were verified automatically.', pendingTitle: 'Your place is being held',
@@ -276,6 +281,58 @@ export const BookingWidget: React.FC<{
   const idempotencyKey = useRef(createBookingAttemptKey());
   const launcherRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const stayDates = useMemo(() => stayNightDates(checkIn, checkOut), [checkIn, checkOut]);
+  const stayNights = stayDates.length;
+  const { data: nightlyPricing, loaded: nightlyPricingLoaded } = usePublicPricingSummaries(stayDates);
+  const pricePreview = useMemo(() => {
+    if (stayDates.length === 0 || nightlyPricing.length !== stayDates.length) return null;
+    return estimateBookingPrice(nightlyPricing, step === 1
+      ? { people }
+      : { people, type, mode, mealPlan });
+  }, [stayDates, nightlyPricing, step, people, type, mode, mealPlan]);
+  const fallbackTotalCentavos = publicStartingRule
+    ? publicStartingRule.importe_centavos * (publicStartingRule.base_calculo === 'persona_noche' ? people : 1)
+    : null;
+  const displayedQuote = step === 3 ? quote : null;
+  const displayedTotalCentavos = displayedQuote?.precio.subtotal_centavos
+    ?? pricePreview?.totalCentavos
+    ?? (stayDates.length === 0 ? fallbackTotalCentavos : null);
+  const displayedCurrency = displayedQuote?.precio.moneda
+    ?? pricePreview?.currency
+    ?? publicPricing?.plan.moneda
+    ?? 'ARS';
+  const displayedPerPersonCentavos = displayedQuote
+    ? Math.round(displayedQuote.precio.subtotal_centavos / people)
+    : pricePreview?.perPersonCentavos
+      ?? (stayDates.length === 0 && fallbackTotalCentavos !== null
+        ? Math.round(fallbackTotalCentavos / people)
+        : null);
+  const priceIsExact = Boolean(displayedQuote);
+  const priceIsStayEstimate = Boolean(pricePreview);
+  const priceLoading = stayDates.length > 0 ? !nightlyPricingLoaded : !publicPricingLoaded;
+  const priceLabel = priceIsExact ? c.total : stayDates.length > 0 ? c.fromTotal : c.fromNight;
+  const priceHelp = priceIsStayEstimate
+    ? c.estimatedPrice
+    : stayDates.length === 0
+      ? c.startingPriceHelp
+      : c.unavailablePrice;
+
+  const renderPriceSummary = (className = '') => (
+    <div className={`booking-price-summary ${className}`.trim()} aria-live="polite">
+      <span>{priceLabel}</span>
+      <strong>{displayedTotalCentavos === null
+        ? (priceLoading ? '…' : '—')
+        : formatMoney(displayedTotalCentavos, displayedCurrency, language)}</strong>
+      <div><span>{c.perPerson}</span><b>{displayedPerPersonCentavos === null
+        ? '—'
+        : formatMoney(displayedPerPersonCentavos, displayedCurrency, language)}</b></div>
+      {displayedQuote && <>
+        <div><span>{c.deposit}</span><b>{formatMoney(displayedQuote.precio.sena_centavos, displayedQuote.precio.moneda, language)}</b></div>
+        <div><span>{c.balance}</span><b>{formatMoney(displayedQuote.precio.saldo_centavos, displayedQuote.precio.moneda, language)}</b></div>
+      </>}
+      {!displayedQuote && <small>{priceLoading ? c.startingAt : priceHelp}</small>}
+    </div>
+  );
 
   useEffect(() => {
     onOpenChange?.(open);
@@ -580,9 +637,6 @@ export const BookingWidget: React.FC<{
     ? `${language === 'es' ? 'Hola, necesito ayuda con mi reserva' : 'Hi, I need help with my reservation'} ${reservation.reserva.codigo}.`
     : language === 'es' ? 'Hola, necesito ayuda para reservar una estadía.' : 'Hi, I need help booking a stay.';
   const whatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(whatsappText)}`;
-  const stayNights = checkIn && checkOut
-    ? Math.max(0, Math.round((Date.parse(`${checkOut}T12:00:00Z`) - Date.parse(`${checkIn}T12:00:00Z`)) / 86_400_000))
-    : 0;
   const reservationServerPending = reservation?.reserva.estado === 'pendiente_pago';
   const reservationExpired = Boolean(
     reservationServerPending && reservation?.reserva.expires_at && remainingSeconds(reservation.reserva.expires_at) === 0,
@@ -621,7 +675,10 @@ export const BookingWidget: React.FC<{
         <div className="booking-flow__header-copy">
           <p className="booking-flow__eyebrow">{reservation ? c.reservationCode : c.launcherEyebrow}</p>
           <h2 id="booking-title">{headerTitle}</h2>
-          {!reservation && step === 1 && <strong className="booking-flow__price-lead">{c.startingAt}</strong>}
+          {!reservation && <strong className="booking-flow__price-lead">
+            {priceLabel}: {displayedTotalCentavos === null ? '…' : formatMoney(displayedTotalCentavos, displayedCurrency, language)}
+            {displayedPerPersonCentavos !== null && <> · {formatMoney(displayedPerPersonCentavos, displayedCurrency, language)} {c.perPerson.toLowerCase()}</>}
+          </strong>}
           <p className="booking-flow__intro">{headerCopy}</p>
         </div>
         <button className="booking-icon-button booking-flow__close" type="button" onClick={() => setOpen(false)} aria-label={c.close}><X aria-hidden="true" /></button>
@@ -669,6 +726,7 @@ export const BookingWidget: React.FC<{
                   <strong>{c[type]} · {c[mode]} · {c[mealPlan]}</strong>
                 </div>
                 <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
+                <div className="booking-summary__row"><span>{c.perPerson}</span><strong>{formatMoney(Math.round(quote.precio.subtotal_centavos / people), quote.precio.moneda, language)}</strong></div>
                 <div className="booking-summary__row"><span>{c.deposit}</span><strong>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</strong></div>
                 <div className="booking-summary__row"><span>{c.balance}</span><strong>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</strong></div>
               </div>
@@ -709,6 +767,7 @@ export const BookingWidget: React.FC<{
         ) : (
           <div className="booking-content-grid">
             <div className="booking-main">
+              <div className="booking-price-mobile">{renderPriceSummary()}</div>
               {step === 1 ? (
                 <div className="booking-panel">
                   <div className="booking-panel__heading"><div><p className="booking-section-title"><CalendarDays size={18} /> {c.datesTitle}</p><h3>{language === 'es' ? 'Elegí tus fechas' : 'Choose your dates'}</h3></div></div>
@@ -776,14 +835,14 @@ export const BookingWidget: React.FC<{
 
             <aside className="booking-sidebar" aria-label={c.selectionTitle}>
               <p className="booking-section-title">{c.selectionTitle}</p>
-              <div className="booking-sidebar__visual" aria-hidden="true"><img src={accommodationImage(type)} alt="" /></div>
-              <h3>{c[type]} · {c[mode]}</h3>
+              {step > 1 && <div className="booking-sidebar__visual" aria-hidden="true"><img src={accommodationImage(type)} alt="" /></div>}
+              <h3>{step === 1 ? c.datesTitle : `${c[type]} · ${c[mode]}`}</h3>
               <ul>
                 <li><CalendarDays /> <span>{checkIn && checkOut ? `${formatBookingDate(checkIn, language, true)} — ${formatBookingDate(checkOut, language, true)}` : c.datesTitle}</span></li>
                 <li><Users /> <span>{people} {c.people.toLowerCase()}</span></li>
-                <li><Utensils /> <span>{c[mealPlan]}</span></li>
+                {step > 1 && <li><Utensils /> <span>{c[mealPlan]}</span></li>}
               </ul>
-              {quote ? <div className="booking-sidebar__price"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong><div><span>{c.deposit}</span><b>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</b></div><div><span>{c.balance}</span><b>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</b></div></div> : <p className="booking-sidebar__pending">{c.selectionPending}</p>}
+              {renderPriceSummary('booking-sidebar__price')}
               <div className="booking-sidebar__trust"><ShieldCheck /><span>{c.dateNotice}</span></div>
             </aside>
           </div>
