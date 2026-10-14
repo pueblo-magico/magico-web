@@ -539,6 +539,24 @@ test('registra una transferencia por DNI protegido y sólo entonces expone el de
     JSON.stringify(body),
     /"pagador_documento_hash"|"pagador_documento_ultimos4"|"documento_numero"/,
   );
+
+  const estado = await consultarEstadoReserva({
+    request: new Request(`https://test/api/v1/public/reservas/${body.data.reserva.codigo}`),
+    env: entornoTransferencia,
+    params: { codigo: body.data.reserva.codigo },
+  });
+  const bodyEstado = await estado.json() as any;
+  assert.equal(bodyEstado.data.pago.metodo, 'transferencia_mp');
+  assert.deepEqual(bodyEstado.data.transferencia, {
+    estado: 'ready',
+    destino: {
+      alias: 'pueblo.magico.test',
+      cvu: '0000003100012345678901',
+      titular: 'Pueblo Mágico',
+      moneda: 'ARS',
+    },
+  });
+  assert.equal(bodyEstado.data.cuenta_cobro.estado, 'no_disponible');
   sqlite.close();
 });
 
@@ -659,6 +677,18 @@ test('Preview puede provisionar un destino mock visible, durable e idempotente',
   assert.equal(bodyRetry.data.reserva.id, bodyPrimera.data.reserva.id);
   assert.equal(bodyRetry.data.cuenta_cobro.destino.cvu, bodyPrimera.data.cuenta_cobro.destino.cvu);
   assert.equal(bodyRetry.meta.idempotente, true);
+
+  const estado = await consultarEstadoReserva({
+    request: new Request(`https://test/api/v1/public/reservas/${bodyPrimera.data.reserva.codigo}`),
+    env: entornoMock,
+    params: { codigo: bodyPrimera.data.reserva.codigo },
+  });
+  const bodyEstado = await estado.json() as any;
+  assert.equal(bodyEstado.data.cuenta_cobro.proveedor, 'cucuru_mock');
+  assert.equal(bodyEstado.data.cuenta_cobro.estado, 'ready');
+  assert.equal(bodyEstado.data.cuenta_cobro.simulado, true);
+  assert.equal(bodyEstado.data.cuenta_cobro.destino.alias, bodyPrimera.data.cuenta_cobro.destino.alias);
+  assert.equal(bodyEstado.data.cuenta_cobro.destino.cvu, bodyPrimera.data.cuenta_cobro.destino.cvu);
 
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT estado, simulada, COUNT(*) OVER () AS cantidad
