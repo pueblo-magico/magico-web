@@ -29,6 +29,7 @@ import {
 } from './booking/bookingApi';
 import './BookingWidget.css';
 import { FloatingUiPortal } from './FloatingUiContext';
+import { usePublicPricingSummary } from './booking/usePublicPricingSummary';
 
 export const G = { green: '#005333', gold: '#D4AF37', muted: '#4A6070' };
 
@@ -236,6 +237,17 @@ export const BookingWidget: React.FC<{
 }> = ({ compact = false, onOpenChange, activeViewport = 'all' }) => {
   const { language } = useLanguage();
   const c = COPY[language];
+  const { data: publicPricing, loaded: publicPricingLoaded } = usePublicPricingSummary();
+  const publicRules = publicPricing?.opciones.flatMap(option => option.tarifas) || [];
+  const publicPersonRules = publicRules.filter(rule => rule.base_calculo === 'persona_noche');
+  const publicStartingRule = (publicPersonRules.length > 0 ? publicPersonRules : publicRules)
+    .reduce<(typeof publicRules)[number] | null>(
+      (lowest, rule) => !lowest || rule.importe_centavos < lowest.importe_centavos ? rule : lowest,
+      null,
+    );
+  const launcherPrice = publicStartingRule
+    ? `${language === 'es' ? 'Desde' : 'From'} ${formatMoney(publicStartingRule.importe_centavos, publicPricing?.plan.moneda || 'ARS', language)} ${publicStartingRule.base_calculo === 'persona_noche' ? (language === 'es' ? 'por persona/noche' : 'per person/night') : (language === 'es' ? 'por unidad/noche' : 'per unit/night')}`
+    : publicPricingLoaded ? c.startingAt : (language === 'es' ? 'Cargando tarifa vigente…' : 'Loading current rate…');
   const today = localTodayIso();
   const [open, setOpen] = useState(shouldOpenFromReservationLink);
   const [step, setStep] = useState<Step>(1);
@@ -788,7 +800,7 @@ export const BookingWidget: React.FC<{
             <div className="booking-launcher__content">
               <p className="booking-launcher__eyebrow">{c.launcherEyebrow}</p>
               <h3 className="booking-launcher__title">{c.launcherTitle}</h3>
-              <strong className="booking-launcher__price">{language === 'es' ? 'Desde $20.000 por persona/noche' : 'From ARS 20,000 per person/night'}</strong>
+              <strong className="booking-launcher__price">{launcherPrice}</strong>
               <p className="booking-launcher__copy">{c.launcherCopy}</p>
             </div>
             <button ref={launcherRef} className="booking-button" type="button" onClick={() => setOpen(true)}><CalendarDays size={19} aria-hidden="true" /> {c.launcherButton}<ArrowRight size={18} /></button>

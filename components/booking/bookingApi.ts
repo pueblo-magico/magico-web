@@ -11,6 +11,41 @@ export interface PublicAccommodation {
   modalidades: Array<{ codigo: BookingMode; unidad_venta: string }>;
 }
 
+export interface PublicPriceRule {
+  temporada_codigo: string;
+  fecha_desde: string;
+  fecha_hasta: string;
+  modalidad: 'cualquiera' | BookingMode;
+  ocupacion_min: number;
+  ocupacion_max: number;
+  base_calculo: 'unidad_noche' | 'persona_noche';
+  importe_centavos: number;
+}
+
+export interface PublicPricingSummary {
+  fecha_referencia: string;
+  plan: { codigo: string; version: number; moneda: string };
+  alimentacion: {
+    desayuno_incluido: null | {
+      version: number;
+      precio_comida_centavos: number;
+      comidas_adicionales_por_persona_noche: number;
+    };
+    pension_completa: null | {
+      version: number;
+      precio_comida_centavos: number;
+      comidas_adicionales_por_persona_noche: number;
+      adicional_por_persona_noche_centavos: number;
+    };
+  };
+  opciones: Array<{
+    tipo_alojamiento: AccommodationType;
+    modalidades: BookingMode[];
+    capacidad_comercial: number;
+    tarifas: PublicPriceRule[];
+  }>;
+}
+
 export interface QuoteRequest {
   check_in: string;
   check_out: string;
@@ -128,6 +163,13 @@ export async function listPublicAccommodations(): Promise<PublicAccommodation[]>
   if (!Array.isArray(response.data)) {
     throw new BookingApiError(502, 'RESPUESTA_INVALIDA', 'No pudimos cargar los alojamientos.', true);
   }
+  return response.data;
+}
+
+export async function getPublicPricingSummary(fecha = localTodayIso()): Promise<PublicPricingSummary | null> {
+  const response = await requestJson<{ data: PublicPricingSummary | null }>(
+    `/api/v1/public/precios?fecha=${encodeURIComponent(fecha)}`
+  );
   return response.data;
 }
 

@@ -225,6 +225,24 @@ test('evita encabezados promocionales redundantes en los accesos a la reserva', 
   assert.doesNotMatch(stay, /bookingOpen/);
 });
 
+test('la página de estadía y la portada usan el plan tarifario público en vez de precios legacy', () => {
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  const inclusions = readFileSync(new URL('../../components/SectionInclusiones.tsx', import.meta.url), 'utf8');
+  const hero = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+
+  assert.match(stay, /usePublicPricingSummary/);
+  assert.match(inclusions, /usePublicPricingSummary/);
+  assert.match(hero, /usePublicPricingSummary/);
+  assert.match(api, /\/api\/v1\/public\/precios/);
+  assert.match(widget, /usePublicPricingSummary/);
+  assert.doesNotMatch(stay, /Desde \$20\.000/);
+  assert.doesNotMatch(inclusions, /ESTADIA_PRICES/);
+  assert.doesNotMatch(hero, /\(t\.hero as any\)\.reservationPricing/);
+  assert.doesNotMatch(widget, /Desde \$20\.000/);
+});
+
 test('genera una clave idempotente distinta por intento de reserva web', () => {
   const first = createBookingAttemptKey();
   const second = createBookingAttemptKey();

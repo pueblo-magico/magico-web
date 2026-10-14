@@ -9,6 +9,7 @@ import { D1RepositorioEstadoPagoReserva } from '../../functions/_infrastructure/
 import { crearReservaPublica } from '../../functions/_application/reservas/crearReservaPublica.ts';
 import { procesarPagoMercadoPago } from '../../functions/_application/reservas/procesarPagoMercadoPago.ts';
 import { onRequestGet as listarAlojamientos } from '../../functions/api/v1/public/alojamientos.ts';
+import { onRequestGet as listarPreciosPublicos } from '../../functions/api/v1/public/precios.ts';
 import { onRequestGet as consultarDisponibilidad } from '../../functions/api/v1/public/disponibilidad.ts';
 import { onRequestPost as crearCotizacion } from '../../functions/api/v1/public/cotizaciones.ts';
 import { onRequestPost as crearReserva } from '../../functions/api/v1/public/reservas.ts';
@@ -126,6 +127,55 @@ test('publica y calcula disponibilidad de camping cuando espacio y modalidad est
   assert.equal(bodyDisponibilidad.data.estado, 'disponible');
   assert.equal(bodyDisponibilidad.data.opcion.espacio_codigo, 'camping-exterior');
   assert.equal(bodyDisponibilidad.data.opcion.capacidad_disponible, 6);
+  sqlite.close();
+});
+
+test('el resumen público de precios refleja sólo modalidades habilitadas y el plan publicado', async () => {
+  const { sqlite, db } = baseMigrada();
+
+  const inicial = await listarPreciosPublicos({
+    request: new Request('https://test/api/v1/public/precios?fecha=2027-04-10'),
+    env: env(db),
+  });
+  assert.equal(inicial.status, 200);
+  const bodyInicial = await inicial.json() as any;
+  assert.equal(bodyInicial.data.plan.codigo, 'alojamiento-base');
+  assert.equal(bodyInicial.data.plan.version, 1);
+  assert.deepEqual(bodyInicial.data.opciones.map((item: any) => item.tipo_alojamiento), ['domo', 'refugio']);
+  assert.equal(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas.length, 4);
+  assert.equal(bodyInicial.data.alimentacion.pension_completa.adicional_por_persona_noche_centavos, 4_000_000);
+
+  sqlite.exec(`
+    UPDATE espacios
+    SET capacidad_comercial = 6, capacidad_operativa_maxima = 8,
+        reservable_general = 1, estado = 'activo'
+    WHERE codigo = 'camping-exterior';
+    UPDATE modalidades_espacio
+    SET habilitada = 1
+    WHERE espacio_id = (SELECT id FROM espacios WHERE codigo = 'camping-exterior')
+      AND modalidad = 'camping' AND contexto = 'general';
+  `);
+  const sinTarifaCamping = await listarPreciosPublicos({
+    request: new Request('https://test/api/v1/public/precios?fecha=2027-04-10'),
+    env: env(db),
+  });
+  const bodyCamping = await sinTarifaCamping.json() as any;
+  const camping = bodyCamping.data.opciones.find((item: any) => item.tipo_alojamiento === 'camping');
+  assert.ok(camping);
+  assert.deepEqual(camping.modalidades, ['camping']);
+  assert.deepEqual(camping.tarifas, []);
+  assert.doesNotMatch(JSON.stringify(bodyCamping), /cliente_|email|telefono/i);
+  sqlite.close();
+});
+
+test('el resumen público de precios rechaza una fecha inválida', async () => {
+  const { sqlite, db } = baseMigrada();
+  const response = await listarPreciosPublicos({
+    request: new Request('https://test/api/v1/public/precios?fecha=no-es-fecha'),
+    env: env(db),
+  });
+  assert.equal(response.status, 400);
+  assert.equal((await response.json() as any).error.codigo, 'FECHA_INVALIDA');
   sqlite.close();
 });
 
