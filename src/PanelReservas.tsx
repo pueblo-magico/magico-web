@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Trash2, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import {
   Badge, Button, Card, Checkbox, CodeBadge, CopyButton, DateRangeField, DescriptionList,
   DescriptionListItem, EmptyState, IconButton, Input, LoadingState, Modal, MoneyField, NumberField,
@@ -29,7 +29,7 @@ import './PanelReservas.css';
 // forma se colarían acá — el <style> de abajo las neutraliza con selectores
 // más específicos, sin tocar el CSS global del sitio.
 
-type TipoAlojamiento = 'domo' | 'refugio';
+type TipoAlojamiento = 'domo' | 'refugio' | 'camping';
 type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'integraciones' | 'usuarios' | 'actividad';
 
 const ADMIN_RESERVAS_BASE = '/admin/reservas';
@@ -464,10 +464,11 @@ const ESPACIO_POR_ALOJAMIENTO: Record<number, string> = {
   1: 'domo-1',
   2: 'domo-2',
   3: 'refugio',
+  4: 'camping-exterior',
 };
 
-const modalidadPara = (alojamiento: Alojamiento | undefined): 'privada' | 'compartida' =>
-  alojamiento?.tipo === 'domo' ? 'privada' : 'compartida';
+const modalidadPara = (alojamiento: Alojamiento | undefined): 'privada' | 'compartida' | 'camping' =>
+  alojamiento?.tipo === 'domo' ? 'privada' : alojamiento?.tipo === 'camping' ? 'camping' : 'compartida';
 
 const ETIQUETAS_ESTADO_CUENTA = {
   pending: 'Pendiente',
@@ -1830,6 +1831,39 @@ const resumirCambios = (anterior: unknown, nuevo: unknown, ruta = ''): CambioCon
   return [{ campo: ruta || 'Valor', anterior: valorCambio(anterior), nuevo: valorCambio(nuevo) }];
 };
 
+const normalizarRangosSena = (reglas: BorradorTarifaUi['senas']): BorradorTarifaUi['senas'] => {
+  const ordenadas = [...reglas].sort((a, b) => a.subtotalDesdeCentavos - b.subtotalDesdeCentavos);
+  return ordenadas.map((regla, indice) => ({
+    ...regla,
+    subtotalDesdeCentavos: indice === 0 ? 0 : regla.subtotalDesdeCentavos,
+    subtotalHastaCentavos: indice === ordenadas.length - 1
+      ? null
+      : Math.max(regla.subtotalDesdeCentavos, ordenadas[indice + 1].subtotalDesdeCentavos - 1),
+  }));
+};
+
+const errorReglasSena = (reglas: BorradorTarifaUi['senas']): string => {
+  if (reglas.length === 0) return 'Agregá al menos una regla de seña.';
+  const ordenadas = [...reglas].sort((a, b) => a.subtotalDesdeCentavos - b.subtotalDesdeCentavos);
+  if (ordenadas[0].subtotalDesdeCentavos !== 0) return 'La primera regla debe comenzar en ARS 0.';
+  for (let indice = 0; indice < ordenadas.length; indice += 1) {
+    const regla = ordenadas[indice];
+    if (!Number.isSafeInteger(regla.subtotalDesdeCentavos) || regla.subtotalDesdeCentavos < 0) {
+      return 'Los límites de las reglas deben ser importes válidos.';
+    }
+    if (indice > 0 && regla.subtotalDesdeCentavos <= ordenadas[indice - 1].subtotalDesdeCentavos) {
+      return 'Cada regla debe comenzar en un importe mayor que la anterior.';
+    }
+    if (!Number.isSafeInteger(regla.valor) || regla.valor < 0 ||
+        (regla.tipo === 'porcentaje_bps' && regla.valor > 10_000)) {
+      return regla.tipo === 'porcentaje_bps'
+        ? 'El porcentaje de seña debe estar entre 0 % y 100 %.'
+        : 'El importe fijo de la seña debe ser válido.';
+    }
+  }
+  return '';
+};
+
 const opcionesModalidadParaEspacio = (espacio: BorradorInventarioUi[number]) => {
   if (espacio.tipo === 'camping') return [{ value: 'camping', label: 'Camping' }];
   if (espacio.tipo === 'bell_tent') return [{ value: 'privada', label: 'Privada' }, { value: 'camping', label: 'Camping' }];
@@ -1994,8 +2028,32 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
 
   const actualizarSena = (indice: number, cambio: Partial<BorradorTarifaUi['senas'][number]>) => {
     setTarifaDraft(actual => actual ? {
-      ...actual, senas: actual.senas.map((item, i) => i === indice ? { ...item, ...cambio } : item),
+      ...actual,
+      senas: normalizarRangosSena(actual.senas.map((item, i) => i === indice ? { ...item, ...cambio } : item)),
     } : actual);
+  };
+
+  const agregarSena = () => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const ordenadas = [...actual.senas].sort((a, b) => a.subtotalDesdeCentavos - b.subtotalDesdeCentavos);
+      const ultima = ordenadas.at(-1);
+      const desde = (ultima?.subtotalDesdeCentavos ?? 0) + 15_000_000;
+      return {
+        ...actual,
+        senas: normalizarRangosSena([
+          ...ordenadas,
+          { subtotalDesdeCentavos: desde, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 3000 },
+        ]),
+      };
+    });
+  };
+
+  const eliminarSena = (indice: number) => {
+    setTarifaDraft(actual => {
+      if (!actual || actual.senas.length <= 1) return actual;
+      return { ...actual, senas: normalizarRangosSena(actual.senas.filter((_, i) => i !== indice)) };
+    });
   };
 
   const publicarTarifa = async (motivo: string) => {
@@ -2067,6 +2125,11 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
 
   const confirmarTarifa = () => {
     if (!tarifaDraft || !configuracion?.tarifa) return;
+    const errorSena = errorReglasSena(tarifaDraft.senas);
+    if (errorSena) {
+      setError(errorSena);
+      return;
+    }
     pedirConfirmacion({
       titulo: 'Publicar precios y seña',
       descripcion: 'Se creará una nueva versión para reservas futuras.',
@@ -2205,17 +2268,25 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
               </div>
             ))}
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Reglas de seña</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Reglas de seña</p>
+                  <p className="mt-1 text-xs text-gray-500">Cada umbral comienza en el importe indicado, inclusive. El límite anterior se calcula automáticamente para evitar huecos o superposiciones.</p>
+                </div>
+                {esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarSena}><Plus size={15} />Agregar regla</Button>}
+              </div>
               <div className="mt-2 space-y-2">{tarifaDraft.senas.map((regla, indice) => (
-                <div key={indice} className="grid gap-2 rounded-lg bg-gray-50 p-3 sm:grid-cols-4">
-                  <label className="text-xs text-gray-600">Subtotal desde (ARS)<input type="number" min={0} value={regla.subtotalDesdeCentavos / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { subtotalDesdeCentavos: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
-                  <label className="text-xs text-gray-600">Subtotal hasta (ARS)<input type="number" min={0} placeholder="Sin límite" value={regla.subtotalHastaCentavos == null ? '' : regla.subtotalHastaCentavos / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { subtotalHastaCentavos: event.target.value ? Math.round(Number(event.target.value) * 100) : null })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                <div key={`${regla.subtotalDesdeCentavos}-${indice}`} className="grid gap-2 rounded-lg bg-gray-50 p-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+                  <label className="text-xs text-gray-600">Desde (ARS, inclusive)<input type="number" min={0} step="0.01" value={regla.subtotalDesdeCentavos / 100} disabled={!esSuperAdmin || indice === 0} onChange={event => actualizarSena(indice, { subtotalDesdeCentavos: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1 disabled:bg-gray-100" /></label>
+                  <label className="text-xs text-gray-600">Hasta (ARS, inclusive)<input value={regla.subtotalHastaCentavos == null ? 'Sin límite' : (regla.subtotalHastaCentavos / 100).toFixed(2)} disabled className="mt-1 w-full rounded border bg-gray-100 px-2 py-1 text-gray-600" /></label>
                   <label className="text-xs text-gray-600">Tipo<select value={regla.tipo} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { tipo: event.target.value as any })} className="mt-1 w-full rounded border px-2 py-1"><option value="porcentaje_bps">Porcentaje</option><option value="importe_fijo">Importe fijo</option></select></label>
-                  <label className="text-xs text-gray-600">{regla.tipo === 'porcentaje_bps' ? 'Porcentaje' : 'Importe (ARS)'}<input type="number" min={0} max={regla.tipo === 'porcentaje_bps' ? 100 : undefined} value={regla.tipo === 'porcentaje_bps' ? regla.valor / 100 : regla.valor / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { valor: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">{regla.tipo === 'porcentaje_bps' ? 'Porcentaje' : 'Importe (ARS)'}<input type="number" min={0} step={regla.tipo === 'porcentaje_bps' ? '0.01' : '0.01'} max={regla.tipo === 'porcentaje_bps' ? 100 : undefined} value={regla.valor / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { valor: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  {esSuperAdmin && <div className="flex items-end"><IconButton icon={<Trash2 size={16} />} label={`Eliminar regla de seña ${indice + 1}`} variant="secondary" isDisabled={tarifaDraft.senas.length <= 1} onPress={() => eliminarSena(indice)} /></div>}
                 </div>
               ))}</div>
+              {errorReglasSena(tarifaDraft.senas) && <p role="alert" className="mt-2 text-xs font-semibold text-red-700">{errorReglasSena(tarifaDraft.senas)}</p>}
             </div>
-            {esSuperAdmin && <button type="button" onClick={confirmarTarifa} disabled={guardando !== null || !configuracion?.tarifa || resumirCambios(configuracion.tarifa, tarifaDraft).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'tarifa' ? 'Publicando…' : 'Publicar nueva versión de precios y seña'}</button>}
+            {esSuperAdmin && <button type="button" onClick={confirmarTarifa} disabled={guardando !== null || !configuracion?.tarifa || Boolean(errorReglasSena(tarifaDraft.senas)) || resumirCambios(configuracion.tarifa, tarifaDraft).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'tarifa' ? 'Publicando…' : 'Publicar nueva versión de precios y seña'}</button>}
           </>}
         </div>
       </details>

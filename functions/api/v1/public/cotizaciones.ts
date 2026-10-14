@@ -13,7 +13,7 @@ export async function onRequestPost({ request, env }: any) {
   if (!lectura.ok) return lectura.response;
   const body: any = lectura.body;
   const tipo = body.tipo_alojamiento;
-  const modalidad = body.modalidad || (tipo === 'domo' ? 'privada' : 'compartida');
+  const modalidad = body.modalidad || (tipo === 'domo' ? 'privada' : tipo === 'camping' ? 'camping' : 'compartida');
   const contexto = body.contexto || 'general';
   const personas = Number(body.personas);
   const regimenAlimentacion = body.regimen_alimentacion ?? 'desayuno_incluido';
@@ -25,8 +25,8 @@ export async function onRequestPost({ request, env }: any) {
       },
     }, 400);
   }
-  if ((tipo !== 'domo' && tipo !== 'refugio') || !Number.isInteger(personas) || personas < 1 ||
-      !['privada', 'compartida'].includes(modalidad) || !['general', 'retiro'].includes(contexto)) {
+  if (!['domo', 'refugio', 'camping'].includes(tipo) || !Number.isInteger(personas) || personas < 1 ||
+      !['privada', 'compartida', 'camping'].includes(modalidad) || !['general', 'retiro'].includes(contexto)) {
     return jsonPublico(request, 'POST', { error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'La solicitud es inválida.' } }, 400);
   }
 

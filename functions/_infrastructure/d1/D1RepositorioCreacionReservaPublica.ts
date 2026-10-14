@@ -58,16 +58,18 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
     if (!row) return null;
     const desglose = JSON.parse(String(row.desglose_json)) as Record<string, unknown>;
     const tipo = desglose.tipo_alojamiento;
-    const modalidad = desglose.modalidad ?? (tipo === 'domo' ? 'privada' : 'compartida');
+    const modalidad = desglose.modalidad ?? (tipo === 'domo' ? 'privada' : tipo === 'camping' ? 'camping' : 'compartida');
     const contexto = desglose.contexto ?? 'general';
     const regimen = desglose.regimen_alimentacion ?? 'desayuno_incluido';
-    if ((tipo !== 'domo' && tipo !== 'refugio') ||
-        (modalidad !== 'privada' && modalidad !== 'compartida') ||
+    if (!['domo', 'refugio', 'camping'].includes(String(tipo)) ||
+        !['privada', 'compartida', 'camping'].includes(String(modalidad)) ||
         (contexto !== 'general' && contexto !== 'retiro') || !esRegimenAlimentacion(regimen)) {
       return null;
     }
     return {
-      id: Number(row.id), codigo: String(row.codigo), tipo, modalidad, contexto,
+      id: Number(row.id), codigo: String(row.codigo),
+      tipo: tipo as CotizacionAceptada['tipo'],
+      modalidad: modalidad as CotizacionAceptada['modalidad'], contexto,
       regimenAlimentacion: regimen,
       fechaCheckin: String(row.fecha_checkin), fechaCheckout: String(row.fecha_checkout),
       personas: Number(row.cantidad_personas), moneda: String(row.moneda),
@@ -103,7 +105,8 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
       : 'crear_reserva_publica';
     const alojamientoLegacyId = solicitud.espacioCodigo === 'domo-1' ? 1
       : solicitud.espacioCodigo === 'domo-2' ? 2
-        : solicitud.espacioCodigo.startsWith('refugio') ? 3 : null;
+        : solicitud.espacioCodigo.startsWith('refugio') ? 3
+          : solicitud.espacioCodigo === 'camping-exterior' ? 4 : null;
     if (alojamientoLegacyId === null) throw new Error('Espacio sin proyección legacy.');
 
     const statements = [

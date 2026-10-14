@@ -1,6 +1,6 @@
 import type { RegimenAlimentacion } from './alimentacion.ts';
 
-export type TipoAlojamiento = 'domo' | 'refugio';
+export type TipoAlojamiento = 'domo' | 'refugio' | 'camping';
 
 export type Cotizacion = {
   tipo_alojamiento: TipoAlojamiento;

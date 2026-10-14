@@ -1,5 +1,5 @@
-export type AccommodationType = 'domo' | 'refugio';
-export type BookingMode = 'compartida' | 'privada';
+export type AccommodationType = 'domo' | 'refugio' | 'camping';
+export type BookingMode = 'compartida' | 'privada' | 'camping';
 export type MealPlan = 'desayuno_incluido' | 'pension_completa';
 export type PaymentMethod = 'mercado_pago_checkout' | 'transferencia_mp';
 
@@ -64,7 +64,24 @@ export interface ReservationResponse {
 
 export interface PublicReservationStatus {
   reserva: { codigo: string; estado: string; expires_at: string | null };
-  pago: { proveedor: 'mercado_pago'; estado: string };
+  pago: {
+    proveedor: 'mercado_pago';
+    estado: string;
+    metodo: PaymentMethod | null;
+    monto_centavos: number;
+    moneda: string;
+    checkout_url?: string;
+  };
+  transferencia: {
+    estado: 'disabled' | 'ready';
+    destino?: { cvu?: string; alias?: string; titular?: string; moneda: string };
+  };
+  cuenta_cobro: {
+    proveedor: string;
+    estado: string;
+    simulado?: boolean;
+    destino?: { cvu?: string; alias?: string; moneda?: string };
+  };
 }
 
 export class BookingApiError extends Error {

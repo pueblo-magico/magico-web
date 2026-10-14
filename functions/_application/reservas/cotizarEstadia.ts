@@ -29,7 +29,9 @@ export async function cotizarEstadia(
   }
   const solicitudNormalizada: SolicitudCotizacion = {
     ...solicitud,
-    modalidad: solicitud.modalidad ?? (solicitud.tipo === 'domo' ? 'privada' : 'compartida'),
+    modalidad: solicitud.modalidad ?? (solicitud.tipo === 'domo'
+      ? 'privada'
+      : solicitud.tipo === 'camping' ? 'camping' : 'compartida'),
     contexto: solicitud.contexto ?? 'general',
     regimenAlimentacion,
   };
@@ -44,7 +46,9 @@ export async function cotizarEstadia(
     };
   }
 
-  const capacidadMaxima = solicitudNormalizada.tipo === 'domo'
+  const capacidadMaxima = solicitudNormalizada.tipo === 'camping'
+    ? Number.MAX_SAFE_INTEGER
+    : solicitudNormalizada.tipo === 'domo'
     ? 7
     : solicitudNormalizada.modalidad === 'privada' ? 4 : 15;
   if (solicitudNormalizada.personas < 1 || solicitudNormalizada.personas > capacidadMaxima) {
@@ -52,7 +56,9 @@ export async function cotizarEstadia(
       ok: false,
       error: {
         codigo: 'OCUPACION_INVALIDA',
-        mensaje: solicitudNormalizada.tipo === 'domo'
+        mensaje: solicitudNormalizada.tipo === 'camping'
+          ? 'La cantidad de personas debe ser mayor a cero.'
+          : solicitudNormalizada.tipo === 'domo'
           ? 'El Domo admite entre 1 y 7 personas.'
           : solicitudNormalizada.modalidad === 'privada'
             ? 'La habitación privada del Refugio admite entre 1 y 4 personas.'

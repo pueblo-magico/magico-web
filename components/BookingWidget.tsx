@@ -9,6 +9,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { WA_MAGICO } from '../src/data/config';
 import {
   BookingApiError,
+  type AccommodationType,
   type BookingMode,
   type MealPlan,
   type PaymentMethod,
@@ -45,12 +46,12 @@ const COPY = {
     dateNoticeTitle: 'Disponibilidad en tiempo real', dateNotice: 'Verificamos las fechas, el alojamiento y el precio antes de crear la reserva.',
     selectionPending: 'El precio se calcula al verificar disponibilidad.', selectionTitle: 'Tu reserva',
     stayTitle: 'Elegí cómo querés quedarte', accommodation: 'Alojamiento', domo: 'Domo',
-    refugio: 'Refugio de piedra', mode: 'Modalidad', compartida: 'Compartida', privada: 'Privada',
+    refugio: 'Refugio de piedra', camping: 'Camping', mode: 'Modalidad', compartida: 'Compartida', privada: 'Privada',
     meals: 'Comidas', desayuno_incluido: 'Con desayuno', pension_completa: 'Pensión completa',
     breakfastHelp: 'El desayuno está incluido.', fullBoardHelp: 'Desayuno, almuerzo y cena incluidos.',
     quote: 'Consultar disponibilidad', loadingOptions: 'Cargando opciones disponibles…',
     noOptions: 'No pudimos cargar los alojamientos.',
-    domeCopy: 'Dormí rodeado de naturaleza.', refugeCopy: 'Calidez simple en el refugio.',
+    domeCopy: 'Dormí rodeado de naturaleza.', refugeCopy: 'Calidez simple en el refugio.', campingCopy: 'Acampá en un área habilitada en plena naturaleza.',
     unavailable: 'No hay disponibilidad para esa combinación. Probá con otras fechas u opciones.',
     contactSupport: 'Consultar por WhatsApp', reviewTitle: 'Contanos quién viene',
     name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email',
@@ -99,12 +100,12 @@ const COPY = {
     dateNoticeTitle: 'Live availability', dateNotice: 'We verify dates, accommodation and price before creating the reservation.',
     selectionPending: 'The price is calculated after checking availability.', selectionTitle: 'Your reservation',
     stayTitle: 'Choose how you want to stay', accommodation: 'Accommodation', domo: 'Dome',
-    refugio: 'Stone shelter', mode: 'Room type', compartida: 'Shared', privada: 'Private',
+    refugio: 'Stone shelter', camping: 'Camping', mode: 'Room type', compartida: 'Shared', privada: 'Private',
     meals: 'Meals', desayuno_incluido: 'Breakfast included', pension_completa: 'Full board',
     breakfastHelp: 'Breakfast is included.', fullBoardHelp: 'Breakfast, lunch and dinner included.',
     quote: 'Check availability', loadingOptions: 'Loading available options…',
     noOptions: 'We could not load accommodation options.',
-    domeCopy: 'Sleep surrounded by nature.', refugeCopy: 'Simple warmth in the stone shelter.',
+    domeCopy: 'Sleep surrounded by nature.', refugeCopy: 'Simple warmth in the stone shelter.', campingCopy: 'Camp in a designated area surrounded by nature.',
     unavailable: 'There is no availability for that combination. Try other dates or options.',
     contactSupport: 'Ask on WhatsApp', reviewTitle: 'Tell us who is coming',
     name: 'Full name', phone: 'WhatsApp', email: 'Email',
@@ -154,7 +155,7 @@ type ActiveReservationSnapshot = {
     checkIn: string;
     checkOut: string;
     people: number;
-    type: 'domo' | 'refugio';
+    type: AccommodationType;
     mode: BookingMode;
     mealPlan: MealPlan;
     paymentMethod: PaymentMethod;
@@ -172,8 +173,8 @@ function readActiveReservation(): ActiveReservationSnapshot | null {
         !Number.isFinite(snapshot.savedAt) || Date.now() - snapshot.savedAt > ACTIVE_RESERVATION_MAX_AGE_MS ||
         !context || typeof context.checkIn !== 'string' || typeof context.checkOut !== 'string' ||
         !Number.isSafeInteger(context.people) || context.people < 1 ||
-        !['domo', 'refugio'].includes(context.type) ||
-        !['compartida', 'privada'].includes(context.mode) ||
+        !['domo', 'refugio', 'camping'].includes(context.type) ||
+        !['compartida', 'privada', 'camping'].includes(context.mode) ||
         !['desayuno_incluido', 'pension_completa'].includes(context.mealPlan) ||
         !['mercado_pago_checkout', 'transferencia_mp'].includes(context.paymentMethod)) {
       window.localStorage.removeItem(ACTIVE_RESERVATION_STORAGE_KEY);
@@ -215,6 +216,12 @@ function apiErrorMessage(error: unknown, fallback: string, language: 'es' | 'en'
   return language === 'es' && error instanceof BookingApiError ? error.message : fallback;
 }
 
+function accommodationImage(type: AccommodationType): string {
+  if (type === 'domo') return '/uploads/domos_2.jpg';
+  if (type === 'camping') return '/uploads/campoentero.webp';
+  return '/uploads/habitaciones.webp';
+}
+
 export const BookingWidget: React.FC<{
   compact?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -231,7 +238,7 @@ export const BookingWidget: React.FC<{
   const [accommodations, setAccommodations] = useState<PublicAccommodation[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [optionsLoaded, setOptionsLoaded] = useState(false);
-  const [type, setType] = useState<'domo' | 'refugio'>('domo');
+  const [type, setType] = useState<AccommodationType>('domo');
   const [mode, setMode] = useState<BookingMode>('compartida');
   const [mealPlan, setMealPlan] = useState<MealPlan>('desayuno_incluido');
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
@@ -297,14 +304,14 @@ export const BookingWidget: React.FC<{
 
   const availableTypes = useMemo(() => {
     const unique = new Set(accommodations.map(item => item.tipo));
-    return (['domo', 'refugio'] as const).filter(item => unique.has(item));
+    return (['domo', 'refugio', 'camping'] as const).filter(item => unique.has(item));
   }, [accommodations]);
 
   const availableModes = useMemo(() => {
     const unique = new Set(accommodations
       .filter(item => item.tipo === type)
       .flatMap(item => item.modalidades.map(option => option.codigo)));
-    return (['compartida', 'privada'] as const).filter(item => unique.has(item));
+    return (['compartida', 'privada', 'camping'] as const).filter(item => unique.has(item));
   }, [accommodations, type]);
 
   useEffect(() => {
@@ -707,8 +714,8 @@ export const BookingWidget: React.FC<{
                       <p className="booking-section-title">{c.accommodation}</p>
                       <div className="booking-stay-grid">{availableTypes.map(option => (
                         <button key={option} type="button" className={`booking-stay-card ${type === option ? 'booking-choice--selected' : ''}`} aria-pressed={type === option} onClick={() => { setType(option); resetQuote(); }}>
-                          <img src={option === 'domo' ? '/uploads/domos_2.jpg' : '/uploads/habitaciones.webp'} alt="" />
-                          <span><strong>{c[option]}</strong><small>{option === 'domo' ? c.domeCopy : c.refugeCopy}</small></span>
+                          <img src={accommodationImage(option)} alt="" />
+                          <span><strong>{c[option]}</strong><small>{option === 'domo' ? c.domeCopy : option === 'camping' ? c.campingCopy : c.refugeCopy}</small></span>
                           <CheckCircle2 className="booking-stay-card__check" size={27} aria-hidden="true" />
                         </button>
                       ))}</div>
@@ -750,7 +757,7 @@ export const BookingWidget: React.FC<{
 
             <aside className="booking-sidebar" aria-label={c.selectionTitle}>
               <p className="booking-section-title">{c.selectionTitle}</p>
-              <div className="booking-sidebar__visual" aria-hidden="true"><img src={type === 'domo' ? '/uploads/domos_2.jpg' : '/uploads/habitaciones.webp'} alt="" /></div>
+              <div className="booking-sidebar__visual" aria-hidden="true"><img src={accommodationImage(type)} alt="" /></div>
               <h3>{c[type]} · {c[mode]}</h3>
               <ul>
                 <li><CalendarDays /> <span>{checkIn && checkOut ? `${formatBookingDate(checkIn, language, true)} — ${formatBookingDate(checkOut, language, true)}` : c.datesTitle}</span></li>

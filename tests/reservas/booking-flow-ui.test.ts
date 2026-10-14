@@ -35,6 +35,16 @@ test('la carga de alojamientos no se cancela al activar su propio indicador', ()
   assert.doesNotMatch(source, /\[open, optionsLoaded, loadingOptions/);
 });
 
+test('incluye camping cuando el catálogo público lo habilita', () => {
+  const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  assert.match(api, /AccommodationType = 'domo' \| 'refugio' \| 'camping'/);
+  assert.match(api, /BookingMode = 'compartida' \| 'privada' \| 'camping'/);
+  assert.match(widget, /\['domo', 'refugio', 'camping'\] as const/);
+  assert.match(widget, /\['compartida', 'privada', 'camping'\] as const/);
+  assert.match(widget, /campoentero\.webp/);
+});
+
 test('muestra el flujo en un modal accesible en todos los tamaños y protege los datos de pago', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
@@ -77,6 +87,9 @@ test('los retornos de Mercado Pago consultan el estado persistido y tienen fallb
   const redirects = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8');
   assert.match(source, /getPublicReservationStatus\(code\)/);
   assert.match(source, /status\?\.reserva\.estado === 'confirmada'/);
+  assert.match(source, /status\.pago\.checkout_url/);
+  assert.match(source, /status\?\.transferencia\.estado === 'ready'/);
+  assert.match(source, /activePending && status/);
   assert.doesNotMatch(source, /params\.get\(['"]status['"]\)/);
   for (const path of ['/reserva-confirmada', '/reserva-pendiente', '/reserva-fallida']) {
     assert.match(redirects, new RegExp(`${path}\\s+/app-shell/\\s+200`));

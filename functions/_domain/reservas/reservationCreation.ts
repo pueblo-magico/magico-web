@@ -23,8 +23,8 @@ export type SolicitudCrearReservaPublica = {
 export type CotizacionAceptada = {
   id: number;
   codigo: string;
-  tipo: 'domo' | 'refugio';
-  modalidad: 'privada' | 'compartida';
+  tipo: 'domo' | 'refugio' | 'camping';
+  modalidad: 'privada' | 'compartida' | 'camping';
   contexto: 'general' | 'retiro';
   regimenAlimentacion: RegimenAlimentacion;
   fechaCheckin: string;

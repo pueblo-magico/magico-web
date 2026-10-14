@@ -94,6 +94,41 @@ test('el catálogo v1 publica capacidades comerciales sin PII ni ids internos', 
   sqlite.close();
 });
 
+test('publica y calcula disponibilidad de camping cuando espacio y modalidad están habilitados', async () => {
+  const { sqlite, db } = baseMigrada();
+  sqlite.exec(`
+    UPDATE espacios
+    SET capacidad_comercial = 6, capacidad_operativa_maxima = 8,
+        reservable_general = 1, estado = 'activo'
+    WHERE codigo = 'camping-exterior';
+    UPDATE modalidades_espacio
+    SET habilitada = 1
+    WHERE espacio_id = (SELECT id FROM espacios WHERE codigo = 'camping-exterior')
+      AND modalidad = 'camping' AND contexto = 'general';
+  `);
+
+  const catalogo = await listarAlojamientos({
+    request: new Request('https://test/api/v1/public/alojamientos?contexto=general'),
+    env: env(db),
+  });
+  const bodyCatalogo = await catalogo.json() as any;
+  const camping = bodyCatalogo.data.find((item: any) => item.tipo === 'camping');
+  assert.equal(camping.codigo, 'camping-exterior');
+  assert.equal(camping.capacidad_comercial, 6);
+  assert.deepEqual(camping.modalidades, [{ codigo: 'camping', unidad_venta: 'parcela' }]);
+
+  const disponibilidad = await consultarDisponibilidad({
+    request: new Request('https://test/api/v1/public/disponibilidad?check_in=2027-04-11&check_out=2027-04-13&personas=4&tipo_alojamiento=camping&modalidad=camping'),
+    env: env(db),
+  });
+  const bodyDisponibilidad = await disponibilidad.json() as any;
+  assert.equal(disponibilidad.status, 200);
+  assert.equal(bodyDisponibilidad.data.estado, 'disponible');
+  assert.equal(bodyDisponibilidad.data.opcion.espacio_codigo, 'camping-exterior');
+  assert.equal(bodyDisponibilidad.data.opcion.capacidad_disponible, 6);
+  sqlite.close();
+});
+
 test('la disponibilidad v1 usa checkout exclusivo y bloquea sólo solapamientos reales', async () => {
   const { sqlite, db } = baseMigrada();
   insertarReserva(sqlite, 1, '2027-04-10', '2027-04-12', 2);
@@ -420,7 +455,10 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     assert.equal(bodyEstado.data.reserva.codigo, body.data.reserva.codigo);
     assert.equal(bodyEstado.data.reserva.estado, 'pendiente_pago');
     assert.equal(bodyEstado.data.pago.estado, 'pendiente');
-    assert.doesNotMatch(JSON.stringify(bodyEstado), /cliente_|email|telefono|checkout_url/i);
+    assert.equal(bodyEstado.data.pago.monto_centavos, 4_500_000);
+    assert.equal(bodyEstado.data.pago.metodo, 'mercado_pago_checkout');
+    assert.equal(bodyEstado.data.pago.checkout_url, 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1');
+    assert.doesNotMatch(JSON.stringify(bodyEstado), /cliente_|email|telefono/i);
   } finally {
     globalThis.fetch = originalFetch;
     sqlite.close();

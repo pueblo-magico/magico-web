@@ -444,7 +444,7 @@ export interface RepositorioReservasManyChat {
 export type SolicitudPreferenciaPago = {
   reservaId: number;
   reservaCodigo?: string;
-  tipoAlojamiento: 'domo' | 'refugio';
+  tipoAlojamiento: 'domo' | 'refugio' | 'camping';
   montoSena: number;
 };
 
@@ -462,7 +462,7 @@ export interface ProveedorCheckoutReserva {
 export type CheckoutReservaPublica = {
   reservaId: number;
   reservaCodigo: string;
-  tipoAlojamiento: 'domo' | 'refugio';
+  tipoAlojamiento: 'domo' | 'refugio' | 'camping';
   montoSenaCentavos: number;
   moneda: string;
   estadoFlujo: string;
@@ -488,6 +488,17 @@ export type EstadoReservaPublica = {
   estado: string;
   expiresAt: string | null;
   pagoEstado: string | null;
+  metodoPago: 'mercado_pago_checkout' | 'transferencia_mp' | null;
+  montoSenaCentavos: number;
+  moneda: string;
+  checkoutUrl: string | null;
+  cuentaCobro: {
+    estado: string;
+    cvu: string | null;
+    alias: string | null;
+    moneda: string;
+    simulada: boolean;
+  } | null;
 };
 
 export interface RepositorioConsultaEstadoReservaPublica {

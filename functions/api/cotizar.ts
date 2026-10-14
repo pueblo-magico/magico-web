@@ -58,15 +58,15 @@ export async function onRequestPost({ request, env }: any) {
       headers
     );
   }
-  if (tipo_alojamiento !== 'domo' && tipo_alojamiento !== 'refugio') {
-    return json({ error: "tipo_alojamiento debe ser 'domo' o 'refugio'." }, 400, headers);
+  if (!['domo', 'refugio', 'camping'].includes(tipo_alojamiento)) {
+    return json({ error: "tipo_alojamiento debe ser 'domo', 'refugio' o 'camping'." }, 400, headers);
   }
   const personas = Number(cantidad_personas);
   if (!Number.isInteger(personas) || personas < 1) {
     return json({ error: 'cantidad_personas debe ser un entero positivo.' }, 400, headers);
   }
-  if (modalidad !== undefined && !['privada', 'compartida'].includes(modalidad)) {
-    return json({ error: "modalidad debe ser 'privada' o 'compartida'." }, 400, headers);
+  if (modalidad !== undefined && !['privada', 'compartida', 'camping'].includes(modalidad)) {
+    return json({ error: "modalidad debe ser 'privada', 'compartida' o 'camping'." }, 400, headers);
   }
   if (contexto !== undefined && !['general', 'retiro'].includes(contexto)) {
     return json({ error: "contexto debe ser 'general' o 'retiro'." }, 400, headers);

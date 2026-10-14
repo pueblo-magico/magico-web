@@ -54,6 +54,38 @@ test('aplica importe fijo y exclusividad sólo dentro de la banda configurada', 
   assert.equal(resultado.exclusividadGratis, true);
 });
 
+test('aplica porcentajes distintos a ambos lados de un umbral de seña', () => {
+  const configuracion: ConfiguracionTarifa = {
+    ...base,
+    reglasPrecio: [{
+      ...base.reglasPrecio[0], fechaHasta: '2026-12-31', baseCalculo: 'unidad_noche',
+      importeCentavos: 15_000_000,
+    }],
+    reglasSena: [
+      { subtotalDesdeCentavos: 0, subtotalHastaCentavos: 14_999_999, tipo: 'porcentaje_bps', valor: 3000 },
+      { subtotalDesdeCentavos: 15_000_000, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 5000 },
+    ],
+  };
+  const resultado = cotizarConPlan(
+    { tipo: 'domo', personas: 1, fechaEntrada: '2026-02-02', fechaSalida: '2026-02-03' },
+    configuracion,
+  );
+  assert.ok(!('error' in resultado));
+  assert.equal(resultado.subtotalCentavos, 15_000_000);
+  assert.equal(resultado.senaCentavos, 7_500_000);
+
+  const resultadoBandaInferior = cotizarConPlan(
+    { tipo: 'domo', personas: 1, fechaEntrada: '2026-02-02', fechaSalida: '2026-02-03' },
+    {
+      ...configuracion,
+      reglasPrecio: [{ ...configuracion.reglasPrecio[0], importeCentavos: 14_000_000 }],
+    },
+  );
+  assert.ok(!('error' in resultadoBandaInferior));
+  assert.equal(resultadoBandaInferior.subtotalCentavos, 14_000_000);
+  assert.equal(resultadoBandaInferior.senaCentavos, 4_200_000);
+});
+
 test('el repositorio D1 carga y normaliza el plan publicado', async () => {
   const bindings: unknown[][] = [];
   const db = {

@@ -131,6 +131,15 @@ test('pide el motivo al confirmar y compara el valor anterior con el nuevo', () 
   assert.match(styles, /\.admin-config-change-summary__row/);
 });
 
+test('permite administrar varias reglas de seña sin huecos ni superposiciones', () => {
+  assert.match(source, /normalizarRangosSena/);
+  assert.match(source, /errorReglasSena/);
+  assert.match(source, /Agregar regla/);
+  assert.match(source, /eliminarSena/);
+  assert.match(source, /Hasta \(ARS, inclusive\)/);
+  assert.match(source, /subtotalHastaCentavos: indice === ordenadas\.length - 1/);
+});
+
 test('separa los eventos de integraciones en categorías accesibles sin ocultar sus acciones', () => {
   assert.match(source, /type CategoriaEventosIntegracion = 'eventos' \| 'comunicaciones' \| 'mercado_pago' \| 'aplicaciones'/);
   assert.match(source, /role="tablist" aria-label="Categorías de eventos de integración"/);
