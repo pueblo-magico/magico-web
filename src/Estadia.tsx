@@ -156,7 +156,6 @@ const ALOJAMIENTOS = [
 
 const Alojamientos: React.FC = () => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
-  const [bookingOpen, setBookingOpen] = useState(false);
 
   return (
     <section id="alojamientos" className="py-20 bg-bone">
@@ -268,21 +267,7 @@ const Alojamientos: React.FC = () => {
               max-h + scroll interno el widget nunca queda más alto que la
               pantalla, aunque crezca al cambiar de opción. */}
           <div id="reservar" className="order-first lg:order-none lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:rounded-2xl">
-
-            <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-brand/5">
-              {!bookingOpen && <div style={{ background: '#005333', padding: '16px 20px' }}>
-                <p style={{ fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', fontWeight: 700, color: 'rgba(212,175,55,0.85)', marginBottom: 5 }}>
-                  RESERVÁ TU LUGAR
-                </p>
-                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 18, fontWeight: 400, color: 'white', margin: '0 0 3px' }}>
-                  Verificar disponibilidad
-                </h3>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
-                  y estimar el costo de tu estadía
-                </p>
-              </div>}
-              <BookingWidget onOpenChange={setBookingOpen} />
-            </div>
+            <BookingWidget />
             <WithdrawalAccessLink embedded />
           </div>
         </div>

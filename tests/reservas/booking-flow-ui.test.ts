@@ -211,7 +211,7 @@ test('ubica el botón de arrepentimiento debajo de los widgets de reserva princi
   assert.match(stay, /<WithdrawalAccessLink embedded \/>/);
 });
 
-test('oculta el encabezado promocional mientras el checkout está abierto', () => {
+test('evita encabezados promocionales redundantes en los accesos a la reserva', () => {
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
   const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
@@ -220,8 +220,9 @@ test('oculta el encabezado promocional mientras el checkout está abierto', () =
   assert.match(home, /!desktopBookingOpen && <div/);
   assert.match(home, /<BookingWidget compact activeViewport="mobile" onOpenChange=\{setCompactBookingOpen\}/);
   assert.match(home, /<BookingWidget compact activeViewport="desktop" onOpenChange=\{setDesktopBookingOpen\}/);
-  assert.match(stay, /!bookingOpen && <div/);
-  assert.match(stay, /<BookingWidget onOpenChange=\{setBookingOpen\}/);
+  assert.match(stay, /<BookingWidget \/>/);
+  assert.doesNotMatch(stay, /RESERVÁ TU LUGAR/);
+  assert.doesNotMatch(stay, /bookingOpen/);
 });
 
 test('genera una clave idempotente distinta por intento de reserva web', () => {
