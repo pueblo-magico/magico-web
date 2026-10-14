@@ -14,7 +14,7 @@ import {
   ClockIcon, UsersThreeIcon, CalendarIcon, WhatsappLogoIcon,
   ForkKnifeIcon, PawPrintIcon, WheelchairIcon
 } from '@phosphor-icons/react';
-import { WA_MAGICO, SITE_URL } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO, SITE_URL } from './data/config';
 import { ESTADIA_PRICES } from './data/retreats';
 import { ROUTES } from './routes';
 
@@ -56,12 +56,10 @@ const Hero: React.FC = () => (
       </div>
       <div className="flex flex-col sm:flex-row gap-4">
         <a
-          href={WA_ESTADIA}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={RESERVATION_START_PATH}
           className="inline-flex items-center justify-center gap-2 bg-gold text-white px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-brand transition-[background-color,color] duration-300 shadow-lg"
         >
-          <WhatsappLogo className="w-4 h-4 flex-shrink-0" weight="fill" />
+          <CalendarIcon className="w-4 h-4 flex-shrink-0" weight="bold" />
           Reservar mi lugar
         </a>
         <a

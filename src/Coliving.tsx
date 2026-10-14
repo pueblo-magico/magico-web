@@ -10,7 +10,7 @@ import {
   Mountains, Bank, DownloadSimple, FilePdf, CircleNotch, InstagramLogo,
   CaretLeft, CaretRight, ForkKnifeIcon, PawPrintIcon, WheelchairIcon,
 } from '@phosphor-icons/react';
-import { WA_MAGICO, SITE_URL } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO, SITE_URL } from './data/config';
 import { COLIVING_PRICES } from './data/retreats';
 import { ROUTES } from './routes';
 import { submitForm } from './lib/submitForm';
@@ -840,12 +840,10 @@ const CTAFinal: React.FC = () => (
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href={WA_COLIVING}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={RESERVATION_START_PATH}
             className="inline-flex items-center justify-center gap-3 bg-brand text-white px-10 py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-gold transition-colors duration-300 shadow-lg"
           >
-            <WhatsappLogo className="w-5 h-5 flex-shrink-0" weight="fill" />
+            <CalendarIcon className="w-5 h-5 flex-shrink-0" weight="bold" />
             Reservar mi lugar
           </a>
           <a

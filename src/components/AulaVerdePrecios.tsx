@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
-import { WA_MAGICO } from '../data/config';
+import { RESERVATION_START_PATH, WA_MAGICO } from '../data/config';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const AulaVerdePrecios: React.FC = () => {
@@ -29,6 +29,7 @@ const AulaVerdePrecios: React.FC = () => {
           {t.aula_verde.precios.cards.map((card: any, index: number) => {
             const isFeatured = !!card.badge;
             const isCustom = index === 2;
+            const startsReservation = /reserv|book/i.test(card.btn);
 
             return (
               <div key={index} className={`w-full h-full ${isFeatured ? 'z-10 md:-translate-y-4' : 'md:py-6 lg:py-10'}`} data-reveal data-delay={String(index + 1)}>
@@ -68,7 +69,11 @@ const AulaVerdePrecios: React.FC = () => {
                   </ul>
 
                   <div className="mt-auto text-center">
-                    <a href={getWaLink(card.title)} target="_blank" rel="noreferrer" className="inline-block w-full">
+                    <a
+                      href={startsReservation ? RESERVATION_START_PATH : getWaLink(card.title)}
+                      {...(!startsReservation ? { target: '_blank', rel: 'noreferrer' } : {})}
+                      className="inline-block w-full"
+                    >
                       <button 
                         className={`w-full font-bold px-6 py-3 rounded-full text-sm uppercase transition-all duration-200 shadow-lg ${
                           isFeatured 

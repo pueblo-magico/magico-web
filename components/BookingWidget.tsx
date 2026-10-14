@@ -6,7 +6,7 @@ import {
   UserRound, Users, Utensils, X,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { WA_MAGICO } from '../src/data/config';
+import { RESERVATION_START_PATH, WA_MAGICO } from '../src/data/config';
 import {
   BookingApiError,
   type AccommodationType,
@@ -222,6 +222,13 @@ function accommodationImage(type: AccommodationType): string {
   return '/uploads/habitaciones.webp';
 }
 
+function shouldOpenFromReservationLink(): boolean {
+  if (typeof window === 'undefined') return false;
+  const reservationUrl = new URL(RESERVATION_START_PATH, window.location.origin);
+  return window.location.pathname === reservationUrl.pathname
+    && new URLSearchParams(window.location.search).get('reservar') === '1';
+}
+
 export const BookingWidget: React.FC<{
   compact?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -230,7 +237,7 @@ export const BookingWidget: React.FC<{
   const { language } = useLanguage();
   const c = COPY[language];
   const today = localTodayIso();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(shouldOpenFromReservationLink);
   const [step, setStep] = useState<Step>(1);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');

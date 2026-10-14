@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { TrendingDown, Plus, Minus, X } from 'lucide-react';
-import { WA_MAGICO } from '../data/config';
-import { RETREATS_DATA } from '../data/retreats';
+import { RESERVATION_START_PATH } from '../data/config';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const C = {
@@ -192,8 +191,6 @@ const Calculadora: React.FC = () => {
 const FamilionPrecios: React.FC = () => {
   const { t } = useLanguage();
   const p = (t.familion as any).precios;
-  const waLink = 'https://wa.me/' + WA_MAGICO + '?text=' + encodeURIComponent(RETREATS_DATA.familion.message);
-
   return (
     <section id="precios" className="py-16 md:py-24 px-6 bg-brand-green text-white rounded-3xl relative overflow-hidden">
       <div className="absolute inset-0 border border-white/20 rounded-3xl backdrop-blur-sm pointer-events-none" />
@@ -309,7 +306,7 @@ const FamilionPrecios: React.FC = () => {
 
         {/* CTA */}
         <div className="text-center">
-          <a href={waLink} className="btn-gold w-full md:w-auto block md:inline-block mb-5">
+          <a href={RESERVATION_START_PATH} className="btn-gold w-full md:w-auto block md:inline-block mb-5">
             {p.btn}
           </a>
           <p className="text-white/50 text-xs italic">{p.footer}</p>

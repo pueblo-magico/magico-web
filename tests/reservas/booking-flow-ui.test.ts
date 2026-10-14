@@ -82,6 +82,47 @@ test('el widget embebido conserva un lanzador compacto sin duplicar el hero', ()
   assert.match(home, /<BookingWidget compact activeViewport="desktop"/);
 });
 
+test('los CTA que prometen reservar entran al flujo y no abren una conversación', () => {
+  const config = readFileSync(new URL('../../src/data/config.ts', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const content = JSON.parse(readFileSync(new URL('../../data.json', import.meta.url), 'utf8'));
+  const reservationViews = [
+    '../../src/Estadia.tsx',
+    '../../src/Coliving.tsx',
+    '../../src/AlmaDeLobo.tsx',
+    '../../src/Despertar.tsx',
+    '../../src/IntiRaymi.tsx',
+    '../../src/KillaRaymi.tsx',
+    '../../src/PachamamaFest.tsx',
+    '../../src/CicloVitalFemenino.tsx',
+    '../../src/CordobaFlyFishing.tsx',
+    '../../src/VueloDelCondor.tsx',
+    '../../src/Familion.tsx',
+    '../../src/Gondorbows.tsx',
+    '../../src/components/AchalaVivaHero.tsx',
+    '../../src/components/AulaVerdePrecios.tsx',
+    '../../src/components/CicloVitalFemeninoHero.tsx',
+    '../../src/components/GondorbowsHero.tsx',
+    '../../src/components/GondorbowsPrecios.tsx',
+    '../../src/components/VueloDelCondorPrecios.tsx',
+    '../../src/components/VueloDelCondorInversion.tsx',
+    '../../src/components/FamilionHero.tsx',
+    '../../src/components/FamilionPrecios.tsx',
+  ];
+
+  assert.match(config, /RESERVATION_START_PATH = '\/estadia\?reservar=1'/);
+  assert.match(widget, /useState\(shouldOpenFromReservationLink\)/);
+  assert.match(widget, /get\('reservar'\) === '1'/);
+  assert.equal(content.es.menu.bookLink, '/estadia?reservar=1');
+  assert.equal(content.en.menu.bookLink, '/estadia?reservar=1');
+  assert.equal(content.es.experiences.link, '/estadia?reservar=1');
+  assert.equal(content.en.experiences.link, '/estadia?reservar=1');
+  for (const path of reservationViews) {
+    const source = readFileSync(new URL(path, import.meta.url), 'utf8');
+    assert.match(source, /RESERVATION_START_PATH/, `${path} debe usar la entrada canónica de reserva`);
+  }
+});
+
 test('los retornos de Mercado Pago consultan el estado persistido y tienen fallback SPA', () => {
   const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
   const redirects = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8');

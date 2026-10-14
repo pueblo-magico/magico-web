@@ -1,4 +1,5 @@
 import React from 'react';
+import { RESERVATION_START_PATH } from '../data/config';
 
 const AchalaVivaHero: React.FC = () => {
   return (
@@ -51,7 +52,7 @@ const AchalaVivaHero: React.FC = () => {
 
         {/* CTAs */}
         <div className="hero-cta flex flex-col sm:flex-row gap-4 justify-center items-center w-full mb-8">
-          <a href="#precios" className="btn-gold inline-flex items-center justify-center">
+          <a href={RESERVATION_START_PATH} className="btn-gold inline-flex items-center justify-center">
             Quiero asegurar mi lugar
           </a>
           <a href="#experiencia" className="btn-glass inline-flex items-center justify-center">

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Flame, Music, Leaf, Heart, Star, Users, Sun, Moon, Calendar, Compass, ChevronDown, PawPrint, Instagram, Linkedin, Youtube, type LucideIcon } from 'lucide-react';
 import { img } from './lib/img';
-import { WA_MAGICO } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO } from './data/config';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 const WA_INFO    = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Me interesa el Festival de Solsticio del 20 y 21 de junio. ¿Me pueden dar más info?')}`;
-const WA_RESERVA = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Quiero reservar mi lugar para el Festival de Solsticio del 20 y 21 de junio. ¿Cómo procedo?')}`;
 
 const C = {
   green: '#005333',
@@ -229,9 +228,7 @@ const IntiRaymi: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
             <a
-              href={WA_RESERVA}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={RESERVATION_START_PATH}
               className="btn-gold text-sm py-4 px-8 inline-block"
             >
               Quiero participar
@@ -729,7 +726,7 @@ const IntiRaymi: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer"
+              <a href={RESERVATION_START_PATH}
                 className="block text-center py-3 px-4 rounded-xl border font-bold text-sm transition-colors hover:bg-brand-green hover:text-white hover:border-brand-green"
                 style={{ borderColor: 'rgba(0,83,51,0.3)', color: C.green }}>
                 Quiero el pase diario
@@ -758,7 +755,7 @@ const IntiRaymi: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer"
+              <a href={RESERVATION_START_PATH}
                 className="block text-center py-3 px-4 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: C.green }}>
                 Reservar habitación
@@ -785,7 +782,7 @@ const IntiRaymi: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer"
+              <a href={RESERVATION_START_PATH}
                 className="block text-center py-3 px-4 rounded-xl border font-bold text-sm transition-colors"
                 style={{ borderColor: 'rgba(212,175,55,0.4)', color: '#7A5C00', backgroundColor: 'rgba(212,175,55,0.08)' }}>
                 Reservar pijamada
@@ -892,7 +889,7 @@ const IntiRaymi: React.FC = () => {
             Y a recordar, juntos, lo esencial.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer"
+            <a href={RESERVATION_START_PATH}
               className="btn-gold text-sm py-5 px-10 inline-block">
               Reservar mi lugar
             </a>

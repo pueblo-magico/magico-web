@@ -1,5 +1,5 @@
 import React from 'react';
-import { WA_GONDOR } from '../data/config';
+import { RESERVATION_START_PATH, WA_GONDOR } from '../data/config';
 import { RETREATS_DATA } from '../data/retreats';
 
 const INCLUYE = [
@@ -12,9 +12,6 @@ const INCLUYE = [
 ];
 
 const GondorbowsPrecios: React.FC = () => {
-  const waMain = 'https://wa.me/' + WA_GONDOR + '?text=' +
-    encodeURIComponent(RETREATS_DATA.gondorbows.message);
-
   const waFechas = 'https://wa.me/' + WA_GONDOR + '?text=' +
     encodeURIComponent('¡Hola Fausto! Me encantó la propuesta de Gondorbows pero no puedo en esta fecha. ¿Me avisás cuando lancen nuevas fechas? 🗓️');
 
@@ -118,7 +115,7 @@ const GondorbowsPrecios: React.FC = () => {
 
           {/* CTAs */}
           <div className="flex flex-col items-center gap-4 pb-4">
-            <a href={waMain} className="btn-gold">RESERVAR MI LUGAR AHORA</a>
+            <a href={RESERVATION_START_PATH} className="btn-gold">RESERVAR MI LUGAR AHORA</a>
             <a href={waFechas} className="text-white/55 hover:text-gold transition-colors text-sm underline underline-offset-4">
               ¿No podés en esta fecha? Consultá otras fechas.
             </a>
