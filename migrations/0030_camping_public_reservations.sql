@@ -21,42 +21,30 @@ BEGIN
   WHERE id = 4;
 END;
 
-DROP TRIGGER IF EXISTS reserva_estadias_mapear_espacio_insert;
-CREATE TRIGGER reserva_estadias_mapear_espacio_insert
+CREATE TRIGGER reserva_estadias_mapear_camping_insert
 AFTER INSERT ON reserva_estadias
 FOR EACH ROW
-WHEN NEW.alojamiento_legacy_id IN (1, 2, 3, 4)
+WHEN NEW.alojamiento_legacy_id = 4
 BEGIN
   INSERT OR REPLACE INTO reserva_estadia_espacios (
     reserva_estadia_id, espacio_id, origen, created_at, updated_at
   )
   SELECT NEW.id, e.id, 'mapeo_legacy', NEW.created_at, NEW.updated_at
   FROM espacios e
-  WHERE e.codigo = CASE NEW.alojamiento_legacy_id
-    WHEN 1 THEN 'domo-1'
-    WHEN 2 THEN 'domo-2'
-    WHEN 3 THEN 'refugio'
-    WHEN 4 THEN 'camping-exterior'
-  END;
+  WHERE e.codigo = 'camping-exterior';
 END;
 
-DROP TRIGGER IF EXISTS reserva_estadias_mapear_espacio_update;
-CREATE TRIGGER reserva_estadias_mapear_espacio_update
+CREATE TRIGGER reserva_estadias_mapear_camping_update
 AFTER UPDATE OF alojamiento_legacy_id ON reserva_estadias
 FOR EACH ROW
-WHEN NEW.alojamiento_legacy_id IN (1, 2, 3, 4)
+WHEN NEW.alojamiento_legacy_id = 4
 BEGIN
   INSERT OR REPLACE INTO reserva_estadia_espacios (
     reserva_estadia_id, espacio_id, origen, created_at, updated_at
   )
   SELECT NEW.id, e.id, 'mapeo_legacy', OLD.created_at, NEW.updated_at
   FROM espacios e
-  WHERE e.codigo = CASE NEW.alojamiento_legacy_id
-    WHEN 1 THEN 'domo-1'
-    WHEN 2 THEN 'domo-2'
-    WHEN 3 THEN 'refugio'
-    WHEN 4 THEN 'camping-exterior'
-  END;
+  WHERE e.codigo = 'camping-exterior';
 END;
 
 INSERT INTO schema_migrations (version, descripcion, checksum_ref)
