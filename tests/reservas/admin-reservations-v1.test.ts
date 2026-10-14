@@ -81,6 +81,10 @@ function crearReserva(sqlite: DatabaseSync, indice: number): number {
 test('lista reservas con paginación estable y filtros combinables', async () => {
   const sqlite = baseCompleta();
   for (let indice = 1; indice <= 12; indice++) crearReserva(sqlite, indice);
+  sqlite.prepare('UPDATE reservas SET monto_total_centavos = ? WHERE cliente_nombre = ?')
+    .run(250_000, 'Titular 1');
+  sqlite.prepare('UPDATE reservas SET monto_total_centavos = ? WHERE cliente_nombre = ?')
+    .run(75_000, 'Titular 2');
   const repositorio = new D1RepositorioGestionReservasAdmin(d1(sqlite));
 
   const pagina = await listarReservasAdmin({ pagina: 2, limite: 5 }, repositorio);
@@ -101,6 +105,22 @@ test('lista reservas con paginación estable y filtros combinables', async () =>
   assert.equal(porCodigo.total, 1);
   assert.equal(porCodigo.items[0].codigo, filtrada.items[0].codigo);
   assert.ok(porCodigo.items[0].createdAt);
+
+  const porTitular = await listarReservasAdmin({
+    pagina: 1, limite: 20, orden: 'titular', direccion: 'asc',
+  }, repositorio);
+  assert.deepEqual(
+    porTitular.items.map(item => item.titular),
+    [...porTitular.items.map(item => item.titular)].sort((a, b) => a.localeCompare(b))
+  );
+
+  const porTotalDesc = await listarReservasAdmin({
+    pagina: 1, limite: 20, orden: 'total', direccion: 'desc',
+  }, repositorio);
+  assert.deepEqual(
+    porTotalDesc.items.map(item => item.montoTotalCentavos),
+    [...porTotalDesc.items.map(item => item.montoTotalCentavos)].sort((a, b) => b - a)
+  );
   sqlite.close();
 });
 
@@ -153,6 +173,16 @@ test('rechaza filtros inválidos antes de consultar el repositorio', () => {
     /paginación es inválida/
   );
   assert.equal(consultado, false);
+  assert.throws(
+    () => listarReservasAdmin({ pagina: 1, limite: 25, orden: 'DROP TABLE reservas' as any }, {
+      async listar() { consultado = true; throw new Error('no'); },
+      async obtenerDetalle() { return null; },
+      async crear() { throw new Error('no'); },
+      async editar() { return null; },
+      async cambiarEstado() { return null; },
+    }),
+    /criterio de orden es inválido/
+  );
 });
 
 test('el listado v1 exige sesión administrativa', async () => {

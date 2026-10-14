@@ -4,6 +4,7 @@ import type {
   CuentaCobroReservaAdmin,
   DetalleReservaAdmin,
   FiltrosReservasAdmin,
+  OrdenReservasAdmin,
   PaginaReservasAdmin,
   ResumenReservaAdmin,
 } from '../../_domain/reservas/adminReservationManagement.ts';
@@ -38,6 +39,17 @@ const FROM_RESERVA = `
   LEFT JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
   LEFT JOIN espacios e ON e.id = ree.espacio_id
 `;
+
+const COLUMNA_ORDEN: Record<OrdenReservasAdmin, string> = {
+  creada: 'r.created_at',
+  titular: 'LOWER(r.cliente_nombre)',
+  alojamiento: 'LOWER(COALESCE(e.nombre, a.tipo))',
+  checkin: 're.fecha_checkin',
+  estado: 'r.estado_flujo',
+  origen: "LOWER(COALESCE(r.canal_origen, ''))",
+  total: 'r.monto_total_centavos',
+  unidad: "LOWER(COALESCE(r.unidad_asignada, ''))",
+};
 
 function mapearResumen(row: Record<string, unknown>): ResumenReservaAdmin {
   return {
@@ -90,11 +102,13 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
   async listar(filtros: FiltrosReservasAdmin): Promise<PaginaReservasAdmin> {
     const { where, valores } = consultaFiltros(filtros);
     const offset = (filtros.pagina - 1) * filtros.limite;
+    const columnaOrden = COLUMNA_ORDEN[filtros.orden];
+    const direccionOrden = filtros.direccion === 'asc' ? 'ASC' : 'DESC';
     const [totalRow, result] = await Promise.all([
       this.db.prepare(`SELECT COUNT(*) total ${FROM_RESERVA} ${where}`).bind(...valores).first(),
       this.db.prepare(`
         SELECT ${SELECT_RESUMEN} ${FROM_RESERVA} ${where}
-        ORDER BY re.fecha_checkin DESC, r.id DESC LIMIT ? OFFSET ?
+        ORDER BY ${columnaOrden} ${direccionOrden}, r.id ${direccionOrden} LIMIT ? OFFSET ?
       `).bind(...valores, filtros.limite, offset).all(),
     ]);
     const total = Number(totalRow?.total) || 0;

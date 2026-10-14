@@ -61,6 +61,18 @@ test('muestra el identificador y la fecha de creación y permite buscarlos por c
   assert.match(source, /codigo: item\.codigo/);
 });
 
+test('ordena el historial completo desde las cabeceras y conserva el orden entre páginas', () => {
+  assert.match(source, /const CabeceraHistorialOrdenable/);
+  assert.match(source, /aria-sort=\{activa/);
+  assert.match(source, /campo="creada" label="Reserva"/);
+  assert.match(source, /campo="titular" label="Huésped"/);
+  assert.match(source, /campo="checkin" label="Fechas"/);
+  assert.match(source, /campo="total" label="Total"/);
+  assert.match(source, /pagina: String\(pagina\), limite: '25', orden, direccion/);
+  assert.match(source, /onOrdenar=\{ordenarHistorial\}/);
+  assert.match(source, /\{ value: 'checkin', label: 'Fecha de llegada' \}/);
+});
+
 test('reemplaza el icono de actualizar por el spinner durante la carga', () => {
   assert.match(source, /icon=\{loading \? null : <RefreshCw size=\{15\} \/>\}/);
   assert.match(source, /icon=\{cargando \? null : <RefreshCw size=\{15\} \/>\}/);

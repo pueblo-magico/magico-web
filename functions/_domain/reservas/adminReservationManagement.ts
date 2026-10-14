@@ -2,6 +2,18 @@ import { esFechaIso } from './dateRange.ts';
 import { ErrorReserva } from './errors.ts';
 import { normalizarEstadoReserva } from './reservationCatalog.ts';
 
+export type OrdenReservasAdmin =
+  | 'creada'
+  | 'titular'
+  | 'alojamiento'
+  | 'checkin'
+  | 'estado'
+  | 'origen'
+  | 'total'
+  | 'unidad';
+
+export type DireccionOrdenReservasAdmin = 'asc' | 'desc';
+
 export type FiltrosReservasAdmin = {
   pagina: number;
   limite: number;
@@ -11,6 +23,8 @@ export type FiltrosReservasAdmin = {
   origen: string | null;
   espacioCodigo: string | null;
   titular: string | null;
+  orden: OrdenReservasAdmin;
+  direccion: DireccionOrdenReservasAdmin;
 };
 
 export function validarFiltrosReservasAdmin(
@@ -30,6 +44,14 @@ export function validarFiltrosReservasAdmin(
   }
   const estado = entrada.estado?.trim() || null;
   const estadoCanonico = estado ? normalizarEstadoReserva(estado) : null;
+  const orden = entrada.orden ?? 'checkin';
+  const direccion = entrada.direccion ?? 'desc';
+  if (!['creada', 'titular', 'alojamiento', 'checkin', 'estado', 'origen', 'total', 'unidad'].includes(orden)) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El criterio de orden es inválido.');
+  }
+  if (!['asc', 'desc'].includes(direccion)) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'La dirección de orden es inválida.');
+  }
   const normalizar = (valor: string | null | undefined, maximo: number) => {
     const limpio = valor?.trim() || null;
     if (limpio && limpio.length > maximo) throw new ErrorReserva('DATOS_INVALIDOS', 'Un filtro es demasiado largo.');
@@ -40,6 +62,8 @@ export function validarFiltrosReservasAdmin(
     origen: normalizar(entrada.origen, 80),
     espacioCodigo: normalizar(entrada.espacioCodigo, 80),
     titular: normalizar(entrada.titular, 120),
+    orden,
+    direccion,
   };
 }
 

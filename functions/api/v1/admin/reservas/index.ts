@@ -6,6 +6,10 @@ import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../_interfaces/h
 import { jsonReserva as json, respuestaErrorReserva } from '../../../../_interfaces/http/reservasHttp.ts';
 import { requirePermission } from '../../../../_lib/authGuard.ts';
 import { programarDespachoOutbox } from '../../../../_interfaces/http/backgroundOutboxDispatch.ts';
+import type {
+  DireccionOrdenReservasAdmin,
+  OrdenReservasAdmin,
+} from '../../../../_domain/reservas/adminReservationManagement.ts';
 
 async function listar(request: Request, env: any): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.leer');
@@ -21,6 +25,8 @@ async function listar(request: Request, env: any): Promise<Response> {
       origen: params.get('origen'),
       espacioCodigo: params.get('espacio'),
       titular: params.get('titular'),
+      orden: (params.get('orden') || undefined) as OrdenReservasAdmin | undefined,
+      direccion: (params.get('direccion') || undefined) as DireccionOrdenReservasAdmin | undefined,
     }, new D1RepositorioGestionReservasAdmin(env.DB));
     return json({ data: pagina.items, meta: {
       version: 'v1', pagina: pagina.pagina, limite: pagina.limite,

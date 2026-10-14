@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import {
   Badge, Button, Card, Checkbox, CodeBadge, CopyButton, DateRangeField, DescriptionList,
   DescriptionListItem, EmptyState, IconButton, Input, LoadingState, Modal, MoneyField, NumberField,
@@ -57,6 +57,8 @@ const vistaDesdeRuta = (pathname: string): VistaActiva | null => {
   return VISTA_POR_SEGMENTO[segmento] ?? null;
 };
 type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
+type OrdenHistorial = 'creada' | 'titular' | 'alojamiento' | 'checkin' | 'estado' | 'origen' | 'total' | 'unidad';
+type DireccionOrdenHistorial = 'asc' | 'desc';
 
 type Alojamiento = {
   id: number;
@@ -1072,21 +1074,58 @@ const EstadoBadge: React.FC<{ estado: string }> = ({ estado }) => (
   </span>
 );
 
-const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva) => void }> = ({ reservas, onSeleccionar }) => (
+const CabeceraHistorialOrdenable: React.FC<{
+  campo: OrdenHistorial;
+  label: string;
+  orden: OrdenHistorial;
+  direccion: DireccionOrdenHistorial;
+  onOrdenar: (campo: OrdenHistorial) => void;
+  alineacion?: 'left' | 'right';
+}> = ({ campo, label, orden, direccion, onOrdenar, alineacion = 'left' }) => {
+  const activa = campo === orden;
+  const Icono = activa ? (direccion === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th
+      scope="col"
+      aria-sort={activa ? (direccion === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={`border-b border-gray-200 px-3 py-2.5 ${alineacion === 'right' ? 'text-right' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={() => onOrdenar(campo)}
+        className={`inline-flex items-center gap-1 rounded hover:text-brand ${alineacion === 'right' ? 'ml-auto' : ''} ${FOCUS_RING}`}
+      >
+        {label}
+        <Icono size={13} aria-hidden="true" className={activa ? 'text-brand' : 'text-gray-400'} />
+        <span className="sr-only">
+          {activa ? `Orden ${direccion === 'asc' ? 'ascendente' : 'descendente'}. Cambiar dirección.` : 'Ordenar por esta columna.'}
+        </span>
+      </button>
+    </th>
+  );
+};
+
+const TablaHistorial: React.FC<{
+  reservas: Reserva[];
+  onSeleccionar: (r: Reserva) => void;
+  orden: OrdenHistorial;
+  direccion: DireccionOrdenHistorial;
+  onOrdenar: (campo: OrdenHistorial) => void;
+}> = ({ reservas, onSeleccionar, orden, direccion, onOrdenar }) => (
   <>
     {/* Tabla — pantallas sm y más grandes */}
     <div className="hidden sm:block overflow-x-auto">
       <table className="text-sm border-collapse w-full">
         <thead>
           <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500 bg-gray-50">
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Reserva</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Huésped</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Alojamiento</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5 tabular-nums">Fechas</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Estado</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Canal</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5 text-right tabular-nums">Total</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Unidad</th>
+            <CabeceraHistorialOrdenable campo="creada" label="Reserva" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="titular" label="Huésped" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="alojamiento" label="Alojamiento" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="checkin" label="Fechas" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="estado" label="Estado" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="origen" label="Canal" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="total" label="Total" orden={orden} direccion={direccion} onOrdenar={onOrdenar} alineacion="right" />
+            <CabeceraHistorialOrdenable campo="unidad" label="Unidad" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
           </tr>
         </thead>
         <tbody>
@@ -1120,6 +1159,36 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
     </div>
 
     {/* Lista de tarjetas — mobile */}
+    <div className="sm:hidden border-b border-gray-100 bg-gray-50 px-4 py-3">
+      <div className="flex items-end gap-2">
+        <Select
+          className="min-w-0 flex-1"
+          label="Ordenar por"
+          placeholder="Elegí una columna"
+          value={orden}
+          options={[
+            { value: 'creada', label: 'Reserva creada' },
+            { value: 'titular', label: 'Huésped' },
+            { value: 'alojamiento', label: 'Alojamiento' },
+            { value: 'checkin', label: 'Fecha de llegada' },
+            { value: 'estado', label: 'Estado' },
+            { value: 'origen', label: 'Canal' },
+            { value: 'total', label: 'Total' },
+            { value: 'unidad', label: 'Unidad' },
+          ]}
+          onChange={value => value && onOrdenar(value as OrdenHistorial)}
+        />
+        <button
+          type="button"
+          onClick={() => onOrdenar(orden)}
+          aria-label={`Orden ${direccion === 'asc' ? 'ascendente' : 'descendente'}. Cambiar dirección.`}
+          className={`mb-px inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-gray-300 bg-white text-brand ${FOCUS_RING}`}
+        >
+          {direccion === 'asc' ? <ArrowUp size={16} aria-hidden="true" /> : <ArrowDown size={16} aria-hidden="true" />}
+        </button>
+      </div>
+    </div>
+
     <div className="sm:hidden divide-y divide-gray-100">
       {reservas.map(r => (
         <button
@@ -3342,6 +3411,8 @@ const PanelReservas: React.FC = () => {
   const [historialPagina, setHistorialPagina] = useState(1);
   const [historialTotalPaginas, setHistorialTotalPaginas] = useState(1);
   const [historialTotal, setHistorialTotal] = useState(0);
+  const [historialOrden, setHistorialOrden] = useState<OrdenHistorial>('checkin');
+  const [historialDireccion, setHistorialDireccion] = useState<DireccionOrdenHistorial>('desc');
   const [consultas, setConsultas] = useState<Consulta[] | null>(null);
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
@@ -3386,10 +3457,17 @@ const PanelReservas: React.FC = () => {
       .finally(() => setLoading(false));
   };
 
-  const cargarHistorial = (pagina = historialPagina, titular = busqueda) => {
+  const cargarHistorial = (
+    pagina = historialPagina,
+    titular = busqueda,
+    orden = historialOrden,
+    direccion = historialDireccion
+  ) => {
     setLoading(true);
     setError(null);
-    const params = new URLSearchParams({ pagina: String(pagina), limite: '25' });
+    const params = new URLSearchParams({
+      pagina: String(pagina), limite: '25', orden, direccion,
+    });
     if (titular.trim()) params.set('titular', titular.trim());
     return paginaReservasV1(params)
       .then(({ reservas: items, meta }) => {
@@ -3405,6 +3483,14 @@ const PanelReservas: React.FC = () => {
         return [];
       })
       .finally(() => setLoading(false));
+  };
+
+  const ordenarHistorial = (campo: OrdenHistorial) => {
+    const nuevaDireccion: DireccionOrdenHistorial =
+      campo === historialOrden ? (historialDireccion === 'asc' ? 'desc' : 'asc') : 'asc';
+    setHistorialOrden(campo);
+    setHistorialDireccion(nuevaDireccion);
+    void cargarHistorial(1, busqueda, campo, nuevaDireccion);
   };
 
   const cargarConsultas = () => {
@@ -3897,7 +3983,13 @@ const PanelReservas: React.FC = () => {
               </div>
             </div>
             <div className="admin-surface bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <TablaHistorial reservas={reservasHistorialFiltradas} onSeleccionar={r => abrirPorId(r.id)} />
+              <TablaHistorial
+                reservas={reservasHistorialFiltradas}
+                onSeleccionar={r => abrirPorId(r.id)}
+                orden={historialOrden}
+                direccion={historialDireccion}
+                onOrdenar={ordenarHistorial}
+              />
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
               <span>{historialTotal} reserva{historialTotal === 1 ? '' : 's'} · página {historialPagina} de {historialTotalPaginas}</span>
