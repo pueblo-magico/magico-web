@@ -88,8 +88,10 @@ test('aplica porcentajes distintos a ambos lados de un umbral de seña', () => {
 
 test('el repositorio D1 carga y normaliza el plan publicado', async () => {
   const bindings: unknown[][] = [];
+  const queries: string[] = [];
   const db = {
     prepare(query: string) {
+      queries.push(query);
       return {
         bind(...values: unknown[]) { bindings.push(values); return this; },
         async first() {
@@ -113,6 +115,9 @@ test('el repositorio D1 carga y normaliza el plan publicado', async () => {
   assert.equal(configuracion?.reglasPrecio[0].importeCentavos, 5000);
   assert.equal(configuracion?.reglasSena[0].subtotalHastaCentavos, null);
   assert.deepEqual(bindings, [[9], [9]]);
+  assert.match(queries[0], /WHERE estado = 'publicado'/);
+  assert.match(queries[0], /ORDER BY publicado_at DESC, id DESC LIMIT 1/);
+  assert.doesNotMatch(queries[0], /codigo = 'alojamiento-base'/);
 });
 
 test('el repositorio D1 devuelve null si no existe un plan publicado', async () => {

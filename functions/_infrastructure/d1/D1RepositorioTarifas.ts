@@ -19,8 +19,8 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
   async obtenerPublicada(): Promise<ConfiguracionTarifa | null> {
     const plan = await this.db.prepare(`
       SELECT id, codigo, version, moneda
-      FROM planes_tarifa WHERE codigo = 'alojamiento-base' AND estado = 'publicado'
-      LIMIT 1
+      FROM planes_tarifa WHERE estado = 'publicado'
+      ORDER BY publicado_at DESC, id DESC LIMIT 1
     `).first();
     if (!plan) return null;
     const planId = Number(plan.id);

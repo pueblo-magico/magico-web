@@ -1777,6 +1777,14 @@ type ConfiguracionBaseApi = {
 type BorradorTarifaUi = NonNullable<ConfiguracionBaseApi['tarifa']>;
 type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
 type BorradorInventarioUi = ConfiguracionBaseApi['inventario'];
+type TipoAlojamientoTarifa = BorradorTarifaUi['temporadas'][number]['reglas'][number]['tipoAlojamiento'];
+
+const OPCIONES_ALOJAMIENTO_TARIFA: Array<{ value: TipoAlojamientoTarifa; label: string }> = [
+  { value: 'domo', label: 'Domo' },
+  { value: 'refugio', label: 'Refugio' },
+  { value: 'camping', label: 'Camping' },
+  { value: 'bell_tent', label: 'Carpa equipada' },
+];
 
 type CambioConfiguracion = {
   campo: string;
@@ -2026,6 +2034,49 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     } : actual);
   };
 
+  const agregarReglaPrecio = (temporadaIndice: number) => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const temporada = actual.temporadas[temporadaIndice];
+      if (!temporada) return actual;
+      const tiposActivos = OPCIONES_ALOJAMIENTO_TARIFA
+        .map(opcion => opcion.value)
+        .filter(tipo => inventarioDraft.some(espacio =>
+          espacio.tipo === tipo && espacio.estado === 'activo' && espacio.reservableGeneral
+        ));
+      const tipoSinTarifa = tiposActivos.find(tipo => !temporada.reglas.some(regla => regla.tipoAlojamiento === tipo));
+      const tipoAlojamiento = tipoSinTarifa ?? tiposActivos[0] ?? 'domo';
+      const capacidad = Math.max(1, ...inventarioDraft
+        .filter(espacio => espacio.tipo === tipoAlojamiento)
+        .map(espacio => espacio.capacidadComercial));
+      const nuevaRegla: BorradorTarifaUi['temporadas'][number]['reglas'][number] = {
+        tipoAlojamiento,
+        modalidad: tipoAlojamiento === 'camping' ? 'camping' : 'cualquiera',
+        ocupacionMin: 1,
+        ocupacionMax: capacidad,
+        baseCalculo: 'persona_noche',
+        importeCentavos: 0,
+        exclusividadDesde: null,
+        exclusividadHasta: null,
+      };
+      return {
+        ...actual,
+        temporadas: actual.temporadas.map((item, indice) => indice === temporadaIndice
+          ? { ...item, reglas: [...item.reglas, nuevaRegla] }
+          : item),
+      };
+    });
+  };
+
+  const eliminarReglaPrecio = (temporadaIndice: number, reglaIndice: number) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual,
+      temporadas: actual.temporadas.map((temporada, indice) => indice === temporadaIndice
+        ? { ...temporada, reglas: temporada.reglas.filter((_, posicion) => posicion !== reglaIndice) }
+        : temporada),
+    } : actual);
+  };
+
   const actualizarSena = (indice: number, cambio: Partial<BorradorTarifaUi['senas'][number]>) => {
     setTarifaDraft(actual => actual ? {
       ...actual,
@@ -2250,17 +2301,25 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                   </label>
                   <div className="text-xs text-gray-500"><strong className="block text-gray-700">Código</strong>{temporada.codigo}</div>
                 </div>
-                <div className="mt-4 overflow-x-auto">
-                  <table className="min-w-[880px] w-full text-left text-xs">
-                    <thead><tr className="border-b text-gray-500"><th className="py-2">Alojamiento</th><th>Modalidad</th><th>Ocupación</th><th>Base</th><th>Precio ARS</th><th>Exclusividad</th></tr></thead>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Tarifas de alojamiento</p>
+                    <p className="mt-1 text-xs text-gray-500">Agregá una fila por alojamiento, modalidad o rango de ocupación que quieras vender.</p>
+                  </div>
+                  {esSuperAdmin && <Button size="sm" variant="secondary" onPress={() => agregarReglaPrecio(temporadaIndice)}><Plus size={15} />Agregar tarifa</Button>}
+                </div>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="min-w-[940px] w-full text-left text-xs">
+                    <thead><tr className="border-b text-gray-500"><th className="py-2">Alojamiento</th><th>Modalidad</th><th>Ocupación</th><th>Base</th><th>Precio ARS</th><th>Exclusividad</th>{esSuperAdmin && <th className="w-12"><span className="sr-only">Acciones</span></th>}</tr></thead>
                     <tbody>{temporada.reglas.map((regla, reglaIndice) => (
                       <tr key={reglaIndice} className="border-b border-gray-100">
-                        <td className="py-2"><select value={regla.tipoAlojamiento} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { tipoAlojamiento: event.target.value as any })} className="rounded border px-2 py-1"><option value="domo">Domo</option><option value="refugio">Refugio</option><option value="camping">Camping</option><option value="bell_tent">Carpa</option></select></td>
+                        <td className="py-2"><select aria-label={`Alojamiento de tarifa ${reglaIndice + 1}`} value={regla.tipoAlojamiento} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { tipoAlojamiento: event.target.value as TipoAlojamientoTarifa })} className="rounded border px-2 py-1">{OPCIONES_ALOJAMIENTO_TARIFA.map(opcion => <option key={opcion.value} value={opcion.value}>{opcion.label}</option>)}</select></td>
                         <td><select value={regla.modalidad} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { modalidad: event.target.value as any })} className="rounded border px-2 py-1"><option value="cualquiera">Cualquiera</option><option value="privada">Privada</option><option value="compartida">Compartida</option><option value="camping">Camping</option></select></td>
                         <td><input aria-label="Ocupación mínima" type="number" min={1} value={regla.ocupacionMin} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { ocupacionMin: Number(event.target.value) })} className="w-14 rounded border px-2 py-1" /> – <input aria-label="Ocupación máxima" type="number" min={1} value={regla.ocupacionMax} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { ocupacionMax: Number(event.target.value) })} className="w-14 rounded border px-2 py-1" /></td>
                         <td><select value={regla.baseCalculo} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { baseCalculo: event.target.value as any })} className="rounded border px-2 py-1"><option value="persona_noche">Persona/noche</option><option value="unidad_noche">Unidad/noche</option></select></td>
                         <td><input aria-label="Precio en ARS" type="number" min={0} value={regla.importeCentavos / 100} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { importeCentavos: Math.round(Number(event.target.value) * 100) })} className="w-28 rounded border px-2 py-1" /></td>
                         <td><input aria-label="Exclusividad desde" type="number" min={1} placeholder="Desde" value={regla.exclusividadDesde ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { exclusividadDesde: event.target.value ? Number(event.target.value) : null })} className="w-20 rounded border px-2 py-1" /> – <input aria-label="Exclusividad hasta" type="number" min={1} placeholder="Hasta" value={regla.exclusividadHasta ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { exclusividadHasta: event.target.value ? Number(event.target.value) : null })} className="w-20 rounded border px-2 py-1" /></td>
+                        {esSuperAdmin && <td className="pl-2"><IconButton icon={<Trash2 size={15} />} label={`Eliminar tarifa ${reglaIndice + 1}`} variant="secondary" isDisabled={temporada.reglas.length <= 1} onPress={() => eliminarReglaPrecio(temporadaIndice, reglaIndice)} /></td>}
                       </tr>
                     ))}</tbody>
                   </table>

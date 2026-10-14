@@ -105,6 +105,10 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /pueblo_magico_logo_marron\.svg/);
   assert.match(source, /accion: 'publicar_tarifa_alimentacion'/);
   assert.match(source, /requestJson\('\/api\/admin\/tarifas'/);
+  assert.match(source, /Agregar tarifa/);
+  assert.match(source, /agregarReglaPrecio/);
+  assert.match(source, /eliminarReglaPrecio/);
+  assert.match(source, /Carpa equipada/);
   assert.match(source, /requestJson\('\/api\/admin\/politicas-reserva'/);
   assert.match(source, /Sólo un superadministrador puede publicar cambios/);
   assert.match(source, /credenciales y activación de proveedores de pago permanecen en variables seguras/);
