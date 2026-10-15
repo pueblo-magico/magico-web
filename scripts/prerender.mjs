@@ -230,7 +230,7 @@ console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
 
 const ADMIN_RESERVAS_SECTIONS = [
   'listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos',
-  'configuracion', 'integraciones', 'usuarios', 'actividad',
+  'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad',
 ];
 for (const section of ADMIN_RESERVAS_SECTIONS) {
   const sectionDirectory = join(DIST, 'admin', 'reservas', section);

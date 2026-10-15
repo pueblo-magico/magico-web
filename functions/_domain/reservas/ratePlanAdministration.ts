@@ -29,12 +29,23 @@ export type ReglaSenaBorrador = {
   valor: number;
 };
 
+export type ReglaAjustePrecioBorrador = {
+  codigo: string;
+  nombre: string;
+  anticipacionDesdeDias: number;
+  anticipacionHastaDias: number | null;
+  direccion: 'descuento' | 'recargo';
+  tipo: 'porcentaje_bps' | 'importe_fijo';
+  valor: number;
+};
+
 export type PlanTarifaBorrador = {
   codigo: string;
   nombre: string;
   moneda: string;
   temporadas: TemporadaBorrador[];
   senas: ReglaSenaBorrador[];
+  ajustes?: ReglaAjustePrecioBorrador[];
 };
 
 const CODIGO = /^[a-z0-9][a-z0-9-]{1,49}$/;
@@ -42,6 +53,7 @@ const TIPOS_ALOJAMIENTO = new Set(['domo', 'refugio', 'camping', 'bell_tent']);
 const MODALIDADES = new Set(['cualquiera', 'privada', 'compartida', 'camping']);
 const BASES_CALCULO = new Set(['unidad_noche', 'persona_noche']);
 const TIPOS_SENA = new Set(['porcentaje_bps', 'importe_fijo']);
+const DIRECCIONES_AJUSTE = new Set(['descuento', 'recargo']);
 const TODOS_LOS_DIAS = [1, 2, 3, 4, 5, 6, 7];
 
 function diasSemanaValidos(dias: number[]): boolean {
@@ -138,5 +150,18 @@ export function validarPlanTarifaBorrador(plan: PlanTarifaBorrador): void {
     if (ordenadas[i - 1].subtotalHastaCentavos! + 1 !== ordenadas[i].subtotalDesdeCentavos) {
       throw new ErrorReserva('DATOS_INVALIDOS', 'Las reglas de seña deben cubrir el rango sin huecos.');
     }
+  }
+
+  const codigosAjuste = new Set<string>();
+  for (const ajuste of plan.ajustes || []) {
+    if (!CODIGO.test(ajuste.codigo) || codigosAjuste.has(ajuste.codigo) || !ajuste.nombre?.trim() ||
+        !enteroNoNegativo(ajuste.anticipacionDesdeDias) ||
+        (ajuste.anticipacionHastaDias !== null &&
+          (!enteroNoNegativo(ajuste.anticipacionHastaDias) || ajuste.anticipacionHastaDias < ajuste.anticipacionDesdeDias)) ||
+        !DIRECCIONES_AJUSTE.has(ajuste.direccion) || !TIPOS_SENA.has(ajuste.tipo) ||
+        !enteroNoNegativo(ajuste.valor) || (ajuste.tipo === 'porcentaje_bps' && ajuste.valor > 10_000)) {
+      throw new ErrorReserva('DATOS_INVALIDOS', 'La regla de ajuste de precio es inválida.');
+    }
+    codigosAjuste.add(ajuste.codigo);
   }
 }

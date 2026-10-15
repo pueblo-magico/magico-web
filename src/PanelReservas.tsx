@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Trash2, Link2, Home, CalendarDays, ClipboardList, BarChart3, Settings, Users, Activity, ShieldAlert, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Trash2, Link2, Home, CalendarDays, ClipboardList, BarChart3, BadgeDollarSign, Settings, Users, Activity, ShieldAlert, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import {
   Badge, Button, Card, Checkbox, CodeBadge, CopyButton, DateRangeField, DescriptionList,
   DescriptionListItem, EmptyState, IconButton, Input, LoadingState, Modal, MoneyField, NumberField,
@@ -30,7 +30,7 @@ import './PanelReservas.css';
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio' | 'camping';
-type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'integraciones' | 'usuarios' | 'actividad';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'precios' | 'integraciones' | 'usuarios' | 'actividad';
 
 const ADMIN_RESERVAS_BASE = '/admin/reservas';
 const RUTA_POR_VISTA: Record<VistaActiva, string> = {
@@ -41,6 +41,7 @@ const RUTA_POR_VISTA: Record<VistaActiva, string> = {
   consultas: `${ADMIN_RESERVAS_BASE}/consultas`,
   arrepentimientos: `${ADMIN_RESERVAS_BASE}/arrepentimientos`,
   configuracion: `${ADMIN_RESERVAS_BASE}/configuracion`,
+  precios: `${ADMIN_RESERVAS_BASE}/precios`,
   integraciones: `${ADMIN_RESERVAS_BASE}/integraciones`,
   usuarios: `${ADMIN_RESERVAS_BASE}/usuarios`,
   actividad: `${ADMIN_RESERVAS_BASE}/actividad`,
@@ -1743,7 +1744,7 @@ type ConfiguracionBaseApi = {
     estado: string; actualizadoAt: string;
     modalidades: Array<{
       id: number; modalidad: string; contexto: string; unidadVenta: string;
-      habilitada: boolean; actualizadoAt: string;
+      habilitada: boolean; nombreComercial: string; actualizadoAt: string;
     }>;
   }>;
   tarifa: null | {
@@ -1764,6 +1765,10 @@ type ConfiguracionBaseApi = {
       subtotalDesdeCentavos: number; subtotalHastaCentavos: number | null;
       tipo: 'porcentaje_bps' | 'importe_fijo'; valor: number;
     }>;
+    ajustes: Array<{
+      codigo: string; nombre: string; anticipacionDesdeDias: number; anticipacionHastaDias: number | null;
+      direccion: 'descuento' | 'recargo'; tipo: 'porcentaje_bps' | 'importe_fijo'; valor: number;
+    }>;
   };
   politicaCancelacion: null | {
     codigo: string; nombre: string; version: number; estado: string; vigenciaDesde: string | null;
@@ -1772,10 +1777,16 @@ type ConfiguracionBaseApi = {
   alimentacion: Array<{
     id: number; codigo: 'desayuno_incluido' | 'pension_completa'; moneda: string; version: number;
     precioComidaCentavos: number; comidasAdicionalesPorPersonaNoche: number; publicadoAt: string;
+    precioDesayunoCentavos: number; precioAlmuerzoCentavos: number; precioCenaCentavos: number;
+    ajustePaqueteCentavos: number;
   }>;
 };
 
 type BorradorTarifaUi = NonNullable<ConfiguracionBaseApi['tarifa']>;
+type ResumenPlanTarifaUi = {
+  id: number; codigo: string; nombre: string; moneda: string; version: number;
+  estado: 'borrador' | 'publicado' | 'retirado'; publicadoAt: string | null; createdAt: string;
+};
 type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
 type BorradorInventarioUi = ConfiguracionBaseApi['inventario'];
 type TipoAlojamientoTarifa = BorradorTarifaUi['temporadas'][number]['reglas'][number]['tipoAlojamiento'];
@@ -1890,12 +1901,13 @@ const opcionesModalidadParaEspacio = (espacio: BorradorInventarioUi[number]) => 
   return [{ value: 'compartida', label: 'Compartida' }];
 };
 
-const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmin }) => {
+const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' | 'precios' }> = ({ esSuperAdmin, modo = 'base' }) => {
   const [configuracion, setConfiguracion] = useState<ConfiguracionBaseApi | null>(null);
   const [valor, setValor] = useState('15');
   const [confirmacion, setConfirmacion] = useState<ConfirmacionConfiguracion | null>(null);
   const [motivoConfirmacion, setMotivoConfirmacion] = useState('');
   const [tarifaDraft, setTarifaDraft] = useState<BorradorTarifaUi | null>(null);
+  const [planesTarifa, setPlanesTarifa] = useState<ResumenPlanTarifaUi[]>([]);
   const [politicaDraft, setPoliticaDraft] = useState<BorradorPoliticaUi | null>(null);
   const [inventarioDraft, setInventarioDraft] = useState<BorradorInventarioUi>([]);
   const [vigenciaPolitica, setVigenciaPolitica] = useState('');
@@ -1909,17 +1921,28 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     setCargando(true);
     setError('');
     try {
-      const res = await adminFetch('/api/v1/admin/configuracion-reservas');
-      const body: any = await res.json();
+      const [res, resPlanes] = await Promise.all([
+        adminFetch('/api/v1/admin/configuracion-reservas'),
+        adminFetch('/api/admin/tarifas'),
+      ]);
+      const [body, bodyPlanes]: any[] = await Promise.all([res.json(), resPlanes.json()]);
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      if (!resPlanes.ok) throw new Error(bodyPlanes.error || `HTTP ${resPlanes.status}`);
       setConfiguracion(body.data);
       setValor(String(body.data?.parametros?.[0]?.valor ?? 15));
-      setTarifaDraft(body.data?.tarifa ? JSON.parse(JSON.stringify(body.data.tarifa)) : null);
+      setTarifaDraft(body.data?.tarifa ? {
+        ...JSON.parse(JSON.stringify(body.data.tarifa)),
+        ajustes: body.data.tarifa.ajustes || [],
+      } : null);
+      setPlanesTarifa(bodyPlanes.planes || []);
       setPoliticaDraft(body.data?.politicaCancelacion ? JSON.parse(JSON.stringify(body.data.politicaCancelacion)) : null);
       setInventarioDraft(JSON.parse(JSON.stringify(body.data?.inventario || [])));
       setVigenciaPolitica(body.data?.politicaCancelacion?.vigenciaDesde?.slice(0, 16) || new Date(Date.now() + 60_000).toISOString().slice(0, 16));
-      setPreciosComida(Object.fromEntries((body.data?.alimentacion || []).map((item: ConfiguracionBaseApi['alimentacion'][number]) => [
-        item.codigo, String(item.precioComidaCentavos / 100),
+      setPreciosComida(Object.fromEntries((body.data?.alimentacion || []).flatMap((item: ConfiguracionBaseApi['alimentacion'][number]) => [
+        [`${item.codigo}:desayuno`, String(item.precioDesayunoCentavos / 100)],
+        [`${item.codigo}:almuerzo`, String(item.precioAlmuerzoCentavos / 100)],
+        [`${item.codigo}:cena`, String(item.precioCenaCentavos / 100)],
+        [`${item.codigo}:ajuste`, String(item.ajustePaqueteCentavos / 100)],
       ])));
     } catch (e: any) {
       setError(e.message || 'No se pudo cargar la configuración.');
@@ -1979,10 +2002,30 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
         body: JSON.stringify({
           accion: 'actualizar_modalidad', id: item.id, modalidad: item.modalidad,
           contexto: item.contexto, unidad_venta: item.unidadVenta, habilitada: item.habilitada,
+          nombre_comercial: item.nombreComercial,
           expected_updated_at: item.actualizadoAt, motivo: motivo.trim(),
         }),
       });
     }, 'Modalidad y condiciones de venta actualizadas para operaciones nuevas.');
+  };
+
+  const crearModalidad = async (espacio: BorradorInventarioUi[number], motivo: string) => {
+    const opciones = opcionesModalidadParaEspacio(espacio);
+    const opcion = opciones.find(candidata => !espacio.modalidades.some(item =>
+      item.modalidad === candidata.value && item.contexto === 'general'
+    ));
+    if (!opcion) throw new Error('No quedan modalidades operativas disponibles para este alojamiento.');
+    const unidadVenta = opcion.value === 'privada' ? 'espacio' : opcion.value === 'camping' ? 'parcela' : 'cama';
+    return ejecutar(`modalidad-nueva-${espacio.codigo}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'crear_modalidad', espacio_codigo: espacio.codigo, modalidad: opcion.value,
+          nombre_comercial: opcion.label, contexto: 'general', unidad_venta: unidadVenta,
+          habilitada: false, motivo,
+        }),
+      });
+    }, 'Modalidad creada. Revisá sus condiciones antes de habilitarla.');
   };
 
   const guardarEspacio = async (espacio: ConfiguracionBaseApi['inventario'][number], motivo: string) => {
@@ -2022,7 +2065,11 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           accion: 'publicar_tarifa_alimentacion', codigo: item.codigo,
-          precio_comida_centavos: Math.round(Number(preciosComida[item.codigo]) * 100),
+          precio_comida_centavos: Math.round(Number(preciosComida[`${item.codigo}:${item.codigo === 'pension_completa' ? 'almuerzo' : 'desayuno'}`] || 0) * 100),
+          precio_desayuno_centavos: Math.round(Number(preciosComida[`${item.codigo}:desayuno`] || 0) * 100),
+          precio_almuerzo_centavos: Math.round(Number(preciosComida[`${item.codigo}:almuerzo`] || 0) * 100),
+          precio_cena_centavos: Math.round(Number(preciosComida[`${item.codigo}:cena`] || 0) * 100),
+          ajuste_paquete_centavos: Math.round(Number(preciosComida[`${item.codigo}:ajuste`] || 0) * 100),
           expected_version: item.version, motivo: motivo.trim(),
         }),
       });
@@ -2094,6 +2141,30 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
       temporadas: actual.temporadas.filter((_, posicion) => posicion !== indice),
     });
   };
+
+  const agregarTemporada = () => setTarifaDraft(actual => {
+    if (!actual) return actual;
+    const base = actual.temporadas.at(-1);
+    if (!base) return actual;
+    const numero = actual.temporadas.length + 1;
+    return {
+      ...actual,
+      temporadas: [...actual.temporadas, {
+        ...base,
+        codigo: `temporada-${numero}`,
+        nombre: `Temporada ${numero}`,
+        prioridad: Math.max(...actual.temporadas.map(item => item.prioridad), 0) + 1,
+        reglas: base.reglas.map(regla => ({ ...regla })),
+      }],
+    };
+  });
+
+  const iniciarPlanAlternativo = () => setTarifaDraft(actual => actual ? ({
+    ...actual,
+    codigo: `plan-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}`,
+    nombre: `${actual.nombre} · alternativa`,
+    version: 0,
+  }) : actual);
 
   const actualizarReglaPrecio = (temporadaIndice: number, reglaIndice: number, cambio: Partial<BorradorTarifaUi['temporadas'][number]['reglas'][number]>) => {
     setTarifaDraft(actual => actual ? {
@@ -2177,6 +2248,30 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     });
   };
 
+  const agregarAjuste = () => setTarifaDraft(actual => actual ? ({
+    ...actual,
+    ajustes: [...(actual.ajustes || []), {
+      codigo: `ajuste-${(actual.ajustes || []).length + 1}`,
+      nombre: 'Nueva regla',
+      anticipacionDesdeDias: 0,
+      anticipacionHastaDias: 3,
+      direccion: 'descuento',
+      tipo: 'porcentaje_bps',
+      valor: 1000,
+    }],
+  }) : actual);
+
+  const actualizarAjuste = (indice: number, cambio: Partial<BorradorTarifaUi['ajustes'][number]>) =>
+    setTarifaDraft(actual => actual ? ({
+      ...actual,
+      ajustes: (actual.ajustes || []).map((regla, posicion) => posicion === indice ? { ...regla, ...cambio } : regla),
+    }) : actual);
+
+  const eliminarAjuste = (indice: number) => setTarifaDraft(actual => actual ? ({
+    ...actual,
+    ajustes: (actual.ajustes || []).filter((_, posicion) => posicion !== indice),
+  }) : actual);
+
   const publicarTarifa = async (motivo: string) => {
     if (!tarifaDraft) return false;
     return ejecutar('tarifa', async () => {
@@ -2199,6 +2294,12 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
             subtotal_desde_centavos: regla.subtotalDesdeCentavos,
             subtotal_hasta_centavos: regla.subtotalHastaCentavos,
             tipo: regla.tipo, valor: regla.valor,
+          })),
+          ajustes: (tarifaDraft.ajustes || []).map(regla => ({
+            codigo: regla.codigo, nombre: regla.nombre,
+            anticipacion_desde_dias: regla.anticipacionDesdeDias,
+            anticipacion_hasta_dias: regla.anticipacionHastaDias,
+            direccion: regla.direccion, tipo: regla.tipo, valor: regla.valor,
           })),
         } }),
       });
@@ -2308,8 +2409,18 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
     titulo: `Publicar tarifa de ${item.codigo === 'pension_completa' ? 'pensión completa' : 'desayuno incluido'}`,
     descripcion: 'Se publicará una nueva versión para operaciones futuras.',
     cambios: resumirCambios(
-      { precioComidaCentavos: item.precioComidaCentavos / 100 },
-      { precioComidaCentavos: Number(preciosComida[item.codigo]) }
+      item.codigo === 'pension_completa' ? {
+        desayuno: item.precioDesayunoCentavos / 100,
+        almuerzo: item.precioAlmuerzoCentavos / 100,
+        cena: item.precioCenaCentavos / 100,
+        ajustePaquete: item.ajustePaqueteCentavos / 100,
+      } : { desayuno: item.precioDesayunoCentavos / 100 },
+      item.codigo === 'pension_completa' ? {
+        desayuno: Number(preciosComida[`${item.codigo}:desayuno`] || 0),
+        almuerzo: Number(preciosComida[`${item.codigo}:almuerzo`] || 0),
+        cena: Number(preciosComida[`${item.codigo}:cena`] || 0),
+        ajustePaquete: Number(preciosComida[`${item.codigo}:ajuste`] || 0),
+      } : { desayuno: Number(preciosComida[`${item.codigo}:desayuno`] || 0) }
     ).map(cambio => ({ ...cambio, anterior: `ARS ${cambio.anterior}`, nuevo: `ARS ${cambio.nuevo}` })),
     etiquetaConfirmar: 'Publicar nueva versión',
     ejecutar: motivo => publicarComida(item, motivo),
@@ -2333,9 +2444,11 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
   return (
     <div className="admin-config">
       <div className="admin-config__intro">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Configuración comercial</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">{modo === 'precios' ? 'Políticas de precios' : 'Configuración base'}</h2>
         <p className="mt-1 text-xs text-gray-500">
-          Valores efectivos usados al cotizar y vender. Cada publicación crea una versión auditable y afecta sólo operaciones futuras.
+          {modo === 'precios'
+            ? 'Construí ofertas vendibles con temporadas, tarifas, alimentación, ajustes y reglas de seña.'
+            : 'Administrá estructuras, capacidades, modalidades operativas y parámetros generales.'}
         </p>
         {!esSuperAdmin && <p className="mt-2 text-xs font-semibold text-amber-700">Vista de solo lectura. Sólo un superadministrador puede publicar cambios.</p>}
       </div>
@@ -2343,18 +2456,35 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
       {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
 
-      <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+      {modo === 'precios' && <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div><h3 className="text-sm font-semibold text-gray-900">Planes y versiones</h3><p className="text-xs text-gray-500">Podés conservar varios planes. Al publicar uno, pasa a ser la política efectiva para nuevas cotizaciones.</p></div>
+          <Badge variant="success">{planesTarifa.filter(plan => plan.estado === 'publicado').length} vigente</Badge>
+        </div>
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{planesTarifa.map(plan => <Card key={plan.id} tone="muted" className="min-w-[220px] p-3">
+          <div className="flex items-start justify-between gap-2"><strong className="text-sm">{plan.nombre}</strong><Badge variant={plan.estado === 'publicado' ? 'success' : plan.estado === 'borrador' ? 'warning' : 'neutral'}>{plan.estado}</Badge></div>
+          <p className="mt-1 text-xs text-gray-500"><CodeBadge>{plan.codigo}</CodeBadge> · v{plan.version} · {plan.moneda}</p>
+        </Card>)}</div>
+      </section>}
+
+      {modo === 'precios' && <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Precios y seña</strong><small>Tarifas, temporadas y anticipo requerido</small></span></summary>
         <div className="admin-config__section-body space-y-4 border-t border-gray-100">
           {!tarifaDraft ? <p className="text-sm text-amber-700">Sin tarifa publicada.</p> : <>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="grid flex-1 gap-3 md:grid-cols-3">
               <label className="text-xs font-semibold text-gray-600">Nombre del plan
                 <input value={tarifaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setTarifaDraft({ ...tarifaDraft, nombre: event.target.value })}
                   className={`mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`} />
               </label>
-              <div className="text-xs text-gray-500"><strong className="block text-gray-700">Código</strong>{tarifaDraft.codigo}</div>
+              <label className="text-xs font-semibold text-gray-600">Código del plan
+                <input value={tarifaDraft.codigo} disabled={!esSuperAdmin} onChange={event => setTarifaDraft({ ...tarifaDraft, codigo: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+              </label>
               <div className="text-xs text-gray-500"><strong className="block text-gray-700">Versión vigente</strong>v{tarifaDraft.version} · {tarifaDraft.moneda}</div>
             </div>
+            {esSuperAdmin && <Button size="sm" variant="secondary" onPress={iniciarPlanAlternativo}><Plus size={15} />Nuevo plan desde éste</Button>}
+            </div>
+            <div className="flex justify-end">{esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarTemporada}><Plus size={15} />Agregar temporada</Button>}</div>
             {tarifaDraft.temporadas.map((temporada, temporadaIndice) => (
               <div key={`${temporada.codigo}-${temporadaIndice}`} className="rounded-lg border border-gray-200 p-4">
                 <div className="grid gap-3 md:grid-cols-5">
@@ -2423,6 +2553,25 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                 </div>
               </div>
             ))}
+            <div className="rounded-lg border border-gray-200 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Ajustes sobre el total</p>
+                  <p className="mt-1 text-xs text-gray-500">Aplicá descuentos o recargos según la anticipación entre la compra y el check-in.</p>
+                </div>
+                {esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarAjuste}><Plus size={15} />Agregar ajuste</Button>}
+              </div>
+              {(tarifaDraft.ajustes || []).length === 0 ? <p className="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-500">No hay ajustes configurados.</p> :
+                <div className="mt-3 space-y-2">{(tarifaDraft.ajustes || []).map((regla, indice) => <div key={`${regla.codigo}-${indice}`} className="grid gap-2 rounded-lg bg-gray-50 p-3 md:grid-cols-[1.2fr_.8fr_.8fr_.8fr_.9fr_.8fr_auto]">
+                  <label className="text-xs text-gray-600">Nombre<input value={regla.nombre} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { nombre: event.target.value })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Desde (días)<input type="number" min={0} value={regla.anticipacionDesdeDias} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { anticipacionDesdeDias: Number(event.target.value) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Hasta (días)<input type="number" min={0} placeholder="Sin límite" value={regla.anticipacionHastaDias ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { anticipacionHastaDias: event.target.value === '' ? null : Number(event.target.value) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Efecto<select value={regla.direccion} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { direccion: event.target.value as any })} className="mt-1 w-full rounded border px-2 py-1"><option value="descuento">Descuento</option><option value="recargo">Recargo</option></select></label>
+                  <label className="text-xs text-gray-600">Cálculo<select value={regla.tipo} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { tipo: event.target.value as any })} className="mt-1 w-full rounded border px-2 py-1"><option value="porcentaje_bps">Porcentaje</option><option value="importe_fijo">Importe fijo</option></select></label>
+                  <label className="text-xs text-gray-600">{regla.tipo === 'porcentaje_bps' ? 'Porcentaje' : 'ARS'}<input type="number" min={0} value={regla.valor / 100} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { valor: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  {esSuperAdmin && <div className="flex items-end"><IconButton icon={<Trash2 size={15} />} label={`Eliminar ajuste ${indice + 1}`} variant="secondary" onPress={() => eliminarAjuste(indice)} /></div>}
+                </div>)}</div>}
+            </div>
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
@@ -2445,9 +2594,9 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
             {esSuperAdmin && <button type="button" onClick={confirmarTarifa} disabled={guardando !== null || !configuracion?.tarifa || Boolean(errorReglasSena(tarifaDraft.senas)) || resumirCambios(configuracion.tarifa, tarifaDraft).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'tarifa' ? 'Publicando…' : 'Publicar nueva versión de precios y seña'}</button>}
           </>}
         </div>
-      </details>
+      </details>}
 
-      <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+      {modo === 'base' && <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Modalidades de reserva</strong><small>Alojamientos, capacidades y condiciones de venta</small></span></summary>
         <div className="admin-config__section-body space-y-3 border-t border-gray-100">
           <p className="text-xs text-gray-500">Definí cuándo se puede vender cada alojamiento, su capacidad y la unidad que descuenta inventario. Los cambios afectan sólo operaciones nuevas.</p>
@@ -2491,6 +2640,14 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
               {espacio.tipo === 'camping' && espacio.estado !== 'activo' && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Para activar Camping: definí una capacidad mayor a cero, habilitá al menos un contexto, guardá estas condiciones y luego habilitá su modalidad. También debe existir una regla de precio publicada para camping.</p>}
               {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !espacioModificado || espacio.capacidadOperativaMaxima < espacio.capacidadComercial}
                 isLoading={guardando === `espacio-${espacio.codigo}`} onPress={() => original && confirmarEspacio(espacio, original)}>Guardar condiciones del alojamiento</Button>}
+              {esSuperAdmin && opcionesModalidadParaEspacio(espacio).some(opcion => !espacio.modalidades.some(item => item.modalidad === opcion.value && item.contexto === 'general')) &&
+                <Button size="sm" variant="secondary" isLoading={guardando === `modalidad-nueva-${espacio.codigo}`} onPress={() => pedirConfirmacion({
+                  titulo: `Crear modalidad para ${espacio.nombre}`,
+                  descripcion: 'Se agregará deshabilitada para que puedas revisar su nombre y unidad de venta.',
+                  cambios: [{ campo: 'Modalidad', anterior: 'No existe', nuevo: 'Nueva modalidad deshabilitada' }],
+                  etiquetaConfirmar: 'Crear modalidad',
+                  ejecutar: motivo => crearModalidad(espacio, motivo),
+                })}><Plus size={15} />Crear modalidad</Button>}
               <div className="admin-config__modalities">{espacio.modalidades.map(item => {
                 const originalModalidad = original?.modalidades.find(actual => actual.id === item.id);
                 const modalidadModificada = Boolean(originalModalidad) && JSON.stringify(item) !== JSON.stringify(originalModalidad);
@@ -2498,6 +2655,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
                 const puedeHabilitar = original?.estado === 'activo' && (original?.capacidadComercial || 0) > 0 && Boolean(contextoPermitido);
                 return <Card key={item.id} tone="muted" className="admin-config__modality">
                   <div className="admin-config__modality-fields">
+                    <label className="text-xs font-semibold text-gray-600">Nombre comercial<input value={item.nombreComercial} disabled={!esSuperAdmin} onChange={event => actualizarModalidadDraft(espacio.codigo, item.id, { nombreComercial: event.target.value })} className="mt-1 w-full rounded border px-2 py-2 text-sm" /></label>
                     <Select label="Modalidad" placeholder="Elegí" value={item.modalidad} isDisabled={!esSuperAdmin}
                       options={opcionesModalidadParaEspacio(espacio)}
                       onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, {
@@ -2522,30 +2680,41 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean }> = ({ esSuper
           })}
           <p className="text-xs text-gray-500">Deshabilitar una modalidad evita nuevas cotizaciones; no modifica reservas existentes. La activación comercial no reemplaza la regla de precio publicada ni crea unidades físicas.</p>
         </div>
-      </details>
+      </details>}
 
-      <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+      {modo === 'precios' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Alimentación</strong><small>Regímenes y precio por comida</small></span></summary>
         <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-2">{(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-3">
           <p className="font-semibold">{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</p>
           <p className="text-xs text-gray-500">v{item.version} · {item.comidasAdicionalesPorPersonaNoche} comidas adicionales por persona/noche</p>
-          <MoneyField className="mt-3" currency="ARS" decrementLabel="Reducir precio" incrementLabel="Aumentar precio"
-            isDisabled={!esSuperAdmin} label="Precio por comida" minValue={0} showStepper={false}
-            value={Number(preciosComida[item.codigo] || 0)} onChange={value => setPreciosComida(actual => ({ ...actual, [item.codigo]: String(value) }))} />
-          {esSuperAdmin && <button type="button" onClick={() => confirmarComida(item)} disabled={guardando !== null || Math.round(Number(preciosComida[item.codigo]) * 100) === item.precioComidaCentavos} className={`mt-3 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand disabled:opacity-50 ${FOCUS_RING}`}>{guardando === `comida-${item.codigo}` ? 'Publicando…' : 'Publicar nueva versión'}</button>}
+          <div className={`mt-3 grid gap-2 ${item.codigo === 'pension_completa' ? 'sm:grid-cols-3' : ''}`}>
+            {(item.codigo === 'pension_completa' ? ['desayuno', 'almuerzo', 'cena'] as const : ['desayuno'] as const).map(comida => <MoneyField key={comida} currency="ARS" decrementLabel={`Reducir ${comida}`} incrementLabel={`Aumentar ${comida}`}
+              isDisabled={!esSuperAdmin} label={comida[0].toUpperCase() + comida.slice(1)} minValue={0} showStepper={false}
+              value={Number(preciosComida[`${item.codigo}:${comida}`] || 0)} onChange={value => setPreciosComida(actual => ({ ...actual, [`${item.codigo}:${comida}`]: String(value) }))} />)}
+          </div>
+          {item.codigo === 'pension_completa' && <MoneyField className="mt-2" currency="ARS" decrementLabel="Reducir ajuste" incrementLabel="Aumentar ajuste"
+            isDisabled={!esSuperAdmin} label="Ajuste del paquete por persona/noche (negativo = descuento)" showStepper={false}
+            value={Number(preciosComida[`${item.codigo}:ajuste`] || 0)} onChange={value => setPreciosComida(actual => ({ ...actual, [`${item.codigo}:ajuste`]: String(value) }))} />}
+          <p className="mt-2 text-xs text-gray-500">{item.codigo === 'pension_completa'
+            ? 'La pensión completa suma almuerzo + cena y aplica el ajuste del paquete. El desayuno continúa incluido en el alojamiento.'
+            : 'El desayuno está incluido en el alojamiento; este valor deja explícito su precio de referencia.'}</p>
+          {esSuperAdmin && <button type="button" onClick={() => confirmarComida(item)} disabled={guardando !== null || (item.codigo === 'pension_completa' ? [
+            ['desayuno', item.precioDesayunoCentavos], ['almuerzo', item.precioAlmuerzoCentavos],
+            ['cena', item.precioCenaCentavos], ['ajuste', item.ajustePaqueteCentavos],
+          ] : [['desayuno', item.precioDesayunoCentavos]]).every(([clave, centavos]) => Math.round(Number(preciosComida[`${item.codigo}:${clave}`] || 0) * 100) === centavos)} className={`mt-3 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand disabled:opacity-50 ${FOCUS_RING}`}>{guardando === `comida-${item.codigo}` ? 'Publicando…' : 'Publicar nueva versión'}</button>}
         </div>)}</div>
-      </details>
+      </details>}
 
-      <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+      {modo === 'base' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Política de cancelación</strong><small>Vigencia y porcentajes de devolución</small></span></summary>
         <div className="admin-config__section-body space-y-3 border-t border-gray-100">{!politicaDraft ? <p className="text-sm text-amber-700">Sin política configurada.</p> : <>
           <div className="grid gap-3 sm:grid-cols-3"><label className="text-xs font-semibold text-gray-600">Nombre<input value={politicaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, nombre: event.target.value })} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div className="text-xs text-gray-500"><strong className="block text-gray-700">Código y versión</strong>{politicaDraft.codigo} · v{politicaDraft.version}</div><label className="text-xs font-semibold text-gray-600">Vigente desde<input type="datetime-local" value={vigenciaPolitica} disabled={!esSuperAdmin} onChange={event => setVigenciaPolitica(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label></div>
           <div className="space-y-2">{politicaDraft.reglas.map((regla, indice) => <div key={indice} className="grid gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-2"><label className="text-xs text-gray-600">Horas mínimas antes del check-in<input type="number" min={0} value={regla.horasMinimasAntes} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, horasMinimasAntes: Number(event.target.value) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label><label className="text-xs text-gray-600">Devolución (%)<input type="number" min={0} max={100} value={regla.porcentajeDevolucionBps / 100} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, porcentajeDevolucionBps: Math.round(Number(event.target.value) * 100) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label></div>)}</div>
           {esSuperAdmin && <button type="button" onClick={confirmarPolitica} disabled={guardando !== null || !vigenciaPolitica || !configuracion?.politicaCancelacion || resumirCambios({ ...configuracion.politicaCancelacion, vigenciaDesde: configuracion.politicaCancelacion.vigenciaDesde?.slice(0, 16) || '' }, { ...politicaDraft, vigenciaDesde: vigenciaPolitica }).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'politica' ? 'Publicando…' : 'Publicar nueva política'}</button>}
         </>}</div>
-      </details>
+      </details>}
 
-      {parametro && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+      {modo === 'base' && parametro && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
         <summary><span><strong>Retención de pago</strong><small>{parametro.valor} minutos para completar la seña</small></span></summary>
         <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><NumberField decrementLabel="Reducir plazo" incrementLabel="Aumentar plazo" label="Nuevo plazo" minValue={parametro.minimo} maxValue={parametro.maximo} showStepper={false} value={Number(valor)} onChange={value => setValor(String(value))} /><div className="flex items-end"><Button size="sm" isLoading={guardando === 'plazo'} onPress={confirmarPlazo} isDisabled={guardando !== null || Number(valor) === parametro.valor || Number(valor) < parametro.minimo || Number(valor) > parametro.maximo}>Guardar plazo</Button></div></>}</div>
       </details>}
@@ -3895,6 +4064,7 @@ const PanelReservas: React.FC = () => {
     consultas: { titulo: 'Consultas', descripcion: 'Revisá las consultas que todavía no se convirtieron en reservas.' },
     arrepentimientos: { titulo: 'Arrepentimientos', descripcion: 'Gestioná solicitudes y su seguimiento con acceso según tu rol.' },
     configuracion: { titulo: 'Configuración', descripcion: 'Parámetros comerciales y operativos del sistema de reservas.' },
+    precios: { titulo: 'Políticas de precios', descripcion: 'Ofertas, temporadas, alimentación, ajustes y reglas de seña.' },
     integraciones: { titulo: 'Integraciones', descripcion: 'Estado, eventos y reintentos de las conexiones externas.' },
     usuarios: { titulo: 'Usuarios', descripcion: 'Administrá accesos y permisos del equipo.' },
     actividad: { titulo: 'Actividad', descripcion: 'Consultá el registro de auditoría del sistema.' },
@@ -3912,6 +4082,7 @@ const PanelReservas: React.FC = () => {
   ];
   const navSistema: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
     { key: 'configuracion', label: 'Configuración', icon: <Settings aria-hidden="true" /> },
+    { key: 'precios', label: 'Políticas de precios', icon: <BadgeDollarSign aria-hidden="true" /> },
     { key: 'integraciones', label: 'Integraciones', icon: <Link2 aria-hidden="true" /> },
     ...(esSuperAdmin ? [
       { key: 'usuarios' as VistaActiva, label: 'Usuarios', icon: <Users aria-hidden="true" /> },
@@ -4254,7 +4425,8 @@ const PanelReservas: React.FC = () => {
 
         {vistaActiva === 'arrepentimientos' && <SeccionArrepentimientos puedeGestionar={puedeEditar} />}
 
-        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase esSuperAdmin={esSuperAdmin} />}
+        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase esSuperAdmin={esSuperAdmin} modo="base" />}
+        {vistaActiva === 'precios' && <SeccionConfiguracionBase esSuperAdmin={esSuperAdmin} modo="precios" />}
         {vistaActiva === 'integraciones' && <SeccionIntegraciones esSuperAdmin={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}

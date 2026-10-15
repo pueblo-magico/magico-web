@@ -43,6 +43,10 @@ function mapearTarifaAlimentacion(row: Record<string, unknown>): TarifaAlimentac
     version: Number(row.version),
     precioComidaCentavos: Number(row.precio_comida_centavos),
     comidasAdicionalesPorPersonaNoche: Number(row.comidas_adicionales_por_persona_noche),
+    precioDesayunoCentavos: Number(row.precio_desayuno_centavos),
+    precioAlmuerzoCentavos: Number(row.precio_almuerzo_centavos),
+    precioCenaCentavos: Number(row.precio_cena_centavos),
+    ajustePaqueteCentavos: Number(row.ajuste_paquete_centavos),
     publicadoAt: String(row.publicado_at),
   };
 }
@@ -63,7 +67,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
   }
 
   async obtenerEfectiva(): Promise<ConfiguracionBaseReservas> {
-    const [parametro, inventario, tarifa, reglasTarifa, senasTarifa, politica, alimentacion] = await Promise.all([
+    const [parametro, inventario, tarifa, reglasTarifa, senasTarifa, politica, ajustesTarifa, alimentacion] = await Promise.all([
       this.db.prepare(`
         SELECT codigo, valor_entero, unidad, version, updated_at
         FROM parametros_operativos_reservas WHERE codigo = 'payment_hold_minutes'
@@ -72,7 +76,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         SELECT e.codigo, e.nombre, e.tipo, e.capacidad_comercial,
           e.capacidad_operativa_maxima, e.reservable_general, e.reservable_retiro,
           e.estado, e.updated_at espacio_updated_at, me.id, me.modalidad, me.contexto,
-          me.unidad_venta, me.habilitada, me.updated_at
+          me.unidad_venta, me.habilitada, me.nombre_comercial, me.updated_at
         FROM espacios e
         LEFT JOIN modalidades_espacio me ON me.espacio_id = e.id
         ORDER BY e.codigo, me.contexto, me.modalidad
@@ -114,8 +118,18 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         ORDER BY CASE WHEN estado = 'publicada' THEN 0 ELSE 1 END, version DESC LIMIT 1
       `).first(),
       this.db.prepare(`
+        SELECT codigo, nombre, anticipacion_desde_dias, anticipacion_hasta_dias,
+          direccion, tipo, valor
+        FROM reglas_ajuste_precio
+        WHERE plan_tarifa_id = (
+          SELECT id FROM planes_tarifa WHERE estado = 'publicado'
+          ORDER BY publicado_at DESC, id DESC LIMIT 1
+        ) ORDER BY id
+      `).all(),
+      this.db.prepare(`
         SELECT id, codigo, moneda, version, precio_comida_centavos,
-          comidas_adicionales_por_persona_noche, publicado_at
+          comidas_adicionales_por_persona_noche, precio_desayuno_centavos,
+          precio_almuerzo_centavos, precio_cena_centavos, ajuste_paquete_centavos, publicado_at
         FROM tarifas_alimentacion WHERE estado = 'publicado' ORDER BY codigo
       `).all(),
     ]);
@@ -138,6 +152,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       if (row.modalidad != null) espacio.modalidades.push({
         id: Number(row.id), modalidad: String(row.modalidad), contexto: String(row.contexto),
         unidadVenta: String(row.unidad_venta), habilitada: Number(row.habilitada) === 1,
+        nombreComercial: String(row.nombre_comercial || row.modalidad),
         actualizadoAt: String(row.updated_at),
       });
     }
@@ -188,6 +203,13 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         senas: (senasTarifa.results || []).map(row => ({
           subtotalDesdeCentavos: Number(row.subtotal_desde_centavos),
           subtotalHastaCentavos: row.subtotal_hasta_centavos == null ? null : Number(row.subtotal_hasta_centavos),
+          tipo: row.tipo as 'porcentaje_bps' | 'importe_fijo', valor: Number(row.valor),
+        })),
+        ajustes: (ajustesTarifa.results || []).map(row => ({
+          codigo: String(row.codigo), nombre: String(row.nombre),
+          anticipacionDesdeDias: Number(row.anticipacion_desde_dias),
+          anticipacionHastaDias: row.anticipacion_hasta_dias == null ? null : Number(row.anticipacion_hasta_dias),
+          direccion: row.direccion as 'descuento' | 'recargo',
           tipo: row.tipo as 'porcentaje_bps' | 'importe_fijo', valor: Number(row.valor),
         })),
       } : null,
@@ -242,7 +264,8 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
     entrada: Parameters<RepositorioConfiguracionBaseReservas['actualizarModalidad']>[0]
   ): Promise<ModalidadComercialActualizada | null> {
     const anterior = await this.db.prepare(`
-      SELECT me.id, me.habilitada, me.modalidad, me.contexto, me.unidad_venta, me.updated_at,
+      SELECT me.id, me.habilitada, me.modalidad, me.contexto, me.unidad_venta,
+        me.nombre_comercial, me.updated_at,
         e.codigo espacio_codigo
       FROM modalidades_espacio me JOIN espacios e ON e.id = me.espacio_id WHERE me.id = ?
     `).bind(entrada.id).first();
@@ -251,12 +274,13 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
     const resultados = await this.db.batch([
       this.db.prepare(`
         UPDATE modalidades_espacio
-        SET modalidad = ?, contexto = ?, unidad_venta = ?, habilitada = ?,
+        SET modalidad = ?, contexto = ?, unidad_venta = ?, habilitada = ?, nombre_comercial = ?,
           updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         WHERE id = ? AND updated_at = ?
-        RETURNING id, modalidad, contexto, unidad_venta, habilitada, updated_at
+        RETURNING id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial, updated_at
       `).bind(
         entrada.modalidad, entrada.contexto, entrada.unidadVenta, entrada.habilitada ? 1 : 0,
+        (entrada.nombreComercial || String(anterior.nombre_comercial || anterior.modalidad)).trim(),
         entrada.id, entrada.expectedUpdatedAt
       ),
       this.db.prepare(`
@@ -265,13 +289,16 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         ) SELECT ?, 'actualizar_modalidad_comercial', 'usuario', 'modalidad_espacio', ?, ?, ?,
           json_object('espacio_codigo', ?, 'modalidad_anterior', ?, 'modalidad_nueva', ?,
             'contexto_anterior', ?, 'contexto_nuevo', ?, 'unidad_venta_anterior', ?, 'unidad_venta_nueva', ?,
-            'habilitada_anterior', ?, 'habilitada_nueva', ?)
+            'habilitada_anterior', ?, 'habilitada_nueva', ?,
+            'nombre_comercial_anterior', ?, 'nombre_comercial_nuevo', ?)
         WHERE changes() = 1
       `).bind(
         entrada.actorEmail, String(entrada.id), entrada.motivo, entrada.correlationId,
         String(anterior.espacio_codigo), String(anterior.modalidad), entrada.modalidad,
         String(anterior.contexto), entrada.contexto, String(anterior.unidad_venta), entrada.unidadVenta,
-        Number(anterior.habilitada), entrada.habilitada ? 1 : 0
+        Number(anterior.habilitada), entrada.habilitada ? 1 : 0,
+        String(anterior.nombre_comercial || anterior.modalidad),
+        (entrada.nombreComercial || String(anterior.nombre_comercial || anterior.modalidad)).trim()
       ),
     ]);
     const row = resultados[0]?.results?.[0];
@@ -279,6 +306,43 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       id: Number(row.id), espacioCodigo: String(anterior.espacio_codigo),
       modalidad: String(row.modalidad), contexto: String(row.contexto), unidadVenta: String(row.unidad_venta),
       habilitada: Number(row.habilitada) === 1, actualizadoAt: String(row.updated_at),
+      nombreComercial: String(row.nombre_comercial),
+    } : null;
+  }
+
+  async crearModalidad(
+    entrada: Parameters<RepositorioConfiguracionBaseReservas['crearModalidad']>[0]
+  ): Promise<ModalidadComercialActualizada | null> {
+    const resultados = await this.db.batch([
+      this.db.prepare(`
+        INSERT INTO modalidades_espacio (
+          espacio_id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial
+        )
+        SELECT id, ?, ?, ?, ?, ? FROM espacios WHERE codigo = ?
+        ON CONFLICT(espacio_id, modalidad, contexto, unidad_venta) DO NOTHING
+        RETURNING id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial, updated_at
+      `).bind(
+        entrada.modalidad, entrada.contexto, entrada.unidadVenta, entrada.habilitada ? 1 : 0,
+        entrada.nombreComercial!.trim(), entrada.espacioCodigo
+      ),
+      this.db.prepare(`
+        INSERT INTO auditoria_admin (
+          email, accion, actor_tipo, entidad_tipo, entidad_id, motivo, correlation_id, metadata_json
+        ) SELECT ?, 'crear_modalidad_comercial', 'usuario', 'modalidad_espacio', ?, ?, ?,
+          json_object('espacio_codigo', ?, 'modalidad', ?, 'contexto', ?, 'unidad_venta', ?, 'nombre_comercial', ?)
+        WHERE changes() = 1
+      `).bind(
+        entrada.actorEmail, entrada.operacionUid, entrada.motivo, entrada.correlationId,
+        entrada.espacioCodigo, entrada.modalidad, entrada.contexto, entrada.unidadVenta,
+        entrada.nombreComercial!.trim()
+      ),
+    ]);
+    const row = resultados[0]?.results?.[0];
+    return row ? {
+      id: Number(row.id), espacioCodigo: entrada.espacioCodigo,
+      modalidad: String(row.modalidad), contexto: String(row.contexto), unidadVenta: String(row.unidad_venta),
+      habilitada: Number(row.habilitada) === 1, nombreComercial: String(row.nombre_comercial),
+      actualizadoAt: String(row.updated_at),
     } : null;
   }
 
@@ -341,7 +405,8 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
   ): Promise<TarifaAlimentacionActualizada | null> {
     const anterior = await this.db.prepare(`
       SELECT id, codigo, moneda, version, precio_comida_centavos,
-        comidas_adicionales_por_persona_noche
+        comidas_adicionales_por_persona_noche, precio_desayuno_centavos,
+        precio_almuerzo_centavos, precio_cena_centavos, ajuste_paquete_centavos
       FROM tarifas_alimentacion WHERE codigo = ? AND estado = 'publicado'
     `).bind(entrada.codigo).first();
     if (!anterior || Number(anterior.version) !== entrada.expectedVersion) return null;
@@ -354,14 +419,21 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       this.db.prepare(`
         INSERT INTO tarifas_alimentacion (
           codigo, moneda, version, precio_comida_centavos,
-          comidas_adicionales_por_persona_noche, estado, publicado_at
-        ) SELECT ?, ?, ?, ?, ?, 'publicado', strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+          comidas_adicionales_por_persona_noche, precio_desayuno_centavos,
+          precio_almuerzo_centavos, precio_cena_centavos, ajuste_paquete_centavos,
+          estado, publicado_at
+        ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'publicado', strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         WHERE changes() = 1
         RETURNING id, codigo, moneda, version, precio_comida_centavos,
-          comidas_adicionales_por_persona_noche, publicado_at
+          comidas_adicionales_por_persona_noche, precio_desayuno_centavos,
+          precio_almuerzo_centavos, precio_cena_centavos, ajuste_paquete_centavos, publicado_at
       `).bind(
         entrada.codigo, String(anterior.moneda), entrada.expectedVersion + 1,
-        entrada.precioComidaCentavos, Number(anterior.comidas_adicionales_por_persona_noche)
+        entrada.precioComidaCentavos, Number(anterior.comidas_adicionales_por_persona_noche),
+        entrada.precioDesayunoCentavos ?? Number(anterior.precio_desayuno_centavos),
+        entrada.precioAlmuerzoCentavos ?? Number(anterior.precio_almuerzo_centavos),
+        entrada.precioCenaCentavos ?? Number(anterior.precio_cena_centavos),
+        entrada.ajustePaqueteCentavos ?? Number(anterior.ajuste_paquete_centavos)
       ),
       this.db.prepare(`
         INSERT INTO auditoria_admin (

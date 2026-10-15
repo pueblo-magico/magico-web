@@ -5,6 +5,7 @@ import type {
   PublicPriceRule,
   PublicPricingSummary,
 } from './bookingApi';
+import { localTodayIso } from './bookingApi.ts';
 
 export type BookingPricePreview = {
   currency: string;
@@ -71,6 +72,20 @@ function priceCandidate(
       if (supplement === undefined) return null;
       totalCentavos += supplement * people;
     }
+  }
+
+  const firstDate = summaries[0]?.fecha_referencia;
+  const referenceDate = localTodayIso();
+  const leadDays = firstDate
+    ? Math.max(0, Math.floor((Date.parse(`${firstDate}T00:00:00Z`) - Date.parse(`${referenceDate}T00:00:00Z`)) / 86_400_000))
+    : 0;
+  for (const adjustment of summaries[0]?.ajustes || []) {
+    if (leadDays < adjustment.anticipacion_desde_dias ||
+        (adjustment.anticipacion_hasta_dias !== null && leadDays > adjustment.anticipacion_hasta_dias)) continue;
+    const magnitude = adjustment.tipo === 'porcentaje_bps'
+      ? Math.round(totalCentavos * adjustment.valor / 10_000)
+      : adjustment.valor;
+    totalCentavos = Math.max(0, totalCentavos + (adjustment.direccion === 'descuento' ? -magnitude : magnitude));
   }
 
   return {

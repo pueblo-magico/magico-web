@@ -32,6 +32,12 @@ function mapearPlan(body: any): PlanTarifaBorrador {
       subtotalHastaCentavos: regla?.subtotal_hasta_centavos == null ? null : Number(regla.subtotal_hasta_centavos),
       tipo: regla?.tipo, valor: Number(regla?.valor),
     })) : [],
+    ajustes: Array.isArray(body?.ajustes) ? body.ajustes.map((regla: any) => ({
+      codigo: String(regla?.codigo || ''), nombre: String(regla?.nombre || ''),
+      anticipacionDesdeDias: Number(regla?.anticipacion_desde_dias),
+      anticipacionHastaDias: regla?.anticipacion_hasta_dias == null ? null : Number(regla.anticipacion_hasta_dias),
+      direccion: regla?.direccion, tipo: regla?.tipo, valor: Number(regla?.valor),
+    })) : [],
   };
 }
 

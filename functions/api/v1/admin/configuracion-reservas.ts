@@ -1,5 +1,6 @@
 import {
   actualizarModalidadConfiguracion,
+  crearModalidadConfiguracion,
   actualizarEspacioConfiguracion,
   actualizarParametroConfiguracion,
   consultarConfiguracionBase,
@@ -54,9 +55,19 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
         contexto: String(body.contexto || '') as any,
         unidadVenta: String(body.unidad_venta || '') as any,
         habilitada: body.habilitada === true, expectedUpdatedAt: String(body.expected_updated_at || ''),
+        nombreComercial: String(body.nombre_comercial || body.modalidad || ''),
         motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
       }, repositorio);
       return json({ data: modalidad, meta: { version: 'v1' } });
+    }
+    if (accion === 'crear_modalidad') {
+      const modalidad = await crearModalidadConfiguracion({
+        espacioCodigo: String(body.espacio_codigo || ''), modalidad: String(body.modalidad || '') as any,
+        contexto: String(body.contexto || '') as any, unidadVenta: String(body.unidad_venta || '') as any,
+        habilitada: body.habilitada === true, nombreComercial: String(body.nombre_comercial || ''),
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: modalidad, meta: { version: 'v1' } }, 201);
     }
     if (accion === 'actualizar_espacio') {
       const espacio = await actualizarEspacioConfiguracion({
@@ -74,6 +85,10 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
       const tarifa = await publicarTarifaAlimentacionConfiguracion({
         codigo: String(body.codigo || '') as 'desayuno_incluido' | 'pension_completa',
         precioComidaCentavos: Number(body.precio_comida_centavos),
+        precioDesayunoCentavos: body.precio_desayuno_centavos == null ? undefined : Number(body.precio_desayuno_centavos),
+        precioAlmuerzoCentavos: body.precio_almuerzo_centavos == null ? undefined : Number(body.precio_almuerzo_centavos),
+        precioCenaCentavos: body.precio_cena_centavos == null ? undefined : Number(body.precio_cena_centavos),
+        ajustePaqueteCentavos: body.ajuste_paquete_centavos == null ? undefined : Number(body.ajuste_paquete_centavos),
         expectedVersion: Number(body.expected_version), motivo: String(body.motivo || ''),
         actorEmail: auth.email, correlationId,
       }, repositorio);

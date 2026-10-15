@@ -30,7 +30,7 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
     if (!plan) return null;
     const planId = Number(plan.id);
 
-    const [precios, senas] = await Promise.all([
+    const [precios, senas, ajustes] = await Promise.all([
       this.db.prepare(`
         SELECT t.codigo temporada_codigo, t.fecha_desde, t.fecha_hasta, t.prioridad,
                t.dias_semana_mask,
@@ -42,6 +42,11 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
       this.db.prepare(`
         SELECT subtotal_desde_centavos, subtotal_hasta_centavos, tipo, valor
         FROM reglas_sena WHERE plan_tarifa_id = ? ORDER BY subtotal_desde_centavos
+      `).bind(planId).all(),
+      this.db.prepare(`
+        SELECT codigo, nombre, anticipacion_desde_dias, anticipacion_hasta_dias,
+               direccion, tipo, valor
+        FROM reglas_ajuste_precio WHERE plan_tarifa_id = ? ORDER BY id
       `).bind(planId).all(),
     ]);
 
@@ -66,6 +71,13 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
         subtotalHastaCentavos: row.subtotal_hasta_centavos === null ? null : Number(row.subtotal_hasta_centavos),
         tipo: row.tipo as any,
         valor: Number(row.valor),
+      })),
+      reglasAjuste: (ajustes.results || []).map(row => ({
+        codigo: String(row.codigo), nombre: String(row.nombre),
+        anticipacionDesdeDias: Number(row.anticipacion_desde_dias),
+        anticipacionHastaDias: row.anticipacion_hasta_dias === null ? null : Number(row.anticipacion_hasta_dias),
+        direccion: row.direccion as 'descuento' | 'recargo',
+        tipo: row.tipo as 'porcentaje_bps' | 'importe_fijo', valor: Number(row.valor),
       })),
     };
   }

@@ -63,6 +63,9 @@ export async function onRequestPost({ request, env }: any) {
         precio_comida_centavos: cotizacion.desglose.precio_comida_centavos,
         comidas_adicionales_por_persona_noche:
           cotizacion.desglose.comidas_adicionales_por_persona_noche,
+        ajustes_precio: cotizacion.desglose.ajustes_precio,
+        subtotal_antes_ajustes_centavos: cotizacion.desglose.subtotal_antes_ajustes_centavos,
+        ajuste_total_centavos: cotizacion.desglose.ajuste_total_centavos,
         subtotal_centavos: cotizacion.desglose.subtotal_centavos,
         sena_centavos: cotizacion.sena.monto_centavos,
         saldo_centavos: cotizacion.desglose.subtotal_centavos - cotizacion.sena.monto_centavos,

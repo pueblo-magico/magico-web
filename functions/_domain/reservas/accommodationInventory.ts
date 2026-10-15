@@ -29,6 +29,7 @@ export type ModalidadEspacio = {
   contexto: ContextoAlojamiento;
   unidadVenta: UnidadVenta;
   habilitada: boolean;
+  nombreComercial?: string;
 };
 
 export type UnidadAsignable = {

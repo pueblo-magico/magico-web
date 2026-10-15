@@ -38,6 +38,7 @@ export type ConfiguracionBaseReservas = {
       contexto: string;
       unidadVenta: string;
       habilitada: boolean;
+      nombreComercial: string;
       actualizadoAt: string;
     }>;
   }>;
@@ -74,6 +75,15 @@ export type ConfiguracionBaseReservas = {
       tipo: 'porcentaje_bps' | 'importe_fijo';
       valor: number;
     }>;
+    ajustes: Array<{
+      codigo: string;
+      nombre: string;
+      anticipacionDesdeDias: number;
+      anticipacionHastaDias: number | null;
+      direccion: 'descuento' | 'recargo';
+      tipo: 'porcentaje_bps' | 'importe_fijo';
+      valor: number;
+    }>;
   };
   politicaCancelacion: null | {
     codigo: string;
@@ -90,6 +100,10 @@ export type ConfiguracionBaseReservas = {
     version: number;
     precioComidaCentavos: number;
     comidasAdicionalesPorPersonaNoche: number;
+    precioDesayunoCentavos: number;
+    precioAlmuerzoCentavos: number;
+    precioCenaCentavos: number;
+    ajustePaqueteCentavos: number;
     publicadoAt: string;
   }>;
 };
@@ -100,8 +114,13 @@ export type CambioModalidadComercial = {
   contexto: 'general' | 'retiro';
   unidadVenta: 'espacio' | 'cama' | 'parcela';
   habilitada: boolean;
+  nombreComercial?: string;
   expectedUpdatedAt: string;
   motivo: string;
+};
+
+export type NuevaModalidadComercial = Omit<CambioModalidadComercial, 'id' | 'expectedUpdatedAt'> & {
+  espacioCodigo: string;
 };
 
 export type CambioEspacioComercial = {
@@ -130,6 +149,10 @@ export type EspacioComercialActualizado = {
 export type CambioTarifaAlimentacion = {
   codigo: 'desayuno_incluido' | 'pension_completa';
   precioComidaCentavos: number;
+  precioDesayunoCentavos?: number;
+  precioAlmuerzoCentavos?: number;
+  precioCenaCentavos?: number;
+  ajustePaqueteCentavos?: number;
   expectedVersion: number;
   motivo: string;
 };
@@ -141,6 +164,7 @@ export type ModalidadComercialActualizada = {
   contexto: string;
   unidadVenta: string;
   habilitada: boolean;
+  nombreComercial: string;
   actualizadoAt: string;
 };
 
@@ -183,6 +207,9 @@ export function validarCambioModalidadComercial(entrada: CambioModalidadComercia
       typeof entrada.habilitada !== 'boolean' || !entrada.expectedUpdatedAt) {
     throw new ErrorReserva('DATOS_INVALIDOS', 'La modalidad comercial es inválida.');
   }
+  if (entrada.nombreComercial !== undefined && (!entrada.nombreComercial.trim() || entrada.nombreComercial.trim().length > 80)) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El nombre comercial de la modalidad es inválido.');
+  }
   const unidadValida = entrada.modalidad === 'privada'
     ? entrada.unidadVenta === 'espacio'
     : entrada.modalidad === 'camping'
@@ -192,6 +219,20 @@ export function validarCambioModalidadComercial(entrada: CambioModalidadComercia
     throw new ErrorReserva('DATOS_INVALIDOS', 'La unidad de venta no corresponde a la modalidad elegida.');
   }
   return { ...entrada, motivo: validarMotivo(entrada.motivo) };
+}
+
+export function validarNuevaModalidadComercial(entrada: NuevaModalidadComercial): NuevaModalidadComercial {
+  if (!entrada.nombreComercial?.trim()) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El nombre comercial de la modalidad es obligatorio.');
+  }
+  const validada = validarCambioModalidadComercial({
+    ...entrada, id: 1, expectedUpdatedAt: 'nuevo',
+  });
+  if (!entrada.espacioCodigo?.trim()) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El alojamiento de la modalidad es obligatorio.');
+  }
+  const { id: _id, expectedUpdatedAt: _expected, ...resultado } = validada;
+  return { ...resultado, nombreComercial: entrada.nombreComercial.trim(), espacioCodigo: entrada.espacioCodigo.trim() };
 }
 
 export function validarCambioEspacioComercial(entrada: CambioEspacioComercial): CambioEspacioComercial {
@@ -212,6 +253,12 @@ export function validarCambioTarifaAlimentacion(entrada: CambioTarifaAlimentacio
   if (!['desayuno_incluido', 'pension_completa'].includes(entrada.codigo) ||
       !Number.isSafeInteger(entrada.precioComidaCentavos) || entrada.precioComidaCentavos < 0 ||
       entrada.precioComidaCentavos > 1_000_000_000 ||
+      ![entrada.precioDesayunoCentavos ?? entrada.precioComidaCentavos,
+        entrada.precioAlmuerzoCentavos ?? entrada.precioComidaCentavos,
+        entrada.precioCenaCentavos ?? entrada.precioComidaCentavos]
+        .every(valor => Number.isSafeInteger(valor) && valor >= 0 && valor <= 1_000_000_000) ||
+      !Number.isSafeInteger(entrada.ajustePaqueteCentavos ?? 0) ||
+      Math.abs(entrada.ajustePaqueteCentavos ?? 0) > 1_000_000_000 ||
       !Number.isSafeInteger(entrada.expectedVersion) || entrada.expectedVersion < 1) {
     throw new ErrorReserva('DATOS_INVALIDOS', 'La tarifa de alimentación es inválida.');
   }

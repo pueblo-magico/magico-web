@@ -27,13 +27,13 @@ test('mantiene cada sección en una URL recargable y compatible con navegación 
   assert.match(source, /onClick=\{\(\) => navigate\(RUTA_POR_VISTA\[key\]\)\}/);
   assert.match(source, /vistaDesdeRuta\(location\.pathname\)/);
   assert.match(prerender, /ADMIN_RESERVAS_SECTIONS/);
-  for (const section of ['listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos', 'configuracion', 'integraciones', 'usuarios', 'actividad']) {
+  for (const section of ['listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos', 'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad']) {
     assert.match(prerender, new RegExp(`['"]${section}['"]`));
   }
 });
 
 test('mantiene accesibles todas las vistas existentes y sus permisos', () => {
-  for (const view of ['operativa', 'ocupacion', 'metricas', 'historial', 'consultas', 'arrepentimientos', 'configuracion', 'integraciones', 'usuarios', 'actividad']) {
+  for (const view of ['operativa', 'ocupacion', 'metricas', 'historial', 'consultas', 'arrepentimientos', 'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad']) {
     assert.match(source, new RegExp(`key: '${view}'`));
   }
   assert.match(source, /puedeEditar \? \[\{ key: 'ocupacion'/);
@@ -51,7 +51,8 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /<SeccionOcupacionOperativa \/>/);
   assert.match(source, /<SeccionArrepentimientos puedeGestionar=\{puedeEditar\} \/>/);
   assert.match(source, /<SeccionIntegraciones esSuperAdmin=\{esSuperAdmin\} \/>/);
-  assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} \/>/);
+  assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} modo="base" \/>/);
+  assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} modo="precios" \/>/);
 });
 
 test('muestra el identificador y la fecha de creación y permite buscarlos por código', () => {
@@ -92,7 +93,8 @@ test('acompaña los reportes con gráficos basados en métricas existentes', () 
 });
 
 test('permite al superadmin versionar la configuración comercial sin exponer secretos', () => {
-  assert.match(source, /Configuración comercial/);
+  assert.match(source, /Configuración base/);
+  assert.match(source, /Políticas de precios/);
   assert.match(source, /Precios y seña/);
   assert.match(source, /Modalidades de reserva/);
   assert.match(source, /Política de cancelación/);
@@ -104,6 +106,8 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /opcionesModalidadParaEspacio/);
   assert.match(source, /pueblo_magico_logo_marron\.svg/);
   assert.match(source, /accion: 'publicar_tarifa_alimentacion'/);
+  assert.match(source, /Ajustes sobre el total/);
+  assert.match(source, /Crear modalidad/);
   assert.match(source, /requestJson\('\/api\/admin\/tarifas'/);
   assert.match(source, /Agregar tarifa/);
   assert.match(source, /agregarReglaPrecio/);

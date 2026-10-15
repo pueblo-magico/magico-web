@@ -389,6 +389,11 @@ export const BookingWidget: React.FC<{
       .flatMap(item => item.modalidades.map(option => option.codigo)));
     return (['compartida', 'privada', 'camping'] as const).filter(item => unique.has(item));
   }, [accommodations, type]);
+  const commercialModeNames = useMemo(() => new Map(accommodations
+    .filter(item => item.tipo === type)
+    .flatMap(item => item.modalidades.map(option => [option.codigo, option.nombre] as const))
+    .filter((entry): entry is readonly [BookingMode, string] => Boolean(entry[1]))
+  ), [accommodations, type]);
 
   useEffect(() => {
     if (!open || optionsLoaded) return;
@@ -798,7 +803,7 @@ export const BookingWidget: React.FC<{
                         </button>
                       ))}</div>
                       <p className="booking-section-title">{c.mode}</p>
-                      <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={23} /><span>{c[option]}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                      <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={23} /><span>{commercialModeNames.get(option) || c[option]}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                       <p className="booking-section-title">{c.meals}</p>
                       <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={23} /><span><strong>{c[option]}</strong><small>{option === 'desayuno_incluido' ? c.breakfastHelp : c.fullBoardHelp}</small></span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                     </>

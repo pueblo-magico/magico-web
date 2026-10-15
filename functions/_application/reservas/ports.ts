@@ -69,6 +69,7 @@ import type {
   CambioEspacioComercial,
   CambioParametroOperativo,
   CambioTarifaAlimentacion,
+  NuevaModalidadComercial,
   ConfiguracionBaseReservas,
   EspacioComercialActualizado,
   ModalidadComercialActualizada,
@@ -260,6 +261,11 @@ export interface RepositorioConfiguracionBaseReservas {
     operacionUid: string;
   }): Promise<ParametroOperativoReserva | null>;
   actualizarModalidad(entrada: CambioModalidadComercial & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ModalidadComercialActualizada | null>;
+  crearModalidad(entrada: NuevaModalidadComercial & {
     actorEmail: string;
     correlationId: string;
     operacionUid: string;

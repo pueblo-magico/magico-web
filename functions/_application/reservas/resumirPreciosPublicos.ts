@@ -29,7 +29,7 @@ export async function resumirPreciosPublicos(
 
   const opcionesPorTipo = new Map<string, {
     tipo: typeof TIPOS_PUBLICOS[number];
-    modalidades: Set<string>;
+    modalidades: Map<string, string>;
     capacidadComercial: number;
   }>();
 
@@ -37,11 +37,11 @@ export async function resumirPreciosPublicos(
     if (!esTipoPublico(espacio.tipo)) continue;
     const actual = opcionesPorTipo.get(espacio.tipo) || {
       tipo: espacio.tipo,
-      modalidades: new Set<string>(),
+      modalidades: new Map<string, string>(),
       capacidadComercial: 0,
     };
     actual.capacidadComercial = Math.max(actual.capacidadComercial, espacio.capacidad_comercial);
-    espacio.modalidades.forEach(item => actual.modalidades.add(item.codigo));
+    espacio.modalidades.forEach(item => actual.modalidades.set(item.codigo, item.nombre || item.codigo));
     opcionesPorTipo.set(espacio.tipo, actual);
   }
 
@@ -57,7 +57,8 @@ export async function resumirPreciosPublicos(
     );
     return [{
       tipo_alojamiento: tipo,
-      modalidades: Array.from(opcion.modalidades),
+      modalidades: Array.from(opcion.modalidades.keys()),
+      nombres_modalidades: Object.fromEntries(opcion.modalidades),
       capacidad_comercial: opcion.capacidadComercial,
       tarifas: reglas.map(regla => ({
         temporada_codigo: regla.temporadaCodigo,
@@ -82,15 +83,28 @@ export async function resumirPreciosPublicos(
         version: desayuno.version,
         precio_comida_centavos: desayuno.precioComidaCentavos,
         comidas_adicionales_por_persona_noche: desayuno.comidasAdicionalesPorPersonaNoche,
+        precio_desayuno_centavos: desayuno.precioDesayunoCentavos ?? desayuno.precioComidaCentavos,
       } : null,
       pension_completa: pensionCompleta ? {
         version: pensionCompleta.version,
         precio_comida_centavos: pensionCompleta.precioComidaCentavos,
         comidas_adicionales_por_persona_noche: pensionCompleta.comidasAdicionalesPorPersonaNoche,
         adicional_por_persona_noche_centavos:
-          pensionCompleta.precioComidaCentavos * pensionCompleta.comidasAdicionalesPorPersonaNoche,
+          Math.max(0, (pensionCompleta.precioAlmuerzoCentavos ?? pensionCompleta.precioComidaCentavos) +
+            (pensionCompleta.precioCenaCentavos ?? pensionCompleta.precioComidaCentavos) +
+            (pensionCompleta.ajustePaqueteCentavos ?? 0)),
+        precio_desayuno_centavos: pensionCompleta.precioDesayunoCentavos ?? 0,
+        precio_almuerzo_centavos: pensionCompleta.precioAlmuerzoCentavos ?? pensionCompleta.precioComidaCentavos,
+        precio_cena_centavos: pensionCompleta.precioCenaCentavos ?? pensionCompleta.precioComidaCentavos,
+        ajuste_paquete_centavos: pensionCompleta.ajustePaqueteCentavos ?? 0,
       } : null,
     },
+    ajustes: (plan.reglasAjuste || []).map(regla => ({
+      codigo: regla.codigo, nombre: regla.nombre,
+      anticipacion_desde_dias: regla.anticipacionDesdeDias,
+      anticipacion_hasta_dias: regla.anticipacionHastaDias,
+      direccion: regla.direccion, tipo: regla.tipo, valor: regla.valor,
+    })),
     opciones,
   };
 }

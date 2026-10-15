@@ -77,6 +77,59 @@ test('calcula la selección actual con suplemento de pensión completa', () => {
   });
 });
 
+test('aplica los ajustes comerciales al total mostrado en la vista previa', () => {
+  const first = summary('2027-10-08', [
+    { type: 'domo', modes: ['compartida'], rates: [rule(100_000)] },
+  ]);
+  first.ajustes = [{
+    codigo: 'venta-anticipada', nombre: 'Venta anticipada', anticipacion_desde_dias: 0,
+    anticipacion_hasta_dias: null, direccion: 'descuento', tipo: 'porcentaje_bps', valor: 1000,
+  }];
+  const second = summary('2027-10-09', [
+    { type: 'domo', modes: ['compartida'], rates: [rule(100_000)] },
+  ]);
+
+  assert.deepEqual(estimateBookingPrice([first, second], {
+    people: 2, type: 'domo', mode: 'compartida',
+  }), {
+    currency: 'ARS', totalCentavos: 180_000, perPersonCentavos: 90_000,
+    type: 'domo', mode: 'compartida',
+  });
+});
+
+test('rechaza una vista previa inconsistente o sin una opción vendible', () => {
+  const first = summary('2027-10-08', [
+    { type: 'domo', modes: ['compartida'], rates: [rule(100_000)] },
+  ]);
+  const second = summary('2027-10-09', [
+    { type: 'domo', modes: ['compartida'], rates: [rule(100_000)] },
+  ]);
+  second.plan.moneda = 'USD';
+  assert.equal(estimateBookingPrice([first, second], {
+    people: 2, type: 'domo', mode: 'compartida',
+  }), null);
+
+  first.opciones[0].capacidad_comercial = 1;
+  assert.equal(estimateBookingPrice([first], {
+    people: 2, type: 'domo', mode: 'compartida',
+  }), null);
+  assert.equal(estimateBookingPrice([first], { people: 0 }), null);
+  assert.equal(estimateBookingPrice([first], { people: 1, type: 'camping' }), null);
+});
+
+test('aplica un importe fijo una sola vez y nunca deja un total negativo', () => {
+  const first = summary('2027-10-08', [
+    { type: 'domo', modes: ['compartida'], rates: [rule(100_000)] },
+  ]);
+  first.ajustes = [{
+    codigo: 'bonificacion', nombre: 'Bonificación', anticipacion_desde_dias: 0,
+    anticipacion_hasta_dias: null, direccion: 'descuento', tipo: 'importe_fijo', valor: 200_000,
+  }];
+  assert.equal(estimateBookingPrice([first], {
+    people: 1, type: 'domo', mode: 'compartida',
+  })?.totalCentavos, 0);
+});
+
 test('no mezcla alojamientos por noche para fabricar un mínimo imposible', () => {
   const first = summary('2027-10-08', [
     { type: 'domo', modes: ['compartida'], rates: [rule(10_000)] },

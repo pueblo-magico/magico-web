@@ -61,7 +61,7 @@ export class D1RepositorioInventarioAlojamiento implements RepositorioInventario
 
   async listarModalidades(espacioId: number): Promise<ModalidadEspacio[]> {
     const resultado = await this.db.prepare(
-      `SELECT espacio_id, modalidad, contexto, unidad_venta, habilitada
+      `SELECT espacio_id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial
        FROM modalidades_espacio
        WHERE espacio_id = ?1
        ORDER BY contexto, modalidad, unidad_venta`
@@ -73,6 +73,7 @@ export class D1RepositorioInventarioAlojamiento implements RepositorioInventario
       contexto: fila.contexto as ModalidadEspacio['contexto'],
       unidadVenta: fila.unidad_venta as ModalidadEspacio['unidadVenta'],
       habilitada: booleano(fila.habilitada),
+      nombreComercial: String(fila.nombre_comercial || fila.modalidad),
     }));
   }
 

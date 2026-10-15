@@ -116,7 +116,7 @@ test('publica y calcula disponibilidad de camping cuando espacio y modalidad est
   const camping = bodyCatalogo.data.find((item: any) => item.tipo === 'camping');
   assert.equal(camping.codigo, 'camping-exterior');
   assert.equal(camping.capacidad_comercial, 6);
-  assert.deepEqual(camping.modalidades, [{ codigo: 'camping', unidad_venta: 'parcela' }]);
+  assert.deepEqual(camping.modalidades, [{ codigo: 'camping', nombre: 'Camping', unidad_venta: 'parcela' }]);
 
   const disponibilidad = await consultarDisponibilidad({
     request: new Request('https://test/api/v1/public/disponibilidad?check_in=2027-04-11&check_out=2027-04-13&personas=4&tipo_alojamiento=camping&modalidad=camping'),
@@ -143,6 +143,8 @@ test('el resumen público de precios refleja sólo modalidades habilitadas y el 
   assert.equal(bodyInicial.data.plan.version, 1);
   assert.deepEqual(bodyInicial.data.opciones.map((item: any) => item.tipo_alojamiento), ['domo', 'refugio']);
   assert.equal(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas.length, 4);
+  assert.equal(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo')
+    .nombres_modalidades.compartida, 'Compartida');
   assert.ok(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas
     .every((item: any) => Number.isFinite(item.prioridad)));
   assert.equal(bodyInicial.data.alimentacion.pension_completa.adicional_por_persona_noche_centavos, 4_000_000);
@@ -165,6 +167,7 @@ test('el resumen público de precios refleja sólo modalidades habilitadas y el 
   const camping = bodyCamping.data.opciones.find((item: any) => item.tipo_alojamiento === 'camping');
   assert.ok(camping);
   assert.deepEqual(camping.modalidades, ['camping']);
+  assert.equal(camping.nombres_modalidades.camping, 'Camping');
   assert.deepEqual(camping.tarifas, []);
   assert.doesNotMatch(JSON.stringify(bodyCamping), /cliente_|email|telefono/i);
   sqlite.close();

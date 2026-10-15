@@ -8,7 +8,7 @@ export interface PublicAccommodation {
   nombre: string;
   tipo: AccommodationType;
   capacidad_comercial: number;
-  modalidades: Array<{ codigo: BookingMode; unidad_venta: string }>;
+  modalidades: Array<{ codigo: BookingMode; nombre?: string; unidad_venta: string }>;
 }
 
 export interface PublicPriceRule {
@@ -32,17 +32,32 @@ export interface PublicPricingSummary {
       version: number;
       precio_comida_centavos: number;
       comidas_adicionales_por_persona_noche: number;
+      precio_desayuno_centavos?: number;
     };
     pension_completa: null | {
       version: number;
       precio_comida_centavos: number;
       comidas_adicionales_por_persona_noche: number;
       adicional_por_persona_noche_centavos: number;
+      precio_desayuno_centavos?: number;
+      precio_almuerzo_centavos?: number;
+      precio_cena_centavos?: number;
+      ajuste_paquete_centavos?: number;
     };
   };
+  ajustes?: Array<{
+    codigo: string;
+    nombre: string;
+    anticipacion_desde_dias: number;
+    anticipacion_hasta_dias: number | null;
+    direccion: 'descuento' | 'recargo';
+    tipo: 'porcentaje_bps' | 'importe_fijo';
+    valor: number;
+  }>;
   opciones: Array<{
     tipo_alojamiento: AccommodationType;
     modalidades: BookingMode[];
+    nombres_modalidades?: Partial<Record<BookingMode, string>>;
     capacidad_comercial: number;
     tarifas: PublicPriceRule[];
   }>;
@@ -69,6 +84,9 @@ export interface QuoteResponse {
     regimen_alimentacion: MealPlan;
     alojamiento_centavos: number;
     alimentacion_centavos: number;
+    ajustes_precio?: Array<{ codigo: string; nombre: string; importeCentavos: number }>;
+    subtotal_antes_ajustes_centavos?: number;
+    ajuste_total_centavos?: number;
     subtotal_centavos: number;
     sena_centavos: number;
     saldo_centavos: number;

@@ -1,4 +1,5 @@
 import type { SolicitudCotizacion } from './models.ts';
+import { fechaOperativaCordoba } from './operationalDate.ts';
 
 export type ReglaPrecioVersionada = {
   temporadaCodigo: string;
@@ -30,6 +31,15 @@ export type ConfiguracionTarifa = {
   moneda: string;
   reglasPrecio: ReglaPrecioVersionada[];
   reglasSena: ReglaSenaVersionada[];
+  reglasAjuste?: Array<{
+    codigo: string;
+    nombre: string;
+    anticipacionDesdeDias: number;
+    anticipacionHastaDias: number | null;
+    direccion: 'descuento' | 'recargo';
+    tipo: 'porcentaje_bps' | 'importe_fijo';
+    valor: number;
+  }>;
 };
 
 export type CotizacionVersionada = {
@@ -39,6 +49,9 @@ export type CotizacionVersionada = {
   senaCentavos: number;
   saldoCentavos: number;
   exclusividadGratis: boolean;
+  subtotalAntesAjustesCentavos: number;
+  ajusteTotalCentavos: number;
+  ajustes: Array<{ codigo: string; nombre: string; importeCentavos: number }>;
   noches: Array<{
     fecha: string;
     temporada: string;
@@ -67,7 +80,8 @@ function diaSemanaIso(fecha: string): number {
 export function cotizarConPlan(
   solicitud: SolicitudCotizacion,
   configuracion: ConfiguracionTarifa,
-  subtotalAdicionalCentavos = 0
+  subtotalAdicionalCentavos = 0,
+  fechaReferencia = fechaOperativaCordoba()
 ): CotizacionVersionada | { error: ErrorTarifa } {
   const noches = [] as CotizacionVersionada['noches'];
   let exclusividadGratis = false;
@@ -97,8 +111,26 @@ export function cotizarConPlan(
       solicitud.personas <= (regla.exclusividadHasta ?? Number.MAX_SAFE_INTEGER);
   }
 
-  const subtotalCentavos = noches.reduce((total, noche) => total + noche.importeCentavos, 0) +
+  const subtotalAntesAjustesCentavos = noches.reduce((total, noche) => total + noche.importeCentavos, 0) +
     subtotalAdicionalCentavos;
+  const anticipacionDias = Math.max(0, Math.floor(
+    (Date.parse(`${solicitud.fechaEntrada}T00:00:00Z`) - Date.parse(`${fechaReferencia}T00:00:00Z`)) / 86_400_000
+  ));
+  const ajustes = (configuracion.reglasAjuste || []).filter(regla =>
+    anticipacionDias >= regla.anticipacionDesdeDias &&
+    (regla.anticipacionHastaDias === null || anticipacionDias <= regla.anticipacionHastaDias)
+  ).map(regla => {
+    const magnitud = regla.tipo === 'porcentaje_bps'
+      ? Math.round(subtotalAntesAjustesCentavos * regla.valor / 10_000)
+      : regla.valor;
+    return {
+      codigo: regla.codigo,
+      nombre: regla.nombre,
+      importeCentavos: regla.direccion === 'descuento' ? -magnitud : magnitud,
+    };
+  });
+  const ajusteTotalCentavos = ajustes.reduce((total, ajuste) => total + ajuste.importeCentavos, 0);
+  const subtotalCentavos = Math.max(0, subtotalAntesAjustesCentavos + ajusteTotalCentavos);
   const reglasSena = configuracion.reglasSena.filter(regla =>
     subtotalCentavos >= regla.subtotalDesdeCentavos &&
     (regla.subtotalHastaCentavos === null || subtotalCentavos <= regla.subtotalHastaCentavos)
@@ -113,6 +145,9 @@ export function cotizarConPlan(
     plan: { id: configuracion.planId, codigo: configuracion.codigo, version: configuracion.version },
     moneda: configuracion.moneda,
     subtotalCentavos,
+    subtotalAntesAjustesCentavos,
+    ajusteTotalCentavos,
+    ajustes,
     senaCentavos,
     saldoCentavos: subtotalCentavos - senaCentavos,
     exclusividadGratis,

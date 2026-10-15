@@ -78,7 +78,21 @@ function textoModalidades(precios: PublicPricingSummary | null, tipo: Accommodat
   if (!precios) return 'consultá las modalidades disponibles en la reserva online';
   const opcion = precios?.opciones.find(item => item.tipo_alojamiento === tipo);
   if (!opcion) return 'no disponible para nuevas reservas online';
-  return opcion.modalidades.map(modalidad => ETIQUETAS_MODALIDAD[modalidad].toLocaleLowerCase('es-AR')).join(' y ');
+  return opcion.modalidades.map(modalidad =>
+    (opcion.nombres_modalidades?.[modalidad] || ETIQUETAS_MODALIDAD[modalidad]).toLocaleLowerCase('es-AR')
+  ).join(' y ');
+}
+
+function etiquetaModalidad(
+  precios: PublicPricingSummary | null,
+  tipo: AccommodationType,
+  modalidad: string,
+): string {
+  if (modalidad === 'cualquiera') return ETIQUETAS_MODALIDAD.cualquiera;
+  const opcion = precios?.opciones.find(item => item.tipo_alojamiento === tipo);
+  return opcion?.nombres_modalidades?.[modalidad as keyof typeof opcion.nombres_modalidades]
+    || ETIQUETAS_MODALIDAD[modalidad]
+    || modalidad;
 }
 
 function textoPrecioRegla(regla: PublicPriceRule, adicionalPersona = 0): string {
@@ -88,6 +102,15 @@ function textoPrecioRegla(regla: PublicPriceRule, adicionalPersona = 0): string 
   return adicionalPersona > 0
     ? `${pesos(regla.importe_centavos)}/unidad + ${pesos(adicionalPersona)}/persona`
     : `${pesos(regla.importe_centavos)}/unidad`;
+}
+
+function textoComidasOpcionales(precios: PublicPricingSummary | null): string {
+  const pension = precios?.alimentacion.pension_completa;
+  const almuerzo = pension?.precio_almuerzo_centavos ?? pension?.precio_comida_centavos ?? 0;
+  const cena = pension?.precio_cena_centavos ?? pension?.precio_comida_centavos ?? 0;
+  if (almuerzo <= 0 && cena <= 0) return 'Comidas opcionales';
+  if (almuerzo === cena) return `Almuerzo o cena +${pesos(almuerzo)} c/u`;
+  return `Almuerzo +${pesos(almuerzo)} · cena +${pesos(cena)}`;
 }
 
 // ── Sección Hero ─────────────────────────────────────────────────────────────
@@ -224,7 +247,10 @@ const ALOJAMIENTOS = [
 const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: boolean }> = ({ precios, cargado }) => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   const adicionalPension = precios?.alimentacion.pension_completa?.adicional_por_persona_noche_centavos || 0;
-  const precioComida = precios?.alimentacion.pension_completa?.precio_comida_centavos || 0;
+  const precioAlmuerzo = precios?.alimentacion.pension_completa?.precio_almuerzo_centavos
+    ?? precios?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
+  const precioCena = precios?.alimentacion.pension_completa?.precio_cena_centavos
+    ?? precios?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
   const filasTarifa = precios?.opciones.flatMap(opcion => opcion.tarifas.map(regla => ({
     ...regla,
     tipo: opcion.tipo_alojamiento,
@@ -323,7 +349,7 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
                   <div>
                     <p className="text-brand text-sm font-semibold leading-tight">{ETIQUETAS_ALOJAMIENTO[row.tipo]}</p>
                     <p className="text-dark/45 text-[11px] mt-0.5">
-                      {ETIQUETAS_MODALIDAD[row.modalidad]} · {row.ocupacion_min}–{row.ocupacion_max} personas
+                      {etiquetaModalidad(precios, row.tipo, row.modalidad)} · {row.ocupacion_min}–{row.ocupacion_max} personas
                     </p>
                   </div>
                   <p className="text-brand text-sm font-serif text-center w-24">{textoPrecioRegla(row)}</p>
@@ -331,7 +357,7 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
                 </div>
               ))}
               <p className="text-dark/50 text-xs leading-relaxed mt-2">
-                <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. {precioComida > 0 ? <>Podés sumar almuerzo o cena a +{pesos(precioComida)} c/u.</> : 'Consultá las comidas opcionales al reservar.'}<br />
+                <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. {precioAlmuerzo > 0 || precioCena > 0 ? <>Podés sumar {precioAlmuerzo === precioCena ? <>almuerzo o cena a +{pesos(precioAlmuerzo)} c/u.</> : <>almuerzo a +{pesos(precioAlmuerzo)} y cena a +{pesos(precioCena)}.</>}</> : 'Consultá las comidas opcionales al reservar.'}<br />
                 <strong className="text-gold">Pensión completa:</strong> alojamiento + desayuno, almuerzo y cena, precio total cerrado.
               </p>
               {precios && <p className="text-dark/40 text-[11px] leading-relaxed mt-2">Vigencia consultada: {precios.fecha_referencia}. El total final depende de las fechas, la ocupación y la modalidad elegida, y se confirma antes de reservar.</p>}
@@ -362,7 +388,6 @@ const EscaleraDeValor: React.FC<{
   precios: PublicPricingSummary | null;
   cargado: boolean;
 }> = ({ tarifaDesdeActual, precios, cargado }) => {
-  const precioComida = precios?.alimentacion.pension_completa?.precio_comida_centavos || 0;
   const escalera = [
     {
       icon: <Bed className="w-6 h-6" weight="duotone" />,
@@ -377,7 +402,7 @@ const EscaleraDeValor: React.FC<{
       icon: <ForkKnife className="w-6 h-6" weight="duotone" />,
       step: '2',
       title: 'Quedate a comer',
-      price: precioComida > 0 ? `Almuerzo o cena +${pesos(precioComida)} c/u` : 'Comidas opcionales',
+      price: textoComidasOpcionales(precios),
       desc: 'O sumá la pensión completa. La reserva calcula el total cerrado según tu alojamiento, ocupación y cantidad de noches.',
     },
     {
@@ -1011,7 +1036,7 @@ const Estadia: React.FC = () => {
 
     const ofertas = preciosPublicos?.opciones.flatMap(opcion => opcion.tarifas.map(regla => ({
       '@type': 'Offer',
-      name: `${ETIQUETAS_ALOJAMIENTO[opcion.tipo_alojamiento]} · ${ETIQUETAS_MODALIDAD[regla.modalidad]}`,
+      name: `${ETIQUETAS_ALOJAMIENTO[opcion.tipo_alojamiento]} · ${etiquetaModalidad(preciosPublicos, opcion.tipo_alojamiento, regla.modalidad)}`,
       price: String(regla.importe_centavos / 100),
       priceCurrency: preciosPublicos.plan.moneda,
       priceValidUntil: regla.fecha_hasta,

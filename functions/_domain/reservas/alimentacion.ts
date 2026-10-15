@@ -6,6 +6,10 @@ export type ConfiguracionTarifaAlimentacion = {
   moneda: string;
   precioComidaCentavos: number;
   comidasAdicionalesPorPersonaNoche: number;
+  precioDesayunoCentavos?: number;
+  precioAlmuerzoCentavos?: number;
+  precioCenaCentavos?: number;
+  ajustePaqueteCentavos?: number;
 };
 
 export type CotizacionAlimentacion = {
@@ -13,6 +17,10 @@ export type CotizacionAlimentacion = {
   version: number;
   precioComidaCentavos: number;
   comidasAdicionalesPorPersonaNoche: number;
+  precioDesayunoCentavos: number;
+  precioAlmuerzoCentavos: number;
+  precioCenaCentavos: number;
+  ajustePaqueteCentavos: number;
   totalCentavos: number;
 };
 
@@ -25,12 +33,25 @@ export function cotizarAlimentacion(
   noches: number,
   configuracion: ConfiguracionTarifaAlimentacion
 ): CotizacionAlimentacion {
+  const precioDesayunoCentavos = configuracion.precioDesayunoCentavos ??
+    (configuracion.codigo === 'desayuno_incluido' ? configuracion.precioComidaCentavos : 0);
+  const precioAlmuerzoCentavos = configuracion.precioAlmuerzoCentavos ??
+    (configuracion.codigo === 'pension_completa' ? configuracion.precioComidaCentavos : 0);
+  const precioCenaCentavos = configuracion.precioCenaCentavos ??
+    (configuracion.codigo === 'pension_completa' ? configuracion.precioComidaCentavos : 0);
+  const ajustePaqueteCentavos = configuracion.ajustePaqueteCentavos ?? 0;
+  const adicionalPorPersonaNoche = configuracion.codigo === 'pension_completa'
+    ? Math.max(0, precioAlmuerzoCentavos + precioCenaCentavos + ajustePaqueteCentavos)
+    : 0;
   return {
     regimen: configuracion.codigo,
     version: configuracion.version,
     precioComidaCentavos: configuracion.precioComidaCentavos,
     comidasAdicionalesPorPersonaNoche: configuracion.comidasAdicionalesPorPersonaNoche,
-    totalCentavos: personas * noches * configuracion.comidasAdicionalesPorPersonaNoche *
-      configuracion.precioComidaCentavos,
+    precioDesayunoCentavos,
+    precioAlmuerzoCentavos,
+    precioCenaCentavos,
+    ajustePaqueteCentavos,
+    totalCentavos: personas * noches * adicionalPorPersonaNoche,
   };
 }

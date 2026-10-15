@@ -13,7 +13,11 @@ export async function listarAlojamientosPublicos(
     capacidad_comercial: espacio.capacidadComercial,
     modalidades: (await repositorio.listarModalidades(espacio.id))
       .filter(item => item.habilitada && item.contexto === contexto)
-      .map(item => ({ codigo: item.modalidad, unidad_venta: item.unidadVenta })),
+      .map(item => ({
+        codigo: item.modalidad,
+        nombre: item.nombreComercial || item.modalidad,
+        unidad_venta: item.unidadVenta,
+      })),
   })));
 
   return resultados.filter(item => item.modalidades.length > 0);

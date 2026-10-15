@@ -110,6 +110,29 @@ test('combina tarifa de semana y fin de semana noche por noche', () => {
   assert.deepEqual(resultado.noches.map(noche => noche.temporada), ['baja', 'fin-semana', 'fin-semana']);
 });
 
+test('aplica descuentos y recargos por anticipación antes de calcular la seña', () => {
+  const resultado = cotizarConPlan(
+    { tipo: 'domo', personas: 2, fechaEntrada: '2026-10-17', fechaSalida: '2026-10-18' },
+    {
+      ...base,
+      reglasAjuste: [
+        { codigo: 'ultima-hora', nombre: 'Última hora', anticipacionDesdeDias: 0,
+          anticipacionHastaDias: 3, direccion: 'descuento', tipo: 'porcentaje_bps', valor: 1000 },
+        { codigo: 'operativo', nombre: 'Recargo operativo', anticipacionDesdeDias: 0,
+          anticipacionHastaDias: 1, direccion: 'recargo', tipo: 'importe_fijo', valor: 5_000 },
+      ],
+    },
+    0,
+    '2026-10-16',
+  );
+  assert.ok(!('error' in resultado));
+  assert.equal(resultado.subtotalAntesAjustesCentavos, 40_000);
+  assert.equal(resultado.ajusteTotalCentavos, 1_000);
+  assert.equal(resultado.subtotalCentavos, 41_000);
+  assert.equal(resultado.senaCentavos, 20_500);
+  assert.deepEqual(resultado.ajustes.map(item => item.importeCentavos), [-4_000, 5_000]);
+});
+
 test('el repositorio D1 carga y normaliza el plan publicado', async () => {
   const bindings: unknown[][] = [];
   const queries: string[] = [];
@@ -129,7 +152,12 @@ test('el repositorio D1 carga y normaliza el plan publicado', async () => {
             tipo_alojamiento: 'domo', modalidad: 'cualquiera', ocupacion_min: '1', ocupacion_max: '7',
             base_calculo: 'unidad_noche', importe_centavos: '5000', exclusividad_desde: null, exclusividad_hasta: null,
           }] };
-          return { results: [{ subtotal_desde_centavos: '0', subtotal_hasta_centavos: null, tipo: 'importe_fijo', valor: '1000' }] };
+          if (query.includes('FROM reglas_sena')) return { results: [{ subtotal_desde_centavos: '0', subtotal_hasta_centavos: null, tipo: 'importe_fijo', valor: '1000' }] };
+          if (query.includes('FROM reglas_ajuste_precio')) return { results: [
+            { codigo: 'ultima-hora', nombre: 'Última hora', anticipacion_desde_dias: '0', anticipacion_hasta_dias: '3', direccion: 'descuento', tipo: 'porcentaje_bps', valor: '1000' },
+            { codigo: 'larga-estadia', nombre: 'Larga estadía', anticipacion_desde_dias: '30', anticipacion_hasta_dias: null, direccion: 'recargo', tipo: 'importe_fijo', valor: '5000' },
+          ] };
+          return { results: [] };
         },
       };
     },
@@ -138,7 +166,9 @@ test('el repositorio D1 carga y normaliza el plan publicado', async () => {
   assert.equal(configuracion?.planId, 9);
   assert.equal(configuracion?.reglasPrecio[0].importeCentavos, 5000);
   assert.equal(configuracion?.reglasSena[0].subtotalHastaCentavos, null);
-  assert.deepEqual(bindings, [[9], [9]]);
+  assert.equal(configuracion?.reglasAjuste?.[0].anticipacionHastaDias, 3);
+  assert.equal(configuracion?.reglasAjuste?.[1].anticipacionHastaDias, null);
+  assert.deepEqual(bindings, [[9], [9], [9]]);
   assert.match(queries[0], /WHERE estado = 'publicado'/);
   assert.match(queries[0], /ORDER BY publicado_at DESC, id DESC LIMIT 1/);
   assert.doesNotMatch(queries[0], /codigo = 'alojamiento-base'/);

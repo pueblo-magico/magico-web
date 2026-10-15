@@ -3,6 +3,7 @@ import {
   validarCambioEspacioComercial,
   validarCambioParametroOperativo,
   validarCambioTarifaAlimentacion,
+  validarNuevaModalidadComercial,
   type CambioModalidadComercial,
   type CambioEspacioComercial,
   type CambioParametroOperativo,
@@ -10,6 +11,7 @@ import {
   type ConfiguracionBaseReservas,
   type EspacioComercialActualizado,
   type ModalidadComercialActualizada,
+  type NuevaModalidadComercial,
   type ParametroOperativoReserva,
   type TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
@@ -56,6 +58,20 @@ export async function actualizarModalidadConfiguracion(
     throw new ErrorReserva('CONFLICTO_RESERVA', 'La modalidad cambió; actualizá la vista antes de reintentar.');
   }
   return actualizada;
+}
+
+export async function crearModalidadConfiguracion(
+  entrada: NuevaModalidadComercial & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<ModalidadComercialActualizada> {
+  const validada = validarNuevaModalidadComercial(entrada);
+  const creada = await repositorio.crearModalidad({
+    ...validada, actorEmail: entrada.actorEmail, correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!creada) throw new ErrorReserva('CONFLICTO_RESERVA', 'La modalidad ya existe o el alojamiento no está disponible.');
+  return creada;
 }
 
 export async function actualizarEspacioConfiguracion(

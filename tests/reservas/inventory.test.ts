@@ -176,7 +176,7 @@ test('el repositorio D1 lista sólo espacios y unidades reservables', async () =
   const unidades = await repository.listarUnidadesAsignables(1);
 
   assert.deepEqual(espacios[0], espacio());
-  assert.deepEqual(modalidades[0], modalidad({ modalidad: 'privada', unidadVenta: 'espacio' }));
+  assert.deepEqual(modalidades[0], { ...modalidad({ modalidad: 'privada', unidadVenta: 'espacio' }), nombreComercial: 'privada' });
   assert.equal(unidades[0].tipo, 'plaza_flexible');
   assert.deepEqual(calls[0].values, ['general', 'privada']);
   assert.deepEqual(calls[1].values, [1]);

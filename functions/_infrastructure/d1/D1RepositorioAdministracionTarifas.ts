@@ -86,6 +86,19 @@ export class D1RepositorioAdministracionTarifas implements RepositorioAdministra
         sena.subtotalDesdeCentavos, sena.subtotalHastaCentavos, sena.tipo, sena.valor, plan.codigo
       ));
     }
+    for (const ajuste of plan.ajustes || []) {
+      statements.push(this.db.prepare(`
+        INSERT INTO reglas_ajuste_precio (
+          plan_tarifa_id, codigo, nombre, anticipacion_desde_dias, anticipacion_hasta_dias,
+          direccion, tipo, valor
+        )
+        SELECT id, ?, ?, ?, ?, ?, ?, ? FROM planes_tarifa
+        WHERE codigo = ? AND estado = 'borrador' ORDER BY version DESC LIMIT 1
+      `).bind(
+        ajuste.codigo, ajuste.nombre.trim(), ajuste.anticipacionDesdeDias,
+        ajuste.anticipacionHastaDias, ajuste.direccion, ajuste.tipo, ajuste.valor, plan.codigo
+      ));
+    }
 
     await this.db.batch(statements);
     const row = await this.db.prepare(`
@@ -100,8 +113,8 @@ export class D1RepositorioAdministracionTarifas implements RepositorioAdministra
     const results = await this.db.batch([
       this.db.prepare(`
         UPDATE planes_tarifa SET estado = 'retirado'
-        WHERE estado = 'publicado' AND codigo = (
-          SELECT p.codigo FROM planes_tarifa p
+        WHERE estado = 'publicado' AND EXISTS (
+          SELECT 1 FROM planes_tarifa p
           WHERE p.id = ? AND p.estado = 'borrador'
             AND EXISTS (SELECT 1 FROM temporadas t WHERE t.plan_tarifa_id = p.id)
             AND EXISTS (SELECT 1 FROM reglas_precio r JOIN temporadas t ON t.id = r.temporada_id WHERE t.plan_tarifa_id = p.id)
