@@ -310,7 +310,9 @@ export const BookingWidget: React.FC<{
   const priceIsExact = Boolean(displayedQuote);
   const priceIsStayEstimate = Boolean(pricePreview);
   const priceLoading = stayDates.length > 0 ? !nightlyPricingLoaded : !publicPricingLoaded;
-  const priceLabel = priceIsExact ? c.total : stayDates.length > 0 ? c.fromTotal : c.fromNight;
+  const priceLabel = priceIsExact || (step > 1 && priceIsStayEstimate)
+    ? c.total
+    : stayDates.length > 0 ? c.fromTotal : c.fromNight;
   const priceHelp = priceIsStayEstimate
     ? c.estimatedPrice
     : stayDates.length === 0

@@ -246,6 +246,19 @@ test('la página de estadía y la portada usan el plan tarifario público en vez
   assert.doesNotMatch(widget, /Desde \$20\.000/);
 });
 
+test('adapta el acceso a reserva a columnas angostas y distingue precios desde de totales seleccionados', () => {
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+
+  assert.match(stay, /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(0,340px\)\]/);
+  assert.match(stay, /id="reservar" className="order-first min-w-0 max-w-full/);
+  assert.match(styles, /\.booking-widget\s*\{[^}]*min-width:\s*0[^}]*container-type:\s*inline-size/s);
+  assert.match(styles, /@container \(max-width: 420px\)/);
+  assert.match(widget, /priceIsExact \|\| \(step > 1 && priceIsStayEstimate\)/);
+  assert.match(widget, /stayDates\.length > 0 \? c\.fromTotal : c\.fromNight/);
+});
+
 test('genera una clave idempotente distinta por intento de reserva web', () => {
   const first = createBookingAttemptKey();
   const second = createBookingAttemptKey();

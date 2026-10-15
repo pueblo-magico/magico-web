@@ -265,10 +265,10 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
           <p className="text-dark/60 text-sm max-w-md mx-auto">Conocé las opciones disponibles — las modalidades habilitadas y sus tarifas se actualizan desde la configuración de reservas.</p>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
 
           {/* Acordeón de cards + precios */}
-          <div>
+          <div className="min-w-0">
             <div className="space-y-3 mb-5">
               {ALOJAMIENTOS.map((aloj, i) => (
                 <div key={i}
@@ -372,7 +372,7 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
           {/* top-36: debajo del header + la barra de secciones (~123px). Con
               max-h + scroll interno el widget nunca queda más alto que la
               pantalla, aunque crezca al cambiar de opción. */}
-          <div id="reservar" className="order-first lg:order-none lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:rounded-2xl">
+          <div id="reservar" className="order-first min-w-0 max-w-full lg:order-none lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:rounded-2xl">
             <BookingWidget />
             <WithdrawalAccessLink embedded />
           </div>

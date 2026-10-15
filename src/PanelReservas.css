@@ -7,12 +7,15 @@
   --admin-line: #dce3df;
   --admin-paper: #fbfaf6;
   color: var(--admin-ink);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   background:
     radial-gradient(circle at 90% 0%, rgba(213, 175, 55, .07), transparent 28rem),
     var(--admin-paper);
 }
 
-.admin-shell { min-height: 100vh; }
+.admin-shell { min-width: 0; min-height: 100vh; max-width: 100%; }
 .admin-sidebar {
   position: fixed;
   z-index: 40;
@@ -46,15 +49,15 @@
 .admin-sidebar__user strong { font-size: 12px; }
 .admin-sidebar__user small { color: var(--admin-muted); font-size: 10px; }
 .admin-sidebar__logout { display: grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: 8px; color: var(--admin-muted); background: transparent; cursor: pointer; }
-.admin-workspace { min-width: 0; margin-left: 224px; }
-.admin-topbar { position: sticky; z-index: 30; top: 0; display: flex; min-height: 74px; align-items: center; justify-content: space-between; gap: 18px; padding: 12px clamp(20px, 3vw, 38px); border-bottom: 1px solid var(--admin-line); background: rgba(255, 255, 255, .91); backdrop-filter: blur(18px); }
+.admin-workspace { width: calc(100% - 224px); min-width: 0; max-width: calc(100vw - 224px); margin-left: 224px; }
+.admin-topbar { position: sticky; z-index: 30; top: 0; display: flex; min-width: 0; max-width: 100%; min-height: 74px; box-sizing: border-box; align-items: center; justify-content: space-between; gap: 18px; padding: 12px clamp(20px, 3vw, 38px); border-bottom: 1px solid var(--admin-line); background: rgba(255, 255, 255, .91); backdrop-filter: blur(18px); }
 .admin-topbar__identity { min-width: 0; }
 .admin-topbar__identity p { margin: 0 0 1px; color: #71818b; font-size: 10px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 .admin-topbar__identity h1 { margin: 0; color: #082f2b; font-family: Georgia, 'Times New Roman', serif !important; font-size: clamp(24px, 3vw, 34px); font-weight: 500; line-height: 1; }
-.admin-topbar__actions { display: flex; align-items: center; gap: 8px; }
+.admin-topbar__actions { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .admin-date-chip { display: flex; align-items: center; gap: 8px; color: #536773; font-size: 12px; white-space: nowrap; }
 .admin-mobile-brand, .admin-mobile-nav { display: none; }
-.admin-content { width: min(100%, 1510px); margin: 0 auto; padding: 28px clamp(20px, 3vw, 38px) 46px; }
+.admin-content { width: min(100%, 1510px); min-width: 0; max-width: 100%; box-sizing: border-box; margin: 0 auto; padding: 28px clamp(20px, 3vw, 38px) 46px; }
 .admin-view-heading { margin-bottom: 23px; }
 .admin-view-heading h2 { margin: 0; color: #082f2b; font-family: Georgia, 'Times New Roman', serif !important; font-size: clamp(31px, 4vw, 46px); font-weight: 500; line-height: 1.06; }
 .admin-view-heading p { margin: 5px 0 0; color: var(--admin-muted); font-size: 14px; }
@@ -95,7 +98,9 @@
 .admin-report-bars__track { height: 9px; overflow: hidden; border-radius: 999px; background: #edf1ee; }
 .admin-report-bars__track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #087452, #27a874); }
 
-.admin-config { display: grid; gap: 12px; }
+.admin-config { display: grid; min-width: 0; max-width: 100%; gap: 12px; }
+.admin-config > *, .admin-config__section, .admin-config__section-body, .admin-config__season { min-width: 0; max-width: 100%; }
+.admin-config__horizontal-scroll { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .admin-config__intro { margin-bottom: 2px; }
 .admin-config__section { overflow: clip; }
 .admin-config__section > summary { display: flex; min-height: 58px; align-items: center; gap: 12px; padding: 10px 16px; color: #203d49; cursor: pointer; list-style: none; }
@@ -133,7 +138,7 @@
 
 @media (max-width: 1023px) {
   .admin-sidebar { display: none; }
-  .admin-workspace { margin-left: 0; }
+  .admin-workspace { width: 100%; max-width: 100%; margin-left: 0; }
   .admin-topbar { min-height: 64px; padding: 10px 16px; }
   .admin-topbar__identity p, .admin-date-chip { display: none; }
   .admin-topbar__identity h1 { font-size: 22px; }

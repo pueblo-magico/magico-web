@@ -2461,7 +2461,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
           <div><h3 className="text-sm font-semibold text-gray-900">Planes y versiones</h3><p className="text-xs text-gray-500">Podés conservar varios planes. Al publicar uno, pasa a ser la política efectiva para nuevas cotizaciones.</p></div>
           <Badge variant="success">{planesTarifa.filter(plan => plan.estado === 'publicado').length} vigente</Badge>
         </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{planesTarifa.map(plan => <Card key={plan.id} tone="muted" className="min-w-[220px] p-3">
+        <div className="admin-config__horizontal-scroll mt-3 flex gap-2 pb-1">{planesTarifa.map(plan => <Card key={plan.id} tone="muted" className="min-w-[220px] p-3">
           <div className="flex items-start justify-between gap-2"><strong className="text-sm">{plan.nombre}</strong><Badge variant={plan.estado === 'publicado' ? 'success' : plan.estado === 'borrador' ? 'warning' : 'neutral'}>{plan.estado}</Badge></div>
           <p className="mt-1 text-xs text-gray-500"><CodeBadge>{plan.codigo}</CodeBadge> · v{plan.version} · {plan.moneda}</p>
         </Card>)}</div>
@@ -2486,7 +2486,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
             </div>
             <div className="flex justify-end">{esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarTemporada}><Plus size={15} />Agregar temporada</Button>}</div>
             {tarifaDraft.temporadas.map((temporada, temporadaIndice) => (
-              <div key={`${temporada.codigo}-${temporadaIndice}`} className="rounded-lg border border-gray-200 p-4">
+              <div key={`${temporada.codigo}-${temporadaIndice}`} className="admin-config__season rounded-lg border border-gray-200 p-4">
                 <div className="grid gap-3 md:grid-cols-5">
                   <label className="text-xs font-semibold text-gray-600">Temporada
                     <input value={temporada.nombre} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { nombre: event.target.value })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
@@ -2535,7 +2535,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
                   </div>
                   {esSuperAdmin && <Button size="sm" variant="secondary" onPress={() => agregarReglaPrecio(temporadaIndice)}><Plus size={15} />Agregar tarifa</Button>}
                 </div>
-                <div className="mt-2 overflow-x-auto">
+                <div className="admin-config__horizontal-scroll mt-2">
                   <table className="min-w-[940px] w-full text-left text-xs">
                     <thead><tr className="border-b text-gray-500"><th className="py-2">Alojamiento</th><th>Modalidad</th><th>Ocupación</th><th>Base</th><th>Precio ARS</th><th>Exclusividad</th>{esSuperAdmin && <th className="w-12"><span className="sr-only">Acciones</span></th>}</tr></thead>
                     <tbody>{temporada.reglas.map((regla, reglaIndice) => (

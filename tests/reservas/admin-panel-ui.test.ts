@@ -126,6 +126,14 @@ test('presenta la configuración en secciones compactas sin quebrar valores de m
   assert.match(styles, /@media \(max-width: 640px\)[\s\S]*\.admin-config__modality-fields\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });
 
+test('contiene las tablas y versiones anchas dentro de políticas de precios', () => {
+  assert.match(styles, /\.admin-workspace\s*\{[^}]*width:\s*calc\(100% - 224px\)[^}]*max-width:\s*calc\(100vw - 224px\)/s);
+  assert.match(styles, /\.admin-content\s*\{[^}]*min-width:\s*0[^}]*max-width:\s*100%/s);
+  assert.match(styles, /\.admin-config__horizontal-scroll\s*\{[^}]*max-width:\s*100%[^}]*overflow-x:\s*auto/s);
+  assert.match(source, /admin-config__horizontal-scroll mt-3 flex/);
+  assert.match(source, /admin-config__horizontal-scroll mt-2/);
+});
+
 test('pide el motivo al confirmar y compara el valor anterior con el nuevo', () => {
   assert.match(source, /type ConfirmacionConfiguracion/);
   assert.match(source, /resumirCambios/);
