@@ -942,6 +942,17 @@
           "isVolunariado": true
         },
         {
+          "date": "31 OCTUBRE 2026",
+          "startDate": "2026-10-31",
+          "endDate": "2026-10-31",
+          "title": "Festival 31·10 · Música, naturaleza y encuentro",
+          "desc": "Una jornada de electrónica orgánica, DJs, río, montaña y experiencias para compartir. Mati Onix, Mauri Sayri y Federico Salas confirmados. Entradas y programación en definición.",
+          "btn": "Conocer el festival",
+          "image": "/uploads/sunset-rio-baile.webp",
+          "link": "/festival-31-octubre",
+          "pdfLink": ""
+        },
+        {
           "date": "7-8 NOVIEMBRE 2026",
           "startDate": "2026-11-07",
           "endDate": "2026-11-08",
@@ -3690,6 +3701,17 @@
           "link": "https://wa.me/5493516765820?text=Hi!%20I%27m%20interested%20in%20the%20Pueblo%20M%C3%A1gico%20Retreat%20on%20October%2017-18.%20Can%20you%20give%20me%20more%20info%3F",
           "pdfLink": "",
           "isVolunariado": true
+        },
+        {
+          "date": "OCT 31, 2026",
+          "startDate": "2026-10-31",
+          "endDate": "2026-10-31",
+          "title": "Oct 31 Festival · Music, nature and connection",
+          "desc": "A day of organic electronic music, DJs, river, mountains and shared experiences. Mati Onix, Mauri Sayri and Federico Salas confirmed. Tickets and programme are being defined.",
+          "btn": "Discover the festival",
+          "image": "/uploads/sunset-rio-baile.webp",
+          "link": "/festival-31-octubre",
+          "pdfLink": ""
         },
         {
           "date": "NOV 7-8, 2026",
