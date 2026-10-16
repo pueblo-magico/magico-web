@@ -135,7 +135,7 @@ const FestivalButton = ({ href, children, secondary = false }: { href: string; c
     rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
     className={`group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${
       secondary
-        ? 'border border-current bg-transparent hover:bg-white/10 focus-visible:outline-white'
+        ? 'border border-white/45 bg-black/20 text-white backdrop-blur-sm hover:bg-white/10 focus-visible:outline-white'
         : 'bg-[#E7B84B] text-[#123B2D] shadow-[0_12px_35px_rgba(0,0,0,0.18)] hover:-translate-y-0.5 hover:bg-[#F0C75D] focus-visible:outline-[#E7B84B]'
     }`}
   >
@@ -316,7 +316,7 @@ const FestivalOctubre: React.FC = () => {
               </div>
               <div className="mt-8 flex items-center gap-3 text-xs text-white/55">
                 <Clock3 size={15} aria-hidden="true" />
-                <span>Preventa y programación: próximas novedades</span>
+                <span>Preventa abierta · cupos de alojamiento limitados</span>
               </div>
               </div>
 
@@ -358,7 +358,7 @@ const FestivalOctubre: React.FC = () => {
                 <p>Creamos un espacio para disfrutar, conocer gente, movernos y celebrar la vida en comunidad.</p>
               </div>
               <div className="mt-10 grid grid-cols-3 gap-3 border-t border-[#123B2D]/15 pt-7 text-center sm:text-left">
-                {[['01', 'día central'], ['03', 'DJs confirmados'], ['02', 'formas de sumarte']].map(([number, label]) => (
+                {[['01', 'día central'], ['03', 'DJs confirmados'], ['03', 'formas de sumarte']].map(([number, label]) => (
                   <div key={label}>
                     <p className="text-3xl text-[#B85A3D] serif-title md:text-4xl">{number}</p>
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1F2922]/55">{label}</p>
@@ -498,7 +498,7 @@ const FestivalOctubre: React.FC = () => {
             <div data-reveal>
               <Eyebrow>Preguntas frecuentes</Eyebrow>
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">Lo confirmado, sin letra chica.</h2>
-              <p className="mt-5 max-w-md text-sm leading-relaxed text-[#1F2922]/60">Vamos a actualizar esta sección a medida que se definan precios, programación, disponibilidad y condiciones.</p>
+              <p className="mt-5 max-w-md text-sm leading-relaxed text-[#1F2922]/60">Vamos a actualizar esta sección a medida que se confirme la programación, los cupos disponibles y cualquier condición adicional.</p>
               <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-[#123B2D] underline decoration-[#E7B84B] decoration-2 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#123B2D]">
                 <MessageCircle size={17} aria-hidden="true" /> Hacer otra consulta
               </a>
