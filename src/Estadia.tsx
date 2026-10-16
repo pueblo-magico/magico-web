@@ -113,6 +113,38 @@ function textoComidasOpcionales(precios: PublicPricingSummary | null): string {
   return `Almuerzo +${pesos(almuerzo)} · cena +${pesos(cena)}`;
 }
 
+function textoTarifasPublicadas(precios: PublicPricingSummary | null, cargado: boolean): string {
+  if (!cargado) return 'Cargando las tarifas vigentes…';
+  if (!precios || precios.opciones.length === 0) {
+    return 'Consultá el precio y la disponibilidad para tus fechas en la reserva online.';
+  }
+
+  const opciones = precios.opciones
+    .map(opcion => {
+      const resumen = textoTarifas(opcion.tarifas, true);
+      return resumen.startsWith('Consultá')
+        ? null
+        : `${ETIQUETAS_ALOJAMIENTO[opcion.tipo_alojamiento]} ${resumen}`;
+    })
+    .filter((opcion): opcion is string => Boolean(opcion));
+
+  if (opciones.length === 0) {
+    return 'Consultá el precio y la disponibilidad para tus fechas en la reserva online.';
+  }
+
+  return `${opciones.join(' · ')}. El total se calcula con tus fechas, ocupación y modalidad.`;
+}
+
+function textoPensionCompleta(precios: PublicPricingSummary | null, cargado: boolean): string {
+  if (!cargado) return 'Cargando la política de alimentación vigente…';
+  const pension = precios?.alimentacion.pension_completa;
+  if (!pension) return 'Consultá las opciones de alimentación disponibles al reservar.';
+  const adicional = pension.adicional_por_persona_noche_centavos;
+  return adicional > 0
+    ? `Suma ${pesos(adicional)} por persona/noche a la tarifa del alojamiento. La reserva muestra el total cerrado antes de confirmar.`
+    : 'La reserva calcula el total cerrado según el alojamiento, la ocupación y las noches elegidas.';
+}
+
 // ── Sección Hero ─────────────────────────────────────────────────────────────
 const Hero: React.FC<{ tarifaDesdeActual: { importe: number; unidad: string } | null; cargado: boolean }> = ({ tarifaDesdeActual, cargado }) => (
   <section className="relative h-[92vh] min-h-[600px] w-full flex items-end overflow-hidden">
@@ -456,7 +488,14 @@ const EscaleraDeValor: React.FC<{
 };
 
 // ── Horarios y Pensión Completa de Montaña ───────────────────────────────────
-const HorariosPension: React.FC = () => (
+const HorariosPension: React.FC<{
+  precios: PublicPricingSummary | null;
+  cargado: boolean;
+}> = ({ precios, cargado }) => {
+  const desayunoHabilitado = Boolean(precios?.alimentacion.desayuno_incluido);
+  const pensionHabilitada = Boolean(precios?.alimentacion.pension_completa);
+
+  return (
   <section className="py-14 bg-bone">
     <div className="max-w-4xl mx-auto px-6">
       <div data-reveal className="bg-white rounded-2xl border border-brand/10 shadow-sm p-6 md:p-8">
@@ -467,13 +506,14 @@ const HorariosPension: React.FC = () => (
           <div>
             <h2 className="font-serif text-xl md:text-2xl text-brand leading-tight">Horarios y Gastronomía de Montaña</h2>
             <p className="inline-block bg-gold/10 text-gold text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mt-2">
-              ✦ Desayuno incluido · almuerzo y cena, menú del día opcional
+              ✦ {desayunoHabilitado ? 'Desayuno incluido' : 'Alimentación configurable'} · {textoComidasOpcionales(precios)}
             </p>
           </div>
         </div>
 
         <p className="text-dark/70 text-sm leading-relaxed mb-5">
-          <strong className="text-brand font-semibold">Tarifa base: desde $20.000 por persona / noche</strong> (camping) o $35.000 (Refugio de Piedra o domo compartido) — incluye alojamiento y desayuno. Domo privado: $50.000 por persona / noche (1 persona sola: $100.000). Sumá almuerzo o cena a +$20.000 cada uno, o pensión completa a precio cerrado: $45.000 camping / $60.000 Refugio de Piedra o domo compartido / $75.000 domo privado, por persona/noche.
+          <strong className="text-brand font-semibold">Tarifas publicadas:</strong>{' '}
+          {textoTarifasPublicadas(precios, cargado)}
         </p>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-5">
@@ -492,15 +532,15 @@ const HorariosPension: React.FC = () => (
           <ul className="space-y-2">
             <li className="flex items-start gap-2 text-sm text-dark/65">
               <CheckCircle className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" weight="duotone" />
-              <span><strong className="text-brand font-medium">Desayuno:</strong> incluido siempre, todas las noches.</span>
+              <span><strong className="text-brand font-medium">Desayuno:</strong> {desayunoHabilitado ? 'incluido según la política publicada.' : 'la disponibilidad se confirma al cotizar.'}</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-dark/65">
               <CheckCircle className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" weight="duotone" />
-              <span><strong className="text-brand font-medium">Almuerzo y cena:</strong> opcionales, +$20.000 cada uno por persona — menú del día, sumalos los días que quieras.</span>
+              <span><strong className="text-brand font-medium">Almuerzo y cena:</strong> {textoComidasOpcionales(precios)} — menú del día; la reserva aplica los valores publicados.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-dark/65">
               <CheckCircle className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" weight="duotone" />
-              <span><strong className="text-brand font-medium">Pensión completa:</strong> si preferís las 3 comidas todos los días, sale a precio cerrado ($45.000 camping / $60.000 Refugio de Piedra o domo compartido / $75.000 domo privado, por persona/noche) — más conveniente que sumar cada comida suelta.</span>
+              <span><strong className="text-brand font-medium">Pensión completa:</strong> {pensionHabilitada ? textoPensionCompleta(precios, cargado) : 'no está habilitada en la política publicada para esta fecha.'}</span>
             </li>
           </ul>
         </div>
@@ -585,7 +625,8 @@ const HorariosPension: React.FC = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 // ── Galería del lugar ─────────────────────────────────────────────────────────
 const GALERIA = [
@@ -1113,7 +1154,7 @@ const Estadia: React.FC = () => {
           <Alojamientos precios={preciosPublicos} cargado={preciosCargados} />
           <SectionRegeneracion />
           <EscaleraDeValor tarifaDesdeActual={tarifaDesdeActual} precios={preciosPublicos} cargado={preciosCargados} />
-          <HorariosPension />
+          <HorariosPension precios={preciosPublicos} cargado={preciosCargados} />
           <Galeria />
           {/* Mini CTA puente */}
           <div style={{ background: '#005333', padding: '24px', textAlign: 'center' }}>

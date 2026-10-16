@@ -241,6 +241,12 @@ test('la página de estadía y la portada usan el plan tarifario público en vez
   assert.match(widget, /estimateBookingPrice/);
   assert.match(widget, /c\.perPerson/);
   assert.doesNotMatch(stay, /Desde \$20\.000/);
+  assert.match(stay, /textoTarifasPublicadas\(precios, cargado\)/);
+  assert.match(stay, /textoPensionCompleta\(precios, cargado\)/);
+  assert.match(stay, /<HorariosPension precios=\{preciosPublicos\} cargado=\{preciosCargados\} \/>/);
+  assert.doesNotMatch(stay, /Tarifa base: desde \$20\.000/);
+  assert.doesNotMatch(stay, /\+\$20\.000 cada uno/);
+  assert.doesNotMatch(stay, /\$45\.000 camping \/ \$60\.000/);
   assert.doesNotMatch(inclusions, /ESTADIA_PRICES/);
   assert.doesNotMatch(hero, /\(t\.hero as any\)\.reservationPricing/);
   assert.doesNotMatch(widget, /Desde \$20\.000/);
