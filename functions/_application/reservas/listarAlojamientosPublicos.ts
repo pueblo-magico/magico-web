@@ -16,6 +16,7 @@ export async function listarAlojamientosPublicos(
       .map(item => ({
         codigo: item.modalidad,
         nombre: item.nombreComercial || item.modalidad,
+        descripcion: item.descripcionComercial || '',
         unidad_venta: item.unidadVenta,
       })),
   })));

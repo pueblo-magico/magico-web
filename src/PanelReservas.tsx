@@ -1750,7 +1750,8 @@ type ConfiguracionBaseApi = {
     estado: string; actualizadoAt: string;
     modalidades: Array<{
       id: number; modalidad: string; contexto: string; unidadVenta: string;
-      habilitada: boolean; nombreComercial: string; actualizadoAt: string;
+      habilitada: boolean; nombreComercial: string; descripcionComercial: string;
+      actualizadoAt: string;
     }>;
   }>;
   tarifa: null | {
@@ -2063,6 +2064,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
           accion: 'actualizar_modalidad', id: item.id, modalidad: item.modalidad,
           contexto: item.contexto, unidad_venta: item.unidadVenta, habilitada: item.habilitada,
           nombre_comercial: item.nombreComercial,
+          descripcion_comercial: item.descripcionComercial,
           expected_updated_at: item.actualizadoAt, motivo: motivo.trim(),
         }),
       });
@@ -2082,7 +2084,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
         body: JSON.stringify({
           accion: 'crear_modalidad', espacio_codigo: espacio.codigo, modalidad: opcion.value,
           nombre_comercial: opcion.label, contexto: 'general', unidad_venta: unidadVenta,
-          habilitada: false, motivo,
+          descripcion_comercial: '', habilitada: false, motivo,
         }),
       });
     }, 'Modalidad creada. Revisá sus condiciones antes de habilitarla.');
@@ -2819,6 +2821,11 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
                       options={item.modalidad === 'privada' ? [{ value: 'espacio', label: 'Espacio completo' }] : item.modalidad === 'camping' ? [{ value: 'parcela', label: 'Parcela' }] : [{ value: 'cama', label: 'Cama' }, { value: 'espacio', label: 'Espacio completo' }]}
                       onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, { unidadVenta: value })} />
                   </div>
+                  <Textarea label="Información para huéspedes" rows={2}
+                    description="Explicá qué debe traer la persona y qué incluye esta modalidad. Se mostrará durante la reserva."
+                    placeholder="Ej.: Traé tu propia carpa · Ropa blanca incluida"
+                    value={item.descripcionComercial} isDisabled={!esSuperAdmin}
+                    onChange={value => actualizarModalidadDraft(espacio.codigo, item.id, { descripcionComercial: value })} />
                   <Checkbox className="admin-config__modality-toggle" isSelected={item.habilitada} isDisabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
                     onChange={isSelected => actualizarModalidadDraft(espacio.codigo, item.id, { habilitada: isSelected })}>Habilitada para reservas nuevas</Checkbox>
                   {!puedeHabilitar && <p className="admin-config__modality-warning text-xs text-amber-700">Primero activá el alojamiento, asignale capacidad y habilitá el contexto seleccionado.</p>}

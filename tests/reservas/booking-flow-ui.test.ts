@@ -45,6 +45,19 @@ test('incluye camping cuando el catálogo público lo habilita', () => {
   assert.match(widget, /campoentero\.webp/);
 });
 
+test('explica el impacto, la pensión completa y la información editable de cada modalidad', () => {
+  const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(api, /descripcion\?: string/);
+  assert.match(widget, /El 10% de tu inversión va directo a reforestar tabaquillos y restaurar nuestras sierras/);
+  assert.match(widget, /Desayuno, almuerzo y cena incluidos/);
+  assert.match(widget, /commercialModeDescriptions\.get\(option\)/);
+  assert.match(widget, /selectedModeDescription/);
+  assert.match(styles, /\.booking-impact/);
+  assert.match(styles, /\.booking-sidebar__impact/);
+});
+
 test('muestra el flujo en un modal accesible en todos los tamaños y protege los datos de pago', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');

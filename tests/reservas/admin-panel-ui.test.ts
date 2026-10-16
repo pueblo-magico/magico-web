@@ -108,6 +108,8 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /accion: 'publicar_tarifa_alimentacion'/);
   assert.match(source, /Ajustes sobre el total/);
   assert.match(source, /Crear modalidad/);
+  assert.match(source, /Información para huéspedes/);
+  assert.match(source, /descripcion_comercial: item\.descripcionComercial/);
   assert.match(source, /requestJson\('\/api\/admin\/tarifas'/);
   assert.match(source, /Agregar tarifa/);
   assert.match(source, /agregarReglaPrecio/);

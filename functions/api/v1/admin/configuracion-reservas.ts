@@ -56,6 +56,7 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
         unidadVenta: String(body.unidad_venta || '') as any,
         habilitada: body.habilitada === true, expectedUpdatedAt: String(body.expected_updated_at || ''),
         nombreComercial: String(body.nombre_comercial || body.modalidad || ''),
+        descripcionComercial: String(body.descripcion_comercial || ''),
         motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
       }, repositorio);
       return json({ data: modalidad, meta: { version: 'v1' } });
@@ -65,6 +66,7 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
         espacioCodigo: String(body.espacio_codigo || ''), modalidad: String(body.modalidad || '') as any,
         contexto: String(body.contexto || '') as any, unidadVenta: String(body.unidad_venta || '') as any,
         habilitada: body.habilitada === true, nombreComercial: String(body.nombre_comercial || ''),
+        descripcionComercial: String(body.descripcion_comercial || ''),
         motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
       }, repositorio);
       return json({ data: modalidad, meta: { version: 'v1' } }, 201);

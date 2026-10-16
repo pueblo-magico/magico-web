@@ -11,6 +11,13 @@ flujos internos existentes. D1 sigue siendo la fuente operativa de verdad.
 - `POST /api/v1/public/reservas`
 - `GET /api/v1/public/reservas/:codigo`
 
+El catálogo público de alojamientos incluye, para cada modalidad habilitada,
+su `codigo`, `nombre` y una `descripcion` comercial opcional. Esa descripción
+permite comunicar condiciones que dependen de la modalidad, por ejemplo si el
+huésped debe traer su propia carpa o si la ropa blanca está incluida. El flujo
+de reserva muestra este contenido sin convertirlo en una regla de precio o de
+disponibilidad.
+
 Ejemplo de solicitud de cotización:
 
 ```json
@@ -38,7 +45,8 @@ desglose vigente, sin datos personales.
 La cotización admite únicamente dos valores estables:
 
 - `desayuno_incluido`: incluido en el alojamiento, sin recargo.
-- `pension_completa`: agrega almuerzo y cena por cada persona y noche.
+- `pension_completa`: incluye desayuno, almuerzo y cena; agrega el precio de
+  almuerzo y cena por cada persona y noche.
 
 Cada comida cuesta ARS 20.000. Por lo tanto, `pension_completa` agrega ARS
 40.000 por persona y noche. La respuesta separa `alojamiento_centavos` de

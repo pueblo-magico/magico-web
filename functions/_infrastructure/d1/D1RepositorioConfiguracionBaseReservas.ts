@@ -76,7 +76,8 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         SELECT e.codigo, e.nombre, e.tipo, e.capacidad_comercial,
           e.capacidad_operativa_maxima, e.reservable_general, e.reservable_retiro,
           e.estado, e.updated_at espacio_updated_at, me.id, me.modalidad, me.contexto,
-          me.unidad_venta, me.habilitada, me.nombre_comercial, me.updated_at
+          me.unidad_venta, me.habilitada, me.nombre_comercial, me.descripcion_comercial,
+          me.updated_at
         FROM espacios e
         LEFT JOIN modalidades_espacio me ON me.espacio_id = e.id
         ORDER BY e.codigo, me.contexto, me.modalidad
@@ -153,6 +154,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         id: Number(row.id), modalidad: String(row.modalidad), contexto: String(row.contexto),
         unidadVenta: String(row.unidad_venta), habilitada: Number(row.habilitada) === 1,
         nombreComercial: String(row.nombre_comercial || row.modalidad),
+        descripcionComercial: String(row.descripcion_comercial || ''),
         actualizadoAt: String(row.updated_at),
       });
     }
@@ -265,22 +267,28 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
   ): Promise<ModalidadComercialActualizada | null> {
     const anterior = await this.db.prepare(`
       SELECT me.id, me.habilitada, me.modalidad, me.contexto, me.unidad_venta,
-        me.nombre_comercial, me.updated_at,
+        me.nombre_comercial, me.descripcion_comercial, me.updated_at,
         e.codigo espacio_codigo
       FROM modalidades_espacio me JOIN espacios e ON e.id = me.espacio_id WHERE me.id = ?
     `).bind(entrada.id).first();
     if (!anterior || String(anterior.updated_at) !== entrada.expectedUpdatedAt) return null;
+    const descripcionComercial = entrada.descripcionComercial === undefined
+      ? String(anterior.descripcion_comercial || '')
+      : entrada.descripcionComercial.trim();
 
     const resultados = await this.db.batch([
       this.db.prepare(`
         UPDATE modalidades_espacio
         SET modalidad = ?, contexto = ?, unidad_venta = ?, habilitada = ?, nombre_comercial = ?,
+          descripcion_comercial = ?,
           updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         WHERE id = ? AND updated_at = ?
-        RETURNING id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial, updated_at
+        RETURNING id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial,
+          descripcion_comercial, updated_at
       `).bind(
         entrada.modalidad, entrada.contexto, entrada.unidadVenta, entrada.habilitada ? 1 : 0,
         (entrada.nombreComercial || String(anterior.nombre_comercial || anterior.modalidad)).trim(),
+        descripcionComercial,
         entrada.id, entrada.expectedUpdatedAt
       ),
       this.db.prepare(`
@@ -290,7 +298,8 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
           json_object('espacio_codigo', ?, 'modalidad_anterior', ?, 'modalidad_nueva', ?,
             'contexto_anterior', ?, 'contexto_nuevo', ?, 'unidad_venta_anterior', ?, 'unidad_venta_nueva', ?,
             'habilitada_anterior', ?, 'habilitada_nueva', ?,
-            'nombre_comercial_anterior', ?, 'nombre_comercial_nuevo', ?)
+            'nombre_comercial_anterior', ?, 'nombre_comercial_nuevo', ?,
+            'descripcion_comercial_anterior', ?, 'descripcion_comercial_nueva', ?)
         WHERE changes() = 1
       `).bind(
         entrada.actorEmail, String(entrada.id), entrada.motivo, entrada.correlationId,
@@ -298,7 +307,8 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
         String(anterior.contexto), entrada.contexto, String(anterior.unidad_venta), entrada.unidadVenta,
         Number(anterior.habilitada), entrada.habilitada ? 1 : 0,
         String(anterior.nombre_comercial || anterior.modalidad),
-        (entrada.nombreComercial || String(anterior.nombre_comercial || anterior.modalidad)).trim()
+        (entrada.nombreComercial || String(anterior.nombre_comercial || anterior.modalidad)).trim(),
+        String(anterior.descripcion_comercial || ''), descripcionComercial
       ),
     ]);
     const row = resultados[0]?.results?.[0];
@@ -307,6 +317,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       modalidad: String(row.modalidad), contexto: String(row.contexto), unidadVenta: String(row.unidad_venta),
       habilitada: Number(row.habilitada) === 1, actualizadoAt: String(row.updated_at),
       nombreComercial: String(row.nombre_comercial),
+      descripcionComercial: String(row.descripcion_comercial || ''),
     } : null;
   }
 
@@ -316,25 +327,29 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
     const resultados = await this.db.batch([
       this.db.prepare(`
         INSERT INTO modalidades_espacio (
-          espacio_id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial
+          espacio_id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial,
+          descripcion_comercial
         )
-        SELECT id, ?, ?, ?, ?, ? FROM espacios WHERE codigo = ?
+        SELECT id, ?, ?, ?, ?, ?, ? FROM espacios WHERE codigo = ?
         ON CONFLICT(espacio_id, modalidad, contexto, unidad_venta) DO NOTHING
-        RETURNING id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial, updated_at
+        RETURNING id, modalidad, contexto, unidad_venta, habilitada, nombre_comercial,
+          descripcion_comercial, updated_at
       `).bind(
         entrada.modalidad, entrada.contexto, entrada.unidadVenta, entrada.habilitada ? 1 : 0,
-        entrada.nombreComercial!.trim(), entrada.espacioCodigo
+        entrada.nombreComercial!.trim(), entrada.descripcionComercial?.trim() || '',
+        entrada.espacioCodigo
       ),
       this.db.prepare(`
         INSERT INTO auditoria_admin (
           email, accion, actor_tipo, entidad_tipo, entidad_id, motivo, correlation_id, metadata_json
         ) SELECT ?, 'crear_modalidad_comercial', 'usuario', 'modalidad_espacio', ?, ?, ?,
-          json_object('espacio_codigo', ?, 'modalidad', ?, 'contexto', ?, 'unidad_venta', ?, 'nombre_comercial', ?)
+          json_object('espacio_codigo', ?, 'modalidad', ?, 'contexto', ?, 'unidad_venta', ?,
+            'nombre_comercial', ?, 'descripcion_comercial', ?)
         WHERE changes() = 1
       `).bind(
         entrada.actorEmail, entrada.operacionUid, entrada.motivo, entrada.correlationId,
         entrada.espacioCodigo, entrada.modalidad, entrada.contexto, entrada.unidadVenta,
-        entrada.nombreComercial!.trim()
+        entrada.nombreComercial!.trim(), entrada.descripcionComercial?.trim() || ''
       ),
     ]);
     const row = resultados[0]?.results?.[0];
@@ -342,6 +357,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       id: Number(row.id), espacioCodigo: entrada.espacioCodigo,
       modalidad: String(row.modalidad), contexto: String(row.contexto), unidadVenta: String(row.unidad_venta),
       habilitada: Number(row.habilitada) === 1, nombreComercial: String(row.nombre_comercial),
+      descripcionComercial: String(row.descripcion_comercial || ''),
       actualizadoAt: String(row.updated_at),
     } : null;
   }

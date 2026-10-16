@@ -39,6 +39,7 @@ export type ConfiguracionBaseReservas = {
       unidadVenta: string;
       habilitada: boolean;
       nombreComercial: string;
+      descripcionComercial: string;
       actualizadoAt: string;
     }>;
   }>;
@@ -115,6 +116,7 @@ export type CambioModalidadComercial = {
   unidadVenta: 'espacio' | 'cama' | 'parcela';
   habilitada: boolean;
   nombreComercial?: string;
+  descripcionComercial?: string;
   expectedUpdatedAt: string;
   motivo: string;
 };
@@ -165,6 +167,7 @@ export type ModalidadComercialActualizada = {
   unidadVenta: string;
   habilitada: boolean;
   nombreComercial: string;
+  descripcionComercial: string;
   actualizadoAt: string;
 };
 
@@ -210,6 +213,9 @@ export function validarCambioModalidadComercial(entrada: CambioModalidadComercia
   if (entrada.nombreComercial !== undefined && (!entrada.nombreComercial.trim() || entrada.nombreComercial.trim().length > 80)) {
     throw new ErrorReserva('DATOS_INVALIDOS', 'El nombre comercial de la modalidad es inválido.');
   }
+  if (entrada.descripcionComercial !== undefined && entrada.descripcionComercial.trim().length > 300) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'La información de la modalidad no puede superar los 300 caracteres.');
+  }
   const unidadValida = entrada.modalidad === 'privada'
     ? entrada.unidadVenta === 'espacio'
     : entrada.modalidad === 'camping'
@@ -218,7 +224,11 @@ export function validarCambioModalidadComercial(entrada: CambioModalidadComercia
   if (!unidadValida) {
     throw new ErrorReserva('DATOS_INVALIDOS', 'La unidad de venta no corresponde a la modalidad elegida.');
   }
-  return { ...entrada, motivo: validarMotivo(entrada.motivo) };
+  return {
+    ...entrada,
+    descripcionComercial: entrada.descripcionComercial?.trim() || '',
+    motivo: validarMotivo(entrada.motivo),
+  };
 }
 
 export function validarNuevaModalidadComercial(entrada: NuevaModalidadComercial): NuevaModalidadComercial {

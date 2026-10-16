@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   AlertCircle, ArrowLeft, ArrowRight, BedDouble, CalendarDays, CheckCircle2, ChevronRight, Clock3,
-  Copy, CreditCard, Landmark, Loader2, Mail, MessageCircle, Minus, Phone, Plus, ShieldCheck,
+  Copy, CreditCard, Landmark, Leaf, Loader2, Mail, MessageCircle, Minus, Phone, Plus, ShieldCheck,
   UserRound, Users, Utensils, X,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -51,6 +51,8 @@ const COPY = {
     refugio: 'Refugio de piedra', camping: 'Camping', mode: 'Modalidad', compartida: 'Compartida', privada: 'Privada',
     meals: 'Comidas', desayuno_incluido: 'Con desayuno', pension_completa: 'Pensión completa',
     breakfastHelp: 'El desayuno está incluido.', fullBoardHelp: 'Desayuno, almuerzo y cena incluidos.',
+    impactTitle: 'Tu estadía regenera la montaña',
+    impactCopy: 'El 10% de tu inversión va directo a reforestar tabaquillos y restaurar nuestras sierras.',
     quote: 'Consultar disponibilidad', loadingOptions: 'Cargando opciones disponibles…',
     noOptions: 'No pudimos cargar los alojamientos.',
     domeCopy: 'Dormí rodeado de naturaleza.', refugeCopy: 'Calidez simple en el refugio.', campingCopy: 'Acampá en un área habilitada en plena naturaleza.',
@@ -107,6 +109,8 @@ const COPY = {
     refugio: 'Stone shelter', camping: 'Camping', mode: 'Room type', compartida: 'Shared', privada: 'Private',
     meals: 'Meals', desayuno_incluido: 'Breakfast included', pension_completa: 'Full board',
     breakfastHelp: 'Breakfast is included.', fullBoardHelp: 'Breakfast, lunch and dinner included.',
+    impactTitle: 'Your stay helps regenerate the mountains',
+    impactCopy: '10% of your investment goes directly to reforesting tabaquillo trees and restoring our mountains.',
     quote: 'Check availability', loadingOptions: 'Loading available options…',
     noOptions: 'We could not load accommodation options.',
     domeCopy: 'Sleep surrounded by nature.', refugeCopy: 'Simple warmth in the stone shelter.', campingCopy: 'Camp in a designated area surrounded by nature.',
@@ -396,6 +400,13 @@ export const BookingWidget: React.FC<{
     .flatMap(item => item.modalidades.map(option => [option.codigo, option.nombre] as const))
     .filter((entry): entry is readonly [BookingMode, string] => Boolean(entry[1]))
   ), [accommodations, type]);
+  const commercialModeDescriptions = useMemo(() => new Map(accommodations
+    .filter(item => item.tipo === type)
+    .flatMap(item => item.modalidades.map(option => [option.codigo, option.descripcion] as const))
+    .filter((entry): entry is readonly [BookingMode, string] => Boolean(entry[1]))
+  ), [accommodations, type]);
+  const selectedModeName = commercialModeNames.get(mode) || c[mode];
+  const selectedModeDescription = commercialModeDescriptions.get(mode) || '';
 
   useEffect(() => {
     if (!open || optionsLoaded) return;
@@ -730,7 +741,9 @@ export const BookingWidget: React.FC<{
               <div className="booking-summary booking-summary--result">
                 <div className="booking-summary__headline">
                   <span>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)} · {stayNights} {c.nights} · {people} {c.people.toLowerCase()}</span>
-                  <strong>{c[type]} · {c[mode]} · {c[mealPlan]}</strong>
+                  <strong>{c[type]} · {selectedModeName} · {c[mealPlan]}</strong>
+                  {selectedModeDescription && <small>{selectedModeDescription}</small>}
+                  <small>{mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</small>
                 </div>
                 <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
                 <div className="booking-summary__row"><span>{c.perPerson}</span><strong>{formatMoney(Math.round(quote.precio.subtotal_centavos / people), quote.precio.moneda, language)}</strong></div>
@@ -775,6 +788,7 @@ export const BookingWidget: React.FC<{
           <div className="booking-content-grid">
             <div className="booking-main">
               <div className="booking-price-mobile">{renderPriceSummary()}</div>
+              <div className="booking-impact"><Leaf size={21} aria-hidden="true" /><span><strong>{c.impactTitle}</strong>{c.impactCopy}</span></div>
               {step === 1 ? (
                 <div className="booking-panel">
                   <div className="booking-panel__heading"><div><p className="booking-section-title"><CalendarDays size={18} /> {c.datesTitle}</p><h3>{language === 'es' ? 'Elegí tus fechas' : 'Choose your dates'}</h3></div></div>
@@ -805,7 +819,7 @@ export const BookingWidget: React.FC<{
                         </button>
                       ))}</div>
                       <p className="booking-section-title">{c.mode}</p>
-                      <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={23} /><span>{commercialModeNames.get(option) || c[option]}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                      <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={23} /><span><strong>{commercialModeNames.get(option) || c[option]}</strong>{commercialModeDescriptions.get(option) && <small>{commercialModeDescriptions.get(option)}</small>}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                       <p className="booking-section-title">{c.meals}</p>
                       <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={23} /><span><strong>{c[option]}</strong><small>{option === 'desayuno_incluido' ? c.breakfastHelp : c.fullBoardHelp}</small></span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                     </>
@@ -819,7 +833,7 @@ export const BookingWidget: React.FC<{
                   <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><h3>{c.reviewTitle}</h3><p>{c.contactIntro}</p></div>
                   <div className="booking-review-cards">
                     <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => setStep(1)}>{c.edit}</button></div>
-                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {c[mode]}</strong><em>{c[mealPlan]}</em></span><button type="button" onClick={() => setStep(2)}>{c.edit}</button></div>
+                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}<em>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</em></span><button type="button" onClick={() => setStep(2)}>{c.edit}</button></div>
                   </div>
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
                   <div className="booking-grid">
@@ -843,14 +857,16 @@ export const BookingWidget: React.FC<{
             <aside className="booking-sidebar" aria-label={c.selectionTitle}>
               <p className="booking-section-title">{c.selectionTitle}</p>
               {step > 1 && <div className="booking-sidebar__visual" aria-hidden="true"><img src={accommodationImage(type)} alt="" /></div>}
-              <h3>{step === 1 ? c.datesTitle : `${c[type]} · ${c[mode]}`}</h3>
+              <h3>{step === 1 ? c.datesTitle : `${c[type]} · ${selectedModeName}`}</h3>
               <ul>
                 <li><CalendarDays /> <span>{checkIn && checkOut ? `${formatBookingDate(checkIn, language, true)} — ${formatBookingDate(checkOut, language, true)}` : c.datesTitle}</span></li>
                 <li><Users /> <span>{people} {c.people.toLowerCase()}</span></li>
-                {step > 1 && <li><Utensils /> <span>{c[mealPlan]}</span></li>}
+                {step > 1 && <li><Utensils /> <span>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</span></li>}
+                {step > 1 && selectedModeDescription && <li><BedDouble /> <span>{selectedModeDescription}</span></li>}
               </ul>
               {renderPriceSummary('booking-sidebar__price')}
               <div className="booking-sidebar__trust"><ShieldCheck /><span>{c.dateNotice}</span></div>
+              <div className="booking-sidebar__impact"><Leaf /><span><strong>{c.impactTitle}</strong>{c.impactCopy}</span></div>
             </aside>
           </div>
         )}

@@ -116,7 +116,11 @@ test('publica y calcula disponibilidad de camping cuando espacio y modalidad est
   const camping = bodyCatalogo.data.find((item: any) => item.tipo === 'camping');
   assert.equal(camping.codigo, 'camping-exterior');
   assert.equal(camping.capacidad_comercial, 6);
-  assert.deepEqual(camping.modalidades, [{ codigo: 'camping', nombre: 'Camping', unidad_venta: 'parcela' }]);
+  assert.deepEqual(camping.modalidades, [{
+    codigo: 'camping', nombre: 'Camping',
+    descripcion: 'Traé tu propia carpa. Incluye acceso a duchas calientes y baños.',
+    unidad_venta: 'parcela',
+  }]);
 
   const disponibilidad = await consultarDisponibilidad({
     request: new Request('https://test/api/v1/public/disponibilidad?check_in=2027-04-11&check_out=2027-04-13&personas=4&tipo_alojamiento=camping&modalidad=camping'),

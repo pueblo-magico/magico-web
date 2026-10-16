@@ -70,6 +70,14 @@ editables. Inventario, modalidades, tarifa, reglas de seña, política y
 alimentación se leen de sus tablas normalizadas; no se copian a una tabla
 genérica. Sólo `super_admin` puede escribir.
 
+Cada modalidad de un espacio admite un nombre comercial y una descripción
+comercial opcional de hasta 300 caracteres. Esta descripción se administra
+desde Configuración y se publica en el proceso de reserva para aclarar qué
+incluye o exige la opción elegida (por ejemplo, carpa propia o ropa blanca).
+Modificarla no cambia por sí solo capacidad, disponibilidad ni precio y queda
+sujeto al mismo motivo obligatorio, confirmación y auditoría que el resto de
+los cambios comerciales.
+
 `payment_hold_minutes` es el primer parámetro operativo escalar. Vive en
 `parametros_operativos_reservas`, comienza en 15 minutos y admite valores de 5
 a 120. Cada actualización usa control optimista, incrementa la versión y deja

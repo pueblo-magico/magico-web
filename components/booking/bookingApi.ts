@@ -8,7 +8,12 @@ export interface PublicAccommodation {
   nombre: string;
   tipo: AccommodationType;
   capacidad_comercial: number;
-  modalidades: Array<{ codigo: BookingMode; nombre?: string; unidad_venta: string }>;
+  modalidades: Array<{
+    codigo: BookingMode;
+    nombre?: string;
+    descripcion?: string;
+    unidad_venta: string;
+  }>;
 }
 
 export interface PublicPriceRule {

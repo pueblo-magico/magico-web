@@ -30,6 +30,7 @@ export type ModalidadEspacio = {
   unidadVenta: UnidadVenta;
   habilitada: boolean;
   nombreComercial?: string;
+  descripcionComercial?: string;
 };
 
 export type UnidadAsignable = {

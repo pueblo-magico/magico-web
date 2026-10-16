@@ -88,6 +88,11 @@ test('valida límites y usa 15 minutos como fallback seguro', () => {
     id: 0, modalidad: 'privada', contexto: 'general', unidadVenta: 'espacio',
     habilitada: true, expectedUpdatedAt: '2026-01-01T00:00:00Z', motivo: 'Cambio aprobado',
   }), /modalidad comercial es inválida/);
+  assert.throws(() => validarCambioModalidadComercial({
+    id: 1, modalidad: 'privada', contexto: 'general', unidadVenta: 'espacio',
+    habilitada: true, nombreComercial: 'Privada', descripcionComercial: 'x'.repeat(301),
+    expectedUpdatedAt: '2026-01-01T00:00:00Z', motivo: 'Cambio aprobado',
+  }), /300 caracteres/);
   assert.throws(() => validarCambioTarifaAlimentacion({
     codigo: 'pension_completa', precioComidaCentavos: -1, expectedVersion: 1, motivo: 'Cambio aprobado',
   }), /tarifa de alimentación es inválida/);
@@ -139,10 +144,17 @@ test('super admin puede cambiar modalidades y publicar una nueva tarifa de alime
   const actualizada = await actualizarModalidadConfiguracion({
     id: modalidad.id, modalidad: modalidad.modalidad as 'privada', contexto: modalidad.contexto as 'general',
     unidadVenta: modalidad.unidadVenta as 'espacio', habilitada: !modalidad.habilitada,
+    nombreComercial: modalidad.nombreComercial,
+    descripcionComercial: 'Uso exclusivo con ropa blanca incluida.',
     expectedUpdatedAt: modalidad.actualizadoAt,
     motivo: 'Cambio comercial aprobado', actorEmail: 'admin@test', correlationId: 'req-modalidad-1',
   }, repositorio, () => 'op-modalidad-1');
   assert.equal(actualizada.habilitada, !modalidad.habilitada);
+  assert.equal(actualizada.descripcionComercial, 'Uso exclusivo con ropa blanca incluida.');
+  assert.equal(
+    sqlite.prepare('SELECT descripcion_comercial FROM modalidades_espacio WHERE id = ?').get(modalidad.id)?.descripcion_comercial,
+    'Uso exclusivo con ropa blanca incluida.',
+  );
   await assert.rejects(actualizarModalidadConfiguracion({
     id: modalidad.id, modalidad: modalidad.modalidad as 'privada', contexto: modalidad.contexto as 'general',
     unidadVenta: modalidad.unidadVenta as 'espacio', habilitada: modalidad.habilitada,
