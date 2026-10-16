@@ -16,17 +16,24 @@ export const RETREATS_DATA = {
       refugio: 450000,
       domoPrivado: 650000,
     },
+    pricesUsd: {
+      camping: 190,
+      refugio: 300,
+      domoPrivado: 430,
+    },
     dates: ['14 al 15 de Agosto'],
     message: 'Hola! Vengo de Familion y quiero consultar la experiencia.',
   },
   achalaViva: {
     price: 180000,
+    priceUsd: 120,
     currency: 'ARS',
     dates: 'Próximas fechas a confirmar',
     message: '¡Hola! Me interesa Achala Viva y quiero saber cuándo es la próxima fecha. 🗓️✨',
   },
   gondorbows: {
     price: 640000,
+    priceUsd: 430,
     currency: 'ARS',
     dates: '24, 25 y 26 de Julio',
     message: '¡Hola Fausto! Terminé de leer todo sobre el retiro de Gondorbows y no me lo quiero perder. Me comunico para coordinar la seña y asegurar mi lugar. 🌲✨',
@@ -36,6 +43,13 @@ export const RETREATS_DATA = {
     priceAcompanada: 300000,
     senia: 100000,
     segundoPago: 100000,
+    pricesUsd: {
+      priceSola: 270,
+      priceAcompanada: 200,
+      senia: 70,
+      segundoPago: 70,
+      valorReferencia: 600,
+    },
     segundoPagoFecha: '15 de Agosto',
     valorReferenciaARS: 900000,
     currency: 'ARS',
@@ -47,12 +61,19 @@ export const RETREATS_DATA = {
   }
 };
 
+export type PricingLanguage = 'es' | 'en';
+
+export function formatPrice(amount: number, language: PricingLanguage): string {
+  return language === 'en'
+    ? `USD ${amount.toLocaleString('en-US')}`
+    : `$${amount.toLocaleString('es-AR')}`;
+}
+
 export const ESTADIA_PRICES = {
   // Alojamiento + desayuno — por persona/noche. Comidas y Reset Vital presencial se suman aparte.
   carpaDesde: 20000,        // Camping
   ecoRefugioDesde: 35000,   // Habitación compartida o Domo geodésico compartido
-  domoPrivado: 50000,       // Domo privado — por persona, de 2 a 7 personas
-  domoPrivadoSolo: 100000,  // Domo privado para 1 persona sola — precio por noche, con desayuno
+  domoPrivado: 50000,       // Domo privado — por persona, de 2 a 7 personas (no se ofrece para 1 persona sola)
 
   // Gastronomía — menú del día, por persona/día
   almuerzo: 20000,
@@ -63,9 +84,41 @@ export const ESTADIA_PRICES = {
   pensionCompletaEcoRefugio: 60000,
   pensionCompletaDomoPrivado: 75000,
 
-  // Reset Vital presencial — upgrade sobre el programa digital (incluido) · tarifa única por persona (no por día)
+  // Fin de semana (noches de viernes y sábado) — solo se vende con pensión
+  // completa. Precio por persona/noche. El resto de la semana usa los valores
+  // de arriba. Cálculo noche por noche en ./pricing.ts.
+  pensionFinde: {
+    carpa: 45000,
+    ecoRefugio: 75000,              // Refugio de Piedra o domo compartido
+    domoPrivadoUnaNoche: 120000,    // una sola noche de finde
+    domoPrivadoDosNoches: 95000,    // viernes + sábado del mismo finde, c/u
+  },
+
+  // Reset Vital presencial — upgrade sobre el programa digital (incluido) · por persona por día de estadía
   resetVitalPresencial: 5000,
 };
+
+export const ESTADIA_PRICES_USD: typeof ESTADIA_PRICES = {
+  carpaDesde: 15,
+  ecoRefugioDesde: 25,
+  domoPrivado: 35,
+  almuerzo: 15,
+  cena: 15,
+  pensionCompletaCarpa: 30,
+  pensionCompletaEcoRefugio: 40,
+  pensionCompletaDomoPrivado: 50,
+  pensionFinde: {
+    carpa: 30,
+    ecoRefugio: 50,
+    domoPrivadoUnaNoche: 80,
+    domoPrivadoDosNoches: 65,
+  },
+  resetVitalPresencial: 5,
+};
+
+export function getEstadiaPrices(language: PricingLanguage): typeof ESTADIA_PRICES {
+  return language === 'en' ? ESTADIA_PRICES_USD : ESTADIA_PRICES;
+}
 
 export const COLIVING_PRICES = {
   currency: 'ARS',
@@ -81,3 +134,22 @@ export const COLIVING_PRICES = {
   },
   message: 'Hola! Vengo de la web y quiero sumarme a Coliving Mágico ✨',
 };
+
+export const COLIVING_PRICES_USD: typeof COLIVING_PRICES = {
+  currency: 'USD',
+  precioPorNocheInvierno: 35,
+  formatos: [
+    { noches: 10, precio: 240, label: '10 nights', desc: 'A deeper process, ideal for integrating habits' },
+    { noches: 20, precio: 280, label: '20 nights', desc: 'An extended stay for establishing a real work rhythm and routine' },
+  ],
+  paseMensual: {
+    precio: 320,
+    label: 'Monthly Open Pass',
+    desc: 'The most complete option for experiencing the program in depth',
+  },
+  message: 'Hi! I came from the website and would like to join Coliving Mágico ✨',
+};
+
+export function getColivingPrices(language: PricingLanguage): typeof COLIVING_PRICES {
+  return language === 'en' ? COLIVING_PRICES_USD : COLIVING_PRICES;
+}

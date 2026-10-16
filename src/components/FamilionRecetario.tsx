@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { DownloadSimple, FilePdf, CheckCircle, CircleNotch } from '@phosphor-icons/react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { submitForm } from '../lib/submitForm';
+import { useAntiBot } from '../lib/useAntiBot';
+import { validarEmail } from '../lib/validarContacto';
 
 const PDF_URL = '/uploads/Recetarios/recetario-familion.pdf';
 const PDF_FILENAME = 'Recetario-Familion-Pueblo-Magico.pdf';
@@ -11,6 +13,9 @@ const FamilionRecetario: React.FC = () => {
   const tr = t.familion.recetario;
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const { trampa, esBot } = useAntiBot();
+  const [errorEmail, setErrorEmail] = useState(false);
+  const errorEmailMsg = t.contact.status.invalidEmail;
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -38,8 +43,12 @@ const FamilionRecetario: React.FC = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.target as HTMLFormElement);
+    if (validarEmail(String(data.get('email') || ''))) { setErrorEmail(true); return; }
+    setErrorEmail(false);
+    // Bot (campo trampa o envío instantáneo): se entrega igual sin mandar nada.
+    if (esBot()) { triggerDownload(); setSubmitted(true); return; }
     setSending(true);
-    submitForm('Recetario — Familion', data).finally(() => {
+    submitForm('recetario-familion', data).finally(() => {
       triggerDownload();
       setSending(false);
       setSubmitted(true);
@@ -90,6 +99,7 @@ const FamilionRecetario: React.FC = () => {
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {trampa}
                     <div>
                       <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wider" htmlFor="rec-nombre">
                         {tr.form.label_nombre}
@@ -131,6 +141,10 @@ const FamilionRecetario: React.FC = () => {
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-sm focus:ring-2 focus:ring-brand-green focus:border-brand-green transition-colors"
                       />
                     </div>
+
+                    {errorEmail && (
+                      <p role="alert" className="text-sm font-semibold text-red-600">{errorEmailMsg}</p>
+                    )}
 
                     <button
                       type="submit"

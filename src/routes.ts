@@ -23,6 +23,7 @@ export const ROUTES = {
   CICLO_VITAL_FEMENINO: '/ciclo-vital-femenino',
   KILLA_RAYMI: '/killa-raymi',
   ALMA_DE_LOBO: '/alma-de-lobo',
+  SUNSET_RIO: '/sunset-y-rio',
   EMPRESAS: '/empresas',
   FLY_FISHING: '/cordoba-fly-fishing',
   VOLUNTARIADO: '/voluntariado',
