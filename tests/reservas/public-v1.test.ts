@@ -472,6 +472,35 @@ test('exige una preparación válida para domo privado de dos personas', async (
   sqlite.close();
 });
 
+test('no exige preparación cuando el superadmin deshabilita todas las opciones aplicables', async () => {
+  const { sqlite, db } = baseMigrada();
+  sqlite.prepare(`
+    UPDATE opciones_preparacion_estadia
+    SET habilitada = 0
+    WHERE tipo_alojamiento = 'domo'
+      AND modalidad = 'privada'
+      AND cantidad_personas = 2
+  `).run();
+  const quote = await cotizarDomo(db);
+
+  const response = await crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-cama-deshabilitada-0001' },
+      body: JSON.stringify({
+        cotizacion_codigo: quote.data.cotizacion.codigo,
+        espacio_codigo: 'domo-1',
+        cliente: { nombre: 'Huésped sin preparación', email: 'sin-preparacion@example.test' },
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reserva_preferencias').get()?.n, 0);
+  sqlite.close();
+});
+
 test('rechaza crear una reserva pública sin email', async () => {
   const { sqlite, db } = baseMigrada();
   const quote = await cotizarDomo(db);
