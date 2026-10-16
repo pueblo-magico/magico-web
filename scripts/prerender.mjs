@@ -118,6 +118,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/sunset-y-rio',
   },
   {
+    path: '/festival-31-octubre',
+    title: 'Música, naturaleza y encuentro · 31 de octubre | Pueblo Mágico',
+    description: 'Un día para cambiar de ritmo: electrónica orgánica, música en vivo, naturaleza y experiencias para compartir en las Sierras de Córdoba.',
+    image: 'https://experienciamagico.com/uploads/sunset-rio-og.jpg',
+    canonical: 'https://experienciamagico.com/festival-31-octubre',
+  },
+  {
     path: '/empresas',
     title: 'Empresas — Voluntariado Corporativo & RSE en las Sierras · Los Gigantes, Córdoba | Pueblo Mágico',
     description: 'Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +25.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria.',
