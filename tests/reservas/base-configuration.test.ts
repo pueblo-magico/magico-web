@@ -104,6 +104,18 @@ test('valida límites y usa 15 minutos como fallback seguro', () => {
     disponibilidad: 'no_disponible', detalle: '', visibleEnReserva: true,
     orden: 10, motivo: 'Cambio aprobado',
   }), /código del servicio es inválido/);
+  const servicioValido = {
+    tipoAlojamiento: 'domo' as const, codigo: 'electricidad-domo', nombre: 'Electricidad',
+    disponibilidad: 'no_disponible' as const, detalle: '', visibleEnReserva: true,
+    orden: 10, motivo: 'Cambio aprobado',
+  };
+  assert.equal(validarNuevoServicioAlojamiento(servicioValido).nombre, 'Electricidad');
+  assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, tipoAlojamiento: 'salon' as any }), /servicio del alojamiento es inválido/);
+  assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, disponibilidad: 'desconocido' as any }), /servicio del alojamiento es inválido/);
+  assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, visibleEnReserva: 'sí' as any }), /servicio del alojamiento es inválido/);
+  assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, orden: 1_000 }), /servicio del alojamiento es inválido/);
+  assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, nombre: ' ' }), /servicio del alojamiento es inválido/);
+  assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, detalle: 'x'.repeat(241) }), /servicio del alojamiento es inválido/);
 });
 
 test('lee fuentes efectivas y actualiza con versión y auditoría atómica', async () => {
@@ -166,6 +178,17 @@ test('super admin crea y actualiza servicios públicos sin modificar el inventar
   }, repositorio, () => 'op-service-2');
   assert.equal(actualizado.disponibilidad, 'no_disponible');
   assert.equal(actualizado.detalle, 'No se entrega ropa blanca.');
+  await assert.rejects(crearServicioAlojamientoConfiguracion({
+    tipoAlojamiento: 'bell_tent', codigo: 'ropa-blanca', nombre: 'Ropa blanca',
+    disponibilidad: 'incluido', detalle: '', visibleEnReserva: true, orden: 10,
+    motivo: 'Evitar servicio duplicado', actorEmail: 'admin@test', correlationId: 'req-service-3',
+  }, repositorio, () => 'op-service-3'), /servicio ya existe/);
+  await assert.rejects(actualizarServicioAlojamientoConfiguracion({
+    id: creado.id, tipoAlojamiento: creado.tipoAlojamiento, nombre: creado.nombre,
+    disponibilidad: 'incluido', detalle: '', visibleEnReserva: true, orden: 10,
+    expectedUpdatedAt: '2020-01-01T00:00:00.000Z', motivo: 'Evitar edición desactualizada',
+    actorEmail: 'admin@test', correlationId: 'req-service-4',
+  }, repositorio, () => 'op-service-4'), /servicio cambió/);
   assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM instalaciones').get()?.cantidad, inventarioAntes);
   assert.deepEqual(
     sqlite.prepare("SELECT accion FROM auditoria_admin WHERE entidad_tipo = 'servicio_alojamiento' ORDER BY id").all().map(row => row.accion),
@@ -354,6 +377,27 @@ test('el contrato permite lectura administrativa pero sólo super admin puede es
     visible_en_reserva: true, orden: 60, motivo: 'Publicar servicio confirmado',
   }), env });
   assert.equal(servicioResponse.status, 201);
-  assert.equal((await servicioResponse.json() as any).data.codigo, 'estufa-lena');
+  const servicioCreado = (await servicioResponse.json() as any).data;
+  assert.equal(servicioCreado.codigo, 'estufa-lena');
+
+  const servicioActualizadoResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'actualizar_servicio_alojamiento', id: servicioCreado.id,
+    tipo_alojamiento: 'refugio', nombre: 'Estufa a leña', disponibilidad: 'no_disponible',
+    detalle: 'No disponible temporalmente.', visible_en_reserva: false, orden: 70,
+    expected_updated_at: servicioCreado.actualizadoAt, motivo: 'Actualizar servicio confirmado',
+  }), env });
+  assert.equal(servicioActualizadoResponse.status, 200);
+  const servicioActualizado = (await servicioActualizadoResponse.json() as any).data;
+  assert.equal(servicioActualizado.disponibilidad, 'no_disponible');
+  assert.equal(servicioActualizado.visibleEnReserva, false);
+
+  const servicioInvalidoResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'crear_servicio_alojamiento', motivo: 'Solicitud inválida controlada',
+  }), env });
+  assert.equal(servicioInvalidoResponse.status, 400);
+  const accionInvalidaResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'accion_inexistente', motivo: 'Solicitud inválida controlada',
+  }), env });
+  assert.equal(accionInvalidaResponse.status, 400);
   sqlite.close();
 });
