@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LanguageProvider } from '../contexts/LanguageContext';
+import { Accordion, AccordionMediaHeader } from '@pueblo-magico/react-ui';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
@@ -250,7 +251,6 @@ const ALOJAMIENTOS = [
     desc: 'Esfera geométrica en plena montaña con ventanas panorámicas al cielo. 7 camas de una plaza, ropa blanca incluida y baños compartidos a metros del domo. Las modalidades disponibles se muestran según la configuración vigente.',
     image: '/uploads/domos.webp',
     details: ['7 camas de 1 plaza', 'Ropa blanca incluida', 'Baños compartidos fuera del domo', 'Desayuno incluido · sumá comidas', 'Programa Reset Vital'],
-    wa: WA('Hola! Quiero consultar disponibilidad de un Domo Geodésico en Pueblo Mágico ✨'),
   },
   {
     tipo: 'refugio' as const,
@@ -261,7 +261,6 @@ const ALOJAMIENTOS = [
     desc: 'La casa de piedra es el corazón de Pueblo Mágico: recepción, salón y comedor, con las habitaciones a pasos. No es un hotel: es una casa grande de montaña para vivir en comunidad. Baños compartidos. Las modalidades disponibles se muestran según la configuración vigente.',
     image: '/uploads/habitaciones.webp',
     details: ['Programa Reset Vital', 'Camas individuales', 'Baños compartidos', 'Habitación entera para tu grupo', 'Desayuno incluido · sumá comidas'],
-    wa: WA('Hola! Quiero consultar disponibilidad en el Refugio de Piedra de Pueblo Mágico 🏡'),
   },
   {
     tipo: 'camping' as const,
@@ -272,12 +271,10 @@ const ALOJAMIENTOS = [
     desc: 'Instalá tu carpa en pleno campo y dormí bajo las estrellas de los Gigantes. Para quienes buscan la experiencia más cruda y auténtica de la montaña, con la puerta de entrada más accesible a Pueblo Mágico. Duchas calientes y baños disponibles.',
     image: '/uploads/exterior.webp',
     details: ['Programa Reset Vital', 'Traé tu carpa', 'Duchas calientes y baños', 'Fogón comunitario', 'Desayuno incluido · sumá comidas'],
-    wa: WA('Hola! Quiero consultar sobre el camping en Pueblo Mágico ⛺'),
   },
 ];
 
 const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: boolean }> = ({ precios, cargado }) => {
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
   const adicionalPension = precios?.alimentacion.pension_completa?.adicional_por_persona_noche_centavos || 0;
   const precioAlmuerzo = precios?.alimentacion.pension_completa?.precio_almuerzo_centavos
     ?? precios?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
@@ -301,55 +298,43 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
 
           {/* Acordeón de cards + precios */}
           <div className="min-w-0">
-            <div className="space-y-3 mb-5">
-              {ALOJAMIENTOS.map((aloj, i) => (
-                <div key={i}
-                  className="bg-white rounded-2xl border border-brand/5 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200"
-                  onClick={() => setOpenIdx(openIdx === i ? null : i)}>
-
-                  {/* Fila compacta siempre visible */}
-                  <div className="flex items-stretch">
-                    <div className="w-[130px] flex-shrink-0">
-                      <img src={aloj.image} alt={aloj.name}
-                        className="w-full h-full object-cover"
-                        style={{ minHeight: 88 }} loading="lazy" />
-                    </div>
-                    <div className="flex-1 px-4 py-3 flex items-center justify-between gap-3 min-w-0">
-                      <div className="min-w-0">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mb-1 inline-block ${aloj.tagColor}`}>{aloj.tag}</span>
-                        <h3 className="font-serif text-[17px] text-brand leading-tight">{aloj.name}</h3>
-                        <p className="text-dark/50 text-xs mt-0.5 leading-snug line-clamp-2">
-                          {aloj.shortLead} · {textoModalidades(precios, aloj.tipo, cargado)} · {textoTarifas(reglasDe(precios, aloj.tipo), cargado)}
-                        </p>
-                      </div>
-                      <span className={`w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center bg-bone transition-transform duration-300 ${openIdx === i ? 'rotate-180' : ''}`}>
-                        <CaretDown weight="bold" className="w-3 h-3 text-brand" />
-                      </span>
-                    </div>
+            <Accordion
+              className="estadia-accommodations-accordion mb-5"
+              defaultExpandedItems={[ALOJAMIENTOS[0].tipo]}
+              headingLevel={3}
+              items={ALOJAMIENTOS.map(aloj => ({
+                id: aloj.tipo,
+                headerLayout: 'media' as const,
+                triggerLabel: `Ver detalles de ${aloj.name}`,
+                header: (
+                  <AccordionMediaHeader
+                    media={<img src={aloj.image} alt="" loading="lazy" />}
+                    eyebrow={<span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider inline-block ${aloj.tagColor}`}>{aloj.tag}</span>}
+                    heading={aloj.name}
+                    description={`${aloj.shortLead} · ${textoModalidades(precios, aloj.tipo, cargado)} · ${textoTarifas(reglasDe(precios, aloj.tipo), cargado)}`}
+                  />
+                ),
+                content: (
+                  <div>
+                    <p className="text-dark/65 text-sm leading-relaxed mb-3">{aloj.desc}</p>
+                    <ul className="flex flex-wrap gap-2 mb-4">
+                      {aloj.details.map(detail => (
+                        <li key={detail} className="flex items-center gap-1.5 text-xs text-dark/60 bg-bone rounded-full px-3 py-1">
+                          <CheckCircle className="w-3.5 h-3.5 text-gold flex-shrink-0" weight="duotone" />
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href={RESERVATION_START_PATH}
+                      className="inline-flex items-center justify-center gap-2 bg-brand text-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gold transition-colors w-full">
+                      <CalendarIcon className="w-4 h-4" weight="bold" />
+                      Reservar ahora
+                    </a>
                   </div>
-
-                  {/* Contenido expandido */}
-                  {openIdx === i && (
-                    <div className="px-4 pb-4 border-t border-brand/5">
-                      <p className="text-dark/65 text-sm leading-relaxed mt-3 mb-3">{aloj.desc}</p>
-                      <ul className="flex flex-wrap gap-2 mb-4">
-                        {aloj.details.map((d, j) => (
-                          <li key={j} className="flex items-center gap-1.5 text-xs text-dark/60 bg-bone rounded-full px-3 py-1">
-                            <CheckCircle className="w-3.5 h-3.5 text-gold flex-shrink-0" weight="duotone" />
-                            {d}
-                          </li>
-                        ))}
-                      </ul>
-                      <a href={aloj.wa} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 bg-brand text-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gold transition-colors w-full">
-                        <WhatsappLogo className="w-4 h-4" weight="fill" />
-                        Consultar por WhatsApp
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ),
+              }))}
+              type="single"
+            />
 
             {/* Nota de disponibilidad privada */}
             {precios?.opciones.some(opcion => opcion.modalidades.includes('privada')) && <div className="bg-brand/5 border border-brand/10 rounded-2xl px-5 py-4 mb-4 flex gap-3 items-start">

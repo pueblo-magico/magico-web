@@ -158,6 +158,29 @@ test('los CTA que prometen reservar entran al flujo y no abren una conversación
   }
 });
 
+test('los alojamientos reutilizan el acordeón compartido y llevan directo a reservar', () => {
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  assert.match(stay, /import \{ Accordion, AccordionMediaHeader \} from '@pueblo-magico\/react-ui'/);
+  assert.match(stay, /defaultExpandedItems=\{\[ALOJAMIENTOS\[0\]\.tipo\]\}/);
+  assert.match(stay, /href=\{RESERVATION_START_PATH\}/);
+  assert.match(stay, /Reservar ahora/);
+  assert.doesNotMatch(stay, /href=\{aloj\.wa\}/);
+});
+
+test('combina llegada y salida en un calendario abierto con selección consecutiva', () => {
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(widget, /className="booking-date-range"/);
+  assert.match(widget, /function selectCalendarDay\(date: string\)/);
+  assert.match(widget, /if \(!checkIn \|\| checkOut \|\| date <= checkIn\)/);
+  assert.match(widget, /setCheckIn\(date\);\s*setCheckOut\(''\)/s);
+  assert.match(widget, /setCheckOut\(date\)/);
+  assert.match(widget, /checkIn && !checkOut \? c\.selectEnd : c\.selectStart/);
+  assert.doesNotMatch(widget, /type="date"/);
+  assert.match(styles, /\.booking-calendar\s*\{/);
+  assert.match(styles, /\.booking-calendar td button\[data-selection-start\]/);
+});
+
 test('los retornos de Mercado Pago consultan el estado persistido y tienen fallback SPA', () => {
   const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
   const redirects = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8');

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  AlertCircle, ArrowLeft, ArrowRight, BedDouble, CalendarDays, CheckCircle2, ChevronRight, Clock3,
+  AlertCircle, ArrowLeft, ArrowRight, BedDouble, CalendarDays, CheckCircle2, Clock3,
   Copy, CreditCard, Landmark, Leaf, Loader2, Mail, MessageCircle, Minus, Phone, Plus, ShieldCheck,
   UserRound, Users, Utensils, X,
 } from 'lucide-react';
@@ -44,6 +44,8 @@ const COPY = {
     heroReview: 'Revisá tu reserva', heroReviewCopy: 'Comprobá los datos antes de crear la reserva.',
     startingAt: 'Precio y disponibilidad en tiempo real', nights: 'noches',
     datesTitle: 'Fechas y personas', checkIn: 'Llegada', checkOut: 'Salida', people: 'Personas',
+    selectStart: 'Elegí la fecha de llegada', selectEnd: 'Ahora elegí la fecha de salida',
+    previousMonth: 'Mes anterior', nextMonth: 'Mes siguiente',
     dateHelp: 'La salida debe ser posterior a la llegada.', continue: 'Continuar', back: 'Volver', edit: 'Editar',
     dateNoticeTitle: 'Disponibilidad en tiempo real', dateNotice: 'Verificamos las fechas, el alojamiento y el precio antes de crear la reserva.',
     selectionPending: 'El precio se calcula al verificar disponibilidad.', selectionTitle: 'Tu reserva',
@@ -105,6 +107,8 @@ const COPY = {
     heroReview: 'Review your booking', heroReviewCopy: 'Check the details before creating your reservation.',
     startingAt: 'Live pricing and availability', nights: 'nights',
     datesTitle: 'Dates and guests', checkIn: 'Arrival', checkOut: 'Departure', people: 'Guests',
+    selectStart: 'Choose your arrival date', selectEnd: 'Now choose your departure date',
+    previousMonth: 'Previous month', nextMonth: 'Next month',
     dateHelp: 'Departure must be after arrival.', continue: 'Continue', back: 'Back', edit: 'Edit',
     dateNoticeTitle: 'Live availability', dateNotice: 'We verify dates, accommodation and price before creating the reservation.',
     selectionPending: 'The price is calculated after checking availability.', selectionTitle: 'Your reservation',
@@ -229,6 +233,39 @@ function formatBookingDate(value: string, language: 'es' | 'en', includeYear = f
   }).format(date).replace('.', '');
 }
 
+function parseIsoDate(value: string): Date {
+  return new Date(`${value}T12:00:00Z`);
+}
+
+function toIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function monthStart(value: string): string {
+  const date = parseIsoDate(value);
+  return toIsoDate(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 12)));
+}
+
+function shiftMonth(value: string, amount: number): string {
+  const date = parseIsoDate(value);
+  return toIsoDate(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + amount, 1, 12)));
+}
+
+function calendarDays(value: string): Array<{ iso: string; currentMonth: boolean }> {
+  const first = parseIsoDate(monthStart(value));
+  const mondayOffset = (first.getUTCDay() + 6) % 7;
+  const gridStart = new Date(first);
+  gridStart.setUTCDate(first.getUTCDate() - mondayOffset);
+  return Array.from({ length: 42 }, (_, index) => {
+    const day = new Date(gridStart);
+    day.setUTCDate(gridStart.getUTCDate() + index);
+    return {
+      iso: toIsoDate(day),
+      currentMonth: day.getUTCMonth() === first.getUTCMonth(),
+    };
+  });
+}
+
 function apiErrorMessage(error: unknown, fallback: string, language: 'es' | 'en'): string {
   return language === 'es' && error instanceof BookingApiError ? error.message : fallback;
 }
@@ -269,6 +306,7 @@ export const BookingWidget: React.FC<{
   const [step, setStep] = useState<Step>(1);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
+  const [visibleMonth, setVisibleMonth] = useState(() => monthStart(today));
   const [people, setPeople] = useState(2);
   const [accommodations, setAccommodations] = useState<PublicAccommodation[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
@@ -295,6 +333,19 @@ export const BookingWidget: React.FC<{
   const dialogRef = useRef<HTMLElement>(null);
   const stayDates = useMemo(() => stayNightDates(checkIn, checkOut), [checkIn, checkOut]);
   const stayNights = stayDates.length;
+  const visibleCalendarDays = useMemo(() => calendarDays(visibleMonth), [visibleMonth]);
+  const monthShortcuts = useMemo(
+    () => Array.from({ length: 5 }, (_, index) => shiftMonth(monthStart(today), index)),
+    [today],
+  );
+  const calendarLocale = language === 'es' ? 'es-AR' : 'en-US';
+  const rawCalendarMonthLabel = new Intl.DateTimeFormat(calendarLocale, {
+    month: 'long', year: 'numeric', timeZone: 'UTC',
+  }).format(parseIsoDate(visibleMonth));
+  const calendarMonthLabel = rawCalendarMonthLabel.charAt(0).toUpperCase() + rawCalendarMonthLabel.slice(1);
+  const weekDays = language === 'es'
+    ? ['L', 'M', 'X', 'J', 'V', 'S', 'D']
+    : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const { data: nightlyPricing, loaded: nightlyPricingLoaded } = usePublicPricingSummaries(stayDates);
   const pricePreview = useMemo(() => {
     if (stayDates.length === 0 || nightlyPricing.length !== stayDates.length) return null;
@@ -373,6 +424,7 @@ export const BookingWidget: React.FC<{
     setQuote(snapshot.quote);
     setCheckIn(snapshot.context.checkIn);
     setCheckOut(snapshot.context.checkOut);
+    setVisibleMonth(monthStart(snapshot.context.checkIn));
     setPeople(snapshot.context.people);
     setType(snapshot.context.type);
     setMode(snapshot.context.mode);
@@ -582,6 +634,16 @@ export const BookingWidget: React.FC<{
     setError(null);
     setAccommodations([]);
     setOptionsLoaded(false);
+  }
+
+  function selectCalendarDay(date: string) {
+    resetQuote();
+    if (!checkIn || checkOut || date <= checkIn) {
+      setCheckIn(date);
+      setCheckOut('');
+      return;
+    }
+    setCheckOut(date);
   }
 
   function goToStay() {
@@ -831,9 +893,76 @@ export const BookingWidget: React.FC<{
               {step === 1 ? (
                 <div className="booking-panel">
                   <div className="booking-panel__heading"><div><p className="booking-section-title"><CalendarDays size={18} /> {c.datesTitle}</p><h3>{language === 'es' ? 'Elegí tus fechas' : 'Choose your dates'}</h3></div></div>
-                  <div className="booking-date-grid">
-                    <label className="booking-date-card"><CalendarDays size={30} /><span><small>{c.checkIn}</small><input aria-label={c.checkIn} type="date" min={today} value={checkIn} onChange={event => { setCheckIn(event.target.value); if (checkOut && event.target.value >= checkOut) setCheckOut(''); resetQuote(); }} required /></span><ChevronRight aria-hidden="true" /></label>
-                    <label className="booking-date-card"><CalendarDays size={30} /><span><small>{c.checkOut}</small><input aria-label={c.checkOut} type="date" min={checkIn || today} value={checkOut} onChange={event => { setCheckOut(event.target.value); resetQuote(); }} required /></span><ChevronRight aria-hidden="true" /></label>
+                  <div className="booking-date-range">
+                    <div className="booking-date-range__selection" aria-live="polite">
+                      <div data-active={!checkIn || Boolean(checkOut) || undefined}>
+                        <CalendarDays aria-hidden="true" />
+                        <span><small>{c.checkIn}</small><strong>{formatBookingDate(checkIn, language, true)}</strong></span>
+                      </div>
+                      <ArrowRight aria-hidden="true" />
+                      <div data-active={Boolean(checkIn && !checkOut) || undefined}>
+                        <CalendarDays aria-hidden="true" />
+                        <span><small>{c.checkOut}</small><strong>{formatBookingDate(checkOut, language, true)}</strong></span>
+                      </div>
+                    </div>
+                    <p className="booking-date-range__instruction" role="status">
+                      {checkIn && !checkOut ? c.selectEnd : c.selectStart}
+                    </p>
+                    <div className="booking-date-range__shortcuts" aria-label={language === 'es' ? 'Meses próximos' : 'Upcoming months'}>
+                      {monthShortcuts.map(month => (
+                        <button key={month} type="button" aria-pressed={month === visibleMonth}
+                          onClick={() => setVisibleMonth(month)}>
+                          {new Intl.DateTimeFormat(calendarLocale, { month: 'short', timeZone: 'UTC' })
+                            .format(parseIsoDate(month)).replace('.', '')}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="booking-calendar">
+                      <header>
+                        <strong>{calendarMonthLabel}</strong>
+                        <span>
+                          <button type="button" aria-label={c.previousMonth}
+                            disabled={visibleMonth <= monthStart(today)}
+                            onClick={() => setVisibleMonth(month => shiftMonth(month, -1))}>
+                            <ArrowLeft aria-hidden="true" />
+                          </button>
+                          <button type="button" aria-label={c.nextMonth}
+                            onClick={() => setVisibleMonth(month => shiftMonth(month, 1))}>
+                            <ArrowRight aria-hidden="true" />
+                          </button>
+                        </span>
+                      </header>
+                      <table aria-label={`${c.datesTitle}: ${calendarMonthLabel}`}>
+                        <thead><tr>{weekDays.map((day, index) => <th key={`${day}-${index}`} scope="col">{day}</th>)}</tr></thead>
+                        <tbody>
+                          {Array.from({ length: 6 }, (_, week) => (
+                            <tr key={week}>
+                              {visibleCalendarDays.slice(week * 7, week * 7 + 7).map(day => {
+                                const isDisabled = day.iso < today || !day.currentMonth;
+                                const isStart = day.iso === checkIn;
+                                const isEnd = day.iso === checkOut;
+                                const isInRange = Boolean(checkIn && checkOut && day.iso > checkIn && day.iso < checkOut);
+                                const label = new Intl.DateTimeFormat(calendarLocale, {
+                                  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+                                }).format(parseIsoDate(day.iso));
+                                return (
+                                  <td key={day.iso} data-in-range={isInRange || undefined}>
+                                    <button type="button" disabled={isDisabled} aria-label={label}
+                                      aria-pressed={isStart || isEnd}
+                                      data-outside-month={!day.currentMonth || undefined}
+                                      data-selection-start={isStart || undefined}
+                                      data-selection-end={isEnd || undefined}
+                                      onClick={() => selectCalendarDay(day.iso)}>
+                                      {parseIsoDate(day.iso).getUTCDate()}
+                                    </button>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                   {stayNights > 0 && <div className="booking-night-count"><BedDouble size={20} /> {stayNights} {c.nights}</div>}
                   <div className="booking-guests-row">
