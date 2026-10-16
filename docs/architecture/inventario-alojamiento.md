@@ -17,6 +17,14 @@ admite afirmaciones y limitaciones explícitas. No reemplaza a `instalaciones`:
 un texto visible como “duchas compartidas fuera del domo” no crea una ducha ni
 participa en cálculos de capacidad, disponibilidad o asignación.
 
+`opciones_preparacion_estadia` cubre otra necesidad separada: decisiones del
+huésped que cambian la preparación pero no la oferta ni el inventario. Para un
+domo privado de dos personas se publican “1 cama doble” y “2 camas simples”. La
+elección es obligatoria mientras existan opciones activas, se guarda como un
+snapshot en `reserva_preferencias` y queda visible para operaciones. No crea
+camas simples o dobles en `unidades_inventario`, no garantiza una unidad física
+específica y no interviene en precio, capacidad ni disponibilidad.
+
 ## Configuración inicial
 
 El refugio contiene habitaciones de 3, 4 y 8 plazas, con quince camas simples.

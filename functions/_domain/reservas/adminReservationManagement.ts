@@ -120,6 +120,12 @@ export type DetalleReservaAdmin = ResumenReservaAdmin & {
   moneda: string;
   estadias: Array<Record<string, unknown>>;
   excepciones: Array<Record<string, unknown>>;
+  preferencias: Array<{
+    categoria: 'preparacion_cama';
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+  }>;
   cuentaCobro: CuentaCobroReservaAdmin | null;
   metodoPago: {
     metodo: 'mercado_pago_checkout' | 'transferencia_mp';

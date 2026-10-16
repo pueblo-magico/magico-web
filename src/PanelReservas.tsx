@@ -91,6 +91,7 @@ type Reserva = {
   canal_origen: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  preferencias?: Array<{ categoria: 'preparacion_cama'; codigo: string; nombre: string; descripcion: string }>;
   cuenta_cobro?: {
     proveedor: 'cucuru' | 'cucuru_mock';
     estado: 'pending' | 'provisioning' | 'ready' | 'failed' | 'disabled' | 'unknown_outcome';
@@ -135,6 +136,7 @@ type ReservaAdminV1 = {
   montoTotalCentavos: number; montoSenaCentavos: number | null;
   unidadAsignada: string | null; manychatUserId: string | null; createdAt: string;
   excepciones?: Array<Record<string, any>>;
+  preferencias?: Array<{ categoria: 'preparacion_cama'; codigo: string; nombre: string; descripcion: string }>;
   cuentaCobro?: Reserva['cuenta_cobro'];
   metodoPago?: Reserva['metodo_pago'];
 };
@@ -163,6 +165,7 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
     canal_origen: item.canalOrigen,
     manychat_user_id: item.manychatUserId,
     created_at: item.createdAt,
+    preferencias: item.preferencias || [],
     cuenta_cobro: item.cuentaCobro ?? null,
     metodo_pago: item.metodoPago ?? null,
     excepcion_capacidad: excepcion ? {
@@ -700,6 +703,18 @@ const ModalReserva: React.FC<{
         <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
           Modo solo lectura — tu usuario no tiene permiso para crear, editar ni cancelar reservas.
         </p>
+      )}
+
+      {modo === 'editar' && (reserva?.preferencias?.length || 0) > 0 && (
+        <section className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3" aria-label="Preferencias de preparación">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">Preparación solicitada</p>
+          {reserva?.preferencias?.map(preferencia => (
+            <div key={preferencia.categoria} className="mt-2 text-sm text-emerald-950">
+              <strong>{preferencia.nombre}</strong>
+              {preferencia.descripcion && <p className="mt-0.5 text-xs text-emerald-800">{preferencia.descripcion}</p>}
+            </div>
+          ))}
+        </section>
       )}
 
       <fieldset disabled={soloLectura} className="space-y-3 mb-4 border-0 p-0 m-0 min-w-0">
@@ -1749,6 +1764,12 @@ type ConfiguracionBaseApi = {
     codigo: string; nombre: string; disponibilidad: 'incluido' | 'no_disponible';
     detalle: string; visibleEnReserva: boolean; orden: number; actualizadoAt: string;
   }>;
+  opcionesPreparacion: Array<{
+    id: number; tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
+    modalidad: 'privada' | 'compartida' | 'camping'; cantidadPersonas: number;
+    codigo: string; nombre: string; descripcion: string; habilitada: boolean;
+    orden: number; actualizadoAt: string;
+  }>;
   inventario: Array<{
     codigo: string; nombre: string; tipo: string; capacidadComercial: number;
     capacidadOperativaMaxima: number; reservableGeneral: boolean; reservableRetiro: boolean;
@@ -1802,6 +1823,7 @@ type ResumenPlanTarifaUi = {
 type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
 type BorradorInventarioUi = ConfiguracionBaseApi['inventario'];
 type BorradorServicioUi = ConfiguracionBaseApi['servicios'][number];
+type BorradorOpcionPreparacionUi = ConfiguracionBaseApi['opcionesPreparacion'][number];
 type TipoAlojamientoTarifa = BorradorTarifaUi['temporadas'][number]['reglas'][number]['tipoAlojamiento'];
 
 const OPCIONES_ALOJAMIENTO_TARIFA: Array<{ value: TipoAlojamientoTarifa; label: string }> = [
@@ -1931,6 +1953,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
   const [politicaDraft, setPoliticaDraft] = useState<BorradorPoliticaUi | null>(null);
   const [inventarioDraft, setInventarioDraft] = useState<BorradorInventarioUi>([]);
   const [serviciosDraft, setServiciosDraft] = useState<BorradorServicioUi[]>([]);
+  const [opcionesPreparacionDraft, setOpcionesPreparacionDraft] = useState<BorradorOpcionPreparacionUi[]>([]);
   const [vigenciaPolitica, setVigenciaPolitica] = useState('');
   const [preciosComida, setPreciosComida] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
@@ -2006,6 +2029,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
       setPoliticaDraft(body.data?.politicaCancelacion ? JSON.parse(JSON.stringify(body.data.politicaCancelacion)) : null);
       setInventarioDraft(JSON.parse(JSON.stringify(body.data?.inventario || [])));
       setServiciosDraft(JSON.parse(JSON.stringify(body.data?.servicios || [])));
+      setOpcionesPreparacionDraft(JSON.parse(JSON.stringify(body.data?.opcionesPreparacion || [])));
       setVigenciaPolitica(body.data?.politicaCancelacion?.vigenciaDesde?.slice(0, 16) || new Date(Date.now() + 60_000).toISOString().slice(0, 16));
       setPreciosComida(Object.fromEntries((body.data?.alimentacion || []).flatMap((item: ConfiguracionBaseApi['alimentacion'][number]) => [
         [`${item.codigo}:desayuno`, String(item.precioDesayunoCentavos / 100)],
@@ -2130,6 +2154,21 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
     }, nuevo ? 'Servicio agregado a las opciones de reserva.' : 'Servicio actualizado en las opciones de reserva.');
   };
 
+  const guardarOpcionPreparacion = async (item: BorradorOpcionPreparacionUi, motivo: string) => {
+    return ejecutar(`preparacion-${item.id}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_opcion_preparacion', id: item.id,
+          tipo_alojamiento: item.tipoAlojamiento, modalidad: item.modalidad,
+          cantidad_personas: item.cantidadPersonas, nombre: item.nombre,
+          descripcion: item.descripcion, habilitada: item.habilitada, orden: item.orden,
+          expected_updated_at: item.actualizadoAt, motivo,
+        }),
+      });
+    }, 'Opción de preparación actualizada para reservas nuevas.');
+  };
+
   const actualizarEspacioDraft = (codigo: string, cambio: Partial<BorradorInventarioUi[number]>) => {
     setInventarioDraft(actual => actual.map(item => item.codigo === codigo ? { ...item, ...cambio } : item));
   };
@@ -2147,6 +2186,10 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
 
   const actualizarServicioDraft = (id: number, cambio: Partial<BorradorServicioUi>) => {
     setServiciosDraft(actual => actual.map(item => item.id === id ? { ...item, ...cambio } : item));
+  };
+
+  const actualizarOpcionPreparacionDraft = (id: number, cambio: Partial<BorradorOpcionPreparacionUi>) => {
+    setOpcionesPreparacionDraft(actual => actual.map(item => item.id === id ? { ...item, ...cambio } : item));
   };
 
   const agregarServicioDraft = () => {
@@ -2529,6 +2572,18 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
         : resumirCambios({}, seleccionar(item)),
       etiquetaConfirmar: original ? 'Guardar servicio' : 'Agregar servicio',
       ejecutar: motivo => guardarServicio(item, motivo),
+    });
+  };
+
+  const confirmarOpcionPreparacion = (item: BorradorOpcionPreparacionUi) => {
+    const original = configuracion?.opcionesPreparacion.find(actual => actual.id === item.id);
+    if (!original) return;
+    pedirConfirmacion({
+      titulo: `Guardar preparación “${item.nombre}”`,
+      descripcion: 'La opción se solicitará únicamente en reservas nuevas que coincidan con estas condiciones.',
+      cambios: resumirCambios(original, item),
+      etiquetaConfirmar: 'Guardar opción',
+      ejecutar: motivo => guardarOpcionPreparacion(item, motivo),
     });
   };
 
@@ -2941,6 +2996,47 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
                     <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modificado || !item.nombre.trim()}
                       isLoading={guardando === `servicio-${item.id}`} onPress={() => confirmarServicio(item)}>{item.id < 0 ? 'Agregar' : 'Guardar'}</Button>
                   </div>}
+                </div>
+              </Card>;
+            })}
+          </div>
+        </div>
+      </details>}
+
+      {modo === 'base' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Preparación de camas</strong><small>Preferencias obligatorias según alojamiento, modalidad y cantidad de personas · {opcionesPreparacionDraft.filter(item => item.habilitada).length} activas</small></span></summary>
+        <div className="admin-config__section-body space-y-4 border-t border-gray-100">
+          <p className="max-w-3xl text-xs text-gray-500">Estas opciones organizan la preparación previa y no cambian precio, capacidad ni inventario físico. Si hay opciones activas para una combinación, el huésped deberá elegir una antes de reservar.</p>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {opcionesPreparacionDraft.map(item => {
+              const original = configuracion?.opcionesPreparacion.find(actual => actual.id === item.id);
+              const modificado = Boolean(original) && JSON.stringify(item) !== JSON.stringify(original);
+              return <Card key={item.id} tone="muted" className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Select label="Alojamiento" placeholder="Elegí" value={item.tipoAlojamiento} isDisabled={!esSuperAdmin}
+                    options={OPCIONES_ALOJAMIENTO_TARIFA}
+                    onChange={value => value && actualizarOpcionPreparacionDraft(item.id, { tipoAlojamiento: value as BorradorOpcionPreparacionUi['tipoAlojamiento'] })} />
+                  <Select label="Modalidad" placeholder="Elegí" value={item.modalidad} isDisabled={!esSuperAdmin}
+                    options={[{ value: 'privada', label: 'Privada' }, { value: 'compartida', label: 'Compartida' }, { value: 'camping', label: 'Camping' }]}
+                    onChange={value => value && actualizarOpcionPreparacionDraft(item.id, { modalidad: value as BorradorOpcionPreparacionUi['modalidad'] })} />
+                  <NumberField label="Personas" minValue={1} maxValue={20} showStepper={false}
+                    decrementLabel="Reducir personas" incrementLabel="Aumentar personas" isDisabled={!esSuperAdmin}
+                    value={item.cantidadPersonas} onChange={value => actualizarOpcionPreparacionDraft(item.id, { cantidadPersonas: value })} />
+                </div>
+                <Input label="Nombre visible" value={item.nombre} isDisabled={!esSuperAdmin}
+                  onChange={value => actualizarOpcionPreparacionDraft(item.id, { nombre: value })} />
+                <Textarea label="Explicación para huéspedes" rows={2} maxLength={240} isDisabled={!esSuperAdmin}
+                  value={item.descripcion} onChange={value => actualizarOpcionPreparacionDraft(item.id, { descripcion: value })} />
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Checkbox isSelected={item.habilitada} isDisabled={!esSuperAdmin}
+                      onChange={isSelected => actualizarOpcionPreparacionDraft(item.id, { habilitada: isSelected })}>Solicitar en reservas nuevas</Checkbox>
+                    <NumberField className="w-28" label="Orden" minValue={0} maxValue={999} showStepper={false}
+                      decrementLabel="Bajar orden" incrementLabel="Subir orden" isDisabled={!esSuperAdmin}
+                      value={item.orden} onChange={value => actualizarOpcionPreparacionDraft(item.id, { orden: value })} />
+                  </div>
+                  {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modificado || !item.nombre.trim()}
+                    isLoading={guardando === `preparacion-${item.id}`} onPress={() => confirmarOpcionPreparacion(item)}>Guardar opción</Button>}
                 </div>
               </Card>;
             })}

@@ -6,7 +6,7 @@ import type {
   ModalidadEspacio,
   UnidadAsignable,
 } from '../../_domain/reservas/accommodationInventory.ts';
-import type { ServicioAlojamiento } from '../../_domain/reservas/baseConfiguration.ts';
+import type { OpcionPreparacionEstadia, ServicioAlojamiento } from '../../_domain/reservas/baseConfiguration.ts';
 
 type D1Result = { results?: Record<string, unknown>[] };
 type D1Statement = {
@@ -99,6 +99,31 @@ export class D1RepositorioInventarioAlojamiento implements RepositorioInventario
       disponibilidad: fila.disponibilidad as ServicioAlojamiento['disponibilidad'],
       detalle: String(fila.detalle || ''),
       visibleEnReserva: booleano(fila.visible_en_reserva),
+      orden: Number(fila.orden),
+      actualizadoAt: String(fila.updated_at),
+    }));
+  }
+
+  async listarOpcionesPreparacion(
+    tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent'
+  ): Promise<OpcionPreparacionEstadia[]> {
+    const resultado = await this.db.prepare(
+      `SELECT id, tipo_alojamiento, modalidad, cantidad_personas, codigo, nombre,
+         descripcion, habilitada, orden, updated_at
+       FROM opciones_preparacion_estadia
+       WHERE tipo_alojamiento = ?1 AND habilitada = 1
+       ORDER BY modalidad, cantidad_personas, orden, id`
+    ).bind(tipoAlojamiento).all();
+
+    return (resultado.results || []).map(fila => ({
+      id: Number(fila.id),
+      tipoAlojamiento: fila.tipo_alojamiento as OpcionPreparacionEstadia['tipoAlojamiento'],
+      modalidad: fila.modalidad as OpcionPreparacionEstadia['modalidad'],
+      cantidadPersonas: Number(fila.cantidad_personas),
+      codigo: String(fila.codigo),
+      nombre: String(fila.nombre),
+      descripcion: String(fila.descripcion || ''),
+      habilitada: booleano(fila.habilitada),
       orden: Number(fila.orden),
       actualizadoAt: String(fila.updated_at),
     }));

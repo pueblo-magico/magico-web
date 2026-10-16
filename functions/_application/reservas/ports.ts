@@ -72,11 +72,13 @@ import type {
   CambioTarifaAlimentacion,
   NuevaModalidadComercial,
   NuevoServicioAlojamiento,
+  CambioOpcionPreparacionEstadia,
   ConfiguracionBaseReservas,
   EspacioComercialActualizado,
   ModalidadComercialActualizada,
   ParametroOperativoReserva,
   ServicioAlojamiento,
+  OpcionPreparacionEstadia,
   TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
 import type {
@@ -107,6 +109,9 @@ export interface RepositorioInventarioAlojamiento {
   ): Promise<EspacioInventario[]>;
   listarModalidades(espacioId: number): Promise<ModalidadEspacio[]>;
   listarServicios(tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent'): Promise<ServicioAlojamiento[]>;
+  listarOpcionesPreparacion(
+    tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent'
+  ): Promise<OpcionPreparacionEstadia[]>;
   listarUnidadesAsignables(espacioId: number): Promise<UnidadAsignable[]>;
 }
 
@@ -218,6 +223,11 @@ export type SolicitudIdempotenteGuardada = {
 export interface RepositorioCreacionReservaPublica {
   buscarIdempotencia(clave: string, alcance?: string): Promise<SolicitudIdempotenteGuardada | null>;
   obtenerCotizacion(codigo: string): Promise<CotizacionAceptada | null>;
+  listarOpcionesPreparacionAplicables(entrada: {
+    tipoAlojamiento: 'domo' | 'refugio' | 'camping';
+    modalidad: 'privada' | 'compartida' | 'camping';
+    cantidadPersonas: number;
+  }): Promise<OpcionPreparacionEstadia[]>;
   buscarConsultaIntegracion(entrada: {
     codigo: string;
     integracion: 'n8n';
@@ -236,6 +246,7 @@ export interface RepositorioCreacionReservaPublica {
     reservaUid: string;
     reservaCodigo: string;
     holdExpiresAt: string;
+    opcionPreparacion: OpcionPreparacionEstadia | null;
   }): Promise<ReservaPublicaCreada>;
 }
 
@@ -284,6 +295,11 @@ export interface RepositorioConfiguracionBaseReservas {
     correlationId: string;
     operacionUid: string;
   }): Promise<ServicioAlojamiento | null>;
+  actualizarOpcionPreparacion(entrada: CambioOpcionPreparacionEstadia & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<OpcionPreparacionEstadia | null>;
   actualizarEspacio(entrada: CambioEspacioComercial & {
     actorEmail: string;
     correlationId: string;

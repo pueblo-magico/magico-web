@@ -10,6 +10,7 @@ export type SolicitudCrearReservaPublica = {
   pagadorDocumentoHash?: string | null;
   pagadorDocumentoUltimos4?: string | null;
   idioma?: 'es' | 'en';
+  preferenciaPreparacionCodigo?: string | null;
   idempotencyKey: string;
   canalOrigen?: string;
   referenciaIntegracion?: {
@@ -53,6 +54,8 @@ export type ErrorCreacionReserva =
   | 'CONSULTA_NO_ENCONTRADA'
   | 'COTIZACION_NO_ENCONTRADA'
   | 'COTIZACION_VENCIDA'
+  | 'PREFERENCIA_PREPARACION_REQUERIDA'
+  | 'PREFERENCIA_PREPARACION_INVALIDA'
   | 'INVENTARIO_NO_DISPONIBLE';
 
 export type ResultadoCreacionReservaPublica =

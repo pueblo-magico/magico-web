@@ -17,6 +17,7 @@ import {
   validarCambioModalidadComercial,
   validarCambioParametroOperativo,
   validarNuevoServicioAlojamiento,
+  validarCambioOpcionPreparacionEstadia,
   validarCambioTarifaAlimentacion,
 } from '../../functions/_domain/reservas/baseConfiguration.ts';
 import { D1RepositorioConfiguracionBaseReservas } from '../../functions/_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
@@ -116,6 +117,11 @@ test('valida límites y usa 15 minutos como fallback seguro', () => {
   assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, orden: 1_000 }), /servicio del alojamiento es inválido/);
   assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, nombre: ' ' }), /servicio del alojamiento es inválido/);
   assert.throws(() => validarNuevoServicioAlojamiento({ ...servicioValido, detalle: 'x'.repeat(241) }), /servicio del alojamiento es inválido/);
+  assert.throws(() => validarCambioOpcionPreparacionEstadia({
+    id: 1, tipoAlojamiento: 'domo', modalidad: 'privada', cantidadPersonas: 0,
+    nombre: 'Cama doble', descripcion: '', habilitada: true, orden: 10,
+    expectedUpdatedAt: '2026-01-01T00:00:00Z', motivo: 'Cambio aprobado',
+  }), /opción de preparación es inválida/);
 });
 
 test('lee fuentes efectivas y actualiza con versión y auditoría atómica', async () => {
@@ -131,6 +137,7 @@ test('lee fuentes efectivas y actualiza con versión y auditoría atómica', asy
   assert.deepEqual(inicial.alimentacion.map(item => item.codigo), ['desayuno_incluido', 'pension_completa']);
   assert.ok(inicial.servicios.some(item => item.tipoAlojamiento === 'refugio' && item.codigo === 'wifi-satelital'));
   assert.ok(inicial.servicios.some(item => item.tipoAlojamiento === 'domo' && item.codigo === 'electricidad-alojamiento' && item.disponibilidad === 'no_disponible'));
+  assert.deepEqual(inicial.opcionesPreparacion.map(item => item.codigo), ['cama_doble', 'dos_camas_simples']);
   assert.throws(() => sqlite.prepare(`UPDATE parametros_operativos_reservas
     SET valor_entero = 121 WHERE codigo = 'payment_hold_minutes'`).run(), /constraint/i);
 
@@ -261,6 +268,7 @@ test('la creación pública usa el plazo efectivo y conserva el vencimiento calc
   }, {
     async buscarIdempotencia() { return null; },
     async buscarConsultaIntegracion() { return null; },
+    async listarOpcionesPreparacionAplicables() { return []; },
     async obtenerCotizacion() {
       return {
         id: 1, codigo: 'COT-CONFIG-1', tipo: 'domo' as const, modalidad: 'privada' as const,
@@ -395,6 +403,18 @@ test('el contrato permite lectura administrativa pero sólo super admin puede es
     accion: 'crear_servicio_alojamiento', motivo: 'Solicitud inválida controlada',
   }), env });
   assert.equal(servicioInvalidoResponse.status, 400);
+  const opcionPreparacion = sqlite.prepare("SELECT * FROM opciones_preparacion_estadia WHERE codigo = 'cama_doble'").get() as Record<string, unknown>;
+  const opcionResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'actualizar_opcion_preparacion', id: Number(opcionPreparacion.id),
+    tipo_alojamiento: 'domo', modalidad: 'privada', cantidad_personas: 2,
+    nombre: 'Una cama matrimonial', descripcion: 'Preparación confirmada por administración.',
+    habilitada: true, orden: 5, expected_updated_at: String(opcionPreparacion.updated_at),
+    motivo: 'Actualizar preparación de camas',
+  }), env });
+  assert.equal(opcionResponse.status, 200);
+  const opcionActualizada = (await opcionResponse.json() as any).data;
+  assert.equal(opcionActualizada.nombre, 'Una cama matrimonial');
+  assert.equal(sqlite.prepare("SELECT accion FROM auditoria_admin WHERE entidad_tipo = 'opcion_preparacion_estadia'").get()?.accion, 'actualizar_opcion_preparacion');
   const accionInvalidaResponse = await actualizarConfiguracion({ request: requestAccion({
     accion: 'accion_inexistente', motivo: 'Solicitud inválida controlada',
   }), env });

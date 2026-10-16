@@ -13,6 +13,10 @@ export async function listarAlojamientosPublicos(
     tipo,
     await repositorio.listarServicios(tipo),
   ] as const)));
+  const opcionesPreparacionPorTipo = new Map(await Promise.all(tipos.map(async tipo => [
+    tipo,
+    await repositorio.listarOpcionesPreparacion(tipo),
+  ] as const)));
   const resultados = await Promise.all(espacios.map(async espacio => ({
     codigo: espacio.codigo,
     nombre: espacio.nombre,
@@ -25,6 +29,15 @@ export async function listarAlojamientosPublicos(
       nombre: item.nombre,
       disponibilidad: item.disponibilidad,
       detalle: item.detalle,
+    })),
+    opciones_preparacion: (opcionesPreparacionPorTipo.get(
+      (espacio.tipo === 'habitacion' ? 'refugio' : espacio.tipo) as 'domo' | 'refugio' | 'camping' | 'bell_tent'
+    ) || []).map(item => ({
+      modalidad: item.modalidad,
+      cantidad_personas: item.cantidadPersonas,
+      codigo: item.codigo,
+      nombre: item.nombre,
+      descripcion: item.descripcion,
     })),
     modalidades: (await repositorio.listarModalidades(espacio.id))
       .filter(item => item.habilitada && item.contexto === contexto)

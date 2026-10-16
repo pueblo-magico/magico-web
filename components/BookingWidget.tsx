@@ -52,6 +52,8 @@ const COPY = {
     meals: 'Comidas', desayuno_incluido: 'Con desayuno', pension_completa: 'Pensión completa',
     breakfastHelp: 'El desayuno está incluido.', fullBoardHelp: 'Desayuno, almuerzo y cena incluidos.',
     utilities: 'Servicios y condiciones', utilityAvailable: 'Disponible', utilityUnavailable: 'No disponible',
+    bedPreparation: 'Preparación de camas', bedPreparationHelp: 'Elegí cómo querés que preparemos el domo.',
+    bedPreparationRequired: 'Elegí una preparación de camas para continuar.',
     impactTitle: 'Tu estadía regenera la montaña',
     impactCopy: 'El 10% de tu inversión va directo a reforestar tabaquillos y restaurar nuestras sierras.',
     quote: 'Consultar disponibilidad', loadingOptions: 'Cargando opciones disponibles…',
@@ -111,6 +113,8 @@ const COPY = {
     meals: 'Meals', desayuno_incluido: 'Breakfast included', pension_completa: 'Full board',
     breakfastHelp: 'Breakfast is included.', fullBoardHelp: 'Breakfast, lunch and dinner included.',
     utilities: 'Amenities and conditions', utilityAvailable: 'Available', utilityUnavailable: 'Not available',
+    bedPreparation: 'Bed setup', bedPreparationHelp: 'Choose how you would like us to prepare the dome.',
+    bedPreparationRequired: 'Choose a bed setup to continue.',
     impactTitle: 'Your stay helps regenerate the mountains',
     impactCopy: '10% of your investment goes directly to reforesting tabaquillo trees and restoring our mountains.',
     quote: 'Check availability', loadingOptions: 'Loading available options…',
@@ -171,6 +175,7 @@ type ActiveReservationSnapshot = {
     mode: BookingMode;
     mealPlan: MealPlan;
     paymentMethod: PaymentMethod;
+    bedPreparationCode?: string | null;
   };
 };
 
@@ -271,6 +276,7 @@ export const BookingWidget: React.FC<{
   const [type, setType] = useState<AccommodationType>('domo');
   const [mode, setMode] = useState<BookingMode>('compartida');
   const [mealPlan, setMealPlan] = useState<MealPlan>('desayuno_incluido');
+  const [bedPreparationCode, setBedPreparationCode] = useState<string | null>(null);
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [quoteSeconds, setQuoteSeconds] = useState(0);
   const [loadingQuote, setLoadingQuote] = useState(false);
@@ -372,6 +378,7 @@ export const BookingWidget: React.FC<{
     setMode(snapshot.context.mode);
     setMealPlan(snapshot.context.mealPlan);
     setPaymentMethod(snapshot.context.paymentMethod);
+    setBedPreparationCode(snapshot.context.bedPreparationCode || null);
     setStep(3);
   }, []);
 
@@ -382,9 +389,9 @@ export const BookingWidget: React.FC<{
       savedAt: Date.now(),
       reservation,
       quote,
-      context: { checkIn, checkOut, people, type, mode, mealPlan, paymentMethod },
+      context: { checkIn, checkOut, people, type, mode, mealPlan, paymentMethod, bedPreparationCode },
     });
-  }, [reservation, quote, checkIn, checkOut, people, type, mode, mealPlan, paymentMethod]);
+  }, [reservation, quote, checkIn, checkOut, people, type, mode, mealPlan, paymentMethod, bedPreparationCode]);
 
   const availableTypes = useMemo(() => {
     const unique = new Set(accommodations.map(item => item.tipo));
@@ -415,6 +422,15 @@ export const BookingWidget: React.FC<{
       .flatMap(item => item.servicios || []);
     return [...new Map(servicios.map(item => [item.codigo, item])).values()];
   }, [accommodations, type]);
+  const bedPreparationOptions = useMemo(() => {
+    const options = accommodations
+      .filter(item => item.tipo === type)
+      .flatMap(item => item.opciones_preparacion || [])
+      .filter(item => item.modalidad === mode && item.cantidad_personas === people);
+    return [...new Map(options.map(item => [item.codigo, item])).values()];
+  }, [accommodations, type, mode, people]);
+  const selectedBedPreparation = bedPreparationOptions.find(item => item.codigo === bedPreparationCode) || null;
+  const requiresBedPreparation = bedPreparationOptions.length > 0;
 
   useEffect(() => {
     if (!open || optionsLoaded) return;
@@ -441,6 +457,12 @@ export const BookingWidget: React.FC<{
   useEffect(() => {
     if (!availableModes.includes(mode) && availableModes.length > 0) setMode(availableModes[0]);
   }, [availableModes, mode]);
+
+  useEffect(() => {
+    if (bedPreparationCode && !bedPreparationOptions.some(item => item.codigo === bedPreparationCode)) {
+      setBedPreparationCode(null);
+    }
+  }, [bedPreparationCode, bedPreparationOptions]);
 
   useEffect(() => {
     if (!open) return;
@@ -572,6 +594,10 @@ export const BookingWidget: React.FC<{
   }
 
   async function quoteStay() {
+    if (requiresBedPreparation && !bedPreparationCode) {
+      setError({ message: c.bedPreparationRequired, code: 'PREFERENCIA_PREPARACION_REQUERIDA' });
+      return;
+    }
     setLoadingQuote(true);
     setError(null);
     try {
@@ -613,6 +639,7 @@ export const BookingWidget: React.FC<{
         guest: { name: guest.name.trim(), phone: guest.phone.trim(), email: guest.email.trim() },
         paymentMethod,
         payerDni,
+        bedPreparationCode,
         idempotencyKey: idempotencyKey.current,
       });
       setReservation(result.data);
@@ -636,6 +663,7 @@ export const BookingWidget: React.FC<{
         guest: { name: guest.name.trim(), phone: guest.phone.trim(), email: guest.email.trim() },
         paymentMethod,
         payerDni,
+        bedPreparationCode,
         idempotencyKey: idempotencyKey.current,
       });
       setReservation(result.data);
@@ -648,6 +676,7 @@ export const BookingWidget: React.FC<{
 
   function startAgain() {
     setStep(1); setQuote(null); setReservation(null); setError(null); setConsent(false);
+    setBedPreparationCode(null);
     clearActiveReservation();
     idempotencyKey.current = createBookingAttemptKey();
   }
@@ -751,6 +780,7 @@ export const BookingWidget: React.FC<{
                   <span>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)} · {stayNights} {c.nights} · {people} {c.people.toLowerCase()}</span>
                   <strong>{c[type]} · {selectedModeName} · {c[mealPlan]}</strong>
                   {selectedModeDescription && <small>{selectedModeDescription}</small>}
+                  {selectedBedPreparation && <small>{c.bedPreparation}: {selectedBedPreparation.nombre}</small>}
                   <small>{mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</small>
                   {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--summary">{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                 </div>
@@ -829,6 +859,11 @@ export const BookingWidget: React.FC<{
                       ))}</div>
                       <p className="booking-section-title">{c.mode}</p>
                       <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={23} /><span><strong>{commercialModeNames.get(option) || c[option]}</strong>{commercialModeDescriptions.get(option) && <small>{commercialModeDescriptions.get(option)}</small>}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                      {requiresBedPreparation && <>
+                        <p className="booking-section-title">{c.bedPreparation}</p>
+                        <p className="booking-choice-help">{c.bedPreparationHelp}</p>
+                        <div className="booking-choice-grid">{bedPreparationOptions.map(option => <button key={option.codigo} type="button" className={`booking-choice ${bedPreparationCode === option.codigo ? 'booking-choice--selected' : ''}`} aria-pressed={bedPreparationCode === option.codigo} onClick={() => { setBedPreparationCode(option.codigo); resetQuote(); }}><BedDouble size={23} /><span><strong>{option.nombre}</strong>{option.descripcion && <small>{option.descripcion}</small>}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                      </>}
                       <p className="booking-section-title">{c.meals}</p>
                       <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={23} /><span><strong>{c[option]}</strong><small>{option === 'desayuno_incluido' ? c.breakfastHelp : c.fullBoardHelp}</small></span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                       {selectedUtilities.length > 0 && <><p className="booking-section-title">{c.utilities}</p><div className="booking-utilities">{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div></>}
@@ -836,14 +871,14 @@ export const BookingWidget: React.FC<{
                   )}
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /><span>{error.message}{error.code === 'NO_DISPONIBLE' && <> <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{c.contactSupport}</a></>}</span></div>}
                   {!loadingOptions && optionsLoaded && availableTypes.length === 0 && <button className="booking-button booking-button--secondary" type="button" onClick={retryOptions}>{c.retry}</button>}
-                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(1); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="button" disabled={loadingOptions || loadingQuote || availableModes.length === 0} onClick={quoteStay}>{loadingQuote ? <><Loader2 className="booking-loading" size={18} /> {c.quote}</> : <>{c.quote}<ArrowRight size={18} /></>}</button></div>
+                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(1); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="button" disabled={loadingOptions || loadingQuote || availableModes.length === 0 || (requiresBedPreparation && !bedPreparationCode)} onClick={quoteStay}>{loadingQuote ? <><Loader2 className="booking-loading" size={18} /> {c.quote}</> : <>{c.quote}<ArrowRight size={18} /></>}</button></div>
                 </div>
               ) : quote ? (
                 <form className="booking-panel" onSubmit={submitReservation}>
                   <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><h3>{c.reviewTitle}</h3><p>{c.contactIntro}</p></div>
                   <div className="booking-review-cards">
                     <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => setStep(1)}>{c.edit}</button></div>
-                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}<em>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</em></span><button type="button" onClick={() => setStep(2)}>{c.edit}</button></div>
+                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}{selectedBedPreparation && <em>{c.bedPreparation}: {selectedBedPreparation.nombre}</em>}<em>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</em></span><button type="button" onClick={() => setStep(2)}>{c.edit}</button></div>
                   </div>
                   {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--review" aria-label={c.utilities}>{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
@@ -874,6 +909,7 @@ export const BookingWidget: React.FC<{
                 <li><Users /> <span>{people} {c.people.toLowerCase()}</span></li>
                 {step > 1 && <li><Utensils /> <span>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</span></li>}
                 {step > 1 && selectedModeDescription && <li><BedDouble /> <span>{selectedModeDescription}</span></li>}
+                {step > 1 && selectedBedPreparation && <li><BedDouble /> <span>{c.bedPreparation}: {selectedBedPreparation.nombre}</span></li>}
               </ul>
               {renderPriceSummary('booking-sidebar__price')}
               <div className="booking-sidebar__trust"><ShieldCheck /><span>{c.dateNotice}</span></div>

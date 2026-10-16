@@ -93,6 +93,9 @@ test('el catálogo v1 publica capacidades comerciales sin PII ni ids internos', 
   assert.ok(domos.every((item: any) => item.servicios.some((servicio: any) =>
     servicio.codigo === 'electricidad-alojamiento' && servicio.disponibilidad === 'no_disponible'
   )));
+  assert.ok(domos.every((item: any) => item.opciones_preparacion.some((opcion: any) =>
+    opcion.codigo === 'cama_doble' && opcion.modalidad === 'privada' && opcion.cantidad_personas === 2
+  )));
   const refugio = body.data.find((item: any) => item.tipo === 'refugio');
   assert.ok(refugio.servicios.some((servicio: any) =>
     servicio.codigo === 'wifi-satelital' && servicio.disponibilidad === 'incluido'
@@ -392,6 +395,7 @@ function requestReserva(
     body: JSON.stringify({
       cotizacion_codigo: cotizacionCodigo,
       espacio_codigo: 'domo-1',
+      preferencias: { preparacion_cama: 'cama_doble' },
       cliente: { nombre, email: 'QA@Example.Test' },
       ...(idioma === undefined ? {} : { idioma }),
     }),
@@ -418,6 +422,11 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
 
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM retenciones_reserva').get()?.n, 1);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT categoria, opcion_codigo, opcion_nombre FROM reserva_preferencias
+  `).get() }, {
+    categoria: 'preparacion_cama', opcion_codigo: 'cama_doble', opcion_nombre: '1 cama doble',
+  });
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM cuentas_cobro_reserva WHERE estado = 'disabled'").get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ocupacion_reserva_noches').get()?.n, 2);
   assert.deepEqual({ ...sqlite.prepare(`
@@ -430,6 +439,36 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   });
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo IN ('reserva.creada', 'reserva.retencion_iniciada')").get()?.n, 2);
   assert.equal(sqlite.prepare('SELECT cliente_email FROM reservas').get()?.cliente_email, 'qa@example.test');
+  sqlite.close();
+});
+
+test('exige una preparación válida para domo privado de dos personas', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const bodyBase = {
+    cotizacion_codigo: quote.data.cotizacion.codigo,
+    espacio_codigo: 'domo-1',
+    cliente: { nombre: 'Huésped Camas', email: 'camas@example.test' },
+  };
+  const enviar = (clave: string, body: Record<string, unknown>) => crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': clave },
+      body: JSON.stringify(body),
+    }),
+    env: env(db),
+  });
+
+  const faltante = await enviar('qa-cama-faltante-0001', bodyBase);
+  assert.equal(faltante.status, 400);
+  assert.equal((await faltante.json() as any).error.codigo, 'PREFERENCIA_PREPARACION_REQUERIDA');
+
+  const invalida = await enviar('qa-cama-invalida-0001', {
+    ...bodyBase, preferencias: { preparacion_cama: 'cama-inexistente' },
+  });
+  assert.equal(invalida.status, 400);
+  assert.equal((await invalida.json() as any).error.codigo, 'PREFERENCIA_PREPARACION_INVALIDA');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 0);
   sqlite.close();
 });
 
@@ -583,6 +622,7 @@ test('registra una transferencia por DNI protegido y sólo entonces expone el de
     body: JSON.stringify({
       cotizacion_codigo: quote.data.cotizacion.codigo,
       espacio_codigo: 'domo-1',
+      preferencias: { preparacion_cama: 'cama_doble' },
       cliente: { nombre: 'Huésped Transferencia', email: 'qa@example.test' },
       pago: {
         metodo: 'transferencia_mp',
@@ -651,6 +691,7 @@ test('confirma de punta a punta una transferencia por DNI, importe y moneda', as
       body: JSON.stringify({
         cotizacion_codigo: quote.data.cotizacion.codigo,
         espacio_codigo: 'domo-1',
+        preferencias: { preparacion_cama: 'dos_camas_simples' },
         cliente: { nombre: 'Huésped Transferencia E2E', email: 'qa@example.test' },
         pago: {
           metodo: 'transferencia_mp',
@@ -848,6 +889,7 @@ test('la restricción D1 evita sobreventa aunque dos chequeos hayan visto dispon
     clienteNombre: 'Carrera QA',
     clienteTelefono: null,
     clienteEmail: 'expiry@example.test',
+    preferenciaPreparacionCodigo: 'cama_doble',
     idempotencyKey: 'qa-race-0002',
   }, new D1RepositorioCreacionReservaPublica(db), {
     async consultar() {

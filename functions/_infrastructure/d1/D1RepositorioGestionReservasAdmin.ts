@@ -122,7 +122,7 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
   }
 
   async obtenerDetalle(reservaId: number): Promise<DetalleReservaAdmin | null> {
-    const [row, estadias, excepciones, cuentaCobro, metodoPago] = await Promise.all([
+    const [row, estadias, excepciones, preferencias, cuentaCobro, metodoPago] = await Promise.all([
       this.db.prepare(`
         SELECT ${SELECT_RESUMEN}, r.moneda
         ${FROM_RESERVA} WHERE r.id = ?
@@ -142,6 +142,11 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
         FROM excepciones_capacidad ec
         JOIN reserva_estadias re ON re.id = ec.reserva_estadia_id
         WHERE re.reserva_id = ? ORDER BY ec.id DESC
+      `).bind(reservaId).all(),
+      this.db.prepare(`
+        SELECT categoria, opcion_codigo codigo, opcion_nombre nombre,
+          opcion_descripcion descripcion
+        FROM reserva_preferencias WHERE reserva_id = ? ORDER BY id
       `).bind(reservaId).all(),
       this.db.prepare(`
         SELECT c.estado, c.simulada, c.cvu, c.alias, c.moneda, c.intentos,
@@ -166,6 +171,11 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
       moneda: String(row.moneda),
       estadias: estadias.results || [],
       excepciones: excepciones.results || [],
+      preferencias: (preferencias.results || []).map(item => ({
+        categoria: String(item.categoria) as 'preparacion_cama',
+        codigo: String(item.codigo), nombre: String(item.nombre),
+        descripcion: String(item.descripcion || ''),
+      })),
       cuentaCobro: cuentaCobro ? {
         proveedor: Number(cuentaCobro.simulada) === 1 ? 'cucuru_mock' : 'cucuru',
         estado: String(cuentaCobro.estado) as CuentaCobroReservaAdmin['estado'],

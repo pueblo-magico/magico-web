@@ -5,6 +5,7 @@ import {
   type ConfiguracionBaseReservas,
   type EspacioComercialActualizado,
   type ModalidadComercialActualizada,
+  type OpcionPreparacionEstadia,
   type ParametroOperativoReserva,
   type ServicioAlojamiento,
   type TarifaAlimentacionActualizada,
@@ -66,6 +67,21 @@ function mapearServicio(row: Record<string, unknown>): ServicioAlojamiento {
   };
 }
 
+function mapearOpcionPreparacion(row: Record<string, unknown>): OpcionPreparacionEstadia {
+  return {
+    id: Number(row.id),
+    tipoAlojamiento: row.tipo_alojamiento as OpcionPreparacionEstadia['tipoAlojamiento'],
+    modalidad: row.modalidad as OpcionPreparacionEstadia['modalidad'],
+    cantidadPersonas: Number(row.cantidad_personas),
+    codigo: String(row.codigo),
+    nombre: String(row.nombre),
+    descripcion: String(row.descripcion || ''),
+    habilitada: Number(row.habilitada) === 1,
+    orden: Number(row.orden),
+    actualizadoAt: String(row.updated_at),
+  };
+}
+
 export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfiguracionBaseReservas {
   private readonly db: Database;
 
@@ -82,7 +98,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
   }
 
   async obtenerEfectiva(): Promise<ConfiguracionBaseReservas> {
-    const [parametro, inventario, servicios, tarifa, reglasTarifa, senasTarifa, politica, ajustesTarifa, alimentacion] = await Promise.all([
+    const [parametro, inventario, servicios, opcionesPreparacion, tarifa, reglasTarifa, senasTarifa, politica, ajustesTarifa, alimentacion] = await Promise.all([
       this.db.prepare(`
         SELECT codigo, valor_entero, unidad, version, updated_at
         FROM parametros_operativos_reservas WHERE codigo = 'payment_hold_minutes'
@@ -102,6 +118,12 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
           visible_en_reserva, orden, updated_at
         FROM servicios_alojamiento
         ORDER BY tipo_alojamiento, orden, id
+      `).all(),
+      this.db.prepare(`
+        SELECT id, tipo_alojamiento, modalidad, cantidad_personas, codigo, nombre,
+          descripcion, habilitada, orden, updated_at
+        FROM opciones_preparacion_estadia
+        ORDER BY tipo_alojamiento, modalidad, cantidad_personas, orden, id
       `).all(),
       this.db.prepare(`
         SELECT p.id, p.codigo, p.nombre, p.moneda, p.version, p.publicado_at,
@@ -218,6 +240,7 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
     return {
       parametros: [mapearParametro(parametro)],
       servicios: (servicios.results || []).map(mapearServicio),
+      opcionesPreparacion: (opcionesPreparacion.results || []).map(mapearOpcionPreparacion),
       inventario: [...espacios.values()],
       tarifa: tarifa ? {
         id: Number(tarifa.id), codigo: String(tarifa.codigo), nombre: String(tarifa.nombre), moneda: String(tarifa.moneda),
@@ -457,6 +480,50 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
     ]);
     const row = resultados[0]?.results?.[0];
     return row ? mapearServicio(row) : null;
+  }
+
+  async actualizarOpcionPreparacion(
+    entrada: Parameters<RepositorioConfiguracionBaseReservas['actualizarOpcionPreparacion']>[0]
+  ): Promise<OpcionPreparacionEstadia | null> {
+    const anterior = await this.db.prepare(`
+      SELECT id, tipo_alojamiento, modalidad, cantidad_personas, codigo, nombre,
+        descripcion, habilitada, orden, updated_at
+      FROM opciones_preparacion_estadia WHERE id = ?
+    `).bind(entrada.id).first();
+    if (!anterior || String(anterior.updated_at) !== entrada.expectedUpdatedAt) return null;
+
+    const resultados = await this.db.batch([
+      this.db.prepare(`
+        UPDATE opciones_preparacion_estadia
+        SET tipo_alojamiento = ?, modalidad = ?, cantidad_personas = ?, nombre = ?,
+          descripcion = ?, habilitada = ?, orden = ?,
+          updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE id = ? AND updated_at = ?
+        RETURNING id, tipo_alojamiento, modalidad, cantidad_personas, codigo, nombre,
+          descripcion, habilitada, orden, updated_at
+      `).bind(
+        entrada.tipoAlojamiento, entrada.modalidad, entrada.cantidadPersonas, entrada.nombre,
+        entrada.descripcion, entrada.habilitada ? 1 : 0, entrada.orden,
+        entrada.id, entrada.expectedUpdatedAt
+      ),
+      this.db.prepare(`
+        INSERT INTO auditoria_admin (
+          email, accion, actor_tipo, entidad_tipo, entidad_id, motivo, correlation_id, metadata_json
+        ) SELECT ?, 'actualizar_opcion_preparacion', 'usuario', 'opcion_preparacion_estadia', ?, ?, ?,
+          json_object(
+            'codigo', ?, 'nombre_anterior', ?, 'nombre_nuevo', ?,
+            'habilitada_anterior', ?, 'habilitada_nueva', ?,
+            'cantidad_personas_anterior', ?, 'cantidad_personas_nueva', ?
+          ) WHERE changes() = 1
+      `).bind(
+        entrada.actorEmail, String(entrada.id), entrada.motivo, entrada.correlationId,
+        String(anterior.codigo), String(anterior.nombre), entrada.nombre,
+        Number(anterior.habilitada), entrada.habilitada ? 1 : 0,
+        Number(anterior.cantidad_personas), entrada.cantidadPersonas
+      ),
+    ]);
+    const row = resultados[0]?.results?.[0];
+    return row ? mapearOpcionPreparacion(row) : null;
   }
 
   async actualizarEspacio(

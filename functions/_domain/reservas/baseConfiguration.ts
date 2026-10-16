@@ -23,6 +23,7 @@ export type ParametroOperativoReserva = {
 export type ConfiguracionBaseReservas = {
   parametros: ParametroOperativoReserva[];
   servicios: ServicioAlojamiento[];
+  opcionesPreparacion: OpcionPreparacionEstadia[];
   inventario: Array<{
     codigo: string;
     nombre: string;
@@ -131,6 +132,24 @@ export type CambioServicioAlojamiento = Omit<ServicioAlojamiento, 'codigo' | 'ac
 };
 
 export type NuevoServicioAlojamiento = Omit<ServicioAlojamiento, 'id' | 'actualizadoAt'> & {
+  motivo: string;
+};
+
+export type OpcionPreparacionEstadia = {
+  id: number;
+  tipoAlojamiento: TipoServicioAlojamiento;
+  modalidad: 'privada' | 'compartida' | 'camping';
+  cantidadPersonas: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  habilitada: boolean;
+  orden: number;
+  actualizadoAt: string;
+};
+
+export type CambioOpcionPreparacionEstadia = Omit<OpcionPreparacionEstadia, 'codigo' | 'actualizadoAt'> & {
+  expectedUpdatedAt: string;
   motivo: string;
 };
 
@@ -306,6 +325,27 @@ export function validarNuevoServicioAlojamiento(entrada: NuevoServicioAlojamient
     throw new ErrorReserva('DATOS_INVALIDOS', 'El código del servicio es inválido.');
   }
   return validarDatosServicioAlojamiento({ ...entrada, codigo: entrada.codigo.trim() });
+}
+
+export function validarCambioOpcionPreparacionEstadia(
+  entrada: CambioOpcionPreparacionEstadia
+): CambioOpcionPreparacionEstadia {
+  if (!Number.isSafeInteger(entrada.id) || entrada.id < 1 ||
+      !['domo', 'refugio', 'camping', 'bell_tent'].includes(entrada.tipoAlojamiento) ||
+      !['privada', 'compartida', 'camping'].includes(entrada.modalidad) ||
+      !Number.isSafeInteger(entrada.cantidadPersonas) || entrada.cantidadPersonas < 1 ||
+      entrada.cantidadPersonas > 20 || !entrada.nombre?.trim() || entrada.nombre.trim().length > 80 ||
+      (entrada.descripcion || '').trim().length > 240 || typeof entrada.habilitada !== 'boolean' ||
+      !Number.isSafeInteger(entrada.orden) || entrada.orden < 0 || entrada.orden > 999 ||
+      !entrada.expectedUpdatedAt) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'La opción de preparación es inválida.');
+  }
+  return {
+    ...entrada,
+    nombre: entrada.nombre.trim(),
+    descripcion: (entrada.descripcion || '').trim(),
+    motivo: validarMotivo(entrada.motivo),
+  };
 }
 
 export function validarCambioEspacioComercial(entrada: CambioEspacioComercial): CambioEspacioComercial {

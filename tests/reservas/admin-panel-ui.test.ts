@@ -124,6 +124,13 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /credenciales y activación de proveedores de pago permanecen en variables seguras/);
 });
 
+test('permite configurar las opciones de preparación de camas sin alterar inventario ni precio', () => {
+  assert.match(source, /Preparación de camas/);
+  assert.match(source, /actualizar_opcion_preparacion/);
+  assert.match(source, /no cambian precio, capacidad ni inventario físico/);
+  assert.match(source, /Preparación solicitada/);
+});
+
 test('presenta la configuración en secciones compactas sin quebrar valores de modalidad', () => {
   assert.match(source, /admin-config__section/);
   assert.match(source, /admin-config__modality-fields/);

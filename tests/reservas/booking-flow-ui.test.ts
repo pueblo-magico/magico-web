@@ -71,6 +71,15 @@ test('muestra servicios disponibles y limitaciones explícitas del alojamiento s
   assert.match(styles, /\.booking-utility--unavailable/);
 });
 
+test('pide y envía la preparación de camas configurada para domo privado de dos personas', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
+  assert.match(source, /opciones_preparacion/);
+  assert.match(source, /requiresBedPreparation && !bedPreparationCode/);
+  assert.match(source, /Preparación de camas/);
+  assert.match(api, /preparacion_cama: input\.bedPreparationCode/);
+});
+
 test('muestra el flujo en un modal accesible en todos los tamaños y protege los datos de pago', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');

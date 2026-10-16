@@ -21,6 +21,8 @@ const statusPorCodigo: Record<string, number> = {
   CONSULTA_NO_ENCONTRADA: 404,
   COTIZACION_NO_ENCONTRADA: 404,
   COTIZACION_VENCIDA: 410,
+  PREFERENCIA_PREPARACION_REQUERIDA: 400,
+  PREFERENCIA_PREPARACION_INVALIDA: 400,
   INVENTARIO_NO_DISPONIBLE: 409,
 };
 
@@ -52,6 +54,10 @@ async function crear(request: Request, env: any, waitUntil?: (promise: Promise<u
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
     clienteEmail: String(cliente.email || ''),
     idioma: body.idioma === undefined ? undefined : String(body.idioma) as 'es' | 'en',
+    preferenciaPreparacionCodigo: body.preferencias && typeof body.preferencias === 'object' &&
+      !Array.isArray(body.preferencias)
+      ? String((body.preferencias as Record<string, unknown>).preparacion_cama || '') || null
+      : null,
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
     canalOrigen: 'n8n',
     referenciaIntegracion: {

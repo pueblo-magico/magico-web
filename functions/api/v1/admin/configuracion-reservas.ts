@@ -5,6 +5,7 @@ import {
   crearServicioAlojamientoConfiguracion,
   actualizarEspacioConfiguracion,
   actualizarParametroConfiguracion,
+  actualizarOpcionPreparacionConfiguracion,
   consultarConfiguracionBase,
   publicarTarifaAlimentacionConfiguracion,
 } from '../../../_application/reservas/gestionarConfiguracionBase.ts';
@@ -92,6 +93,17 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
         motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
       }, repositorio);
       return json({ data: servicio, meta: { version: 'v1' } }, 201);
+    }
+    if (accion === 'actualizar_opcion_preparacion') {
+      const opcion = await actualizarOpcionPreparacionConfiguracion({
+        id: Number(body.id), tipoAlojamiento: String(body.tipo_alojamiento || '') as any,
+        modalidad: String(body.modalidad || '') as any,
+        cantidadPersonas: Number(body.cantidad_personas), nombre: String(body.nombre || ''),
+        descripcion: String(body.descripcion || ''), habilitada: body.habilitada === true,
+        orden: Number(body.orden), expectedUpdatedAt: String(body.expected_updated_at || ''),
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: opcion, meta: { version: 'v1' } });
     }
     if (accion === 'actualizar_espacio') {
       const espacio = await actualizarEspacioConfiguracion({

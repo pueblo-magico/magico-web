@@ -26,6 +26,8 @@ const statusPorCodigo: Record<string, number> = {
   IDEMPOTENCY_KEY_REUTILIZADA: 409,
   COTIZACION_NO_ENCONTRADA: 404,
   COTIZACION_VENCIDA: 410,
+  PREFERENCIA_PREPARACION_REQUERIDA: 400,
+  PREFERENCIA_PREPARACION_INVALIDA: 400,
   INVENTARIO_NO_DISPONIBLE: 409,
 };
 
@@ -70,6 +72,9 @@ export async function onRequestPost({ request, env, waitUntil }: any) {
     pagadorDocumentoHash: documentoHash,
     pagadorDocumentoUltimos4: dni ? dni.slice(-4) : null,
     idioma: body.idioma === undefined ? undefined : String(body.idioma) as 'es' | 'en',
+    preferenciaPreparacionCodigo: body.preferencias?.preparacion_cama == null
+      ? null
+      : String(body.preferencias.preparacion_cama),
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
   }, new D1RepositorioCreacionReservaPublica(env.DB), new D1RepositorioDisponibilidad(env.DB),
   new D1RepositorioConfiguracionBaseReservas(env.DB));

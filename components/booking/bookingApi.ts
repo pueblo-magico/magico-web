@@ -14,6 +14,13 @@ export interface PublicAccommodation {
     disponibilidad: 'incluido' | 'no_disponible';
     detalle?: string;
   }>;
+  opciones_preparacion: Array<{
+    modalidad: BookingMode;
+    cantidad_personas: number;
+    codigo: string;
+    nombre: string;
+    descripcion?: string;
+  }>;
   modalidades: Array<{
     codigo: BookingMode;
     nombre?: string;
@@ -230,6 +237,7 @@ export async function createPublicReservation(input: {
   guest: { name: string; phone: string; email: string };
   paymentMethod: PaymentMethod;
   payerDni?: string;
+  bedPreparationCode?: string | null;
   idempotencyKey: string;
 }): Promise<{ data: ReservationResponse; idempotent: boolean }> {
   const response = await requestJson<{ data: ReservationResponse; meta: { idempotente: boolean } }>('/api/v1/public/reservas', {
@@ -245,6 +253,9 @@ export async function createPublicReservation(input: {
           pagador: { documento_tipo: 'DNI', documento_numero: input.payerDni || '' },
         } : {}),
       },
+      ...(input.bedPreparationCode
+        ? { preferencias: { preparacion_cama: input.bedPreparationCode } }
+        : {}),
     }),
   });
   return { data: response.data, idempotent: response.meta.idempotente };
