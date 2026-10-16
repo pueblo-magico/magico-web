@@ -156,7 +156,7 @@ test('distingue la política efectiva, el historial y la cotización pública re
   assert.match(source, /usePublicPricingSummary\(fechaPreview\)/);
   assert.match(source, /estimateBookingPrice\(\[resumenPreciosPublicos\]/);
   assert.match(source, /Respuesta pública:/);
-  assert.match(source, /href="\/estadia\?reservar=1"/);
+  assert.match(source, /href="\/reservar\?paso=fechas"/);
   assert.match(styles, /\.admin-pricing-overview__grid\s*\{[^}]*grid-template-columns:/s);
   assert.match(styles, /@media \(max-width: 1023px\)[\s\S]*\.admin-pricing-overview__grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });

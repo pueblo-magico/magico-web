@@ -2713,7 +2713,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
                   {opcionesPreview.length === 0 && <p className="admin-pricing-preview__empty">No hay ofertas vendibles para 2 personas en esta fecha.</p>}
                 </div>
               </>}
-            <a className={`admin-pricing-preview__link ${FOCUS_RING}`} href="/estadia?reservar=1" target="_blank" rel="noreferrer">
+            <a className={`admin-pricing-preview__link ${FOCUS_RING}`} href="/reservar?paso=fechas" target="_blank" rel="noreferrer">
               <Link2 aria-hidden="true" size={15} />Abrir reserva pública
             </a>
           </Card>

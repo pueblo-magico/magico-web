@@ -5,6 +5,7 @@
 export const ROUTES = {
   HOME: '/',
   ESTADIA: '/estadia',
+  RESERVAR: '/reservar',
   FAMILION: '/familion',
   ACHALA_VIVA: '/achala-viva',
   ESCUELAS: '/escuelas',

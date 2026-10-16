@@ -399,7 +399,7 @@
       "coworkingBadge": "Coworking & Coliving",
       "card_extra_text": "También podés solo alojarte si querés — desde $20.000/persona/noche con desayuno, en carpa, Refugio de Piedra o domo compartido. Sumá almuerzo, cena o pensión completa a tu gusto.",
       "btn": "RESERVAR MI LUGAR", 
-      "link": "/estadia?reservar=1",
+      "link": "/reservar?paso=fechas",
       "cards": [
         {
           "id": 1,
@@ -956,7 +956,7 @@
       ],
       "book": "RESERVAR",
       "lang": "ENGLISH",
-      "bookLink": "/estadia?reservar=1"
+      "bookLink": "/reservar?paso=fechas"
     },
     "pillars": [
       {
@@ -2994,7 +2994,7 @@
       "coworkingBadge": "Coworking & Coliving",
       "card_extra_text": "You can also just book accommodation if you wish — from $20,000/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
       "btn": "Book my spot", 
-      "link": "/estadia?reservar=1",
+      "link": "/reservar?paso=fechas",
       "cards": [
         {
           "id": 1,
@@ -3551,7 +3551,7 @@
       ],
       "book": "BOOK NOW",
       "lang": "ESPAÑOL",
-      "bookLink": "/estadia?reservar=1"
+      "bookLink": "/reservar?paso=fechas"
     },
     "pillars": [
       {

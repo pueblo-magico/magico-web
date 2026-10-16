@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
   AlertCircle, ArrowLeft, ArrowRight, BedDouble, CalendarDays, CheckCircle2, Clock3,
   Copy, CreditCard, Landmark, Leaf, Loader2, Mail, MessageCircle, Minus, Phone, Plus, ShieldCheck,
@@ -7,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { RESERVATION_START_PATH, WA_MAGICO } from '../src/data/config';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BookingApiError,
   type AccommodationType,
@@ -165,6 +165,31 @@ type Step = 1 | 2 | 3;
 
 const ACTIVE_RESERVATION_STORAGE_KEY = 'magico.active-reservation.v1';
 const ACTIVE_RESERVATION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const BOOKING_DRAFT_SESSION_KEY = 'magico.booking-draft.v1';
+
+type BookingDraftSnapshot = {
+  checkIn: string;
+  checkOut: string;
+  people: number;
+  type: AccommodationType;
+  mode: BookingMode;
+  mealPlan: MealPlan;
+  bedPreparationCode: string | null;
+};
+
+function readBookingDraft(): BookingDraftSnapshot | null {
+  try {
+    const draft = JSON.parse(window.sessionStorage.getItem(BOOKING_DRAFT_SESSION_KEY) || 'null') as BookingDraftSnapshot | null;
+    if (!draft || !Number.isSafeInteger(draft.people) || draft.people < 1) return null;
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+function writeBookingDraft(draft: BookingDraftSnapshot) {
+  try { window.sessionStorage.setItem(BOOKING_DRAFT_SESSION_KEY, JSON.stringify(draft)); } catch { /* optional browser recovery */ }
+}
 
 type ActiveReservationSnapshot = {
   version: 1;
@@ -276,19 +301,15 @@ function accommodationImage(type: AccommodationType): string {
   return '/uploads/habitaciones.webp';
 }
 
-function shouldOpenFromReservationLink(): boolean {
-  if (typeof window === 'undefined') return false;
-  const reservationUrl = new URL(RESERVATION_START_PATH, window.location.origin);
-  return window.location.pathname === reservationUrl.pathname
-    && new URLSearchParams(window.location.search).get('reservar') === '1';
-}
-
 export const BookingWidget: React.FC<{
   compact?: boolean;
+  page?: boolean;
   onOpenChange?: (open: boolean) => void;
   activeViewport?: 'all' | 'mobile' | 'desktop';
-}> = ({ compact = false, onOpenChange, activeViewport = 'all' }) => {
+}> = ({ compact = false, page = false, onOpenChange, activeViewport = 'all' }) => {
   const { language } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
   const c = COPY[language];
   const { data: publicPricing, loaded: publicPricingLoaded } = usePublicPricingSummary();
   const publicRules = publicPricing?.opciones.flatMap(option => option.tarifas) || [];
@@ -302,19 +323,22 @@ export const BookingWidget: React.FC<{
     ? `${language === 'es' ? 'Desde' : 'From'} ${formatMoney(publicStartingRule.importe_centavos, publicPricing?.plan.moneda || 'ARS', language)} ${publicStartingRule.base_calculo === 'persona_noche' ? (language === 'es' ? 'por persona/noche' : 'per person/night') : (language === 'es' ? 'por unidad/noche' : 'per unit/night')}`
     : publicPricingLoaded ? c.startingAt : (language === 'es' ? 'Cargando tarifa vigente…' : 'Loading current rate…');
   const today = localTodayIso();
-  const [open, setOpen] = useState(shouldOpenFromReservationLink);
-  const [step, setStep] = useState<Step>(1);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [visibleMonth, setVisibleMonth] = useState(() => monthStart(today));
-  const [people, setPeople] = useState(2);
+  const draft = useMemo(readBookingDraft, []);
+  const open = page;
+  const requestedStep = new URLSearchParams(location.search).get('paso');
+  const canResumeStay = Boolean(draft?.checkIn && draft?.checkOut);
+  const [step, setStep] = useState<Step>(requestedStep !== 'fechas' && canResumeStay ? 2 : 1);
+  const [checkIn, setCheckIn] = useState(draft?.checkIn || '');
+  const [checkOut, setCheckOut] = useState(draft?.checkOut || '');
+  const [visibleMonth, setVisibleMonth] = useState(() => monthStart(draft?.checkIn || today));
+  const [people, setPeople] = useState(draft?.people || 2);
   const [accommodations, setAccommodations] = useState<PublicAccommodation[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [optionsLoaded, setOptionsLoaded] = useState(false);
-  const [type, setType] = useState<AccommodationType>('domo');
-  const [mode, setMode] = useState<BookingMode>('compartida');
-  const [mealPlan, setMealPlan] = useState<MealPlan>('desayuno_incluido');
-  const [bedPreparationCode, setBedPreparationCode] = useState<string | null>(null);
+  const [type, setType] = useState<AccommodationType>(draft?.type || 'domo');
+  const [mode, setMode] = useState<BookingMode>(draft?.mode || 'compartida');
+  const [mealPlan, setMealPlan] = useState<MealPlan>(draft?.mealPlan || 'desayuno_incluido');
+  const [bedPreparationCode, setBedPreparationCode] = useState<string | null>(draft?.bedPreparationCode || null);
   const [quote, setQuote] = useState<QuoteResponse | null>(null);
   const [quoteSeconds, setQuoteSeconds] = useState(0);
   const [loadingQuote, setLoadingQuote] = useState(false);
@@ -329,7 +353,6 @@ export const BookingWidget: React.FC<{
   const [copied, setCopied] = useState('');
   const [viewportEligible, setViewportEligible] = useState(activeViewport === 'all');
   const idempotencyKey = useRef(createBookingAttemptKey());
-  const launcherRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const stayDates = useMemo(() => stayNightDates(checkIn, checkOut), [checkIn, checkOut]);
   const stayNights = stayDates.length;
@@ -404,6 +427,28 @@ export const BookingWidget: React.FC<{
   }, [onOpenChange, open]);
 
   useEffect(() => {
+    if (!page || reservation) return;
+    writeBookingDraft({ checkIn, checkOut, people, type, mode, mealPlan, bedPreparationCode });
+  }, [page, reservation, checkIn, checkOut, people, type, mode, mealPlan, bedPreparationCode]);
+
+  useEffect(() => {
+    if (!page) return;
+    const requested = new URLSearchParams(location.search).get('paso');
+    const nextStep: Step = requested === 'estadia' ? 2 : requested === 'datos' ? 3 : 1;
+    if (nextStep > 1 && (!checkIn || !checkOut)) {
+      setStep(1);
+      navigate('/reservar?paso=fechas', { replace: true });
+      return;
+    }
+    if (nextStep === 3 && !quote && !reservation) {
+      setStep(2);
+      navigate('/reservar?paso=estadia', { replace: true });
+      return;
+    }
+    setStep(nextStep);
+  }, [page, location.search, checkIn, checkOut, quote, reservation, navigate]);
+
+  useEffect(() => {
     if (activeViewport === 'all') {
       setViewportEligible(true);
       return;
@@ -432,7 +477,8 @@ export const BookingWidget: React.FC<{
     setPaymentMethod(snapshot.context.paymentMethod);
     setBedPreparationCode(snapshot.context.bedPreparationCode || null);
     setStep(3);
-  }, []);
+    if (page) navigate('/reservar?paso=datos', { replace: true });
+  }, [page, navigate]);
 
   useEffect(() => {
     if (!reservation) return;
@@ -517,48 +563,10 @@ export const BookingWidget: React.FC<{
   }, [bedPreparationCode, bedPreparationOptions]);
 
   useEffect(() => {
-    if (!open) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const focusTimer = window.setTimeout(() => {
-      dialogRef.current?.querySelector<HTMLElement>('button, input, a[href], [tabindex]:not([tabindex="-1"])')?.focus();
-    }, 0);
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-        return;
-      }
-      if (event.key !== 'Tab' || !dialogRef.current) return;
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), input:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])',
-      ));
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.body.style.overflow = previous;
-      window.removeEventListener('keydown', onKeyDown);
-      launcherRef.current?.focus();
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const frame = window.requestAnimationFrame(() => {
-      dialogRef.current?.scrollTo({ top: 0, behavior: 'auto' });
-    });
+    if (!page) return;
+    const frame = window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
     return () => window.cancelAnimationFrame(frame);
-  }, [open, step, reservation?.reserva.codigo]);
+  }, [page, step, reservation?.reserva.codigo]);
 
   useEffect(() => {
     if (!quote?.cotizacion.expiresAt) return;
@@ -628,6 +636,14 @@ export const BookingWidget: React.FC<{
     tipo_alojamiento: type, modalidad: mode, contexto: 'general', regimen_alimentacion: mealPlan,
   };
 
+  function goToStep(nextStep: Step, replace = false) {
+    setStep(nextStep);
+    setError(null);
+    if (!page) return;
+    const slug = nextStep === 1 ? 'fechas' : nextStep === 2 ? 'estadia' : 'datos';
+    navigate(`/reservar?paso=${slug}`, { replace });
+  }
+
   function resetQuote() { setQuote(null); setError(null); }
 
   function retryOptions() {
@@ -652,7 +668,7 @@ export const BookingWidget: React.FC<{
       setError({ message: c.dateHelp });
       return;
     }
-    setStep(2);
+    goToStep(2);
   }
 
   async function quoteStay() {
@@ -675,7 +691,7 @@ export const BookingWidget: React.FC<{
       }
       setQuote(result);
       setPaymentMethod(result.metodos_pago[0] || 'mercado_pago_checkout');
-      setStep(3);
+      goToStep(3);
     } catch (err) {
       setError({ message: apiErrorMessage(err, c.genericError, language), code: err instanceof BookingApiError ? err.code : undefined });
     } finally {
@@ -737,7 +753,7 @@ export const BookingWidget: React.FC<{
   }
 
   function startAgain() {
-    setStep(1); setQuote(null); setReservation(null); setError(null); setConsent(false);
+    goToStep(1, true); setQuote(null); setReservation(null); setError(null); setConsent(false);
     setBedPreparationCode(null);
     clearActiveReservation();
     idempotencyKey.current = createBookingAttemptKey();
@@ -787,7 +803,7 @@ export const BookingWidget: React.FC<{
         : c.heroReviewCopy;
 
   const bookingFlow = (
-    <section ref={dialogRef} className={`booking-dialog ${reservation ? 'booking-dialog--result' : ''}`} role="dialog" aria-modal="true" aria-labelledby="booking-title" tabIndex={-1}>
+    <section ref={dialogRef} className={`booking-dialog booking-dialog--page ${reservation ? 'booking-dialog--result' : ''}`} aria-labelledby="booking-title" tabIndex={-1}>
       <header className={`booking-flow__header ${reservationConfirmed ? 'booking-flow__header--confirmed' : ''}`}>
         <div className="booking-flow__header-copy">
           <p className="booking-flow__eyebrow">{reservation ? c.reservationCode : c.launcherEyebrow}</p>
@@ -798,7 +814,6 @@ export const BookingWidget: React.FC<{
           </strong>}
           <p className="booking-flow__intro">{headerCopy}</p>
         </div>
-        <button className="booking-icon-button booking-flow__close" type="button" onClick={() => setOpen(false)} aria-label={c.close}><X aria-hidden="true" /></button>
       </header>
 
       {!reservation && (
@@ -975,7 +990,7 @@ export const BookingWidget: React.FC<{
                 </div>
               ) : step === 2 ? (
                 <div className="booking-panel">
-                  <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => { setStep(1); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><h3>{c.stayTitle}</h3></div>
+                  <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => goToStep(1)}><ArrowLeft size={17} /> {c.back}</button><h3>{c.stayTitle}</h3></div>
                   {loadingOptions ? <div className="booking-notice"><Loader2 className="booking-loading" size={20} /> {c.loadingOptions}</div> : (
                     <>
                       <p className="booking-section-title">{c.accommodation}</p>
@@ -1000,14 +1015,14 @@ export const BookingWidget: React.FC<{
                   )}
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /><span>{error.message}{error.code === 'NO_DISPONIBLE' && <> <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{c.contactSupport}</a></>}</span></div>}
                   {!loadingOptions && optionsLoaded && availableTypes.length === 0 && <button className="booking-button booking-button--secondary" type="button" onClick={retryOptions}>{c.retry}</button>}
-                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(1); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="button" disabled={loadingOptions || loadingQuote || availableModes.length === 0 || (requiresBedPreparation && !bedPreparationCode)} onClick={quoteStay}>{loadingQuote ? <><Loader2 className="booking-loading" size={18} /> {c.quote}</> : <>{c.quote}<ArrowRight size={18} /></>}</button></div>
+                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => goToStep(1)}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="button" disabled={loadingOptions || loadingQuote || availableModes.length === 0 || (requiresBedPreparation && !bedPreparationCode)} onClick={quoteStay}>{loadingQuote ? <><Loader2 className="booking-loading" size={18} /> {c.quote}</> : <>{c.quote}<ArrowRight size={18} /></>}</button></div>
                 </div>
               ) : quote ? (
                 <form className="booking-panel" onSubmit={submitReservation}>
-                  <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><h3>{c.reviewTitle}</h3><p>{c.contactIntro}</p></div>
+                  <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => goToStep(2)}><ArrowLeft size={17} /> {c.back}</button><h3>{c.reviewTitle}</h3><p>{c.contactIntro}</p></div>
                   <div className="booking-review-cards">
-                    <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => setStep(1)}>{c.edit}</button></div>
-                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}{selectedBedPreparation && <em>{c.bedPreparation}: {selectedBedPreparation.nombre}</em>}<em>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</em></span><button type="button" onClick={() => setStep(2)}>{c.edit}</button></div>
+                    <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => goToStep(1)}>{c.edit}</button></div>
+                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}{selectedBedPreparation && <em>{c.bedPreparation}: {selectedBedPreparation.nombre}</em>}<em>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</em></span><button type="button" onClick={() => goToStep(2)}>{c.edit}</button></div>
                   </div>
                   {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--review" aria-label={c.utilities}>{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
@@ -1022,10 +1037,10 @@ export const BookingWidget: React.FC<{
                   <div className="booking-notice"><ShieldCheck size={20} /> {c.privacyNote}</div>
                   <label className="booking-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank">{c.privacy}</a>.</span></label>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
-                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => { setStep(2); setError(null); }}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !guest.email.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
+                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => goToStep(2)}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !guest.email.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
                 </form>
               ) : (
-                <div className="booking-panel"><div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error?.message || c.expired}</div><div className="booking-actions"><button className="booking-button" type="button" onClick={() => { setStep(2); setError(null); }}>{c.retry}</button></div></div>
+                <div className="booking-panel"><div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error?.message || c.expired}</div><div className="booking-actions"><button className="booking-button" type="button" onClick={() => goToStep(2)}>{c.retry}</button></div></div>
               )}
             </div>
 
@@ -1052,8 +1067,8 @@ export const BookingWidget: React.FC<{
 
   return (
     <>
-      <div className={`booking-widget ${open ? 'booking-widget--open' : ''}`}>
-        {!open && (
+      <div className={`booking-widget ${page ? 'booking-widget--page' : ''}`}>
+        {!page && (
           <div className="booking-launcher" data-compact={compact || undefined}>
             <div className="booking-launcher__content">
               <p className="booking-launcher__eyebrow">{c.launcherEyebrow}</p>
@@ -1061,15 +1076,15 @@ export const BookingWidget: React.FC<{
               <strong className="booking-launcher__price">{launcherPrice}</strong>
               <p className="booking-launcher__copy">{c.launcherCopy}</p>
             </div>
-            <button ref={launcherRef} className="booking-button" type="button" onClick={() => setOpen(true)}><CalendarDays size={19} aria-hidden="true" /> {c.launcherButton}<ArrowRight size={18} /></button>
+            <a className="booking-button" href={RESERVATION_START_PATH}><CalendarDays size={19} aria-hidden="true" /> {c.launcherButton}<ArrowRight size={18} /></a>
           </div>
         )}
       </div>
 
-      {!open && viewportEligible && reservation && (
+      {!page && viewportEligible && reservation && (
         <FloatingUiPortal surface="reservation">
           <aside className={`booking-active-reservation ${reservationConfirmed ? 'booking-active-reservation--confirmed' : ''} ${reservationExpired ? 'booking-active-reservation--expired' : ''}`} aria-live="polite">
-          <button className="booking-active-reservation__open" type="button" onClick={() => setOpen(true)} aria-label={c.openReservation}>
+          <a className="booking-active-reservation__open" href={RESERVATION_START_PATH} aria-label={c.openReservation}>
             <span className="booking-active-reservation__icon">
               {reservationConfirmed
                 ? <CheckCircle2 size={22} aria-hidden="true" />
@@ -1083,7 +1098,7 @@ export const BookingWidget: React.FC<{
               {reservationPending && reservationSeconds > 0 && <span><Clock3 size={14} aria-hidden="true" /> {c.retention}: {formatRemaining(reservationSeconds)}</span>}
             </span>
             <span className="booking-active-reservation__action">{c.openReservation}</span>
-          </button>
+          </a>
           <div className="booking-active-reservation__footer">
             <a className="booking-active-reservation__link" href={reservationStatusUrl}>{c.viewStatus}</a>
             {reservationExpired && <button className="booking-active-reservation__discard" type="button" onClick={startAgain}>{c.discard}</button>}
@@ -1092,12 +1107,7 @@ export const BookingWidget: React.FC<{
         </FloatingUiPortal>
       )}
 
-      {open && createPortal(
-        <div className="booking-overlay" role="presentation" onMouseDown={event => event.target === event.currentTarget && setOpen(false)}>
-          {bookingFlow}
-        </div>,
-        document.body,
-      )}
+      {page && bookingFlow}
     </>
   );
 };

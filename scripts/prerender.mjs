@@ -62,6 +62,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/estadia',
   },
   {
+    path: '/reservar',
+    title: 'Reservá tu estadía — Pueblo Mágico',
+    description: 'Elegí fechas, alojamiento y comidas, consultá disponibilidad y reservá tu estadía en Pueblo Mágico.',
+    image: 'https://experienciamagico.com/uploads/domos_2.jpg',
+    canonical: 'https://experienciamagico.com/reservar',
+  },
+  {
     path: '/politica-de-privacidad',
     title: 'Política de Privacidad — Pueblo Mágico',
     description: 'Política de privacidad y protección de datos personales de Pueblo Mágico conforme a la Ley 25.326. Información sobre recopilación, uso y derechos sobre tus datos.',

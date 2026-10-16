@@ -80,14 +80,18 @@ test('pide y envía la preparación de camas configurada para domo privado de do
   assert.match(api, /preparacion_cama: input\.bedPreparationCode/);
 });
 
-test('muestra el flujo en un modal accesible en todos los tamaños y protege los datos de pago', () => {
+test('muestra el flujo en una página dedicada y protege los datos de pago', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
-  assert.match(source, /open && createPortal/);
-  assert.match(source, /aria-modal="true"/);
-  assert.match(source, /document\.body\.style\.overflow = 'hidden'/);
-  assert.doesNotMatch(source, /booking-inline/);
-  assert.doesNotMatch(source, /mobileFlow/);
+  const page = readFileSync(new URL('../../src/Reservar.tsx', import.meta.url), 'utf8');
+  const root = readFileSync(new URL('../../index.tsx', import.meta.url), 'utf8');
+  assert.match(source, /page && bookingFlow/);
+  assert.doesNotMatch(source, /createPortal/);
+  assert.doesNotMatch(source, /aria-modal="true"/);
+  assert.doesNotMatch(source, /document\.body\.style\.overflow = 'hidden'/);
+  assert.match(styles, /\.booking-dialog--page/);
+  assert.match(page, /<BookingWidget page \/>/);
+  assert.match(root, /<Route path="\/reservar" element=\{<Reservar \/>\} \/>/);
   assert.match(source, /className="booking-payment__identifier"/);
   assert.match(styles, /\.booking-result a\.booking-button\s*\{[^}]*color:\s*#fff/s);
   assert.match(styles, /\.booking-payment__identifier\s*\{[^}]*white-space:\s*nowrap/s);
@@ -145,13 +149,12 @@ test('los CTA que prometen reservar entran al flujo y no abren una conversación
     '../../src/components/FamilionPrecios.tsx',
   ];
 
-  assert.match(config, /RESERVATION_START_PATH = '\/estadia\?reservar=1'/);
-  assert.match(widget, /useState\(shouldOpenFromReservationLink\)/);
-  assert.match(widget, /get\('reservar'\) === '1'/);
-  assert.equal(content.es.menu.bookLink, '/estadia?reservar=1');
-  assert.equal(content.en.menu.bookLink, '/estadia?reservar=1');
-  assert.equal(content.es.experiences.link, '/estadia?reservar=1');
-  assert.equal(content.en.experiences.link, '/estadia?reservar=1');
+  assert.match(config, /RESERVATION_START_PATH = '\/reservar\?paso=fechas'/);
+  assert.match(widget, /href=\{RESERVATION_START_PATH\}/);
+  assert.equal(content.es.menu.bookLink, '/reservar?paso=fechas');
+  assert.equal(content.en.menu.bookLink, '/reservar?paso=fechas');
+  assert.equal(content.es.experiences.link, '/reservar?paso=fechas');
+  assert.equal(content.en.experiences.link, '/reservar?paso=fechas');
   for (const path of reservationViews) {
     const source = readFileSync(new URL(path, import.meta.url), 'utf8');
     assert.match(source, /RESERVATION_START_PATH/, `${path} debe usar la entrada canónica de reserva`);
@@ -181,6 +184,18 @@ test('combina llegada y salida en un calendario abierto con selección consecuti
   assert.match(styles, /\.booking-calendar td button\[data-selection-start\]/);
 });
 
+test('conserva la selección no sensible al recargar y mantiene el paso en la URL', () => {
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const root = readFileSync(new URL('../../index.tsx', import.meta.url), 'utf8');
+  assert.match(widget, /magico\.booking-draft\.v1/);
+  assert.match(widget, /window\.sessionStorage\.setItem/);
+  assert.match(widget, /navigate\(`\/reservar\?paso=\$\{slug\}`/);
+  assert.doesNotMatch(widget, /BookingDraftSnapshot[^}]*guest/s);
+  assert.doesNotMatch(widget, /BookingDraftSnapshot[^}]*payerDni/s);
+  assert.match(root, /new URLSearchParams\(location\.search\)\.get\('reservar'\) === '1'/);
+  assert.match(root, /<Navigate to="\/reservar\?paso=fechas" replace \/>/);
+});
+
 test('los retornos de Mercado Pago consultan el estado persistido y tienen fallback SPA', () => {
   const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
   const redirects = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8');
@@ -206,14 +221,14 @@ test('el widget actualiza una reserva pendiente y retira las instrucciones de pa
   assert.match(source, /reservationPending && reservation\.transferencia\?\.estado === 'ready'/);
 });
 
-test('conserva una reserva activa sin PII y muestra acceso persistente al cerrar el modal', () => {
+test('conserva una reserva activa sin PII y muestra acceso persistente fuera de la página de reserva', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
   assert.match(source, /magico\.active-reservation\.v1/);
   assert.match(source, /writeActiveReservation/);
   assert.match(source, /readActiveReservation/);
   assert.match(source, /clearActiveReservation/);
-  assert.match(source, /!open && viewportEligible && reservation && \(/);
+  assert.match(source, /!page && viewportEligible && reservation && \(/);
   assert.match(source, /<FloatingUiPortal surface="reservation">/);
   assert.match(source, /booking-active-reservation/);
   assert.match(source, /\/reserva-pendiente/);
@@ -263,10 +278,13 @@ test('ubica el botón de arrepentimiento debajo de los widgets de reserva princi
   const access = readFileSync(new URL('../../components/WithdrawalAccessLink.tsx', import.meta.url), 'utf8');
   const home = readFileSync(new URL('../../components/HeroNuevo.tsx', import.meta.url), 'utf8');
   const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  const booking = readFileSync(new URL('../../src/Reservar.tsx', import.meta.url), 'utf8');
   assert.match(access, /embedded\?: boolean/);
   assert.match(access, /location\.pathname === '\/' \|\| location\.pathname === ROUTES\.ESTADIA/);
   assert.equal((home.match(/<WithdrawalAccessLink embedded inverse \/>/g) || []).length, 2);
   assert.match(stay, /<WithdrawalAccessLink embedded \/>/);
+  assert.match(booking, /<WithdrawalAccessLink embedded \/>/);
+  assert.match(access, /location\.pathname === ROUTES\.RESERVAR/);
 });
 
 test('evita encabezados promocionales redundantes en los accesos a la reserva', () => {
