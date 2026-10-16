@@ -114,6 +114,17 @@ function textoComidasOpcionales(precios: PublicPricingSummary | null): string {
   return `Almuerzo +${pesos(almuerzo)} · cena +${pesos(cena)}`;
 }
 
+function textoComidaDesdePorPersona(precios: PublicPricingSummary | null): string {
+  const pension = precios?.alimentacion.pension_completa;
+  const preciosPublicados = [
+    pension?.precio_almuerzo_centavos ?? pension?.precio_comida_centavos ?? 0,
+    pension?.precio_cena_centavos ?? pension?.precio_comida_centavos ?? 0,
+  ].filter(precio => precio > 0);
+
+  if (preciosPublicados.length === 0) return 'Comidas opcionales';
+  return `Desde +${pesos(Math.min(...preciosPublicados))} por persona/comida`;
+}
+
 function textoTarifasPublicadas(precios: PublicPricingSummary | null, cargado: boolean): string {
   if (!cargado) return 'Cargando las tarifas vigentes…';
   if (!precios || precios.opciones.length === 0) {
@@ -419,7 +430,7 @@ const EscaleraDeValor: React.FC<{
       icon: <ForkKnife className="w-6 h-6" weight="duotone" />,
       step: '2',
       title: 'Quedate a comer',
-      price: textoComidasOpcionales(precios),
+      price: textoComidaDesdePorPersona(precios),
       desc: 'O sumá la pensión completa. La reserva calcula el total cerrado según tu alojamiento, ocupación y cantidad de noches.',
     },
     {

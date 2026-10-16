@@ -58,6 +58,13 @@ test('explica el impacto, la pensión completa y la información editable de cad
   assert.match(styles, /\.booking-sidebar__impact/);
 });
 
+test('muestra en la escalera el menor precio publicado de comida por persona', () => {
+  const source = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  assert.match(source, /Math\.min\(\.\.\.preciosPublicados\)/);
+  assert.match(source, /Desde \+\$\{pesos\(Math\.min\(\.\.\.preciosPublicados\)\)\} por persona\/comida/);
+  assert.match(source, /price: textoComidaDesdePorPersona\(precios\)/);
+});
+
 test('muestra servicios disponibles y limitaciones explícitas del alojamiento seleccionado', () => {
   const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
