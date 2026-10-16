@@ -285,7 +285,8 @@ test('super admin actualiza los horarios de comidas con versión y auditoría', 
   assert.equal(await repositorio.actualizarHorariosComidas({
     desayuno: actualizados.desayuno, almuerzo: actualizados.almuerzo, cena: actualizados.cena,
     expectedVersion: inicial.horariosComidas.version,
-    motivo: 'Comprobar conflicto de versión', actorEmail: 'admin@test', correlationId: 'req-meal-hours-stale',
+    motivo: 'Comprobar conflicto de versión', actorEmail: 'admin@test',
+    correlationId: 'req-meal-hours-stale', operacionUid: 'op-meal-hours-stale',
   }), null);
   await assert.rejects(actualizarHorariosComidasConfiguracion({
     desayuno: { desde: '10:00', hasta: '09:00' },
