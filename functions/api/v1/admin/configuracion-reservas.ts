@@ -1,6 +1,8 @@
 import {
   actualizarModalidadConfiguracion,
+  actualizarServicioAlojamientoConfiguracion,
   crearModalidadConfiguracion,
+  crearServicioAlojamientoConfiguracion,
   actualizarEspacioConfiguracion,
   actualizarParametroConfiguracion,
   consultarConfiguracionBase,
@@ -70,6 +72,26 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
         motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
       }, repositorio);
       return json({ data: modalidad, meta: { version: 'v1' } }, 201);
+    }
+    if (accion === 'actualizar_servicio_alojamiento') {
+      const servicio = await actualizarServicioAlojamientoConfiguracion({
+        id: Number(body.id), tipoAlojamiento: String(body.tipo_alojamiento || '') as any,
+        nombre: String(body.nombre || ''), disponibilidad: String(body.disponibilidad || '') as any,
+        detalle: String(body.detalle || ''), visibleEnReserva: body.visible_en_reserva === true,
+        orden: Number(body.orden), expectedUpdatedAt: String(body.expected_updated_at || ''),
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: servicio, meta: { version: 'v1' } });
+    }
+    if (accion === 'crear_servicio_alojamiento') {
+      const servicio = await crearServicioAlojamientoConfiguracion({
+        tipoAlojamiento: String(body.tipo_alojamiento || '') as any,
+        codigo: String(body.codigo || ''), nombre: String(body.nombre || ''),
+        disponibilidad: String(body.disponibilidad || '') as any, detalle: String(body.detalle || ''),
+        visibleEnReserva: body.visible_en_reserva === true, orden: Number(body.orden),
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: servicio, meta: { version: 'v1' } }, 201);
     }
     if (accion === 'actualizar_espacio') {
       const espacio = await actualizarEspacioConfiguracion({

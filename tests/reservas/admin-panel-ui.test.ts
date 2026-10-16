@@ -110,6 +110,10 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /Crear modalidad/);
   assert.match(source, /Información para huéspedes/);
   assert.match(source, /descripcion_comercial: item\.descripcionComercial/);
+  assert.match(source, /Servicios y limitaciones/);
+  assert.match(source, /nuevo \? 'crear_servicio_alojamiento' : 'actualizar_servicio_alojamiento'/);
+  assert.match(source, /visible_en_reserva: item\.visibleEnReserva/);
+  assert.match(source, /No disponible/);
   assert.match(source, /requestJson\('\/api\/admin\/tarifas'/);
   assert.match(source, /Agregar tarifa/);
   assert.match(source, /agregarReglaPrecio/);

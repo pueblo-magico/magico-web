@@ -90,6 +90,16 @@ test('el catálogo v1 publica capacidades comerciales sin PII ni ids internos', 
   const domos = body.data.filter((item: any) => item.tipo === 'domo');
   assert.equal(domos.length, 2);
   assert.ok(domos.every((item: any) => item.capacidad_comercial === 7));
+  assert.ok(domos.every((item: any) => item.servicios.some((servicio: any) =>
+    servicio.codigo === 'electricidad-alojamiento' && servicio.disponibilidad === 'no_disponible'
+  )));
+  const refugio = body.data.find((item: any) => item.tipo === 'refugio');
+  assert.ok(refugio.servicios.some((servicio: any) =>
+    servicio.codigo === 'wifi-satelital' && servicio.disponibilidad === 'incluido'
+  ));
+  assert.ok(refugio.servicios.some((servicio: any) =>
+    servicio.codigo === 'bano-privado' && servicio.disponibilidad === 'no_disponible'
+  ));
   assert.ok(domos.every((item: any) => !('id' in item) && !('parent_id' in item)));
   assert.doesNotMatch(JSON.stringify(body), /cliente_|email|telefono/i);
   sqlite.close();
@@ -121,6 +131,12 @@ test('publica y calcula disponibilidad de camping cuando espacio y modalidad est
     descripcion: 'Traé tu propia carpa. Incluye acceso a duchas calientes y baños.',
     unidad_venta: 'parcela',
   }]);
+  assert.ok(camping.servicios.some((servicio: any) =>
+    servicio.codigo === 'sanitarios-compartidos' && servicio.disponibilidad === 'incluido'
+  ));
+  assert.ok(camping.servicios.some((servicio: any) =>
+    servicio.codigo === 'electricidad-alojamiento' && servicio.disponibilidad === 'no_disponible'
+  ));
 
   const disponibilidad = await consultarDisponibilidad({
     request: new Request('https://test/api/v1/public/disponibilidad?check_in=2027-04-11&check_out=2027-04-13&personas=4&tipo_alojamiento=camping&modalidad=camping'),

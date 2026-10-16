@@ -6,11 +6,26 @@ export async function listarAlojamientosPublicos(
   repositorio: RepositorioInventarioAlojamiento
 ) {
   const espacios = await repositorio.listarEspaciosReservables(contexto);
+  const tipos = [...new Set(espacios.map(espacio =>
+    (espacio.tipo === 'habitacion' ? 'refugio' : espacio.tipo) as 'domo' | 'refugio' | 'camping' | 'bell_tent'
+  ))];
+  const serviciosPorTipo = new Map(await Promise.all(tipos.map(async tipo => [
+    tipo,
+    await repositorio.listarServicios(tipo),
+  ] as const)));
   const resultados = await Promise.all(espacios.map(async espacio => ({
     codigo: espacio.codigo,
     nombre: espacio.nombre,
     tipo: espacio.tipo === 'habitacion' ? 'refugio' : espacio.tipo,
     capacidad_comercial: espacio.capacidadComercial,
+    servicios: (serviciosPorTipo.get(
+      (espacio.tipo === 'habitacion' ? 'refugio' : espacio.tipo) as 'domo' | 'refugio' | 'camping' | 'bell_tent'
+    ) || []).map(item => ({
+      codigo: item.codigo,
+      nombre: item.nombre,
+      disponibilidad: item.disponibilidad,
+      detalle: item.detalle,
+    })),
     modalidades: (await repositorio.listarModalidades(espacio.id))
       .filter(item => item.habilitada && item.contexto === contexto)
       .map(item => ({

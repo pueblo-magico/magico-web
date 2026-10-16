@@ -5,15 +5,18 @@ import test from 'node:test';
 
 import { crearReservaPublica } from '../../functions/_application/reservas/crearReservaPublica.ts';
 import {
+  actualizarServicioAlojamientoConfiguracion,
   actualizarModalidadConfiguracion,
   actualizarEspacioConfiguracion,
   actualizarParametroConfiguracion,
+  crearServicioAlojamientoConfiguracion,
   publicarTarifaAlimentacionConfiguracion,
 } from '../../functions/_application/reservas/gestionarConfiguracionBase.ts';
 import {
   normalizarPaymentHoldMinutes,
   validarCambioModalidadComercial,
   validarCambioParametroOperativo,
+  validarNuevoServicioAlojamiento,
   validarCambioTarifaAlimentacion,
 } from '../../functions/_domain/reservas/baseConfiguration.ts';
 import { D1RepositorioConfiguracionBaseReservas } from '../../functions/_infrastructure/d1/D1RepositorioConfiguracionBaseReservas.ts';
@@ -96,6 +99,11 @@ test('valida límites y usa 15 minutos como fallback seguro', () => {
   assert.throws(() => validarCambioTarifaAlimentacion({
     codigo: 'pension_completa', precioComidaCentavos: -1, expectedVersion: 1, motivo: 'Cambio aprobado',
   }), /tarifa de alimentación es inválida/);
+  assert.throws(() => validarNuevoServicioAlojamiento({
+    tipoAlojamiento: 'domo', codigo: 'x', nombre: 'Electricidad',
+    disponibilidad: 'no_disponible', detalle: '', visibleEnReserva: true,
+    orden: 10, motivo: 'Cambio aprobado',
+  }), /código del servicio es inválido/);
 });
 
 test('lee fuentes efectivas y actualiza con versión y auditoría atómica', async () => {
@@ -109,6 +117,8 @@ test('lee fuentes efectivas y actualiza con versión y auditoría atómica', asy
   assert.equal(inicial.tarifa?.temporadas[0]?.reglas.length, 5);
   assert.equal(inicial.tarifa?.senas.length, 2);
   assert.deepEqual(inicial.alimentacion.map(item => item.codigo), ['desayuno_incluido', 'pension_completa']);
+  assert.ok(inicial.servicios.some(item => item.tipoAlojamiento === 'refugio' && item.codigo === 'wifi-satelital'));
+  assert.ok(inicial.servicios.some(item => item.tipoAlojamiento === 'domo' && item.codigo === 'electricidad-alojamiento' && item.disponibilidad === 'no_disponible'));
   assert.throws(() => sqlite.prepare(`UPDATE parametros_operativos_reservas
     SET valor_entero = 121 WHERE codigo = 'payment_hold_minutes'`).run(), /constraint/i);
 
@@ -130,6 +140,37 @@ test('lee fuentes efectivas y actualiza con versión y auditoría atómica', asy
     codigo: 'payment_hold_minutes', valor: 45, expectedVersion: 1,
     motivo: 'Versión desactualizada', actorEmail: 'admin@test', correlationId: 'req-config-2',
   }, repositorio), /configuración cambió/);
+  sqlite.close();
+});
+
+test('super admin crea y actualiza servicios públicos sin modificar el inventario físico', async () => {
+  const sqlite = baseCompleta();
+  const repositorio = new D1RepositorioConfiguracionBaseReservas(d1(sqlite));
+  const inventarioAntes = sqlite.prepare('SELECT COUNT(*) cantidad FROM instalaciones').get()?.cantidad;
+
+  const creado = await crearServicioAlojamientoConfiguracion({
+    tipoAlojamiento: 'bell_tent', codigo: 'ropa-blanca', nombre: 'Ropa blanca',
+    disponibilidad: 'incluido', detalle: 'Sábanas y toallas incluidas.',
+    visibleEnReserva: true, orden: 10, motivo: 'Publicar información confirmada',
+    actorEmail: 'admin@test', correlationId: 'req-service-1',
+  }, repositorio, () => 'op-service-1');
+  assert.equal(creado.codigo, 'ropa-blanca');
+  assert.equal(creado.tipoAlojamiento, 'bell_tent');
+
+  const actualizado = await actualizarServicioAlojamientoConfiguracion({
+    id: creado.id, tipoAlojamiento: creado.tipoAlojamiento, nombre: creado.nombre,
+    disponibilidad: 'no_disponible', detalle: 'No se entrega ropa blanca.',
+    visibleEnReserva: true, orden: 20, expectedUpdatedAt: creado.actualizadoAt,
+    motivo: 'Corregir condición comercial', actorEmail: 'admin@test',
+    correlationId: 'req-service-2',
+  }, repositorio, () => 'op-service-2');
+  assert.equal(actualizado.disponibilidad, 'no_disponible');
+  assert.equal(actualizado.detalle, 'No se entrega ropa blanca.');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM instalaciones').get()?.cantidad, inventarioAntes);
+  assert.deepEqual(
+    sqlite.prepare("SELECT accion FROM auditoria_admin WHERE entidad_tipo = 'servicio_alojamiento' ORDER BY id").all().map(row => row.accion),
+    ['crear_servicio_alojamiento', 'actualizar_servicio_alojamiento'],
+  );
   sqlite.close();
 });
 
@@ -306,5 +347,13 @@ test('el contrato permite lectura administrativa pero sólo super admin puede es
   }), env });
   assert.equal(alimentacionResponse.status, 200);
   assert.equal((await alimentacionResponse.json() as any).data.precioComidaCentavos, 2_600_000);
+
+  const servicioResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'crear_servicio_alojamiento', tipo_alojamiento: 'refugio', codigo: 'estufa-lena',
+    nombre: 'Estufa a leña', disponibilidad: 'incluido', detalle: 'Disponible en el espacio común.',
+    visible_en_reserva: true, orden: 60, motivo: 'Publicar servicio confirmado',
+  }), env });
+  assert.equal(servicioResponse.status, 201);
+  assert.equal((await servicioResponse.json() as any).data.codigo, 'estufa-lena');
   sqlite.close();
 });

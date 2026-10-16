@@ -125,6 +125,15 @@
 .booking-choice > span { display: grid; gap: 3px; }
 .booking-choice--selected { border-color: var(--booking-green); color: var(--booking-green); background: linear-gradient(110deg, #f7fffb, #e9f5ef); box-shadow: inset 0 0 0 1px var(--booking-green); }
 .booking-choice--selected .booking-stay-card__check, .booking-choice--selected .booking-choice__check { color: white; fill: var(--booking-green); }
+.booking-utilities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.booking-utilities > span { display: flex; min-width: 0; align-items: flex-start; gap: 9px; padding: 11px 12px; border: 1px solid #cfe5d9; border-radius: 12px; color: var(--booking-green); background: #f4fbf7; }
+.booking-utilities > span > svg { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; }
+.booking-utilities > span > span { display: grid; min-width: 0; gap: 2px; }
+.booking-utilities strong { font-size: 13px; line-height: 1.25; }
+.booking-utilities small { color: var(--booking-muted); font-size: 11px; line-height: 1.35; }
+.booking-utilities .booking-utility--unavailable { border-color: #ead3ce; color: #8d3d31; background: #fff7f5; }
+.booking-utilities--review { margin-bottom: 12px; }
+.booking-utilities--summary { grid-column: 1 / -1; margin-top: 8px; }
 
 .booking-grid { margin-top: 22px; }
 .booking-field { display: grid; gap: 7px; color: var(--booking-ink); font-size: 14px; font-weight: 700; }
@@ -239,6 +248,7 @@
   .booking-stay-card { grid-template-columns: 112px minmax(0, 1fr); min-height: 112px; }
   .booking-stay-card img { height: 94px; }
   .booking-choice-grid { gap: 10px; }
+  .booking-utilities { grid-template-columns: 1fr; }
   .booking-payment-methods { grid-template-columns: 1fr 1fr; }
   .booking-payment-methods .booking-choice { align-items: flex-start; min-height: 88px; font-size: 14px; }
   .booking-actions { flex-direction: column-reverse; }

@@ -1744,6 +1744,11 @@ type ConfiguracionBaseApi = {
     codigo: 'payment_hold_minutes'; valor: number; unidad: string; version: number;
     minimo: number; maximo: number; editable: boolean; fuente: string; actualizadoAt: string;
   }>;
+  servicios: Array<{
+    id: number; tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
+    codigo: string; nombre: string; disponibilidad: 'incluido' | 'no_disponible';
+    detalle: string; visibleEnReserva: boolean; orden: number; actualizadoAt: string;
+  }>;
   inventario: Array<{
     codigo: string; nombre: string; tipo: string; capacidadComercial: number;
     capacidadOperativaMaxima: number; reservableGeneral: boolean; reservableRetiro: boolean;
@@ -1796,6 +1801,7 @@ type ResumenPlanTarifaUi = {
 };
 type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
 type BorradorInventarioUi = ConfiguracionBaseApi['inventario'];
+type BorradorServicioUi = ConfiguracionBaseApi['servicios'][number];
 type TipoAlojamientoTarifa = BorradorTarifaUi['temporadas'][number]['reglas'][number]['tipoAlojamiento'];
 
 const OPCIONES_ALOJAMIENTO_TARIFA: Array<{ value: TipoAlojamientoTarifa; label: string }> = [
@@ -1924,6 +1930,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
   const [planesTarifa, setPlanesTarifa] = useState<ResumenPlanTarifaUi[]>([]);
   const [politicaDraft, setPoliticaDraft] = useState<BorradorPoliticaUi | null>(null);
   const [inventarioDraft, setInventarioDraft] = useState<BorradorInventarioUi>([]);
+  const [serviciosDraft, setServiciosDraft] = useState<BorradorServicioUi[]>([]);
   const [vigenciaPolitica, setVigenciaPolitica] = useState('');
   const [preciosComida, setPreciosComida] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
@@ -1998,6 +2005,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
       setPlanesTarifa(bodyPlanes.planes || []);
       setPoliticaDraft(body.data?.politicaCancelacion ? JSON.parse(JSON.stringify(body.data.politicaCancelacion)) : null);
       setInventarioDraft(JSON.parse(JSON.stringify(body.data?.inventario || [])));
+      setServiciosDraft(JSON.parse(JSON.stringify(body.data?.servicios || [])));
       setVigenciaPolitica(body.data?.politicaCancelacion?.vigenciaDesde?.slice(0, 16) || new Date(Date.now() + 60_000).toISOString().slice(0, 16));
       setPreciosComida(Object.fromEntries((body.data?.alimentacion || []).flatMap((item: ConfiguracionBaseApi['alimentacion'][number]) => [
         [`${item.codigo}:desayuno`, String(item.precioDesayunoCentavos / 100)],
@@ -2106,6 +2114,22 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
     }, 'Condiciones del alojamiento actualizadas para operaciones nuevas.');
   };
 
+  const guardarServicio = async (item: BorradorServicioUi, motivo: string) => {
+    const nuevo = item.id < 0;
+    return ejecutar(`servicio-${item.id}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: nuevo ? 'crear_servicio_alojamiento' : 'actualizar_servicio_alojamiento',
+          ...(!nuevo ? { id: item.id, expected_updated_at: item.actualizadoAt } : { codigo: item.codigo }),
+          tipo_alojamiento: item.tipoAlojamiento, nombre: item.nombre,
+          disponibilidad: item.disponibilidad, detalle: item.detalle,
+          visible_en_reserva: item.visibleEnReserva, orden: item.orden, motivo,
+        }),
+      });
+    }, nuevo ? 'Servicio agregado a las opciones de reserva.' : 'Servicio actualizado en las opciones de reserva.');
+  };
+
   const actualizarEspacioDraft = (codigo: string, cambio: Partial<BorradorInventarioUi[number]>) => {
     setInventarioDraft(actual => actual.map(item => item.codigo === codigo ? { ...item, ...cambio } : item));
   };
@@ -2119,6 +2143,25 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
       ...espacio,
       modalidades: espacio.modalidades.map(item => item.id === id ? { ...item, ...cambio } : item),
     }));
+  };
+
+  const actualizarServicioDraft = (id: number, cambio: Partial<BorradorServicioUi>) => {
+    setServiciosDraft(actual => actual.map(item => item.id === id ? { ...item, ...cambio } : item));
+  };
+
+  const agregarServicioDraft = () => {
+    const ahora = Date.now();
+    setServiciosDraft(actual => [...actual, {
+      id: -ahora,
+      tipoAlojamiento: 'refugio',
+      codigo: `servicio-${ahora}`,
+      nombre: 'Nuevo servicio',
+      disponibilidad: 'incluido',
+      detalle: '',
+      visibleEnReserva: true,
+      orden: Math.min(999, Math.max(0, ...actual.map(item => item.orden)) + 10),
+      actualizadoAt: '',
+    }]);
   };
 
   const publicarComida = async (item: ConfiguracionBaseApi['alimentacion'][number], motivo: string) => {
@@ -2467,6 +2510,27 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
     etiquetaConfirmar: 'Guardar modalidad',
     ejecutar: motivo => guardarModalidad(item, motivo),
   });
+
+  const confirmarServicio = (item: BorradorServicioUi) => {
+    const original = configuracion?.servicios.find(actual => actual.id === item.id);
+    const seleccionar = (servicio: BorradorServicioUi) => ({
+      alojamiento: servicio.tipoAlojamiento,
+      nombre: servicio.nombre,
+      disponibilidad: servicio.disponibilidad,
+      detalle: servicio.detalle,
+      visibleEnReserva: servicio.visibleEnReserva,
+      orden: servicio.orden,
+    });
+    pedirConfirmacion({
+      titulo: `${original ? 'Guardar' : 'Agregar'} servicio de alojamiento`,
+      descripcion: 'La información se mostrará en las opciones de reserva, sin modificar precio ni disponibilidad.',
+      cambios: original
+        ? resumirCambios(seleccionar(original), seleccionar(item))
+        : resumirCambios({}, seleccionar(item)),
+      etiquetaConfirmar: original ? 'Guardar servicio' : 'Agregar servicio',
+      ejecutar: motivo => guardarServicio(item, motivo),
+    });
+  };
 
   const confirmarComida = (item: ConfiguracionBaseApi['alimentacion'][number]) => pedirConfirmacion({
     titulo: `Publicar tarifa de ${item.codigo === 'pension_completa' ? 'pensión completa' : 'desayuno incluido'}`,
@@ -2836,6 +2900,51 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
             </Card>;
           })}
           <p className="text-xs text-gray-500">Deshabilitar una modalidad evita nuevas cotizaciones; no modifica reservas existentes. La activación comercial no reemplaza la regla de precio publicada ni crea unidades físicas.</p>
+        </div>
+      </details>}
+
+      {modo === 'base' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Servicios y limitaciones</strong><small>Qué tiene y qué no tiene cada alojamiento · {serviciosDraft.filter(item => item.visibleEnReserva).length} visibles</small></span></summary>
+        <div className="admin-config__section-body space-y-4 border-t border-gray-100">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="max-w-3xl text-xs text-gray-500">Mostrá información concreta antes de cotizar. Usá “No disponible” para restricciones importantes, como baño privado o electricidad, y ocultá sólo los datos que no deban publicarse.</p>
+            {esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarServicioDraft}><Plus size={15} />Agregar servicio</Button>}
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {serviciosDraft.map(item => {
+              const original = configuracion?.servicios.find(actual => actual.id === item.id);
+              const modificado = item.id < 0 || (Boolean(original) && JSON.stringify(item) !== JSON.stringify(original));
+              return <Card key={item.id} tone="muted" className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Select label="Alojamiento" placeholder="Elegí" value={item.tipoAlojamiento} isDisabled={!esSuperAdmin}
+                    options={OPCIONES_ALOJAMIENTO_TARIFA}
+                    onChange={value => value && actualizarServicioDraft(item.id, { tipoAlojamiento: value as BorradorServicioUi['tipoAlojamiento'] })} />
+                  <Select label="Disponibilidad" placeholder="Elegí" value={item.disponibilidad} isDisabled={!esSuperAdmin}
+                    options={[{ value: 'incluido', label: 'Disponible / incluido' }, { value: 'no_disponible', label: 'No disponible' }]}
+                    onChange={value => value && actualizarServicioDraft(item.id, { disponibilidad: value as BorradorServicioUi['disponibilidad'] })} />
+                </div>
+                <Input label="Nombre visible" value={item.nombre} isDisabled={!esSuperAdmin}
+                  onChange={value => actualizarServicioDraft(item.id, { nombre: value })} />
+                <Textarea label="Detalle opcional" rows={2} maxLength={240} isDisabled={!esSuperAdmin}
+                  placeholder="Ej.: Disponible en las duchas exteriores compartidas."
+                  value={item.detalle} onChange={value => actualizarServicioDraft(item.id, { detalle: value })} />
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Checkbox isSelected={item.visibleEnReserva} isDisabled={!esSuperAdmin}
+                      onChange={isSelected => actualizarServicioDraft(item.id, { visibleEnReserva: isSelected })}>Visible en la reserva</Checkbox>
+                    <NumberField className="w-28" label="Orden" minValue={0} maxValue={999} showStepper={false}
+                      decrementLabel="Bajar orden" incrementLabel="Subir orden" isDisabled={!esSuperAdmin}
+                      value={item.orden} onChange={value => actualizarServicioDraft(item.id, { orden: value })} />
+                  </div>
+                  {esSuperAdmin && <div className="flex gap-2">
+                    {item.id < 0 && <Button size="sm" variant="secondary" onPress={() => setServiciosDraft(actual => actual.filter(servicio => servicio.id !== item.id))}>Descartar</Button>}
+                    <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modificado || !item.nombre.trim()}
+                      isLoading={guardando === `servicio-${item.id}`} onPress={() => confirmarServicio(item)}>{item.id < 0 ? 'Agregar' : 'Guardar'}</Button>
+                  </div>}
+                </div>
+              </Card>;
+            })}
+          </div>
         </div>
       </details>}
 

@@ -1,10 +1,13 @@
 import {
   validarCambioModalidadComercial,
+  validarCambioServicioAlojamiento,
   validarCambioEspacioComercial,
   validarCambioParametroOperativo,
   validarCambioTarifaAlimentacion,
   validarNuevaModalidadComercial,
+  validarNuevoServicioAlojamiento,
   type CambioModalidadComercial,
+  type CambioServicioAlojamiento,
   type CambioEspacioComercial,
   type CambioParametroOperativo,
   type CambioTarifaAlimentacion,
@@ -12,7 +15,9 @@ import {
   type EspacioComercialActualizado,
   type ModalidadComercialActualizada,
   type NuevaModalidadComercial,
+  type NuevoServicioAlojamiento,
   type ParametroOperativoReserva,
+  type ServicioAlojamiento,
   type TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
 import { ErrorReserva } from '../../_domain/reservas/errors.ts';
@@ -71,6 +76,36 @@ export async function crearModalidadConfiguracion(
     operacionUid: crearUuid(),
   });
   if (!creada) throw new ErrorReserva('CONFLICTO_RESERVA', 'La modalidad ya existe o el alojamiento no está disponible.');
+  return creada;
+}
+
+export async function actualizarServicioAlojamientoConfiguracion(
+  entrada: CambioServicioAlojamiento & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<ServicioAlojamiento> {
+  const validada = validarCambioServicioAlojamiento(entrada);
+  const actualizada = await repositorio.actualizarServicio({
+    ...validada, actorEmail: entrada.actorEmail, correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!actualizada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'El servicio cambió; actualizá la vista antes de reintentar.');
+  }
+  return actualizada;
+}
+
+export async function crearServicioAlojamientoConfiguracion(
+  entrada: NuevoServicioAlojamiento & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<ServicioAlojamiento> {
+  const validada = validarNuevoServicioAlojamiento(entrada);
+  const creada = await repositorio.crearServicio({
+    ...validada, actorEmail: entrada.actorEmail, correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!creada) throw new ErrorReserva('CONFLICTO_RESERVA', 'El servicio ya existe para este alojamiento.');
   return creada;
 }
 

@@ -18,6 +18,18 @@ huésped debe traer su propia carpa o si la ropa blanca está incluida. El flujo
 de reserva muestra este contenido sin convertirlo en una regla de precio o de
 disponibilidad.
 
+Cada alojamiento publica además `servicios`, un catálogo visible para el
+huésped con `codigo`, `nombre`, `disponibilidad` y `detalle`. La disponibilidad
+es explícita: `incluido` confirma que existe y `no_disponible` comunica una
+limitación importante, por ejemplo que no hay baño privado ni electricidad en
+el domo. Sólo se publican registros marcados como visibles y ordenados por la
+administración. La ausencia de un servicio no se interpreta como una negación.
+
+Este catálogo describe la experiencia comercial por tipo de alojamiento. No
+crea inventario, no bloquea noches y no modifica la cotización. Las
+`instalaciones` físicas continúan siendo la fuente operativa para baños,
+duchas y otros recursos compartidos.
+
 Ejemplo de solicitud de cotización:
 
 ```json

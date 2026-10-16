@@ -51,6 +51,7 @@ const COPY = {
     refugio: 'Refugio de piedra', camping: 'Camping', mode: 'Modalidad', compartida: 'Compartida', privada: 'Privada',
     meals: 'Comidas', desayuno_incluido: 'Con desayuno', pension_completa: 'Pensión completa',
     breakfastHelp: 'El desayuno está incluido.', fullBoardHelp: 'Desayuno, almuerzo y cena incluidos.',
+    utilities: 'Servicios y condiciones', utilityAvailable: 'Disponible', utilityUnavailable: 'No disponible',
     impactTitle: 'Tu estadía regenera la montaña',
     impactCopy: 'El 10% de tu inversión va directo a reforestar tabaquillos y restaurar nuestras sierras.',
     quote: 'Consultar disponibilidad', loadingOptions: 'Cargando opciones disponibles…',
@@ -109,6 +110,7 @@ const COPY = {
     refugio: 'Stone shelter', camping: 'Camping', mode: 'Room type', compartida: 'Shared', privada: 'Private',
     meals: 'Meals', desayuno_incluido: 'Breakfast included', pension_completa: 'Full board',
     breakfastHelp: 'Breakfast is included.', fullBoardHelp: 'Breakfast, lunch and dinner included.',
+    utilities: 'Amenities and conditions', utilityAvailable: 'Available', utilityUnavailable: 'Not available',
     impactTitle: 'Your stay helps regenerate the mountains',
     impactCopy: '10% of your investment goes directly to reforesting tabaquillo trees and restoring our mountains.',
     quote: 'Check availability', loadingOptions: 'Loading available options…',
@@ -407,6 +409,12 @@ export const BookingWidget: React.FC<{
   ), [accommodations, type]);
   const selectedModeName = commercialModeNames.get(mode) || c[mode];
   const selectedModeDescription = commercialModeDescriptions.get(mode) || '';
+  const selectedUtilities = useMemo(() => {
+    const servicios = accommodations
+      .filter(item => item.tipo === type)
+      .flatMap(item => item.servicios || []);
+    return [...new Map(servicios.map(item => [item.codigo, item])).values()];
+  }, [accommodations, type]);
 
   useEffect(() => {
     if (!open || optionsLoaded) return;
@@ -744,6 +752,7 @@ export const BookingWidget: React.FC<{
                   <strong>{c[type]} · {selectedModeName} · {c[mealPlan]}</strong>
                   {selectedModeDescription && <small>{selectedModeDescription}</small>}
                   <small>{mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</small>
+                  {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--summary">{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                 </div>
                 <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
                 <div className="booking-summary__row"><span>{c.perPerson}</span><strong>{formatMoney(Math.round(quote.precio.subtotal_centavos / people), quote.precio.moneda, language)}</strong></div>
@@ -822,6 +831,7 @@ export const BookingWidget: React.FC<{
                       <div className="booking-choice-grid">{availableModes.map(option => <button key={option} type="button" className={`booking-choice ${mode === option ? 'booking-choice--selected' : ''}`} aria-pressed={mode === option} onClick={() => { setMode(option); resetQuote(); }}><Users size={23} /><span><strong>{commercialModeNames.get(option) || c[option]}</strong>{commercialModeDescriptions.get(option) && <small>{commercialModeDescriptions.get(option)}</small>}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                       <p className="booking-section-title">{c.meals}</p>
                       <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={23} /><span><strong>{c[option]}</strong><small>{option === 'desayuno_incluido' ? c.breakfastHelp : c.fullBoardHelp}</small></span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                      {selectedUtilities.length > 0 && <><p className="booking-section-title">{c.utilities}</p><div className="booking-utilities">{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div></>}
                     </>
                   )}
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /><span>{error.message}{error.code === 'NO_DISPONIBLE' && <> <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">{c.contactSupport}</a></>}</span></div>}
@@ -835,6 +845,7 @@ export const BookingWidget: React.FC<{
                     <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => setStep(1)}>{c.edit}</button></div>
                     <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}<em>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</em></span><button type="button" onClick={() => setStep(2)}>{c.edit}</button></div>
                   </div>
+                  {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--review" aria-label={c.utilities}>{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
                   <div className="booking-grid">
                     <label className="booking-field booking-field--full">{c.name}<span><UserRound /><input value={guest.name} onChange={event => setGuest({ ...guest, name: event.target.value })} autoComplete="name" required /></span></label>

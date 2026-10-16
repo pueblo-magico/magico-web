@@ -66,14 +66,17 @@ import type {
 } from '../../_domain/reservas/collectionAccounts.ts';
 import type {
   CambioModalidadComercial,
+  CambioServicioAlojamiento,
   CambioEspacioComercial,
   CambioParametroOperativo,
   CambioTarifaAlimentacion,
   NuevaModalidadComercial,
+  NuevoServicioAlojamiento,
   ConfiguracionBaseReservas,
   EspacioComercialActualizado,
   ModalidadComercialActualizada,
   ParametroOperativoReserva,
+  ServicioAlojamiento,
   TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
 import type {
@@ -103,6 +106,7 @@ export interface RepositorioInventarioAlojamiento {
     modalidad?: ModalidadAlojamiento
   ): Promise<EspacioInventario[]>;
   listarModalidades(espacioId: number): Promise<ModalidadEspacio[]>;
+  listarServicios(tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent'): Promise<ServicioAlojamiento[]>;
   listarUnidadesAsignables(espacioId: number): Promise<UnidadAsignable[]>;
 }
 
@@ -270,6 +274,16 @@ export interface RepositorioConfiguracionBaseReservas {
     correlationId: string;
     operacionUid: string;
   }): Promise<ModalidadComercialActualizada | null>;
+  actualizarServicio(entrada: CambioServicioAlojamiento & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ServicioAlojamiento | null>;
+  crearServicio(entrada: NuevoServicioAlojamiento & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ServicioAlojamiento | null>;
   actualizarEspacio(entrada: CambioEspacioComercial & {
     actorEmail: string;
     correlationId: string;

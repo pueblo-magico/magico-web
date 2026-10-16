@@ -22,6 +22,7 @@ export type ParametroOperativoReserva = {
 
 export type ConfiguracionBaseReservas = {
   parametros: ParametroOperativoReserva[];
+  servicios: ServicioAlojamiento[];
   inventario: Array<{
     codigo: string;
     nombre: string;
@@ -107,6 +108,30 @@ export type ConfiguracionBaseReservas = {
     ajustePaqueteCentavos: number;
     publicadoAt: string;
   }>;
+};
+
+export type TipoServicioAlojamiento = 'domo' | 'refugio' | 'camping' | 'bell_tent';
+export type DisponibilidadServicioAlojamiento = 'incluido' | 'no_disponible';
+
+export type ServicioAlojamiento = {
+  id: number;
+  tipoAlojamiento: TipoServicioAlojamiento;
+  codigo: string;
+  nombre: string;
+  disponibilidad: DisponibilidadServicioAlojamiento;
+  detalle: string;
+  visibleEnReserva: boolean;
+  orden: number;
+  actualizadoAt: string;
+};
+
+export type CambioServicioAlojamiento = Omit<ServicioAlojamiento, 'codigo' | 'actualizadoAt'> & {
+  expectedUpdatedAt: string;
+  motivo: string;
+};
+
+export type NuevoServicioAlojamiento = Omit<ServicioAlojamiento, 'id' | 'actualizadoAt'> & {
+  motivo: string;
 };
 
 export type CambioModalidadComercial = {
@@ -243,6 +268,44 @@ export function validarNuevaModalidadComercial(entrada: NuevaModalidadComercial)
   }
   const { id: _id, expectedUpdatedAt: _expected, ...resultado } = validada;
   return { ...resultado, nombreComercial: entrada.nombreComercial.trim(), espacioCodigo: entrada.espacioCodigo.trim() };
+}
+
+function validarDatosServicioAlojamiento<T extends {
+  tipoAlojamiento: string;
+  nombre: string;
+  disponibilidad: string;
+  detalle: string;
+  visibleEnReserva: boolean;
+  orden: number;
+  motivo: string;
+}>(entrada: T): T {
+  if (!['domo', 'refugio', 'camping', 'bell_tent'].includes(entrada.tipoAlojamiento) ||
+      !['incluido', 'no_disponible'].includes(entrada.disponibilidad) ||
+      typeof entrada.visibleEnReserva !== 'boolean' || !Number.isSafeInteger(entrada.orden) ||
+      entrada.orden < 0 || entrada.orden > 999 || !entrada.nombre?.trim() ||
+      entrada.nombre.trim().length > 80 || (entrada.detalle || '').trim().length > 240) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El servicio del alojamiento es inválido.');
+  }
+  return {
+    ...entrada,
+    nombre: entrada.nombre.trim(),
+    detalle: (entrada.detalle || '').trim(),
+    motivo: validarMotivo(entrada.motivo),
+  };
+}
+
+export function validarCambioServicioAlojamiento(entrada: CambioServicioAlojamiento): CambioServicioAlojamiento {
+  if (!Number.isSafeInteger(entrada.id) || entrada.id < 1 || !entrada.expectedUpdatedAt) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El servicio del alojamiento es inválido.');
+  }
+  return validarDatosServicioAlojamiento(entrada);
+}
+
+export function validarNuevoServicioAlojamiento(entrada: NuevoServicioAlojamiento): NuevoServicioAlojamiento {
+  if (!/^[a-z0-9][a-z0-9-]{2,79}$/.test(entrada.codigo || '')) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'El código del servicio es inválido.');
+  }
+  return validarDatosServicioAlojamiento({ ...entrada, codigo: entrada.codigo.trim() });
 }
 
 export function validarCambioEspacioComercial(entrada: CambioEspacioComercial): CambioEspacioComercial {

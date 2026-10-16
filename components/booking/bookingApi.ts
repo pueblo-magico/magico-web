@@ -8,6 +8,12 @@ export interface PublicAccommodation {
   nombre: string;
   tipo: AccommodationType;
   capacidad_comercial: number;
+  servicios: Array<{
+    codigo: string;
+    nombre: string;
+    disponibilidad: 'incluido' | 'no_disponible';
+    detalle?: string;
+  }>;
   modalidades: Array<{
     codigo: BookingMode;
     nombre?: string;

@@ -6,6 +6,7 @@ import type {
   ModalidadEspacio,
   UnidadAsignable,
 } from '../../_domain/reservas/accommodationInventory.ts';
+import type { ServicioAlojamiento } from '../../_domain/reservas/baseConfiguration.ts';
 
 type D1Result = { results?: Record<string, unknown>[] };
 type D1Statement = {
@@ -76,6 +77,30 @@ export class D1RepositorioInventarioAlojamiento implements RepositorioInventario
       habilitada: booleano(fila.habilitada),
       nombreComercial: String(fila.nombre_comercial || fila.modalidad),
       descripcionComercial: String(fila.descripcion_comercial || ''),
+    }));
+  }
+
+  async listarServicios(
+    tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent'
+  ): Promise<ServicioAlojamiento[]> {
+    const resultado = await this.db.prepare(
+      `SELECT id, tipo_alojamiento, codigo, nombre, disponibilidad, detalle,
+         visible_en_reserva, orden, updated_at
+       FROM servicios_alojamiento
+       WHERE tipo_alojamiento = ?1 AND visible_en_reserva = 1
+       ORDER BY orden, id`
+    ).bind(tipoAlojamiento).all();
+
+    return (resultado.results || []).map(fila => ({
+      id: Number(fila.id),
+      tipoAlojamiento: fila.tipo_alojamiento as ServicioAlojamiento['tipoAlojamiento'],
+      codigo: String(fila.codigo),
+      nombre: String(fila.nombre),
+      disponibilidad: fila.disponibilidad as ServicioAlojamiento['disponibilidad'],
+      detalle: String(fila.detalle || ''),
+      visibleEnReserva: booleano(fila.visible_en_reserva),
+      orden: Number(fila.orden),
+      actualizadoAt: String(fila.updated_at),
     }));
   }
 

@@ -58,6 +58,19 @@ test('explica el impacto, la pensión completa y la información editable de cad
   assert.match(styles, /\.booking-sidebar__impact/);
 });
 
+test('muestra servicios disponibles y limitaciones explícitas del alojamiento seleccionado', () => {
+  const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(api, /disponibilidad: 'incluido' \| 'no_disponible'/);
+  assert.match(widget, /Servicios y condiciones/);
+  assert.match(widget, /selectedUtilities/);
+  assert.match(widget, /booking-utility--unavailable/);
+  assert.match(widget, /No disponible/);
+  assert.match(styles, /\.booking-utilities/);
+  assert.match(styles, /\.booking-utility--unavailable/);
+});
+
 test('muestra el flujo en un modal accesible en todos los tamaños y protege los datos de pago', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
