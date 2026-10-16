@@ -171,6 +171,7 @@ test('el resumen público de precios refleja sólo modalidades habilitadas y el 
   assert.ok(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas
     .every((item: any) => Number.isFinite(item.prioridad)));
   assert.equal(bodyInicial.data.alimentacion.pension_completa.adicional_por_persona_noche_centavos, 4_000_000);
+  assert.deepEqual(bodyInicial.data.horarios_comidas.cena, { desde: '20:00', hasta: '21:00' });
 
   sqlite.exec(`
     UPDATE espacios
@@ -181,6 +182,9 @@ test('el resumen público de precios refleja sólo modalidades habilitadas y el 
     SET habilitada = 1
     WHERE espacio_id = (SELECT id FROM espacios WHERE codigo = 'camping-exterior')
       AND modalidad = 'camping' AND contexto = 'general';
+    UPDATE configuracion_horarios_comidas
+    SET almuerzo_desde = '13:30', almuerzo_hasta = '15:00', version = version + 1
+    WHERE id = 1;
   `);
   const sinTarifaCamping = await listarPreciosPublicos({
     request: new Request('https://test/api/v1/public/precios?fecha=2027-04-10'),
@@ -192,6 +196,7 @@ test('el resumen público de precios refleja sólo modalidades habilitadas y el 
   assert.deepEqual(camping.modalidades, ['camping']);
   assert.equal(camping.nombres_modalidades.camping, 'Camping');
   assert.deepEqual(camping.tarifas, []);
+  assert.deepEqual(bodyCamping.data.horarios_comidas.almuerzo, { desde: '13:30', hasta: '15:00' });
   assert.doesNotMatch(JSON.stringify(bodyCamping), /cliente_|email|telefono/i);
   sqlite.close();
 });

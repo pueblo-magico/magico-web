@@ -370,6 +370,18 @@ export const BookingWidget: React.FC<{
     ? ['L', 'M', 'X', 'J', 'V', 'S', 'D']
     : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const { data: nightlyPricing, loaded: nightlyPricingLoaded } = usePublicPricingSummaries(stayDates);
+  const mealSchedule = nightlyPricing[0]?.horarios_comidas ?? publicPricing?.horarios_comidas;
+  const mealPlanHelp = (option: MealPlan) => {
+    const base = option === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp;
+    if (!mealSchedule) return base;
+    if (option === 'desayuno_incluido') {
+      const label = language === 'es' ? 'Desayuno' : 'Breakfast';
+      return `${base} · ${label} ${mealSchedule.desayuno.desde}–${mealSchedule.desayuno.hasta}`;
+    }
+    const lunch = language === 'es' ? 'Almuerzo' : 'Lunch';
+    const dinner = language === 'es' ? 'Cena' : 'Dinner';
+    return `${base} · ${lunch} ${mealSchedule.almuerzo.desde}–${mealSchedule.almuerzo.hasta} · ${dinner} ${mealSchedule.cena.desde}–${mealSchedule.cena.hasta}`;
+  };
   const pricePreview = useMemo(() => {
     if (stayDates.length === 0 || nightlyPricing.length !== stayDates.length) return null;
     return estimateBookingPrice(nightlyPricing, step === 1
@@ -1009,7 +1021,7 @@ export const BookingWidget: React.FC<{
                         <div className="booking-choice-grid">{bedPreparationOptions.map(option => <button key={option.codigo} type="button" className={`booking-choice ${bedPreparationCode === option.codigo ? 'booking-choice--selected' : ''}`} aria-pressed={bedPreparationCode === option.codigo} onClick={() => { setBedPreparationCode(option.codigo); resetQuote(); }}><BedDouble size={23} /><span><strong>{option.nombre}</strong>{option.descripcion && <small>{option.descripcion}</small>}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                       </>}
                       <p className="booking-section-title">{c.meals}</p>
-                      <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={23} /><span><strong>{c[option]}</strong><small>{option === 'desayuno_incluido' ? c.breakfastHelp : c.fullBoardHelp}</small></span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                      <div className="booking-choice-grid">{(['desayuno_incluido', 'pension_completa'] as const).map(option => <button key={option} type="button" className={`booking-choice ${mealPlan === option ? 'booking-choice--selected' : ''}`} aria-pressed={mealPlan === option} onClick={() => { setMealPlan(option); resetQuote(); }}><Utensils size={23} /><span><strong>{c[option]}</strong><small>{mealPlanHelp(option)}</small></span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                       {selectedUtilities.length > 0 && <><p className="booking-section-title">{c.utilities}</p><div className="booking-utilities">{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div></>}
                     </>
                   )}
@@ -1022,7 +1034,7 @@ export const BookingWidget: React.FC<{
                   <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => goToStep(2)}><ArrowLeft size={17} /> {c.back}</button><h3>{c.reviewTitle}</h3><p>{c.contactIntro}</p></div>
                   <div className="booking-review-cards">
                     <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => goToStep(1)}>{c.edit}</button></div>
-                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}{selectedBedPreparation && <em>{c.bedPreparation}: {selectedBedPreparation.nombre}</em>}<em>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</em></span><button type="button" onClick={() => goToStep(2)}>{c.edit}</button></div>
+                    <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}{selectedBedPreparation && <em>{c.bedPreparation}: {selectedBedPreparation.nombre}</em>}<em>{c[mealPlan]} · {mealPlanHelp(mealPlan)}</em></span><button type="button" onClick={() => goToStep(2)}>{c.edit}</button></div>
                   </div>
                   {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--review" aria-label={c.utilities}>{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
@@ -1051,7 +1063,7 @@ export const BookingWidget: React.FC<{
               <ul>
                 <li><CalendarDays /> <span>{checkIn && checkOut ? `${formatBookingDate(checkIn, language, true)} — ${formatBookingDate(checkOut, language, true)}` : c.datesTitle}</span></li>
                 <li><Users /> <span>{people} {c.people.toLowerCase()}</span></li>
-                {step > 1 && <li><Utensils /> <span>{c[mealPlan]} · {mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</span></li>}
+                {step > 1 && <li><Utensils /> <span>{c[mealPlan]} · {mealPlanHelp(mealPlan)}</span></li>}
                 {step > 1 && selectedModeDescription && <li><BedDouble /> <span>{selectedModeDescription}</span></li>}
                 {step > 1 && selectedBedPreparation && <li><BedDouble /> <span>{c.bedPreparation}: {selectedBedPreparation.nombre}</span></li>}
               </ul>

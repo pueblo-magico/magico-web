@@ -1,6 +1,7 @@
 import { resumirPreciosPublicos } from '../../../_application/reservas/resumirPreciosPublicos.ts';
 import { esFechaIso } from '../../../_domain/reservas/dateRange.ts';
 import { D1RepositorioInventarioAlojamiento } from '../../../_infrastructure/d1/D1RepositorioInventarioAlojamiento.ts';
+import { D1RepositorioHorariosComidas } from '../../../_infrastructure/d1/D1RepositorioHorariosComidas.ts';
 import { D1RepositorioTarifas } from '../../../_infrastructure/d1/D1RepositorioTarifas.ts';
 import { D1RepositorioTarifasAlimentacion } from '../../../_infrastructure/d1/D1RepositorioTarifasAlimentacion.ts';
 import { jsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
@@ -30,6 +31,7 @@ export async function onRequestGet({ request, env }: any) {
     new D1RepositorioInventarioAlojamiento(env.DB),
     new D1RepositorioTarifas(env.DB),
     new D1RepositorioTarifasAlimentacion(env.DB),
+    new D1RepositorioHorariosComidas(env.DB),
   );
   return jsonPublico(request, 'GET', { data: resumen, meta: { version: 'v1' } });
 }

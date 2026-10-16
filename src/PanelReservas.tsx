@@ -1759,6 +1759,12 @@ type ConfiguracionBaseApi = {
     codigo: 'payment_hold_minutes'; valor: number; unidad: string; version: number;
     minimo: number; maximo: number; editable: boolean; fuente: string; actualizadoAt: string;
   }>;
+  horariosComidas: {
+    version: number; actualizadoAt: string;
+    desayuno: { desde: string; hasta: string };
+    almuerzo: { desde: string; hasta: string };
+    cena: { desde: string; hasta: string };
+  };
   servicios: Array<{
     id: number; tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
     codigo: string; nombre: string; disponibilidad: 'incluido' | 'no_disponible';
@@ -1956,6 +1962,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
   const [opcionesPreparacionDraft, setOpcionesPreparacionDraft] = useState<BorradorOpcionPreparacionUi[]>([]);
   const [vigenciaPolitica, setVigenciaPolitica] = useState('');
   const [preciosComida, setPreciosComida] = useState<Record<string, string>>({});
+  const [horariosComidasDraft, setHorariosComidasDraft] = useState<ConfiguracionBaseApi['horariosComidas'] | null>(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -2037,6 +2044,9 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
         [`${item.codigo}:cena`, String(item.precioCenaCentavos / 100)],
         [`${item.codigo}:ajuste`, String(item.ajustePaqueteCentavos / 100)],
       ])));
+      setHorariosComidasDraft(body.data?.horariosComidas
+        ? JSON.parse(JSON.stringify(body.data.horariosComidas))
+        : null);
     } catch (e: any) {
       setError(e.message || 'No se pudo cargar la configuración.');
     } finally {
@@ -2047,6 +2057,14 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
   useEffect(() => { cargar(); }, []);
 
   const parametro = configuracion?.parametros.find(item => item.codigo === 'payment_hold_minutes');
+  const horariosComidasModificados = Boolean(
+    horariosComidasDraft && configuracion?.horariosComidas &&
+    resumirCambios(configuracion.horariosComidas, horariosComidasDraft).length > 0
+  );
+  const horariosComidasValidos = Boolean(horariosComidasDraft &&
+    [horariosComidasDraft.desayuno, horariosComidasDraft.almuerzo, horariosComidasDraft.cena]
+      .every(horario => /^\d{2}:\d{2}$/.test(horario.desde) && /^\d{2}:\d{2}$/.test(horario.hasta) && horario.desde < horario.hasta)
+  );
   const ejecutar = async (clave: string, accion: () => Promise<void>, exito: string): Promise<boolean> => {
     setGuardando(clave);
     setError('');
@@ -2222,6 +2240,27 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
         }),
       });
     }, 'Tarifa de alimentación publicada como una nueva versión.');
+  };
+
+  const guardarHorariosComidas = async (motivo: string) => {
+    if (!horariosComidasDraft) return false;
+    return ejecutar('horarios-comidas', async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_horarios_comidas',
+          desayuno_desde: horariosComidasDraft.desayuno.desde,
+          desayuno_hasta: horariosComidasDraft.desayuno.hasta,
+          almuerzo_desde: horariosComidasDraft.almuerzo.desde,
+          almuerzo_hasta: horariosComidasDraft.almuerzo.hasta,
+          cena_desde: horariosComidasDraft.cena.desde,
+          cena_hasta: horariosComidasDraft.cena.hasta,
+          expected_version: horariosComidasDraft.version,
+          motivo: motivo.trim(),
+        }),
+      });
+      refrescarPreviewPublico();
+    }, 'Horarios de comidas actualizados.');
   };
 
   const actualizarTemporada = (indice: number, cambio: Partial<BorradorTarifaUi['temporadas'][number]>) => {
@@ -2607,6 +2646,17 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
     etiquetaConfirmar: 'Publicar nueva versión',
     ejecutar: motivo => publicarComida(item, motivo),
   });
+
+  const confirmarHorariosComidas = () => {
+    if (!horariosComidasDraft || !configuracion?.horariosComidas) return;
+    pedirConfirmacion({
+      titulo: 'Guardar horarios de comidas',
+      descripcion: 'Los nuevos horarios se mostrarán en la reserva online y en la página de estadías.',
+      cambios: resumirCambios(configuracion.horariosComidas, horariosComidasDraft),
+      etiquetaConfirmar: 'Guardar horarios',
+      ejecutar: guardarHorariosComidas,
+    });
+  };
 
   const confirmarPlazo = () => {
     if (!parametro) return;
@@ -3045,8 +3095,30 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
       </details>}
 
       {modo === 'precios' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
-        <summary><span><strong>Alimentación</strong><small>Regímenes y precio por comida</small></span></summary>
-        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-2">{(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-3">
+        <summary><span><strong>Alimentación</strong><small>Horarios, regímenes y precio por comida</small></span></summary>
+        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-2">
+        {horariosComidasDraft && <Card tone="muted" className="p-4 sm:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="font-semibold">Horarios del servicio</p>
+              <p className="text-xs text-gray-500">Versión {horariosComidasDraft.version} · se muestran en la reserva online y en la página de estadías.</p>
+            </div>
+            {esSuperAdmin && <Button size="sm" variant="secondary"
+              isDisabled={guardando !== null || !horariosComidasModificados || !horariosComidasValidos}
+              isLoading={guardando === 'horarios-comidas'} onPress={confirmarHorariosComidas}>Guardar horarios</Button>}
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {(['desayuno', 'almuerzo', 'cena'] as const).map(comida => <div key={comida} className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-white p-3">
+              <p className="col-span-2 text-xs font-semibold capitalize text-gray-700">{comida}</p>
+              <Input type="time" label="Desde" value={horariosComidasDraft[comida].desde} isDisabled={!esSuperAdmin}
+                onChange={value => setHorariosComidasDraft(actual => actual ? { ...actual, [comida]: { ...actual[comida], desde: value } } : actual)} />
+              <Input type="time" label="Hasta" value={horariosComidasDraft[comida].hasta} isDisabled={!esSuperAdmin}
+                onChange={value => setHorariosComidasDraft(actual => actual ? { ...actual, [comida]: { ...actual[comida], hasta: value } } : actual)} />
+            </div>)}
+          </div>
+          {!horariosComidasValidos && <p className="mt-2 text-xs font-semibold text-red-700" role="alert">Cada horario debe tener una hora de inicio anterior a la hora de cierre.</p>}
+        </Card>}
+        {(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-3">
           <p className="font-semibold">{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</p>
           <p className="text-xs text-gray-500">v{item.version} · {item.comidasAdicionalesPorPersonaNoche} comidas adicionales por persona/noche</p>
           <div className={`mt-3 grid gap-2 ${item.codigo === 'pension_completa' ? 'sm:grid-cols-3' : ''}`}>

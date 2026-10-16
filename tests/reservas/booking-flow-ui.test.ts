@@ -65,6 +65,24 @@ test('muestra en la escalera el menor precio publicado de comida por persona', (
   assert.match(source, /price: textoComidaDesdePorPersona\(precios\)/);
 });
 
+test('muestra los horarios de comidas configurados en estadía y en la reserva', () => {
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
+  const terms = readFileSync(new URL('../../src/TerminosYCondiciones.tsx', import.meta.url), 'utf8');
+  const coliving = readFileSync(new URL('../../src/Coliving.tsx', import.meta.url), 'utf8');
+  assert.match(api, /horarios_comidas/);
+  assert.match(stay, /textoHorarioComida\(precios, 'desayuno', cargado\)/);
+  assert.match(stay, /textoHorarioComida\(precios, 'almuerzo', cargado\)/);
+  assert.match(stay, /textoHorarioComida\(precios, 'cena', cargado\)/);
+  assert.match(widget, /mealSchedule\.desayuno\.desde/);
+  assert.match(widget, /mealSchedule\.almuerzo\.desde/);
+  assert.match(widget, /mealSchedule\.cena\.desde/);
+  assert.match(terms, /precios\?\.horarios_comidas/);
+  assert.match(coliving, /precios\?\.horarios_comidas/);
+  assert.doesNotMatch(`${stay}\n${terms}\n${coliving}`, /desayuno de 09:00 a 10:00/);
+});
+
 test('muestra servicios disponibles y limitaciones explícitas del alojamiento seleccionado', () => {
   const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');

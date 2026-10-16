@@ -157,6 +157,16 @@ function textoPensionCompleta(precios: PublicPricingSummary | null, cargado: boo
     : 'La reserva calcula el total cerrado según el alojamiento, la ocupación y las noches elegidas.';
 }
 
+function textoHorarioComida(
+  precios: PublicPricingSummary | null,
+  comida: 'desayuno' | 'almuerzo' | 'cena',
+  cargado: boolean,
+): string {
+  if (!cargado) return 'Cargando…';
+  const horario = precios?.horarios_comidas[comida];
+  return horario ? `${horario.desde}–${horario.hasta}` : 'Consultar';
+}
+
 // ── Sección Hero ─────────────────────────────────────────────────────────────
 const Hero: React.FC<{ tarifaDesdeActual: { importe: number; unidad: string } | null; cargado: boolean }> = ({ tarifaDesdeActual, cargado }) => (
   <section className="relative h-[92vh] min-h-[600px] w-full flex items-end overflow-hidden">
@@ -546,19 +556,19 @@ const HorariosPension: React.FC<{
           <div className="grid grid-cols-3 gap-2 mb-2">
             <div className="bg-bone rounded-lg px-2 py-2 text-center">
               <p className="text-dark/40 text-[10px] uppercase tracking-widest">Desayuno</p>
-              <p className="text-brand text-sm font-semibold">09:00–10:00</p>
+              <p className="text-brand text-sm font-semibold">{textoHorarioComida(precios, 'desayuno', cargado)}</p>
             </div>
             <div className="bg-bone rounded-lg px-2 py-2 text-center">
               <p className="text-dark/40 text-[10px] uppercase tracking-widest">Almuerzo</p>
-              <p className="text-brand text-sm font-semibold">14:00–15:00</p>
+              <p className="text-brand text-sm font-semibold">{textoHorarioComida(precios, 'almuerzo', cargado)}</p>
             </div>
             <div className="bg-bone rounded-lg px-2 py-2 text-center">
               <p className="text-dark/40 text-[10px] uppercase tracking-widest">Cena</p>
-              <p className="text-brand text-sm font-semibold">20:00–21:00</p>
+              <p className="text-brand text-sm font-semibold">{textoHorarioComida(precios, 'cena', cargado)}</p>
             </div>
           </div>
           <p className="text-dark/50 text-xs leading-relaxed">
-            Fuera de estos horarios no se presta servicio de cocina. Si llegás a partir de las 19:00 hs, contás con la cena en su horario habitual; las comidas no consumidas por llegadas tardías sin aviso no son acumulables ni reembolsables.
+            Fuera de estos horarios no se presta servicio de cocina. El día del check-in contás con la cena dentro del horario publicado; las comidas no consumidas por llegadas tardías sin aviso no son acumulables ni reembolsables.
           </p>
         </div>
 

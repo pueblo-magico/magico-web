@@ -2,6 +2,7 @@ import {
   validarCambioModalidadComercial,
   validarCambioServicioAlojamiento,
   validarCambioEspacioComercial,
+  validarCambioHorariosComidas,
   validarCambioParametroOperativo,
   validarCambioTarifaAlimentacion,
   validarNuevaModalidadComercial,
@@ -11,10 +12,12 @@ import {
   type CambioOpcionPreparacionEstadia,
   type CambioServicioAlojamiento,
   type CambioEspacioComercial,
+  type CambioHorariosComidas,
   type CambioParametroOperativo,
   type CambioTarifaAlimentacion,
   type ConfiguracionBaseReservas,
   type EspacioComercialActualizado,
+  type HorariosComidas,
   type ModalidadComercialActualizada,
   type OpcionPreparacionEstadia,
   type NuevaModalidadComercial,
@@ -162,4 +165,22 @@ export async function publicarTarifaAlimentacionConfiguracion(
     throw new ErrorReserva('CONFLICTO_RESERVA', 'La tarifa cambió; actualizá la vista antes de reintentar.');
   }
   return publicada;
+}
+
+export async function actualizarHorariosComidasConfiguracion(
+  entrada: CambioHorariosComidas & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<HorariosComidas> {
+  const validada = validarCambioHorariosComidas(entrada);
+  const actualizada = await repositorio.actualizarHorariosComidas({
+    ...validada,
+    actorEmail: entrada.actorEmail,
+    correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!actualizada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'Los horarios cambiaron; actualizá la vista antes de reintentar.');
+  }
+  return actualizada;
 }

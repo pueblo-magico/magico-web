@@ -68,6 +68,7 @@ import type {
   CambioModalidadComercial,
   CambioServicioAlojamiento,
   CambioEspacioComercial,
+  CambioHorariosComidas,
   CambioParametroOperativo,
   CambioTarifaAlimentacion,
   NuevaModalidadComercial,
@@ -75,6 +76,7 @@ import type {
   CambioOpcionPreparacionEstadia,
   ConfiguracionBaseReservas,
   EspacioComercialActualizado,
+  HorariosComidas,
   ModalidadComercialActualizada,
   ParametroOperativoReserva,
   ServicioAlojamiento,
@@ -208,6 +210,10 @@ export interface RepositorioTarifasAlimentacion {
   obtenerPublicada(regimen: RegimenAlimentacion): Promise<ConfiguracionTarifaAlimentacion | null>;
 }
 
+export interface RepositorioHorariosComidas {
+  obtener(): Promise<HorariosComidas>;
+}
+
 export interface RepositorioCotizaciones {
   guardar(
     solicitud: SolicitudCotizacion,
@@ -310,6 +316,11 @@ export interface RepositorioConfiguracionBaseReservas {
     correlationId: string;
     operacionUid: string;
   }): Promise<TarifaAlimentacionActualizada | null>;
+  actualizarHorariosComidas(entrada: CambioHorariosComidas & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<HorariosComidas | null>;
 }
 
 export interface RepositorioRetencionesReserva {

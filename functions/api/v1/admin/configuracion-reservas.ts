@@ -4,6 +4,7 @@ import {
   crearModalidadConfiguracion,
   crearServicioAlojamientoConfiguracion,
   actualizarEspacioConfiguracion,
+  actualizarHorariosComidasConfiguracion,
   actualizarParametroConfiguracion,
   actualizarOpcionPreparacionConfiguracion,
   consultarConfiguracionBase,
@@ -129,6 +130,25 @@ async function actualizar(request: Request, env: any, correlationId: string): Pr
         actorEmail: auth.email, correlationId,
       }, repositorio);
       return json({ data: tarifa, meta: { version: 'v1' } });
+    }
+    if (accion === 'actualizar_horarios_comidas') {
+      const horarios = await actualizarHorariosComidasConfiguracion({
+        desayuno: {
+          desde: String(body.desayuno_desde || ''),
+          hasta: String(body.desayuno_hasta || ''),
+        },
+        almuerzo: {
+          desde: String(body.almuerzo_desde || ''),
+          hasta: String(body.almuerzo_hasta || ''),
+        },
+        cena: {
+          desde: String(body.cena_desde || ''),
+          hasta: String(body.cena_hasta || ''),
+        },
+        expectedVersion: Number(body.expected_version),
+        motivo: String(body.motivo || ''), actorEmail: auth.email, correlationId,
+      }, repositorio);
+      return json({ data: horarios, meta: { version: 'v1' } });
     }
     return json({ error: 'Acción de configuración no soportada.' }, 400);
   } catch (error) {

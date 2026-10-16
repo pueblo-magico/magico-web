@@ -45,6 +45,12 @@ export interface PublicPriceRule {
 export interface PublicPricingSummary {
   fecha_referencia: string;
   plan: { codigo: string; version: number; moneda: string };
+  horarios_comidas: {
+    version: number;
+    desayuno: { desde: string; hasta: string };
+    almuerzo: { desde: string; hasta: string };
+    cena: { desde: string; hasta: string };
+  };
   alimentacion: {
     desayuno_incluido: null | {
       version: number;

@@ -106,6 +106,10 @@ test('permite al superadmin versionar la configuración comercial sin exponer se
   assert.match(source, /opcionesModalidadParaEspacio/);
   assert.match(source, /pueblo_magico_logo_marron\.svg/);
   assert.match(source, /accion: 'publicar_tarifa_alimentacion'/);
+  assert.match(source, /accion: 'actualizar_horarios_comidas'/);
+  assert.match(source, /Horarios del servicio/);
+  assert.match(source, /type="time"/);
+  assert.match(source, /Guardar horarios/);
   assert.match(source, /Ajustes sobre el total/);
   assert.match(source, /Crear modalidad/);
   assert.match(source, /Información para huéspedes/);

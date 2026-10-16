@@ -4,6 +4,7 @@ import {
   normalizarPaymentHoldMinutes,
   type ConfiguracionBaseReservas,
   type EspacioComercialActualizado,
+  type HorariosComidas,
   type ModalidadComercialActualizada,
   type OpcionPreparacionEstadia,
   type ParametroOperativoReserva,
@@ -53,6 +54,16 @@ function mapearTarifaAlimentacion(row: Record<string, unknown>): TarifaAlimentac
   };
 }
 
+function mapearHorariosComidas(row: Record<string, unknown>): HorariosComidas {
+  return {
+    version: Number(row.version),
+    desayuno: { desde: String(row.desayuno_desde), hasta: String(row.desayuno_hasta) },
+    almuerzo: { desde: String(row.almuerzo_desde), hasta: String(row.almuerzo_hasta) },
+    cena: { desde: String(row.cena_desde), hasta: String(row.cena_hasta) },
+    actualizadoAt: String(row.updated_at),
+  };
+}
+
 function mapearServicio(row: Record<string, unknown>): ServicioAlojamiento {
   return {
     id: Number(row.id),
@@ -98,10 +109,15 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
   }
 
   async obtenerEfectiva(): Promise<ConfiguracionBaseReservas> {
-    const [parametro, inventario, servicios, opcionesPreparacion, tarifa, reglasTarifa, senasTarifa, politica, ajustesTarifa, alimentacion] = await Promise.all([
+    const [parametro, horariosComidas, inventario, servicios, opcionesPreparacion, tarifa, reglasTarifa, senasTarifa, politica, ajustesTarifa, alimentacion] = await Promise.all([
       this.db.prepare(`
         SELECT codigo, valor_entero, unidad, version, updated_at
         FROM parametros_operativos_reservas WHERE codigo = 'payment_hold_minutes'
+      `).first(),
+      this.db.prepare(`
+        SELECT version, desayuno_desde, desayuno_hasta, almuerzo_desde,
+          almuerzo_hasta, cena_desde, cena_hasta, updated_at
+        FROM configuracion_horarios_comidas WHERE id = 1
       `).first(),
       this.db.prepare(`
         SELECT e.codigo, e.nombre, e.tipo, e.capacidad_comercial,
@@ -237,8 +253,13 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       } catch { reglasPolitica = []; }
     }
 
+    if (!horariosComidas) {
+      throw new Error('No existe la configuracion de horarios de comidas.');
+    }
+
     return {
       parametros: [mapearParametro(parametro)],
+      horariosComidas: mapearHorariosComidas(horariosComidas),
       servicios: (servicios.results || []).map(mapearServicio),
       opcionesPreparacion: (opcionesPreparacion.results || []).map(mapearOpcionPreparacion),
       inventario: [...espacios.values()],
@@ -268,6 +289,45 @@ export class D1RepositorioConfiguracionBaseReservas implements RepositorioConfig
       } : null,
       alimentacion: (alimentacion.results || []).map(mapearTarifaAlimentacion),
     };
+  }
+
+  async actualizarHorariosComidas(
+    entrada: Parameters<RepositorioConfiguracionBaseReservas['actualizarHorariosComidas']>[0]
+  ): Promise<HorariosComidas | null> {
+    const resultados = await this.db.batch([
+      this.db.prepare(`
+        UPDATE configuracion_horarios_comidas
+        SET desayuno_desde = ?, desayuno_hasta = ?, almuerzo_desde = ?,
+          almuerzo_hasta = ?, cena_desde = ?, cena_hasta = ?,
+          version = version + 1,
+          updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        WHERE id = 1 AND version = ?
+        RETURNING version, desayuno_desde, desayuno_hasta, almuerzo_desde,
+          almuerzo_hasta, cena_desde, cena_hasta, updated_at
+      `).bind(
+        entrada.desayuno.desde, entrada.desayuno.hasta,
+        entrada.almuerzo.desde, entrada.almuerzo.hasta,
+        entrada.cena.desde, entrada.cena.hasta,
+        entrada.expectedVersion,
+      ),
+      this.db.prepare(`
+        INSERT INTO auditoria_admin (
+          email, accion, actor_tipo, entidad_tipo, entidad_id, motivo, correlation_id, metadata_json
+        ) SELECT ?, 'actualizar_horarios_comidas', 'usuario', 'configuracion_horarios_comidas',
+          '1', ?, ?, json_object(
+            'version_anterior', ?, 'version_nueva', ?,
+            'desayuno', ?, 'almuerzo', ?, 'cena', ?
+          ) WHERE changes() = 1
+      `).bind(
+        entrada.actorEmail, entrada.motivo, entrada.correlationId,
+        entrada.expectedVersion, entrada.expectedVersion + 1,
+        `${entrada.desayuno.desde}-${entrada.desayuno.hasta}`,
+        `${entrada.almuerzo.desde}-${entrada.almuerzo.hasta}`,
+        `${entrada.cena.desde}-${entrada.cena.hasta}`,
+      ),
+    ]);
+    const row = resultados[0]?.results?.[0];
+    return row ? mapearHorariosComidas(row) : null;
   }
 
   async actualizarParametro(

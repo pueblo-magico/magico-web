@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
+import { usePublicPricingSummary } from '../components/booking/usePublicPricingSummary';
 
 const DATA_FISCAL_URL = '/uploads/F960.pdf';
 
@@ -11,12 +12,14 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 );
 
 export const TerminosYCondiciones: React.FC = () => {
+  const { data: precios } = usePublicPricingSummary();
   useEffect(() => {
     document.title = 'Términos y Condiciones — Pueblo Mágico';
     window.scrollTo(0, 0);
   }, []);
 
   const fecha = '27 de abril de 2025';
+  const horarios = precios?.horarios_comidas;
 
   return (
     <div className="min-h-screen bg-bone font-sans antialiased">
@@ -128,7 +131,11 @@ export const TerminosYCondiciones: React.FC = () => {
             El check-in se realiza a partir de las 13:00 hs y el check-out hasta las 11:00 hs, salvo acuerdo previo.
           </p>
           <p>
-            <strong>Horarios de comidas:</strong> desayuno de 09:00 a 10:00 hs, almuerzo de 14:00 a 15:00 hs y cena de 20:00 a 21:00 hs. Fuera de esos horarios no se presta servicio de cocina; quienes ingresen a partir de las 19:00 hs cuentan con el servicio de cena en su horario habitual. Las comidas no consumidas por llegadas tardías sin aviso previo no son acumulables ni reembolsables.
+            <strong>Horarios de comidas:</strong>{' '}
+            {horarios
+              ? <>desayuno de {horarios.desayuno.desde} a {horarios.desayuno.hasta} hs, almuerzo de {horarios.almuerzo.desde} a {horarios.almuerzo.hasta} hs y cena de {horarios.cena.desde} a {horarios.cena.hasta} hs.</>
+              : <>los horarios vigentes se informan en la reserva online antes de confirmar.</>}
+            {' '}Fuera de esos horarios no se presta servicio de cocina. Las comidas no consumidas por llegadas tardías sin aviso previo no son acumulables ni reembolsables.
           </p>
           <p>
             En caso de haber abonado un anticipo, el saldo pendiente deberá cancelarse a más tardar al momento del check-out.

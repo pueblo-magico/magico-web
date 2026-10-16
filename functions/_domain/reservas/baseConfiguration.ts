@@ -20,8 +20,22 @@ export type ParametroOperativoReserva = {
   actualizadoAt: string;
 };
 
+export type VentanaComida = {
+  desde: string;
+  hasta: string;
+};
+
+export type HorariosComidas = {
+  version: number;
+  desayuno: VentanaComida;
+  almuerzo: VentanaComida;
+  cena: VentanaComida;
+  actualizadoAt: string;
+};
+
 export type ConfiguracionBaseReservas = {
   parametros: ParametroOperativoReserva[];
+  horariosComidas: HorariosComidas;
   servicios: ServicioAlojamiento[];
   opcionesPreparacion: OpcionPreparacionEstadia[];
   inventario: Array<{
@@ -203,6 +217,14 @@ export type CambioTarifaAlimentacion = {
   motivo: string;
 };
 
+export type CambioHorariosComidas = {
+  desayuno: VentanaComida;
+  almuerzo: VentanaComida;
+  cena: VentanaComida;
+  expectedVersion: number;
+  motivo: string;
+};
+
 export type ModalidadComercialActualizada = {
   id: number;
   espacioCodigo: string;
@@ -374,6 +396,28 @@ export function validarCambioTarifaAlimentacion(entrada: CambioTarifaAlimentacio
       Math.abs(entrada.ajustePaqueteCentavos ?? 0) > 1_000_000_000 ||
       !Number.isSafeInteger(entrada.expectedVersion) || entrada.expectedVersion < 1) {
     throw new ErrorReserva('DATOS_INVALIDOS', 'La tarifa de alimentación es inválida.');
+  }
+  return { ...entrada, motivo: validarMotivo(entrada.motivo) };
+}
+
+function minutosHora(valor: string): number | null {
+  const coincidencia = /^(\d{2}):(\d{2})$/.exec(valor || '');
+  if (!coincidencia) return null;
+  const horas = Number(coincidencia[1]);
+  const minutos = Number(coincidencia[2]);
+  if (horas > 23 || minutos > 59) return null;
+  return horas * 60 + minutos;
+}
+
+export function validarCambioHorariosComidas(entrada: CambioHorariosComidas): CambioHorariosComidas {
+  const ventanas = [entrada.desayuno, entrada.almuerzo, entrada.cena];
+  const ventanasValidas = ventanas.every(ventana => {
+    const desde = minutosHora(ventana?.desde);
+    const hasta = minutosHora(ventana?.hasta);
+    return desde !== null && hasta !== null && desde < hasta;
+  });
+  if (!ventanasValidas || !Number.isSafeInteger(entrada.expectedVersion) || entrada.expectedVersion < 1) {
+    throw new ErrorReserva('DATOS_INVALIDOS', 'Los horarios de comidas son inválidos.');
   }
   return { ...entrada, motivo: validarMotivo(entrada.motivo) };
 }

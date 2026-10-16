@@ -8,6 +8,7 @@ import {
   actualizarServicioAlojamientoConfiguracion,
   actualizarModalidadConfiguracion,
   actualizarEspacioConfiguracion,
+  actualizarHorariosComidasConfiguracion,
   actualizarParametroConfiguracion,
   crearServicioAlojamientoConfiguracion,
   publicarTarifaAlimentacionConfiguracion,
@@ -15,6 +16,7 @@ import {
 import {
   normalizarPaymentHoldMinutes,
   validarCambioModalidadComercial,
+  validarCambioHorariosComidas,
   validarCambioParametroOperativo,
   validarNuevoServicioAlojamiento,
   validarCambioOpcionPreparacionEstadia,
@@ -260,6 +262,53 @@ test('super admin puede cambiar modalidades y publicar una nueva tarifa de alime
   sqlite.close();
 });
 
+test('super admin actualiza los horarios de comidas con versión y auditoría', async () => {
+  const sqlite = baseCompleta();
+  const repositorio = new D1RepositorioConfiguracionBaseReservas(d1(sqlite));
+  const inicial = await repositorio.obtenerEfectiva();
+  assert.deepEqual(inicial.horariosComidas.desayuno, { desde: '09:00', hasta: '10:00' });
+
+  const actualizados = await actualizarHorariosComidasConfiguracion({
+    desayuno: { desde: '08:30', hasta: '10:00' },
+    almuerzo: { desde: '13:30', hasta: '15:00' },
+    cena: { desde: '19:30', hasta: '21:00' },
+    expectedVersion: inicial.horariosComidas.version,
+    motivo: 'Ajustar horarios de cocina', actorEmail: 'admin@test', correlationId: 'req-meal-hours-1',
+  }, repositorio, () => 'op-meal-hours-1');
+
+  assert.equal(actualizados.version, inicial.horariosComidas.version + 1);
+  assert.deepEqual(actualizados.cena, { desde: '19:30', hasta: '21:00' });
+  assert.equal(
+    sqlite.prepare("SELECT COUNT(*) cantidad FROM auditoria_admin WHERE accion = 'actualizar_horarios_comidas'").get()?.cantidad,
+    1,
+  );
+  assert.equal(await repositorio.actualizarHorariosComidas({
+    desayuno: actualizados.desayuno, almuerzo: actualizados.almuerzo, cena: actualizados.cena,
+    expectedVersion: inicial.horariosComidas.version,
+    motivo: 'Comprobar conflicto de versión', actorEmail: 'admin@test', correlationId: 'req-meal-hours-stale',
+  }), null);
+  await assert.rejects(actualizarHorariosComidasConfiguracion({
+    desayuno: { desde: '10:00', hasta: '09:00' },
+    almuerzo: actualizados.almuerzo, cena: actualizados.cena,
+    expectedVersion: actualizados.version,
+    motivo: 'Horario inválido para validar', actorEmail: 'admin@test', correlationId: 'req-meal-hours-2',
+  }, repositorio), /horarios de comidas son inválidos/);
+  assert.throws(() => validarCambioHorariosComidas({
+    desayuno: { desde: '25:00', hasta: '26:00' },
+    almuerzo: actualizados.almuerzo, cena: actualizados.cena,
+    expectedVersion: actualizados.version, motivo: 'Validar formato horario',
+  }), /horarios de comidas son inválidos/);
+  assert.throws(() => validarCambioHorariosComidas({
+    desayuno: actualizados.desayuno, almuerzo: actualizados.almuerzo, cena: actualizados.cena,
+    expectedVersion: 0, motivo: 'Validar versión inválida',
+  }), /horarios de comidas son inválidos/);
+  assert.throws(() => validarCambioHorariosComidas({
+    desayuno: actualizados.desayuno, almuerzo: actualizados.almuerzo, cena: actualizados.cena,
+    expectedVersion: actualizados.version, motivo: 'no',
+  }), /motivo debe tener entre 5 y 500 caracteres/);
+  sqlite.close();
+});
+
 test('la creación pública usa el plazo efectivo y conserva el vencimiento calculado', async () => {
   let holdExpiresAt = '';
   const resultado = await crearReservaPublica({
@@ -378,6 +427,17 @@ test('el contrato permite lectura administrativa pero sólo super admin puede es
   }), env });
   assert.equal(alimentacionResponse.status, 200);
   assert.equal((await alimentacionResponse.json() as any).data.precioComidaCentavos, 2_600_000);
+
+  const horarios = sqlite.prepare('SELECT version FROM configuracion_horarios_comidas WHERE id = 1').get() as Record<string, unknown>;
+  const horariosResponse = await actualizarConfiguracion({ request: requestAccion({
+    accion: 'actualizar_horarios_comidas',
+    desayuno_desde: '08:30', desayuno_hasta: '10:00',
+    almuerzo_desde: '13:30', almuerzo_hasta: '15:00',
+    cena_desde: '19:30', cena_hasta: '21:00',
+    expected_version: Number(horarios.version), motivo: 'Cambiar horarios desde contrato',
+  }), env });
+  assert.equal(horariosResponse.status, 200);
+  assert.deepEqual((await horariosResponse.json() as any).data.almuerzo, { desde: '13:30', hasta: '15:00' });
 
   const servicioResponse = await actualizarConfiguracion({ request: requestAccion({
     accion: 'crear_servicio_alojamiento', tipo_alojamiento: 'refugio', codigo: 'estufa-lena',

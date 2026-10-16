@@ -1,4 +1,9 @@
-import type { RepositorioInventarioAlojamiento, RepositorioTarifas, RepositorioTarifasAlimentacion } from './ports.ts';
+import type {
+  RepositorioHorariosComidas,
+  RepositorioInventarioAlojamiento,
+  RepositorioTarifas,
+  RepositorioTarifasAlimentacion,
+} from './ports.ts';
 import { listarAlojamientosPublicos } from './listarAlojamientosPublicos.ts';
 
 const TIPOS_PUBLICOS = ['domo', 'refugio', 'camping'] as const;
@@ -17,12 +22,14 @@ export async function resumirPreciosPublicos(
   inventario: RepositorioInventarioAlojamiento,
   tarifas: RepositorioTarifas,
   tarifasAlimentacion: RepositorioTarifasAlimentacion,
+  horariosComidas: RepositorioHorariosComidas,
 ) {
-  const [catalogo, plan, desayuno, pensionCompleta] = await Promise.all([
+  const [catalogo, plan, desayuno, pensionCompleta, horarios] = await Promise.all([
     listarAlojamientosPublicos('general', inventario),
     tarifas.obtenerPublicada(),
     tarifasAlimentacion.obtenerPublicada('desayuno_incluido'),
     tarifasAlimentacion.obtenerPublicada('pension_completa'),
+    horariosComidas.obtener(),
   ]);
 
   if (!plan) return null;
@@ -78,6 +85,12 @@ export async function resumirPreciosPublicos(
   return {
     fecha_referencia: fechaReferencia,
     plan: { codigo: plan.codigo, version: plan.version, moneda: plan.moneda },
+    horarios_comidas: {
+      version: horarios.version,
+      desayuno: horarios.desayuno,
+      almuerzo: horarios.almuerzo,
+      cena: horarios.cena,
+    },
     alimentacion: {
       desayuno_incluido: desayuno ? {
         version: desayuno.version,

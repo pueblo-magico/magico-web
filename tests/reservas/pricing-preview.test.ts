@@ -24,6 +24,12 @@ function summary(
   return {
     fecha_referencia: date,
     plan: { codigo: 'published', version: 4, moneda: 'ARS' },
+    horarios_comidas: {
+      version: 1,
+      desayuno: { desde: '09:00', hasta: '10:00' },
+      almuerzo: { desde: '14:00', hasta: '15:00' },
+      cena: { desde: '20:00', hasta: '21:00' },
+    },
     alimentacion: {
       desayuno_incluido: { version: 1, precio_comida_centavos: 0, comidas_adicionales_por_persona_noche: 0 },
       pension_completa: {

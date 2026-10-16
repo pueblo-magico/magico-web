@@ -51,6 +51,27 @@ test('publica sólo desayuno incluido y pensión completa a ARS 20.000 por comid
   db.close();
 });
 
+test('crea una configuración única y válida para los horarios de comidas', () => {
+  const db = baseConTarifas();
+  const horarios = db.prepare(`
+    SELECT version, desayuno_desde, desayuno_hasta, almuerzo_desde,
+      almuerzo_hasta, cena_desde, cena_hasta
+    FROM configuracion_horarios_comidas WHERE id = 1
+  `).get();
+  assert.deepEqual({ ...horarios }, {
+    version: 1,
+    desayuno_desde: '09:00', desayuno_hasta: '10:00',
+    almuerzo_desde: '14:00', almuerzo_hasta: '15:00',
+    cena_desde: '20:00', cena_hasta: '21:00',
+  });
+  assert.throws(() => db.prepare(`
+    UPDATE configuracion_horarios_comidas
+    SET cena_desde = '22:00', cena_hasta = '21:00'
+    WHERE id = 1
+  `).run(), /CHECK constraint failed/);
+  db.close();
+});
+
 test('conserva la versión alimentaria del snapshot al publicar una tarifa nueva', () => {
   const db = baseConTarifas();
   const planId = Number(db.prepare("SELECT id FROM planes_tarifa WHERE codigo = 'alojamiento-base'").get()?.id);
