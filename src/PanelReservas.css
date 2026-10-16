@@ -102,6 +102,37 @@
 .admin-config > *, .admin-config__section, .admin-config__section-body, .admin-config__season { min-width: 0; max-width: 100%; }
 .admin-config__horizontal-scroll { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .admin-config__intro { margin-bottom: 2px; }
+.admin-pricing-overview__grid { display: grid; grid-template-columns: minmax(230px, .72fr) minmax(0, 1.5fr); gap: 10px; }
+.admin-pricing-alert { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid #f3b8b8; border-radius: 10px; background: #fff4f4; color: #9b1c1c; }
+.admin-pricing-alert svg { flex: 0 0 auto; margin-top: 1px; }
+.admin-pricing-alert strong { display: block; font-size: 12px; }
+.admin-pricing-alert p { margin: 2px 0 0; font-size: 11px; line-height: 1.45; }
+.admin-pricing-current, .admin-pricing-preview { min-width: 0; }
+.admin-pricing-current__heading, .admin-pricing-preview__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.admin-pricing-current__heading h4, .admin-pricing-preview__heading h4 { margin: 2px 0 0; color: var(--admin-green-deep); font-size: 16px; line-height: 1.25; }
+.admin-pricing-eyebrow { margin: 0; color: #6b7b72; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.admin-pricing-current__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 16px; color: #42544a; font-size: 11px; }
+.admin-pricing-current__published { margin: 9px 0 0; color: #53655b; font-size: 11px; }
+.admin-pricing-current__note { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid #dfe7e2; color: #64746b; font-size: 11px; line-height: 1.45; }
+.admin-pricing-preview__date { display: grid; flex: 0 0 auto; gap: 3px; color: #53655b; font-size: 10px; font-weight: 700; }
+.admin-pricing-preview__date input { min-height: 32px; max-width: 150px; padding: 5px 8px; border: 1px solid #ccd6d0; border-radius: 7px; background: white; color: var(--admin-ink); font: inherit; }
+.admin-pricing-preview__source { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 12px 0 8px; color: #607168; font-size: 10px; }
+.admin-pricing-preview__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 7px; }
+.admin-pricing-preview__option { min-width: 0; padding: 9px 10px; border: 1px solid #e0e6e2; border-radius: 9px; background: #fbfcfb; }
+.admin-pricing-preview__option > div { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.admin-pricing-preview__option > div strong { color: #173f32; font-size: 12px; }
+.admin-pricing-preview__option > div span { overflow: hidden; color: #65766c; font-size: 10px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.admin-pricing-preview__option dl { display: grid; gap: 3px; margin: 8px 0 0; }
+.admin-pricing-preview__option dl div { display: flex; justify-content: space-between; gap: 8px; color: #5f7067; font-size: 10px; }
+.admin-pricing-preview__option dd { margin: 0; color: #173f32; font-weight: 750; text-align: right; }
+.admin-pricing-preview__empty { display: flex; grid-column: 1 / -1; align-items: center; gap: 7px; margin: 12px 0 0; padding: 9px 10px; border-radius: 8px; background: #fff9eb; color: #8a5a00; font-size: 11px; }
+.admin-pricing-preview__link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--admin-green); font-size: 11px; font-weight: 750; text-decoration: underline; text-underline-offset: 2px; }
+.admin-pricing-history { min-width: 0; border-top: 1px solid #e2e7e4; }
+.admin-pricing-history > summary { display: flex; align-items: center; gap: 8px; padding-top: 12px; color: #344c40; cursor: pointer; font-size: 11px; font-weight: 750; list-style: none; }
+.admin-pricing-history > summary::-webkit-details-marker { display: none; }
+.admin-pricing-history > summary::after { margin-left: 2px; color: #718178; content: '▾'; }
+.admin-pricing-history[open] > summary::after { transform: rotate(180deg); }
+.admin-pricing-history__empty { margin: 10px 0 0; color: #6b7a72; font-size: 11px; }
 .admin-config__section { overflow: clip; }
 .admin-config__section > summary { display: flex; min-height: 58px; align-items: center; gap: 12px; padding: 10px 16px; color: #203d49; cursor: pointer; list-style: none; }
 .admin-config__section > summary::-webkit-details-marker { display: none; }
@@ -152,6 +183,7 @@
   .admin-mobile-nav .admin-nav-button svg { width: 16px; }
   .admin-content { padding: 22px 14px 38px; }
   .admin-view-heading { margin-bottom: 18px; }
+  .admin-pricing-overview__grid { grid-template-columns: 1fr; }
   .admin-config__modalities { grid-template-columns: 1fr; }
   .admin-report-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-report-financial { grid-column: 1 / -1; }
@@ -164,6 +196,9 @@
   .admin-view-heading h2 { font-size: 34px; }
   .admin-config__section > summary { min-height: 54px; padding: 9px 12px; }
   .admin-config__section-body { padding: 12px; }
+  .admin-pricing-preview__heading { align-items: stretch; flex-direction: column; }
+  .admin-pricing-preview__date input { width: 100%; max-width: none; }
+  .admin-pricing-preview__grid { grid-template-columns: 1fr; }
   .admin-config__lodging-fields, .admin-config__modality-fields { grid-template-columns: 1fr; }
   .admin-config__modality { grid-template-columns: 1fr; grid-template-areas: 'fields' 'toggle' 'warning' 'action'; }
   .admin-config__modality-action { width: 100%; }

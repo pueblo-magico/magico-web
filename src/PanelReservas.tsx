@@ -7,6 +7,9 @@ import {
   SearchField, Select, StatCard, Table, TableBody, TableCell, TableContainer, TableHead,
   TableHeader, TableRow, Textarea, ToggleGroup,
 } from '@pueblo-magico/react-ui';
+import { localTodayIso, type BookingMode, type MealPlan } from '../components/booking/bookingApi';
+import { estimateBookingPrice } from '../components/booking/pricingPreview';
+import { usePublicPricingSummary } from '../components/booking/usePublicPricingSummary';
 import './PanelReservas.css';
 
 // Dashboard interno de reservas — /admin/reservas. La API valida sesión,
@@ -301,6 +304,9 @@ type Metricas = {
 };
 
 const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+const fmtCentavos = (centavos: number, moneda = 'ARS') => new Intl.NumberFormat('es-AR', {
+  style: 'currency', currency: moneda, maximumFractionDigits: 0,
+}).format(centavos / 100);
 const toISODate = (d: Date) => d.toISOString().slice(0, 10);
 const fechaOperativaLocal = (instante: Date) => {
   const partes = new Intl.DateTimeFormat('en-CA', {
@@ -1798,6 +1804,13 @@ const OPCIONES_ALOJAMIENTO_TARIFA: Array<{ value: TipoAlojamientoTarifa; label: 
   { value: 'bell_tent', label: 'Carpa equipada' },
 ];
 
+const ETIQUETA_ALOJAMIENTO_PUBLICO: Record<TipoAlojamiento, string> = {
+  domo: 'Domo', refugio: 'Refugio', camping: 'Camping',
+};
+const ETIQUETA_MODALIDAD_PUBLICA: Record<BookingMode, string> = {
+  compartida: 'Compartida', privada: 'Privada', camping: 'Camping',
+};
+
 const DIAS_SEMANA_TARIFA = [
   { value: 1, label: 'Lun' }, { value: 2, label: 'Mar' }, { value: 3, label: 'Mié' },
   { value: 4, label: 'Jue' }, { value: 5, label: 'Vie' }, { value: 6, label: 'Sáb' },
@@ -1916,6 +1929,53 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
   const [guardando, setGuardando] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [fechaPreview, setFechaPreview] = useState(localTodayIso());
+  const {
+    data: resumenPreciosPublicos,
+    loaded: previewPublicoCargado,
+    refresh: refrescarPreviewPublico,
+  } = usePublicPricingSummary(fechaPreview);
+
+  const planesPublicados = useMemo(
+    () => planesTarifa.filter(plan => plan.estado === 'publicado'),
+    [planesTarifa],
+  );
+  const planEfectivo = useMemo(
+    () => configuracion?.tarifa
+      ? planesTarifa.find(plan => plan.id === configuracion.tarifa?.id) ?? null
+      : null,
+    [configuracion?.tarifa, planesTarifa],
+  );
+  const otrasVersiones = useMemo(
+    () => planesTarifa.filter(plan => plan.id !== planEfectivo?.id),
+    [planesTarifa, planEfectivo?.id],
+  );
+  const planPublicoCoincide = Boolean(
+    planEfectivo && resumenPreciosPublicos &&
+    planEfectivo.codigo === resumenPreciosPublicos.plan.codigo &&
+    planEfectivo.version === resumenPreciosPublicos.plan.version
+  );
+  const publicacionInconsistente = planesPublicados.length !== 1 || (
+    previewPublicoCargado && Boolean(resumenPreciosPublicos) && !planPublicoCoincide
+  );
+  const opcionesPreview = useMemo(() => {
+    if (!resumenPreciosPublicos) return [];
+    return resumenPreciosPublicos.opciones.flatMap(opcion => opcion.modalidades.map(modalidad => {
+      const calcular = (mealPlan: MealPlan) => estimateBookingPrice([resumenPreciosPublicos], {
+        people: 2,
+        type: opcion.tipo_alojamiento,
+        mode: modalidad,
+        mealPlan,
+      });
+      return {
+        key: `${opcion.tipo_alojamiento}-${modalidad}`,
+        alojamiento: ETIQUETA_ALOJAMIENTO_PUBLICO[opcion.tipo_alojamiento],
+        modalidad: opcion.nombres_modalidades?.[modalidad] || ETIQUETA_MODALIDAD_PUBLICA[modalidad],
+        desayuno: calcular('desayuno_incluido'),
+        pensionCompleta: calcular('pension_completa'),
+      };
+    }));
+  }, [resumenPreciosPublicos]);
 
   const cargar = async () => {
     setCargando(true);
@@ -2307,6 +2367,7 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'publicar', plan_id: borrador.plan.id, motivo }),
       });
+      refrescarPreviewPublico();
     }, 'Nueva versión de precios y seña publicada.');
   };
 
@@ -2456,15 +2517,104 @@ const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
       {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
 
-      {modo === 'precios' && <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div><h3 className="text-sm font-semibold text-gray-900">Planes y versiones</h3><p className="text-xs text-gray-500">Podés conservar varios planes. Al publicar uno, pasa a ser la política efectiva para nuevas cotizaciones.</p></div>
-          <Badge variant="success">{planesTarifa.filter(plan => plan.estado === 'publicado').length} vigente</Badge>
+      {modo === 'precios' && <section className="admin-pricing-overview rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Política efectiva y vista pública</h3>
+            <p className="text-xs text-gray-500">Confirmá qué versión cotiza hoy y revisá el precio que recibe el huésped.</p>
+          </div>
+          <Badge variant={publicacionInconsistente ? 'danger' : 'success'}>
+            {publicacionInconsistente ? 'Requiere revisión' : 'Publicación consistente'}
+          </Badge>
         </div>
-        <div className="admin-config__horizontal-scroll mt-3 flex gap-2 pb-1">{planesTarifa.map(plan => <Card key={plan.id} tone="muted" className="min-w-[220px] p-3">
-          <div className="flex items-start justify-between gap-2"><strong className="text-sm">{plan.nombre}</strong><Badge variant={plan.estado === 'publicado' ? 'success' : plan.estado === 'borrador' ? 'warning' : 'neutral'}>{plan.estado}</Badge></div>
-          <p className="mt-1 text-xs text-gray-500"><CodeBadge>{plan.codigo}</CodeBadge> · v{plan.version} · {plan.moneda}</p>
-        </Card>)}</div>
+
+        {publicacionInconsistente && <div className="admin-pricing-alert mt-3" role="alert">
+          <AlertTriangle aria-hidden="true" size={18} />
+          <div>
+            <strong>El estado publicado no es consistente.</strong>
+            <p>
+              {planesPublicados.length !== 1
+                ? `Hay ${planesPublicados.length} planes marcados como publicados; debería existir exactamente uno.`
+                : `La API pública responde ${resumenPreciosPublicos?.plan.codigo || 'otro plan'} v${resumenPreciosPublicos?.plan.version || '—'}, distinto de la política administrativa.`}
+              {' '}Revisalo antes de habilitar nuevas ventas.
+            </p>
+          </div>
+        </div>}
+
+        <div className="admin-pricing-overview__grid mt-3">
+          <Card tone="muted" className="admin-pricing-current p-4">
+            <div className="admin-pricing-current__heading">
+              <div>
+                <p className="admin-pricing-eyebrow">Efectiva ahora</p>
+                <h4>{planEfectivo?.nombre || 'Sin política publicada'}</h4>
+              </div>
+              <Badge variant={planEfectivo ? 'success' : 'danger'}>{planEfectivo ? 'Vigente' : 'Bloqueante'}</Badge>
+            </div>
+            {planEfectivo && <>
+              <div className="admin-pricing-current__meta">
+                <CodeBadge>{planEfectivo.codigo}</CodeBadge>
+                <span>Versión {planEfectivo.version}</span>
+                <span>{planEfectivo.moneda}</span>
+              </div>
+              <p className="admin-pricing-current__published">Publicada {planEfectivo.publicadoAt ? fmtFechaHora(planEfectivo.publicadoAt) : 'sin fecha registrada'}</p>
+              <p className="admin-pricing-current__note">Las nuevas cotizaciones toman esta política. Las reservas existentes conservan su precio registrado.</p>
+            </>}
+          </Card>
+
+          <Card className="admin-pricing-preview p-4">
+            <div className="admin-pricing-preview__heading">
+              <div>
+                <p className="admin-pricing-eyebrow">Vista pública</p>
+                <h4>2 personas · 1 noche</h4>
+              </div>
+              <label className="admin-pricing-preview__date">Fecha representativa
+                <input type="date" value={fechaPreview} onChange={event => setFechaPreview(event.target.value)} className={FOCUS_RING} />
+              </label>
+            </div>
+
+            {!previewPublicoCargado ? <LoadingState className="py-5" label="Calculando precios públicos" /> :
+              !resumenPreciosPublicos ? <div className="admin-pricing-preview__empty">
+                <AlertTriangle aria-hidden="true" size={18} />
+                <span>No hay una política pública aplicable para esta fecha.</span>
+              </div> : <>
+                <p className="admin-pricing-preview__source">
+                  Respuesta pública: <CodeBadge>{resumenPreciosPublicos.plan.codigo}</CodeBadge> · v{resumenPreciosPublicos.plan.version}
+                </p>
+                <div className="admin-pricing-preview__grid">
+                  {opcionesPreview.map(opcion => <div className="admin-pricing-preview__option" key={opcion.key}>
+                    <div><strong>{opcion.alojamiento}</strong><span>{opcion.modalidad}</span></div>
+                    <dl>
+                      <div><dt>Con desayuno</dt><dd>{opcion.desayuno ? fmtCentavos(opcion.desayuno.totalCentavos, opcion.desayuno.currency) : 'Sin tarifa'}</dd></div>
+                      <div><dt>Por persona</dt><dd>{opcion.desayuno ? fmtCentavos(opcion.desayuno.perPersonCentavos, opcion.desayuno.currency) : '—'}</dd></div>
+                      <div><dt>Pensión completa</dt><dd>{opcion.pensionCompleta ? fmtCentavos(opcion.pensionCompleta.totalCentavos, opcion.pensionCompleta.currency) : 'No disponible'}</dd></div>
+                    </dl>
+                  </div>)}
+                  {opcionesPreview.length === 0 && <p className="admin-pricing-preview__empty">No hay ofertas vendibles para 2 personas en esta fecha.</p>}
+                </div>
+              </>}
+            <a className={`admin-pricing-preview__link ${FOCUS_RING}`} href="/estadia?reservar=1" target="_blank" rel="noreferrer">
+              <Link2 aria-hidden="true" size={15} />Abrir reserva pública
+            </a>
+          </Card>
+        </div>
+
+        <details className="admin-pricing-history mt-3">
+          <summary>
+            <span>Historial y borradores</span>
+            <Badge variant="neutral">{otrasVersiones.length}</Badge>
+          </summary>
+          {otrasVersiones.length === 0 ? <p className="admin-pricing-history__empty">Todavía no hay otras versiones.</p> :
+            <div className="admin-config__horizontal-scroll mt-3 flex gap-2 pb-1">{otrasVersiones.map(plan => <Card key={plan.id} tone="muted" className="min-w-[220px] p-3">
+              <div className="flex items-start justify-between gap-2">
+                <strong className="text-sm">{plan.nombre}</strong>
+                <Badge variant={plan.estado === 'publicado' ? 'danger' : plan.estado === 'borrador' ? 'warning' : 'neutral'}>
+                  {plan.estado === 'publicado' ? 'publicado · conflicto' : plan.estado}
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs text-gray-500"><CodeBadge>{plan.codigo}</CodeBadge> · v{plan.version} · {plan.moneda}</p>
+              <p className="mt-2 text-[11px] text-gray-500">{plan.publicadoAt ? `Publicada ${fmtFechaHora(plan.publicadoAt)}` : `Creada ${fmtFechaHora(plan.createdAt)}`}</p>
+            </Card>)}</div>}
+        </details>
       </section>}
 
       {modo === 'precios' && <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">

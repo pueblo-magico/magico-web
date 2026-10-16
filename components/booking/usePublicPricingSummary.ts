@@ -18,6 +18,7 @@ function loadPricingSummary(fecha: string) {
 export function usePublicPricingSummary(fecha = localTodayIso()) {
   const [data, setData] = useState<PublicPricingSummary | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [refreshToken, setRefreshToken] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -27,9 +28,14 @@ export function usePublicPricingSummary(fecha = localTodayIso()) {
       .catch(() => { if (active) setData(null); })
       .finally(() => { if (active) setLoaded(true); });
     return () => { active = false; };
-  }, [fecha]);
+  }, [fecha, refreshToken]);
 
-  return { data, loaded };
+  const refresh = () => {
+    cachedRequests.delete(fecha);
+    setRefreshToken(value => value + 1);
+  };
+
+  return { data, loaded, refresh };
 }
 
 export function usePublicPricingSummaries(fechas: string[]) {
