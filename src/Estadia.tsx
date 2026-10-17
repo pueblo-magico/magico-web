@@ -105,6 +105,108 @@ function textoPrecioRegla(regla: PublicPriceRule, adicionalPersona = 0): string 
     : `${pesos(regla.importe_centavos)}/unidad`;
 }
 
+const ORDEN_TIPO_TARIFA: Record<AccommodationType, number> = {
+  camping: 0,
+  refugio: 1,
+  domo: 2,
+};
+
+const ORDEN_MODALIDAD_TARIFA: Record<string, number> = {
+  camping: 0,
+  compartida: 1,
+  cualquiera: 2,
+  privada: 3,
+};
+
+function textoDiasTarifa(dias: number[]): string {
+  const normalizados = [...new Set(dias)].sort((a, b) => a - b);
+  const clave = normalizados.join(',');
+  if (clave === '1,2,3,4,5,6,7') return 'todos los días';
+  if (clave === '1,2,3,4,7') return 'domingo a jueves';
+  if (clave === '1,2,3,4') return 'lunes a jueves';
+  if (clave === '5,6') return 'viernes y sábado';
+  if (clave === '7') return 'domingo';
+  const nombres = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+  return normalizados.map(dia => nombres[dia - 1]).filter(Boolean).join(', ');
+}
+
+type FilaTarifaVista = {
+  regla: PublicPriceRule;
+  modalidadEtiqueta: string;
+  ofertas: Array<{
+    tipo: AccommodationType;
+    ocupaciones: Array<{ minimo: number; maximo: number }>;
+  }>;
+};
+
+function agruparFilasTarifa(
+  precios: PublicPricingSummary | null,
+  filas: Array<PublicPriceRule & { tipo: AccommodationType }>,
+): FilaTarifaVista[] {
+  const grupos = new Map<string, FilaTarifaVista>();
+
+  filas.forEach(fila => {
+    const modalidadEtiqueta = etiquetaModalidad(precios, fila.tipo, fila.modalidad);
+    const clave = [
+      fila.temporada_codigo,
+      fila.fecha_desde,
+      fila.fecha_hasta,
+      fila.prioridad,
+      [...fila.dias_semana].sort((a, b) => a - b).join(','),
+      fila.modalidad,
+      modalidadEtiqueta,
+      fila.base_calculo,
+      fila.importe_centavos,
+    ].join('|');
+    const grupo = grupos.get(clave);
+    if (grupo) {
+      const ofertaExistente = grupo.ofertas.find(oferta => oferta.tipo === fila.tipo);
+      const ocupacion = { minimo: fila.ocupacion_min, maximo: fila.ocupacion_max };
+      if (ofertaExistente) ofertaExistente.ocupaciones.push(ocupacion);
+      else grupo.ofertas.push({ tipo: fila.tipo, ocupaciones: [ocupacion] });
+      return;
+    }
+    grupos.set(clave, {
+      regla: fila,
+      modalidadEtiqueta,
+      ofertas: [{
+        tipo: fila.tipo,
+        ocupaciones: [{ minimo: fila.ocupacion_min, maximo: fila.ocupacion_max }],
+      }],
+    });
+  });
+
+  return [...grupos.values()]
+    .map(grupo => ({
+      ...grupo,
+      ofertas: grupo.ofertas.sort((a, b) => ORDEN_TIPO_TARIFA[a.tipo] - ORDEN_TIPO_TARIFA[b.tipo]),
+    }))
+    .sort((a, b) => {
+      const modalidad = (ORDEN_MODALIDAD_TARIFA[a.regla.modalidad] ?? 99) -
+        (ORDEN_MODALIDAD_TARIFA[b.regla.modalidad] ?? 99);
+      return modalidad || ORDEN_TIPO_TARIFA[a.ofertas[0].tipo] - ORDEN_TIPO_TARIFA[b.ofertas[0].tipo];
+    });
+}
+
+function nombreGrupoTarifa(grupo: FilaTarifaVista): string {
+  return grupo.ofertas.map((oferta, indice) => {
+    const nombre = ETIQUETAS_ALOJAMIENTO[oferta.tipo];
+    return indice === 0 ? nombre : nombre.charAt(0).toLocaleLowerCase('es-AR') + nombre.slice(1);
+  }).join(' o ');
+}
+
+function detalleGrupoTarifa(grupo: FilaTarifaVista): string {
+  const capacidades = grupo.ofertas.map(oferta => {
+    const rangos = oferta.ocupaciones
+      .map(ocupacion => `${ocupacion.minimo}–${ocupacion.maximo}`)
+      .join(' y ');
+    return grupo.ofertas.length === 1
+      ? `${rangos} personas`
+      : `${ETIQUETAS_ALOJAMIENTO[oferta.tipo]} ${rangos}`;
+  }).join(' · ');
+  return `${grupo.modalidadEtiqueta} · ${capacidades}`;
+}
+
 function textoComidasOpcionales(precios: PublicPricingSummary | null): string {
   const pension = precios?.alimentacion.pension_completa;
   const almuerzo = pension?.precio_almuerzo_centavos ?? pension?.precio_comida_centavos ?? 0;
@@ -305,6 +407,11 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
     ...regla,
     tipo: opcion.tipo_alojamiento,
   }))) || [];
+  const gruposTarifa = agruparFilasTarifa(precios, filasTarifa);
+  const periodosTarifa = [...new Set(filasTarifa.map(row => textoDiasTarifa(row.dias_semana)).filter(Boolean))];
+  const periodoTarifa = periodosTarifa.length === 1
+    ? periodosTarifa[0]
+    : periodosTarifa.length > 1 ? 'según el día elegido' : 'tarifas vigentes';
 
   return (
     <section id="alojamientos" className="py-20 bg-bone">
@@ -367,33 +474,41 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
             </div>}
 
             {/* Tabla de precios compacta */}
-            <div className="bg-white rounded-2xl p-5 border border-gold/30 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gold/30 p-4 shadow-sm sm:p-5">
               <div className="flex items-center gap-2 mb-1">
                 <CurrencyCircleDollar className="w-5 h-5 text-gold flex-shrink-0" weight="duotone" />
                 <p className="text-brand font-serif text-lg">Tarifas</p>
               </div>
-              <p className="inline-block bg-gold/10 text-gold text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3">
-                ✦ Plan publicado {precios ? `v${precios.plan.version}` : ''} · valores por noche
+              <p className="mb-4 inline-block rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-gold">
+                {precios
+                  ? `✦ Plan publicado v${precios.plan.version} · ${periodoTarifa} · valores por noche`
+                  : '✦ Valores por noche según la tarifa vigente'}
               </p>
-              <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-end px-1 mb-1.5">
+              <div className="mb-1.5 grid grid-cols-[minmax(0,1fr)_minmax(76px,auto)_minmax(88px,auto)] items-end gap-x-2 px-1 sm:grid-cols-[minmax(0,1fr)_112px_112px] sm:gap-x-3">
                 <span />
-                <span className="text-dark/40 text-[10px] uppercase tracking-widest text-center w-24">Con desayuno</span>
-                <span className="text-gold text-[10px] uppercase tracking-widest font-bold text-center w-24">Pensión completa</span>
+                <span className="text-center text-[9px] uppercase tracking-[0.18em] text-dark/40 sm:text-[10px]">Con desayuno</span>
+                <span className="text-center text-[9px] font-bold uppercase tracking-[0.18em] text-gold sm:text-[10px]">Pensión completa</span>
               </div>
               {!cargado && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">Cargando tarifas vigentes…</p>}
-              {cargado && filasTarifa.length === 0 && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">No hay tarifas publicadas aplicables hoy. Consultá el precio en la reserva online.</p>}
-              {filasTarifa.map((row, indice) => (
-                <div key={`${row.tipo}-${row.modalidad}-${row.ocupacion_min}-${row.ocupacion_max}-${indice}`} className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center bg-bone rounded-xl px-4 py-3 border mb-2 border-brand/10">
-                  <div>
-                    <p className="text-brand text-sm font-semibold leading-tight">{ETIQUETAS_ALOJAMIENTO[row.tipo]}</p>
-                    <p className="text-dark/45 text-[11px] mt-0.5">
-                      {etiquetaModalidad(precios, row.tipo, row.modalidad)} · {row.ocupacion_min}–{row.ocupacion_max} personas
-                    </p>
+              {cargado && gruposTarifa.length === 0 && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">No hay tarifas publicadas aplicables hoy. Consultá el precio en la reserva online.</p>}
+              <div className="space-y-2">
+                {gruposTarifa.map((grupo, indice) => (
+                  <div key={`${grupo.regla.temporada_codigo}-${grupo.regla.modalidad}-${grupo.regla.importe_centavos}-${indice}`}
+                    className={`rounded-xl border bg-bone px-4 py-3.5 ${grupo.regla.modalidad === 'privada' ? 'border-gold/40' : 'border-brand/10'}`}>
+                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(76px,auto)_minmax(88px,auto)] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_112px_112px] sm:gap-x-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold leading-tight text-brand">{nombreGrupoTarifa(grupo)}</p>
+                        <p className="mt-1 text-[11px] leading-snug text-dark/45">{detalleGrupoTarifa(grupo)}</p>
+                      </div>
+                      <p className="break-words text-center font-serif text-sm leading-snug text-brand sm:text-lg">{textoPrecioRegla(grupo.regla)}</p>
+                      <p className="break-words text-center font-serif text-sm leading-snug text-gold sm:text-lg">{textoPrecioRegla(grupo.regla, adicionalPension)}</p>
+                    </div>
+                    {periodosTarifa.length > 1 && <p className="mt-2 border-t border-brand/10 pt-2 text-[11px] text-dark/55">
+                      <strong className="font-semibold text-brand">Tarifa aplicable:</strong> {textoDiasTarifa(grupo.regla.dias_semana)}
+                    </p>}
                   </div>
-                  <p className="text-brand text-sm font-serif text-center w-24">{textoPrecioRegla(row)}</p>
-                  <p className="text-gold text-sm font-serif text-center w-24">{textoPrecioRegla(row, adicionalPension)}</p>
-                </div>
-              ))}
+                ))}
+              </div>
               <p className="text-dark/50 text-xs leading-relaxed mt-2">
                 <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. {precioAlmuerzo > 0 || precioCena > 0 ? <>Podés sumar {precioAlmuerzo === precioCena ? <>almuerzo o cena a +{pesos(precioAlmuerzo)} c/u.</> : <>almuerzo a +{pesos(precioAlmuerzo)} y cena a +{pesos(precioCena)}.</>}</> : 'Consultá las comidas opcionales al reservar.'}<br />
                 <strong className="text-gold">Pensión completa:</strong> alojamiento + desayuno, almuerzo y cena, precio total cerrado.

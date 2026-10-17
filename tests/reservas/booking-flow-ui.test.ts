@@ -90,6 +90,17 @@ test('conserva el acceso para organizar retiros y experiencias desde estadía', 
   assert.match(stay, />\s*Contactanos <ArrowRight/);
 });
 
+test('presenta las tarifas públicas con la jerarquía visual de la página vigente', () => {
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  assert.match(stay, /const gruposTarifa = agruparFilasTarifa\(precios, filasTarifa\)/);
+  assert.match(stay, /nombreGrupoTarifa\(grupo\)/);
+  assert.match(stay, /detalleGrupoTarifa\(grupo\)/);
+  assert.match(stay, /Plan publicado v\$\{precios\.plan\.version\} · \$\{periodoTarifa\} · valores por noche/);
+  assert.match(stay, /ofertaExistente\.ocupaciones\.push\(ocupacion\)/);
+  assert.match(stay, /sm:text-lg/);
+  assert.doesNotMatch(stay, /filasTarifa\.map\(\(row/);
+});
+
 test('muestra servicios disponibles y limitaciones explícitas del alojamiento seleccionado', () => {
   const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
