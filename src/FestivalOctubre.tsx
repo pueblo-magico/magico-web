@@ -15,7 +15,6 @@ import {
   Music2,
   Sparkles,
   Sun,
-  Users,
   Waves,
 } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -61,23 +60,23 @@ const weekend = [
     day: 'Viernes',
     date: '30 OCT',
     title: 'Llegada y bienvenida',
-    description: 'Primeras experiencias para quienes quieran instalarse y empezar a compartir.',
+    description: 'Llegada para quienes elijan dos noches, instalación y un primer encuentro para empezar a compartir.',
     Icon: Moon,
     featured: false,
   },
   {
     day: 'Sábado',
     date: '31 OCT',
-    title: 'El festival',
-    description: 'Jornada central con DJs, música en vivo y las actividades programadas.',
+    title: 'Jornada central',
+    description: 'Cuatro DJs, música en vivo, fogón y las actividades programadas en el corazón de la montaña.',
     Icon: Sun,
     featured: true,
   },
   {
     day: 'Domingo',
     date: '01 NOV',
-    title: 'Naturaleza y cierre',
-    description: 'Una jornada más tranquila para quienes extiendan su estadía.',
+    title: 'Naturaleza e integración',
+    description: 'Temazcal, yoga, caminatas y conexión con ríos y montañas para quienes extiendan su estadía.',
     Icon: Leaf,
     featured: false,
   },
@@ -86,19 +85,19 @@ const weekend = [
 const faqs = [
   {
     question: '¿Puedo asistir solamente el sábado?',
-    answer: 'Sí. La modalidad principal es un festival de un día el sábado 31 de octubre. Habrá una entrada general específica para esa jornada.',
+    answer: 'Sí. El Pase por el Día permite vivir toda la jornada central del sábado 31. También podés sumar una o dos noches, en camping o habitación compartida.',
   },
   {
     question: '¿Qué incluye la entrada general?',
-    answer: 'El Pase Festival cuesta AR$ 35.000 por persona e incluye la jornada del sábado, los actos musicales, los espacios generales y las propuestas abiertas que integren la programación. No incluye comidas, bebidas, alojamiento ni experiencias especiales con cupo propio.',
+    answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, los cuatro artistas, el fogón y las propuestas abiertas. No incluye comidas, bebidas, estacionamiento, alojamiento ni experiencias con inscripción propia.',
   },
   {
     question: '¿La comida está incluida?',
-    answer: 'En el Pase Festival no. Festival + Noche incluye cena del sábado y desayuno del domingo; la Experiencia Fin de Semana incluye comidas desde la cena del viernes hasta el almuerzo del domingo. Las bebidas y consumos extra no están incluidos.',
+    answer: 'Los tickets con alojamiento incluyen desayuno. Durante todo el fin de semana habrá un buffet de comida artesanal para distintos momentos del día y gustos, además de barra de bebidas. El resto de las comidas y bebidas se abona por separado.',
   },
   {
-    question: '¿Qué diferencia hay entre las tres modalidades?',
-    answer: 'Pase Festival es solo sábado por AR$ 35.000. Festival + Noche suma una noche, cena y desayuno por AR$ 95.000. La Experiencia Fin de Semana, por AR$ 165.000, comienza el viernes, incluye dos noches, comidas hasta el domingo y actividades seleccionadas. Todos los valores son por persona.',
+    question: '¿Qué opciones de alojamiento hay?',
+    answer: 'Podés elegir camping con tu propia carpa o una cama en habitación compartida con ropa blanca. Hay opciones de una o dos noches y todas incluyen desayuno. Los cupos se confirman al reservar.',
   },
   {
     question: '¿Puedo ir sin experiencia previa en yoga o meditación?',
@@ -109,8 +108,12 @@ const faqs = [
     answer: 'Sí. La propuesta está pensada para encontrarse, compartir y conocer gente, tanto si venís por tu cuenta como en grupo.',
   },
   {
-    question: '¿Puedo quedarme a dormir?',
-    answer: 'Sí. Festival + Noche incluye una noche y la Experiencia Fin de Semana incluye dos. El lugar —alojamiento compartido o acampe— se asigna según disponibilidad y queda confirmado por WhatsApp antes de completar la reserva.',
+    question: '¿Puedo venir con niños o niñas?',
+    answer: 'Sí. AtardeSer es un encuentro apto para toda la familia: niños y niñas son bienvenidos. Es importante que permanezcan acompañados por una persona adulta responsable.',
+  },
+  {
+    question: '¿Cómo funciona el temazcal del domingo?',
+    answer: 'El temazcal forma parte de la propuesta del domingo y tiene cupo limitado, inscripción previa y un valor adicional. Consultanos para reservar tu lugar.',
   },
   {
     question: '¿Dónde queda Pueblo Mágico?',
@@ -118,9 +121,39 @@ const faqs = [
   },
   {
     question: '¿Cómo consulto por las entradas?',
-    answer: 'Elegí una modalidad y escribinos por WhatsApp desde su botón. Allí confirmamos cupo, tipo de alojamiento cuando corresponda y los pasos para reservar. La web no procesa pagos de forma automática.',
+    answer: 'Elegí una modalidad y escribinos por WhatsApp desde su botón. Allí confirmamos cupo, alojamiento cuando corresponda y los pasos para reservar. Podés pagar por transferencia o en 3 cuotas sin interés con tarjeta.',
   },
 ];
+
+const EVENT_START = new Date('2026-10-31T12:00:00-03:00').getTime();
+
+const Countdown = () => {
+  const [remaining, setRemaining] = useState(() => Math.max(0, EVENT_START - Date.now()));
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRemaining(Math.max(0, EVENT_START - Date.now())), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const totalSeconds = Math.floor(remaining / 1000);
+  const units = [
+    ['Días', Math.floor(totalSeconds / 86400)],
+    ['Horas', Math.floor((totalSeconds % 86400) / 3600)],
+    ['Min', Math.floor((totalSeconds % 3600) / 60)],
+    ['Seg', totalSeconds % 60],
+  ] as const;
+
+  return (
+    <div className="grid max-w-lg grid-cols-4 gap-2" aria-label="Cuenta regresiva para AtardeSer">
+      {units.map(([label, value]) => (
+        <div key={label} className="rounded-2xl border border-white/15 bg-black/20 px-2 py-3 text-center backdrop-blur-sm">
+          <span className="block text-2xl text-white serif-title md:text-3xl">{String(value).padStart(2, '0')}</span>
+          <span className="mt-1 block text-[8px] font-bold uppercase tracking-[0.16em] text-white/45">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const Eyebrow = ({ children, light = false }: { children: React.ReactNode; light?: boolean }) => (
   <p className={`mb-4 text-[11px] font-bold uppercase tracking-[0.28em] ${light ? 'text-white/60' : 'text-[#B85A3D]'}`}>
@@ -170,7 +203,7 @@ const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number
     <div className="relative aspect-[4/4.7] overflow-hidden bg-[#123B2D]">
       <img
         src={img(member.image, 800)}
-        alt={member.name === 'Mati Onix' ? 'Atmósfera musical de Raíz Sonora' : member.fullName}
+        alt={member.name === 'Mati Onix' ? 'Mati Onix tocando en Pueblo Mágico' : member.fullName}
         loading="lazy"
         width="800"
         height="940"
@@ -198,8 +231,9 @@ const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: nu
     <h3 className="mt-3 text-3xl serif-title">{option.title}</h3>
     <p className={`mt-3 text-sm leading-relaxed ${option.featured ? 'text-white/65' : 'text-[#1F2922]/60'}`}>{option.description}</p>
     <div className={`my-6 border-y py-5 ${option.featured ? 'border-white/10' : 'border-[#123B2D]/10'}`}>
+      <p className={`mb-3 text-xs font-semibold ${option.featured ? 'text-[#E7B84B]' : 'text-[#123B2D]'}`}>{option.installments}</p>
       <p className="text-3xl serif-title">{option.price}</p>
-      <p className={`mt-1 text-[10px] font-bold uppercase tracking-[0.16em] ${option.featured ? 'text-white/45' : 'text-[#1F2922]/45'}`}>por persona · valor lanzamiento</p>
+      <p className={`mt-1 text-[10px] font-bold uppercase tracking-[0.16em] ${option.featured ? 'text-white/45' : 'text-[#1F2922]/45'}`}>por persona · contado o transferencia · 20% off</p>
     </div>
     <p className={`mb-3 text-[10px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>Incluye</p>
     <ul className="mb-5 space-y-2.5">
@@ -305,11 +339,11 @@ const FestivalOctubre: React.FC = () => {
                 <span className="rounded-full border border-white/25 bg-black/15 px-4 py-2 backdrop-blur-sm">Los Gigantes · Córdoba</span>
               </div>
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.32em] text-[#E7B84B]">{FESTIVAL_OCTUBRE.nameStatus}</p>
-              <h1 className="max-w-3xl text-6xl leading-[0.9] text-white serif-title sm:text-7xl md:text-8xl">Raíz <span className="text-[#E7B84B]">Sonora</span></h1>
-              <p className="mt-5 max-w-xl text-xl leading-tight text-white/85 serif-title md:text-3xl">Festival de música, naturaleza y encuentro</p>
+              <h1 className="max-w-3xl text-6xl leading-[0.9] text-white serif-title sm:text-7xl md:text-8xl">Atarde<span className="text-[#E7B84B]">Ser</span></h1>
               <p className="mt-7 max-w-2xl text-base leading-relaxed text-white/75 md:text-lg">
-                Un día para cambiar de ritmo. Música, DJs, naturaleza y experiencias para compartir en las sierras. Vení por el día o quedate a vivir el fin de semana completo.
+                Un día para encontrarnos, celebrar y conectar con el pulso natural. Live sets y música en vivo con DJs invitados, naturaleza y experiencias para compartir en el corazón de la montaña. Vení por el día o quedate a vivir el finde completo.
               </p>
+              <div className="mt-7"><Countdown /></div>
               <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
                 <FestivalButton href={FESTIVAL_OCTUBRE.contact.general}>Quiero sumarme</FestivalButton>
                 <FestivalButton href="#propuesta" secondary>Conocer la propuesta</FestivalButton>
@@ -320,26 +354,20 @@ const FestivalOctubre: React.FC = () => {
               </div>
               </div>
 
-              <div className="rounded-[1.75rem] border border-white/15 bg-[#0A140E]/55 p-5 text-white shadow-2xl backdrop-blur-md md:p-6" data-reveal data-delay="2">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#E7B84B]">Tres formas de vivirlo</p>
-                    <p className="mt-1 text-lg serif-title">Elegí cuánto tiempo querés quedarte</p>
+              <div className="grid grid-cols-2 gap-3" data-reveal data-delay="2">
+                {FESTIVAL_OCTUBRE.images.gallery.map((photo, index) => (
+                  <div key={photo.src} className={`relative overflow-hidden rounded-[1.5rem] border border-white/15 ${index === 0 ? 'col-span-2 aspect-[16/8]' : 'aspect-square'}`}>
+                    <img src={img(photo.src, 900)} alt={photo.alt} className="h-full w-full object-cover" width="900" height="700" />
+                    <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(10,20,14,0.55),transparent_55%)]" />
                   </div>
-                  <Users size={22} className="shrink-0 text-white/45" aria-hidden="true" />
-                </div>
-                <div className="divide-y divide-white/10 border-y border-white/10">
-                  {FESTIVAL_OCTUBRE.accessOptions.map(option => (
-                    <a key={option.shortTitle} href="#entradas" className="group grid grid-cols-[1fr_auto] gap-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B84B]">
-                      <span>
-                        <span className="block text-sm font-semibold text-white group-hover:text-[#E7B84B]">{option.shortTitle}</span>
-                        <span className="mt-1 block text-xs text-white/50">{option.heroDetail}</span>
-                      </span>
-                      <span className="self-center text-right text-lg text-[#E7B84B] serif-title">{option.price}</span>
-                    </a>
-                  ))}
-                </div>
-                <p className="mt-4 text-[10px] leading-relaxed text-white/45">Valores por persona. La disponibilidad de alojamiento y experiencias especiales se confirma al reservar.</p>
+                ))}
+                <a href="#entradas" className="col-span-2 flex items-center justify-between gap-5 rounded-[1.5rem] border border-white/15 bg-[#0A140E]/70 p-5 text-white backdrop-blur-md transition hover:border-[#E7B84B]/60">
+                  <span>
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#E7B84B]">Pase por el día</span>
+                    <span className="mt-1 block text-sm text-white/60">También hay opciones con una o dos noches</span>
+                  </span>
+                  <span className="shrink-0 text-2xl text-[#E7B84B] serif-title">AR$ 35.000</span>
+                </a>
               </div>
             </div>
           </div>
@@ -355,10 +383,10 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="max-w-2xl text-4xl leading-tight serif-title md:text-6xl">Una forma diferente de encontrarnos.</h2>
               <div className="mt-8 max-w-2xl space-y-5 text-base leading-relaxed text-[#1F2922]/70 md:text-lg">
                 <p>La música nos reúne. La naturaleza nos cambia el ritmo. El fuego invita a conversar. Y, entre el baile, el río y la montaña, aparecen momentos que no estaban en los planes.</p>
-                <p>Creamos un espacio para disfrutar, conocer gente, movernos y celebrar la vida en comunidad.</p>
+                <p>Creamos un espacio para disfrutar, conocer gente, movernos y celebrar la vida en comunidad. Es un encuentro para toda la familia: niños y niñas son bienvenidos.</p>
               </div>
               <div className="mt-10 grid grid-cols-3 gap-3 border-t border-[#123B2D]/15 pt-7 text-center sm:text-left">
-                {[['01', 'día central'], ['03', 'DJs confirmados'], ['03', 'formas de sumarte']].map(([number, label]) => (
+                {[['01', 'día central'], ['04', 'artistas confirmados'], ['05', 'formas de sumarte']].map(([number, label]) => (
                   <div key={label}>
                     <p className="text-3xl text-[#B85A3D] serif-title md:text-4xl">{number}</p>
                     <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1F2922]/55">{label}</p>
@@ -368,7 +396,7 @@ const FestivalOctubre: React.FC = () => {
             </div>
             <div className="relative" data-reveal data-delay="2">
               <div className="overflow-hidden rounded-[2rem]">
-                <img src={img(FESTIVAL_OCTUBRE.images.concept, 1100)} alt="Amigos compartiendo mate en Pueblo Mágico" loading="lazy" width="1100" height="1300" className="aspect-[4/5] w-full object-cover" />
+                <img src={img(FESTIVAL_OCTUBRE.images.concept, 1100)} alt="Movimiento y celebración al aire libre en Pueblo Mágico" loading="lazy" width="1100" height="1300" className="aspect-[4/5] w-full object-cover" />
               </div>
               <div className="absolute -bottom-6 -left-3 max-w-[240px] rounded-2xl bg-[#123B2D] p-5 text-white shadow-xl sm:-left-8">
                 <Music2 size={22} className="mb-3 text-[#E7B84B]" aria-hidden="true" />
@@ -383,9 +411,9 @@ const FestivalOctubre: React.FC = () => {
             <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
               <div>
                 <Eyebrow>Qué vas a encontrar</Eyebrow>
-                <h2 className="max-w-3xl text-4xl leading-tight serif-title md:text-6xl">Un festival que también se vive fuera de la pista.</h2>
+                <h2 className="max-w-3xl text-4xl leading-tight serif-title md:text-6xl">Un festival para explorarlo todo.</h2>
               </div>
-              <p className="max-w-md text-sm leading-relaxed text-[#1F2922]/60">La programación y las actividades incluidas en cada modalidad se confirmarán próximamente.</p>
+              <p className="max-w-md text-sm leading-relaxed text-[#1F2922]/60">Música, naturaleza, movimiento, fuego y gastronomía para armar tu propia experiencia. Algunas propuestas, como el temazcal, tienen inscripción y cupo propios.</p>
             </div>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {FESTIVAL_OCTUBRE.experiences.map((experience, index) => <ExperienceCard key={experience.title} experience={experience} index={index} />)}
@@ -400,9 +428,9 @@ const FestivalOctubre: React.FC = () => {
                 <Eyebrow light>Artistas confirmados</Eyebrow>
                 <h2 className="text-4xl leading-tight serif-title md:text-6xl">La música que nos reúne.</h2>
               </div>
-              <p className="text-sm leading-relaxed text-white/55">Tres actos confirmados para una jornada donde la electrónica se encuentra con el paisaje. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
+              <p className="text-sm leading-relaxed text-white/55">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
             </div>
-            <div className="grid gap-5 md:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               {FESTIVAL_OCTUBRE.artists.map((artist, index) => (
                 <article key={artist.name} className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
                   <div className="relative aspect-[4/3] overflow-hidden">
@@ -422,7 +450,7 @@ const FestivalOctubre: React.FC = () => {
                 </article>
               ))}
             </div>
-            <div className="mt-6 rounded-2xl border border-dashed border-white/15 px-6 py-5 text-center text-sm text-white/45">La grilla sigue abierta: los próximos actos y la programación completa se anunciarán en las redes de Pueblo Mágico.</div>
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 text-center text-sm text-white/55">La programación horaria completa se publicará en las redes de Pueblo Mágico.</div>
           </div>
         </section>
 
@@ -433,10 +461,15 @@ const FestivalOctubre: React.FC = () => {
                 <Eyebrow>Quienes lo hacen posible</Eyebrow>
                 <h2 className="max-w-3xl text-4xl leading-tight serif-title md:text-6xl">Un equipo que vive el lugar y cuida cada detalle.</h2>
               </div>
-              <p className="text-sm leading-relaxed text-[#1F2922]/60">Raíz Sonora nace dentro de Pueblo Mágico. El equipo reúne hospitalidad, bienestar, producción, tecnología y dirección musical para crear una experiencia cercana y bien sostenida.</p>
+              <p className="text-sm leading-relaxed text-[#1F2922]/60">AtardeSer nace como una coproducción entre Kintu y Pueblo Mágico. El equipo reúne hospitalidad, bienestar, producción y dirección musical para crear una experiencia cercana y bien sostenida.</p>
             </div>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
               {FESTIVAL_OCTUBRE.team.map((member, index) => <TeamCard key={member.fullName} member={member} index={index} />)}
+            </div>
+            <div className="mt-8 rounded-[2rem] bg-[#123B2D] px-7 py-8 text-center text-white md:px-12 md:py-10" data-reveal>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#E7B84B]">Una coproducción de</p>
+              <h3 className="mt-3 text-3xl serif-title md:text-4xl">Kintu × Pueblo Mágico</h3>
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65">Dos equipos que se encuentran para cuidar la producción, la hospitalidad y el sentido de una celebración creada en conexión con el lugar.</p>
             </div>
           </div>
         </section>
@@ -446,7 +479,7 @@ const FestivalOctubre: React.FC = () => {
             <div className="mx-auto mb-14 max-w-3xl text-center" data-reveal>
               <Eyebrow>Elegí tu propio ritmo</Eyebrow>
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">Un día de festival. Un fin de semana para quedarse.</h2>
-              <p className="mt-5 text-sm leading-relaxed text-[#1F2922]/60 md:text-base">La programación detallada se anunciará próximamente.</p>
+              <p className="mt-5 text-sm leading-relaxed text-[#1F2922]/60 md:text-base">Podés venir solo por la jornada central o hacer del encuentro un fin de semana completo.</p>
             </div>
             <div className="relative grid gap-5 lg:grid-cols-3">
               <div className="absolute left-[16.6%] right-[16.6%] top-12 hidden h-px bg-[#123B2D]/15 lg:block" />
@@ -467,28 +500,36 @@ const FestivalOctubre: React.FC = () => {
             <div className="mb-12 text-center" data-reveal>
               <Eyebrow>Modalidades de acceso</Eyebrow>
               <h2 className="text-4xl serif-title md:text-6xl">Elegí cómo sumarte.</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60">Tres maneras de vivir Raíz Sonora, desde una jornada de festival hasta la experiencia completa de viernes a domingo.</p>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60">Vení por el día o elegí una o dos noches en camping o habitación compartida. Todos los tickets con alojamiento incluyen desayuno.</p>
             </div>
-            <div className="grid gap-6 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => <AccessCard key={option.title} option={option} index={index} />)}
             </div>
             <div className="mt-6 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm text-[#1F2922]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
           </div>
         </section>
 
-        <section id="lugar" className="relative min-h-[680px] overflow-hidden bg-[#123B2D] text-white">
-          <img src={img(FESTIVAL_OCTUBRE.images.place, 1800)} alt="Jardín y Refugio de Piedra de Pueblo Mágico" loading="lazy" width="1800" height="1200" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(12,35,26,0.94)_0%,rgba(12,35,26,0.72)_50%,rgba(12,35,26,0.16)_100%)] max-md:bg-[linear-gradient(to_top,rgba(12,35,26,0.97),rgba(12,35,26,0.42))]" />
-          <div className="relative mx-auto flex min-h-[680px] max-w-7xl items-end px-6 py-16 md:items-center md:px-10 lg:px-16">
-            <div className="max-w-2xl" data-reveal>
-              <Eyebrow light>El lugar</Eyebrow>
-              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico, en el corazón de las sierras.</h2>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-white/72 md:text-lg">Un ecolodge de montaña en Los Gigantes, Córdoba. Naturaleza, comunidad y un paisaje que cambia la forma de vivir el tiempo.</p>
+        <section id="lugar" className="bg-[#F5F0E5] px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-20">
+            <div data-reveal>
+              <Eyebrow>El lugar</Eyebrow>
+              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico,<br />Los Gigantes.</h2>
+              <p className="mt-6 max-w-xl text-base leading-relaxed text-[#1F2922]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone AtardeSer: naturaleza, comunidad y presencia.</p>
+              <ul className="mt-8 grid gap-3 text-sm text-[#1F2922]/65 sm:grid-cols-2">
+                {['A 90 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón'].map(item => (
+                  <li key={item} className="flex items-start gap-3"><Check size={16} className="mt-0.5 shrink-0 text-[#B85A3D]" aria-hidden="true" />{item}</li>
+                ))}
+              </ul>
               <div className="mt-8 flex flex-wrap gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/15 px-4 py-2 text-xs text-white/75 backdrop-blur-sm"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/15 px-4 py-2 text-xs text-white/75 backdrop-blur-sm"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
               </div>
               <div className="mt-8"><FestivalButton href="/">Conocer Pueblo Mágico</FestivalButton></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3" data-reveal data-delay="1">
+              <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
+              <img src={img('/uploads/atardeser/familias.jpeg', 700)} alt="Familias compartiendo en Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+              <img src={img('/uploads/atardeser/ninez.jpeg', 700)} alt="Niños y adultos celebrando al aire libre" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
             </div>
           </div>
         </section>
@@ -497,8 +538,8 @@ const FestivalOctubre: React.FC = () => {
           <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.72fr_1fr] lg:gap-20">
             <div data-reveal>
               <Eyebrow>Preguntas frecuentes</Eyebrow>
-              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Lo confirmado, sin letra chica.</h2>
-              <p className="mt-5 max-w-md text-sm leading-relaxed text-[#1F2922]/60">Vamos a actualizar esta sección a medida que se confirme la programación, los cupos disponibles y cualquier condición adicional.</p>
+              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Todo lo que necesitás saber.</h2>
+              <p className="mt-5 max-w-md text-sm leading-relaxed text-[#1F2922]/60">¿Quedó alguna duda? Escribinos por WhatsApp y te ayudamos a elegir la mejor forma de vivir AtardeSer.</p>
               <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-[#123B2D] underline decoration-[#E7B84B] decoration-2 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#123B2D]">
                 <MessageCircle size={17} aria-hidden="true" /> Hacer otra consulta
               </a>
@@ -525,8 +566,8 @@ const FestivalOctubre: React.FC = () => {
         <section className="bg-[#B85A3D] px-6 py-20 text-white md:px-10 md:py-28">
           <div className="mx-auto max-w-5xl text-center" data-reveal>
             <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#E7B84B] text-[#123B2D]"><Waves size={24} aria-hidden="true" /></div>
-            <h2 className="text-4xl leading-tight serif-title md:text-7xl">Raíz Sonora.<br />Cambiá de ritmo.</h2>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/75">Un día de música, naturaleza y buena compañía. Un encuentro para salir de lo habitual y disfrutar de otra manera.</p>
+            <h2 className="text-4xl leading-tight serif-title md:text-7xl">AtardeSer.<br />Celebrá en la montaña.</h2>
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/75">Música, naturaleza y buena compañía. Vení por el día, quedate a vivir el finde y elegí tu propia manera de ser parte.</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <FestivalButton href={FESTIVAL_OCTUBRE.contact.general}>Consultar por WhatsApp</FestivalButton>
               <a href={FESTIVAL_OCTUBRE.contact.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/35 px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"><Instagram size={16} aria-hidden="true" />Seguir novedades</a>
