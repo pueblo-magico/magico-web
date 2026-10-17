@@ -14,6 +14,7 @@ type ConfiguracionCucuru = {
   apiKey?: string;
   collectorId?: string;
   baseUrl?: string;
+  diagnosticsEnabled?: boolean;
 };
 
 type CuentaApi = {
@@ -172,14 +173,74 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
   private readonly collectorId?: string;
   private readonly baseUrl: string;
   private readonly fetcher: Fetcher;
+  private readonly diagnosticsEnabled: boolean;
   private readonly timeoutMs = 8_000;
 
   constructor(configuracion: ConfiguracionCucuru, fetcher?: Fetcher) {
     this.apiKey = configuracion.apiKey;
     this.collectorId = configuracion.collectorId;
     this.baseUrl = (configuracion.baseUrl || 'https://api.cucuru.com').replace(/\/+$/, '');
+    this.diagnosticsEnabled = configuracion.diagnosticsEnabled === true;
     const fetchConfigurado = fetcher ?? globalThis.fetch.bind(globalThis);
     this.fetcher = (input, init) => fetchConfigurado(input, init);
+  }
+
+  private async diagnosticarRespuestaHttp(
+    response: Response,
+    operacion: 'GET' | 'PUT' | 'POST',
+    path: string
+  ): Promise<void> {
+    if (!this.diagnosticsEnabled) return;
+    const headersPermitidos = [
+      'cache-control',
+      'cf-cache-status',
+      'cf-ray',
+      'content-length',
+      'content-type',
+      'date',
+      'retry-after',
+      'server',
+      'via',
+      'www-authenticate',
+      'x-correlation-id',
+      'x-request-id',
+    ];
+    const headers: Record<string, string> = {};
+    for (const nombre of headersPermitidos) {
+      const valor = response.headers.get(nombre);
+      if (valor) headers[nombre] = valor.slice(0, 500);
+    }
+
+    let bodyPreview = '[NO_DISPONIBLE]';
+    let bodyTruncated = false;
+    try {
+      const body = await response.text();
+      const secretos = [this.apiKey, this.collectorId]
+        .filter((valor): valor is string => Boolean(valor?.trim()))
+        .map(valor => valor.trim());
+      let sanitizado = body;
+      for (const secreto of secretos) sanitizado = sanitizado.split(secreto).join('[REDACTED]');
+      sanitizado = sanitizado
+        .replace(/\bBearer\s+[A-Za-z0-9._~+\/-]+=*/gi, 'Bearer [REDACTED]')
+        .replace(
+          /((?:api[-_ ]?key|authorization|token|secret|password|credential|collector[-_ ]?id)\s*["']?\s*[:=]\s*["']?)[^"',\s}]+/gi,
+          '$1[REDACTED]'
+        );
+      bodyTruncated = sanitizado.length > 2_048;
+      bodyPreview = sanitizado.slice(0, 2_048);
+    } catch {
+      // El diagnóstico nunca debe reemplazar el error HTTP original.
+    }
+
+    console.error(JSON.stringify({
+      evento: 'cucuru_http_error_diagnostic',
+      operacion,
+      path,
+      status: response.status,
+      response_headers: headers,
+      response_body_preview: bodyPreview,
+      response_body_truncated: bodyTruncated,
+    }));
   }
 
   private configuracion() {
@@ -230,7 +291,10 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
       }));
       throw new ErrorCucuruTransitorio('No se pudo consultar Cucuru.', diagnostico.codigo, { cause });
     }
-    if (!response.ok) throw errorHttp(response.status);
+    if (!response.ok) {
+      await this.diagnosticarRespuestaHttp(response, 'GET', path);
+      throw errorHttp(response.status);
+    }
     try {
       const body = await response.json();
       if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error();
@@ -270,8 +334,11 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
     } catch {
       throw new ErrorProvisionamientoDesconocido();
     }
-    if (response.status >= 500) throw new ErrorProvisionamientoDesconocido();
-    if (!response.ok) throw errorHttp(response.status);
+    if (!response.ok) {
+      await this.diagnosticarRespuestaHttp(response, 'PUT', '/app/v1/Collection/accounts/account');
+      if (response.status >= 500) throw new ErrorProvisionamientoDesconocido();
+      throw errorHttp(response.status);
+    }
     let body: Record<string, unknown>;
     try {
       body = await response.json() as Record<string, unknown>;
@@ -296,10 +363,17 @@ export class CucuruClienteHttp implements ProveedorCuentasCobro, ProveedorCollec
     } catch {
       throw new ErrorProvisionamientoDesconocido();
     }
-    if (response.status >= 500 || response.status === 408 || response.status === 429) {
-      throw new ErrorProvisionamientoDesconocido();
+    if (!response.ok) {
+      await this.diagnosticarRespuestaHttp(
+        response,
+        'POST',
+        '/app/v1/Collection/accounts/account/alias'
+      );
+      if (response.status >= 500 || response.status === 408 || response.status === 429) {
+        throw new ErrorProvisionamientoDesconocido();
+      }
+      throw errorHttp(response.status);
     }
-    if (!response.ok) throw errorHttp(response.status);
     return { ...entrada.cuenta, alias: entrada.alias };
   }
 
