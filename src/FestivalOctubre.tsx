@@ -355,32 +355,46 @@ const FestivalOctubre: React.FC = () => {
           </a>
         </section>
 
-        <section id="propuesta" className="px-6 py-20 md:px-10 md:py-32" style={{ backgroundColor: C.cream }}>
-          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20">
-            <div data-reveal>
-              <Eyebrow>La propuesta</Eyebrow>
-              <h2 className="max-w-2xl text-4xl leading-tight serif-title md:text-6xl">Una forma diferente de encontrarnos.</h2>
-              <div className="mt-8 max-w-2xl space-y-5 text-base leading-relaxed text-[#1F2922]/70 md:text-lg">
-                <p>La música nos reúne. La naturaleza nos cambia el ritmo. El fuego invita a conversar. Y, entre el baile, el río y la montaña, aparecen momentos que no estaban en los planes.</p>
-                <p>Creamos un espacio para disfrutar, conocer gente, movernos y celebrar la vida en comunidad. Es un encuentro para toda la familia: niños y niñas son bienvenidos.</p>
-              </div>
-              <div className="mt-10 grid grid-cols-3 gap-3 border-t border-[#123B2D]/15 pt-7 text-center sm:text-left">
-                {[['01', 'día central'], ['04', 'artistas confirmados'], ['05', 'formas de sumarte']].map(([number, label]) => (
-                  <div key={label}>
-                    <p className="text-3xl text-[#B85A3D] serif-title md:text-4xl">{number}</p>
-                    <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#1F2922]/55">{label}</p>
-                  </div>
+        <section id="propuesta" className="bg-[#0B1B12] px-6 py-20 text-white md:px-10 md:py-28">
+          <div className="mx-auto max-w-5xl">
+            <div className="text-center" data-reveal>
+              <div className="mb-7 flex items-center justify-center gap-3">
+                {[{ Icon: Music2, color: '#B85A3D' }, { Icon: Flame, color: '#E7B84B' }, { Icon: Sun, color: '#D6B52C' }].map(({ Icon, color }, index) => (
+                  <span key={index} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.05]">
+                    <Icon size={17} color={color} aria-hidden="true" />
+                  </span>
                 ))}
               </div>
+              <h2 className="mx-auto max-w-3xl text-4xl leading-[1.05] serif-title md:text-6xl">
+                La música nos reúne.<br />
+                La naturaleza cambia el ritmo.<br />
+                <span className="text-[#E7B84B]">Volvemos a encontrarnos.</span>
+              </h2>
+              <p className="mx-auto mt-7 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">
+                AtardeSer es una celebración para bailar, respirar la montaña y compartir sin apuro. Un encuentro abierto para venir por el día o quedarse a vivir el fin de semana completo.
+              </p>
             </div>
-            <div className="relative" data-reveal data-delay="2">
-              <div className="overflow-hidden rounded-[2rem]">
-                <img src={img(FESTIVAL_OCTUBRE.images.concept, 1100)} alt="Movimiento y celebración al aire libre en Pueblo Mágico" loading="lazy" width="1100" height="1300" className="aspect-[4/5] w-full object-cover" />
-              </div>
-              <div className="absolute -bottom-6 -left-3 max-w-[240px] rounded-2xl bg-[#123B2D] p-5 text-white shadow-xl sm:-left-8">
-                <Music2 size={22} className="mb-3 text-[#E7B84B]" aria-hidden="true" />
-                <p className="text-lg leading-snug serif-title">Electrónica orgánica en el corazón de las sierras.</p>
-              </div>
+
+            <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
+              {[
+                { Icon: Music2, title: 'Música que mueve', text: 'Cuatro artistas acompañan un viaje sonoro desde el movimiento del día hasta el fuego de la noche.' },
+                { Icon: Leaf, title: 'Naturaleza viva', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.' },
+                { Icon: Flame, title: 'Encuentro real', text: 'Fogón, comida artesanal y espacios para celebrar, conversar y conocer gente nueva.' },
+              ].map(({ Icon, title, text }) => (
+                <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.035] px-7 py-8 text-center">
+                  <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#E7B84B]/10 text-[#E7B84B]">
+                    <Icon size={18} aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-5 text-sm font-bold text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/50">{text}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-9 flex flex-wrap justify-center gap-2.5" data-reveal data-delay="2">
+              {['Abierto a toda la familia', 'Vení por el día', 'Quedate el finde', 'Buffet y barra disponibles'].map(item => (
+                <span key={item} className="rounded-full border border-[#E7B84B]/30 bg-[#E7B84B]/[0.04] px-4 py-2 text-[10px] font-semibold tracking-wide text-white/65">{item}</span>
+              ))}
             </div>
           </div>
         </section>
