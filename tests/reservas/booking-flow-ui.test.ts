@@ -83,6 +83,13 @@ test('muestra los horarios de comidas configurados en estadía y en la reserva',
   assert.doesNotMatch(`${stay}\n${terms}\n${coliving}`, /desayuno de 09:00 a 10:00/);
 });
 
+test('conserva el acceso para organizar retiros y experiencias desde estadía', () => {
+  const stay = readFileSync(new URL('../../src/Estadia.tsx', import.meta.url), 'utf8');
+  assert.match(stay, /¿Querés hacer un retiro u organizar una experiencia con tu comunidad, empresa o escuela\?/);
+  assert.match(stay, /href=\{ROUTES\.ORGANIZA_EXPERIENCIA\}/);
+  assert.match(stay, />\s*Contactanos <ArrowRight/);
+});
+
 test('muestra servicios disponibles y limitaciones explícitas del alojamiento seleccionado', () => {
   const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');

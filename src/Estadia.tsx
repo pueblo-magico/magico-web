@@ -627,6 +627,17 @@ const HorariosPension: React.FC<{
           <p className="text-dark/50 text-xs leading-relaxed mt-2">
             Actividades y traslados a consultar: temazcal ceremonial, cabalgatas, traslado desde Córdoba / Villa Carlos Paz.
           </p>
+          <div className="mt-5 bg-brand rounded-xl px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-white/85 text-sm leading-relaxed">
+              ¿Querés hacer un retiro u organizar una experiencia con tu comunidad, empresa o escuela?
+            </p>
+            <a
+              href={ROUTES.ORGANIZA_EXPERIENCIA}
+              className="inline-flex flex-shrink-0 items-center justify-center gap-1.5 rounded-full bg-gold px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-white hover:text-brand"
+            >
+              Contactanos <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
       </div>
     </div>
