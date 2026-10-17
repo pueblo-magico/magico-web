@@ -39,7 +39,7 @@ export const FESTIVAL_OCTUBRE = {
       name: 'Mationix',
       style: 'Live set · progressive tribal organic house',
       bio: 'Un set híbrido que cruza frecuencias electrónicas, percusiones orgánicas e instrumentos étnicos en vivo. Movimiento libre y una experiencia sonora inmersiva. Presenta su primer EP, Movimiento Vital.',
-      image: '/uploads/atardeser/mationix.jpg',
+      image: '/uploads/atardeser/mationix-portrait.png',
       imageAlt: 'Mationix, artista de progressive tribal organic house',
       imageNote: 'Imagen oficial del artista',
     },

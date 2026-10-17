@@ -23,7 +23,6 @@ import { PageSectionNav, type PageNavigation } from '../components/PageSectionNa
 import {
   FESTIVAL_OCTUBRE,
   type FestivalAccessOption,
-  type FestivalExperience,
   type FestivalTeamMember,
 } from './data/festivalOctubre';
 import { img } from './lib/img';
@@ -45,7 +44,9 @@ const navigation: PageNavigation = {
   pageTitle: 'Festival en Pueblo Mágico',
   sections: [
     { id: 'propuesta', label: 'La propuesta' },
+    { id: 'para-quien', label: 'Para quién es' },
     { id: 'experiencias', label: 'Experiencias' },
+    { id: 'temazcal', label: 'Temazcal' },
     { id: 'artistas', label: 'Artistas' },
     { id: 'equipo', label: 'Equipo' },
     { id: 'fin-de-semana', label: 'Fin de semana' },
@@ -177,27 +178,6 @@ const FestivalButton = ({ href, children, secondary = false }: { href: string; c
   </a>
 );
 
-const ExperienceCard = ({ experience, index }: { experience: FestivalExperience; index: number }) => (
-  <article className="group relative min-h-[360px] overflow-hidden rounded-[1.75rem] bg-[#123B2D]" data-reveal data-delay={String((index % 3) + 1)}>
-    <img
-      src={img(experience.image, 900)}
-      alt={experience.alt}
-      loading="lazy"
-      width="900"
-      height="1080"
-      className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]"
-    />
-    <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(9,22,16,0.96)_0%,rgba(9,22,16,0.42)_62%,rgba(9,22,16,0.08)_100%)]" />
-    <div className="absolute inset-x-0 bottom-0 p-6 md:p-7">
-      <span className="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-xs font-bold text-white/70">
-        {String(index + 1).padStart(2, '0')}
-      </span>
-      <h3 className="mb-2 text-2xl text-white serif-title">{experience.title}</h3>
-      <p className="max-w-sm text-sm leading-relaxed text-white/70">{experience.description}</p>
-    </div>
-  </article>
-);
-
 const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number }) => (
   <article className="rounded-2xl border border-[#123B2D]/10 bg-[#123B2D]/[0.02] p-7" data-reveal data-delay={String((index % 3) + 1)}>
     <div className="mb-5 h-14 w-14 overflow-hidden rounded-full bg-[#123B2D]/10">
@@ -222,25 +202,25 @@ const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number
 );
 
 const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: number }) => (
-  <article className={`relative flex h-full flex-col overflow-hidden rounded-[2rem] border p-7 md:p-8 ${option.featured ? 'border-[#123B2D] bg-[#123B2D] text-white shadow-xl' : 'border-[#123B2D]/15 bg-[#F5F0E5]'}`} data-reveal data-delay={String(index + 1)}>
-    {option.featured && <span className="absolute right-5 top-5 rounded-full bg-[#E7B84B] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#123B2D]">Equilibrio ideal</span>}
-    <p className={`pr-24 text-[10px] font-bold uppercase tracking-[0.22em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>{option.eyebrow}</p>
-    <h3 className="mt-3 text-3xl serif-title">{option.title}</h3>
-    <p className={`mt-3 text-sm leading-relaxed ${option.featured ? 'text-white/65' : 'text-[#1F2922]/60'}`}>{option.description}</p>
-    <div className={`my-6 border-y py-5 ${option.featured ? 'border-white/10' : 'border-[#123B2D]/10'}`}>
-      <p className={`mb-3 text-xs font-semibold ${option.featured ? 'text-[#E7B84B]' : 'text-[#123B2D]'}`}>{option.installments}</p>
+  <article className={`relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border p-5 ${option.featured ? 'border-[#123B2D] bg-[#123B2D] text-white shadow-xl' : 'border-[#123B2D]/15 bg-[#F5F0E5]'}`} data-reveal data-delay={String((index % 3) + 1)}>
+    {option.featured && <span className="mb-4 self-center rounded-full bg-[#E7B84B] px-3 py-1.5 text-[8px] font-bold uppercase tracking-[0.16em] text-[#123B2D]">Equilibrio ideal</span>}
+    <p className={`text-center text-[9px] font-bold uppercase tracking-[0.2em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>{option.eyebrow}</p>
+    <h3 className="mt-3 min-h-[3.75rem] text-center text-2xl leading-tight serif-title">{option.title}</h3>
+    <p className={`mt-3 min-h-[4.5rem] text-center text-xs leading-relaxed ${option.featured ? 'text-white/65' : 'text-[#1F2922]/60'}`}>{option.description}</p>
+    <div className={`my-5 border-y py-5 text-center ${option.featured ? 'border-white/10' : 'border-[#123B2D]/10'}`}>
+      <p className={`mx-auto mb-4 inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold whitespace-nowrap ${option.featured ? 'bg-white/10 text-[#E7B84B]' : 'bg-[#DDF3EA] text-[#005333]'}`}>💳 {option.installments}</p>
       <p className="text-3xl serif-title">{option.price}</p>
-      <p className={`mt-1 text-[10px] font-bold uppercase tracking-[0.16em] ${option.featured ? 'text-white/45' : 'text-[#1F2922]/45'}`}>por persona · contado o transferencia · 20% off</p>
+      <p className={`mt-1 text-[9px] font-bold uppercase tracking-[0.12em] ${option.featured ? 'text-white/45' : 'text-[#1F2922]/45'}`}>por persona · transferencia · 20% off</p>
     </div>
-    <p className={`mb-3 text-[10px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>Incluye</p>
+    <p className={`mb-3 text-center text-[9px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>Incluye</p>
     <ul className="mb-5 space-y-2.5">
-      {option.includes.map(item => <li key={item} className={`flex gap-2.5 text-sm ${option.featured ? 'text-white/75' : 'text-[#1F2922]/70'}`}><Check size={16} className="mt-0.5 shrink-0 text-[#E7B84B]" aria-hidden="true" />{item}</li>)}
+      {option.includes.map(item => <li key={item} className={`flex gap-2 text-xs leading-relaxed ${option.featured ? 'text-white/75' : 'text-[#1F2922]/70'}`}><Check size={14} className="mt-0.5 shrink-0 text-[#E7B84B]" aria-hidden="true" />{item}</li>)}
     </ul>
-    <div className={`mb-7 rounded-2xl p-4 ${option.featured ? 'bg-white/[0.06]' : 'bg-[#123B2D]/[0.05]'}`}>
+    <div className={`mb-6 rounded-xl p-3 ${option.featured ? 'bg-white/[0.06]' : 'bg-[#123B2D]/[0.05]'}`}>
       <p className={`mb-2 text-[9px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-white/45' : 'text-[#1F2922]/45'}`}>No incluye</p>
-      <p className={`text-xs leading-relaxed ${option.featured ? 'text-white/60' : 'text-[#1F2922]/60'}`}>{option.excludes.join(' · ')}</p>
+      <p className={`text-[11px] leading-relaxed ${option.featured ? 'text-white/60' : 'text-[#1F2922]/60'}`}>{option.excludes.join(' · ')}</p>
     </div>
-    <div className="mt-auto"><FestivalButton href={option.href}>{option.cta}</FestivalButton></div>
+    <div className="mt-auto text-center"><FestivalButton href={option.href}>{option.cta}</FestivalButton></div>
   </article>
 );
 
@@ -399,35 +379,100 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="experiencias" className="bg-[#FCFAF5] px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
-              <div>
-                <Eyebrow>Qué vas a encontrar</Eyebrow>
-                <h2 className="max-w-3xl text-4xl leading-tight serif-title md:text-6xl">Un festival para explorarlo todo.</h2>
-              </div>
-              <p className="max-w-md text-sm leading-relaxed text-[#1F2922]/60">Música, naturaleza, movimiento, fuego y gastronomía para armar tu propia experiencia. Algunas propuestas, como el temazcal, tienen inscripción y cupo propios.</p>
+        <section id="para-quien" className="bg-white px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-14 text-center" data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#123B2D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">¿Para quién es?</p>
+              <h2 className="text-4xl leading-tight text-[#123B2D] serif-title md:text-5xl">Para quienes quieren celebrar distinto.<br />Y encontrarse de verdad.</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#1F2922]/60">No necesitás experiencia previa ni venir con un grupo. AtardeSer está pensado para disfrutar la música, la naturaleza y el encuentro a tu propio ritmo.</p>
             </div>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {FESTIVAL_OCTUBRE.experiences.map((experience, index) => <ExperienceCard key={experience.title} experience={experience} index={index} />)}
+            <div className="grid gap-6 md:grid-cols-2" data-reveal data-delay="1">
+              {[
+                {
+                  Icon: Sparkles,
+                  title: 'Para venir como sos',
+                  text: 'Si querés salir de la rutina, bailar al aire libre, bajar un cambio o compartir un día diferente en la montaña, este encuentro es para vos.',
+                  items: ['Personas que vienen solas, en pareja o con amigos', 'Quienes buscan música y naturaleza sin formato rígido', 'Familias: niños y niñas son bienvenidos', 'Sin experiencia previa en las actividades'],
+                  tone: 'green',
+                },
+                {
+                  Icon: Leaf,
+                  title: 'Para elegir tu propio ritmo',
+                  text: 'Podés venir solamente el sábado o transformar la celebración en un fin de semana completo, con camping o habitación compartida.',
+                  items: ['Pase por el día para vivir la jornada central', 'Una o dos noches para quedarse en Pueblo Mágico', 'Actividades abiertas para elegir libremente', 'Temazcal opcional con inscripción y cupo propios'],
+                  tone: 'gold',
+                },
+              ].map(({ Icon, title, text, items, tone }) => (
+                <article key={title} className={`rounded-2xl border p-8 text-left ${tone === 'green' ? 'border-[#123B2D]/15 bg-[#123B2D]/[0.03]' : 'border-[#E7B84B]/35 bg-[#E7B84B]/[0.06]'}`}>
+                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${tone === 'green' ? 'bg-[#123B2D]/10 text-[#123B2D]' : 'bg-[#E7B84B]/20 text-[#8B6A00]'}`}><Icon size={19} aria-hidden="true" /></span>
+                  <h3 className="mt-5 text-center text-xl font-bold text-[#123B2D]">{title}</h3>
+                  <p className="mx-auto mt-3 max-w-md text-center text-sm leading-relaxed text-[#1F2922]/60">{text}</p>
+                  <ul className="mx-auto mt-6 max-w-md space-y-2.5">
+                    {items.map(item => <li key={item} className="flex items-start gap-2.5 text-sm text-[#1F2922]/65"><span className="mt-1 shrink-0 text-[#B85A3D]">◆</span>{item}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="experiencias" className="bg-[#F7F5F0] px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-14 text-center" data-reveal>
+              <Eyebrow>Qué vas a encontrar</Eyebrow>
+              <h2 className="text-4xl leading-tight serif-title md:text-5xl">Cada propuesta es una puerta.<br /><span className="text-[#123B2D]">Vos elegís cómo transitarla.</span></h2>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60 md:text-base">Nada es obligatorio: son invitaciones abiertas para armar tu propia experiencia, en el momento y con la intensidad que quieras.</p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2" data-reveal data-delay="1">
+              {[
+                { Icon: Music2, color: '#005333', bg: 'bg-[#005333]/[0.05]', border: 'border-[#005333]/15', title: 'Música & movimiento', items: ['Cuatro DJs y live sets confirmados', 'Baile libre y movimiento', 'Música en vivo junto al paisaje', 'Un viaje sonoro del día al fuego de la noche'] },
+                { Icon: Leaf, color: '#49634A', bg: 'bg-[#49634A]/[0.06]', border: 'border-[#49634A]/20', title: 'Naturaleza & exploración', items: ['Río y senderos de montaña', 'Caminatas y espacios de descanso', 'Yoga y conexión con el cuerpo', 'Tiempo libre para habitar el lugar'] },
+                { Icon: Flame, color: '#B85A3D', bg: 'bg-[#B85A3D]/[0.07]', border: 'border-[#B85A3D]/20', title: 'Ritual & integración', items: ['Fogón y círculos para compartir', 'Conversaciones significativas y auténticas', 'Temazcal opcional el domingo', 'Espacios para bajar el ritmo e integrar'] },
+                { Icon: Sun, color: '#8B6A00', bg: 'bg-[#E7B84B]/[0.08]', border: 'border-[#E7B84B]/35', title: 'Gastronomía & comunidad', items: ['Buffet de comida artesanal todo el fin de semana', 'Barra de bebidas', 'Encuentro abierto a toda la familia', 'Opciones para venir por el día o quedarse'] },
+              ].map(({ Icon, color, bg, border, title, items }) => (
+                <article key={title} className={`rounded-2xl border p-7 text-left ${bg} ${border}`}>
+                  <div className="mb-5 flex items-center justify-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/60" style={{ color }}><Icon size={18} aria-hidden="true" /></span>
+                    <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color }}>{title}</h3>
+                  </div>
+                  <ul className="mx-auto max-w-md space-y-3">
+                    {items.map(item => <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-[#1F2922]/65"><span className="mt-1 shrink-0" style={{ color }}>◆</span>{item}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="temazcal" className="bg-white px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-5xl text-center">
+            <div data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#B85A3D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">Ceremonia del domingo · Cupo limitado</p>
+              <h2 className="text-4xl leading-tight serif-title md:text-5xl">¿Qué es el Temazcal?</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#1F2922]/65 md:text-lg">Una ceremonia ancestral de calor, vapor y encuentro que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
+            </div>
+            <div className="mt-12 overflow-hidden rounded-[2rem] border border-[#123B2D]/10 bg-[#F5F0E5]" data-reveal data-delay="1">
+              <img src={img('/uploads/temazcal.webp', 1400)} alt="Ceremonia de Temazcal en Pueblo Mágico" loading="lazy" width="1400" height="900" className="aspect-[16/8] w-full object-cover" />
+              <div className="mx-auto max-w-3xl px-6 py-8 md:px-10">
+                <p className="text-sm leading-relaxed text-[#1F2922]/65">La participación es opcional, requiere inscripción previa y tiene un valor adicional. Si estás embarazada o tenés una condición cardíaca, respiratoria o de presión, consultanos antes para evaluar si esta experiencia es adecuada para vos.</p>
+                <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#123B2D]/25 px-5 py-2.5 text-sm font-semibold text-[#123B2D] transition hover:bg-[#123B2D] hover:text-white"><MessageCircle size={16} aria-hidden="true" />Consultar por WhatsApp</a>
+              </div>
             </div>
           </div>
         </section>
 
         <section id="artistas" className="overflow-hidden bg-[#111914] px-6 py-20 text-white md:px-10 md:py-28">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-12 grid gap-8 lg:grid-cols-[1fr_0.65fr] lg:items-end" data-reveal>
-              <div>
-                <Eyebrow light>Artistas confirmados</Eyebrow>
-                <h2 className="text-4xl leading-tight serif-title md:text-6xl">La música que nos reúne.</h2>
-              </div>
-              <p className="text-sm leading-relaxed text-white/55">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
+            <div className="mx-auto mb-12 max-w-3xl text-center" data-reveal>
+              <Eyebrow light>Artistas confirmados</Eyebrow>
+              <h2 className="text-4xl leading-tight serif-title md:text-6xl">La música que nos reúne.</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
             </div>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               {FESTIVAL_OCTUBRE.artists.map((artist, index) => (
                 <article key={artist.name} className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img src={img(artist.image, 900)} alt={artist.imageAlt} loading="lazy" width="900" height="675" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" />
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    <img src={img(artist.image, 900)} alt={artist.imageAlt} loading="lazy" width="900" height="1125" className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.04]" />
                     <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(17,25,20,0.88),transparent_65%)]" />
                     <span className="absolute right-5 top-5 rounded-full border border-white/20 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/75 backdrop-blur-sm">Acto 0{index + 1}</span>
                     <p className="absolute bottom-4 left-5 right-5 text-[9px] uppercase tracking-[0.14em] text-white/45">{artist.imageNote}</p>
@@ -490,37 +535,40 @@ const FestivalOctubre: React.FC = () => {
         </section>
 
         <section id="entradas" className="bg-[#FCFAF5] px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-[1500px]">
             <div className="mb-12 text-center" data-reveal>
               <Eyebrow>Modalidades de acceso</Eyebrow>
               <h2 className="text-4xl serif-title md:text-6xl">Elegí cómo sumarte.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60">Vení por el día o elegí una o dos noches en camping o habitación compartida. Todos los tickets con alojamiento incluyen desayuno.</p>
+              <p className="mt-4 text-sm font-bold text-[#8B6A00]">✨ pagá en 3 cuotas sin interés</p>
             </div>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => <AccessCard key={option.title} option={option} index={index} />)}
+            <div className="-mx-6 overflow-x-auto px-6 pb-4">
+              <div className="mx-auto grid min-w-[1120px] grid-cols-5 gap-4">
+                {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => <AccessCard key={option.title} option={option} index={index} />)}
+              </div>
             </div>
             <div className="mt-6 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm text-[#1F2922]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
           </div>
         </section>
 
         <section id="lugar" className="bg-[#F5F0E5] px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-20">
-            <div data-reveal>
+          <div className="mx-auto max-w-6xl text-center">
+            <div className="mx-auto max-w-3xl" data-reveal>
               <Eyebrow>El lugar</Eyebrow>
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico,<br />Los Gigantes.</h2>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-[#1F2922]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone AtardeSer: naturaleza, comunidad y presencia.</p>
-              <ul className="mt-8 grid gap-3 text-sm text-[#1F2922]/65 sm:grid-cols-2">
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1F2922]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone AtardeSer: naturaleza, comunidad y presencia.</p>
+              <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left text-sm text-[#1F2922]/65 sm:grid-cols-2">
                 {['A 90 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón'].map(item => (
                   <li key={item} className="flex items-start gap-3"><Check size={16} className="mt-0.5 shrink-0 text-[#B85A3D]" aria-hidden="true" />{item}</li>
                 ))}
               </ul>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
               </div>
               <div className="mt-8"><FestivalButton href="/">Conocer Pueblo Mágico</FestivalButton></div>
             </div>
-            <div className="grid grid-cols-2 gap-3" data-reveal data-delay="1">
+            <div className="mt-12 grid grid-cols-2 gap-3" data-reveal data-delay="1">
               <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
               <img src={img('/uploads/atardeser/familias.jpeg', 700)} alt="Familias compartiendo en Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
               <img src={img('/uploads/atardeser/ninez.jpeg', 700)} alt="Niños y adultos celebrando al aire libre" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
@@ -529,30 +577,31 @@ const FestivalOctubre: React.FC = () => {
         </section>
 
         <section id="preguntas" className="px-6 py-20 md:px-10 md:py-28" style={{ backgroundColor: C.cream }}>
-          <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.72fr_1fr] lg:gap-20">
-            <div data-reveal>
-              <Eyebrow>Preguntas frecuentes</Eyebrow>
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-12 text-center" data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#123B2D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">Preguntas frecuentes</p>
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">Todo lo que necesitás saber.</h2>
-              <p className="mt-5 max-w-md text-sm leading-relaxed text-[#1F2922]/60">¿Quedó alguna duda? Escribinos por WhatsApp y te ayudamos a elegir la mejor forma de vivir AtardeSer.</p>
-              <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex items-center gap-2 text-sm font-bold text-[#123B2D] underline decoration-[#E7B84B] decoration-2 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#123B2D]">
-                <MessageCircle size={17} aria-hidden="true" /> Hacer otra consulta
-              </a>
+              <p className="mx-auto mt-5 max-w-lg text-sm leading-relaxed text-[#1F2922]/60 md:text-base">¿Quedó alguna duda? Escribinos por WhatsApp y te ayudamos a elegir la mejor forma de vivir AtardeSer.</p>
             </div>
-            <div className="divide-y divide-[#123B2D]/12 border-y border-[#123B2D]/12" data-reveal data-delay="2">
+            <div className="space-y-3 md:space-y-4" data-reveal data-delay="1">
               {faqs.map((faq, index) => {
                 const isOpen = openFaq === index;
                 return (
-                  <div key={faq.question}>
-                    <button type="button" className="flex w-full items-center justify-between gap-5 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D]" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`festival-faq-${index}`}>
-                      <span className="text-base font-semibold md:text-lg">{faq.question}</span>
-                      <ChevronDown size={20} className={`shrink-0 text-[#B85A3D] transition-transform ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                  <div key={faq.question} className={`overflow-hidden rounded-2xl border bg-white transition ${isOpen ? 'border-[#E7B84B] shadow-sm' : 'border-[#123B2D]/10'}`}>
+                    <button type="button" className="flex w-full items-center gap-4 px-6 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D] md:px-8 md:py-6" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`festival-faq-${index}`}>
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isOpen ? 'bg-[#123B2D] text-[#E7B84B]' : 'bg-[#123B2D]/[0.06] text-[#123B2D]/45'}`}>{String(index + 1).padStart(2, '0')}</span>
+                      <span className={`flex-1 text-sm font-bold leading-snug md:text-base ${isOpen ? 'text-[#123B2D]' : 'text-[#1F2922]'}`}>{faq.question}</span>
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform ${isOpen ? 'rotate-180 bg-[#123B2D] text-[#E7B84B]' : 'bg-[#123B2D]/[0.06] text-[#123B2D]'}`}><ChevronDown size={16} aria-hidden="true" /></span>
                     </button>
                     <div id={`festival-faq-${index}`} className={`grid transition-[grid-template-rows] duration-300 ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                      <div className="overflow-hidden"><p className="max-w-2xl pb-6 pr-10 text-sm leading-relaxed text-[#1F2922]/65">{faq.answer}</p></div>
+                      <div className="min-h-0 overflow-hidden"><div className="px-6 pb-6 md:pl-[5rem] md:pr-8"><div className="mb-4 h-px w-full bg-[#123B2D]/10" /><p className="text-sm leading-relaxed text-[#1F2922]/65">{faq.answer}</p></div></div>
                     </div>
                   </div>
                 );
               })}
+            </div>
+            <div className="mt-10 text-center" data-reveal data-delay="2">
+              <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/25 px-5 py-2.5 text-sm font-semibold text-[#123B2D] transition hover:bg-[#123B2D] hover:text-white"><MessageCircle size={17} aria-hidden="true" />Escribirnos</a>
             </div>
           </div>
         </section>
