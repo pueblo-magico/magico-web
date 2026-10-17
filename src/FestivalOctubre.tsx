@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowRight,
   CalendarDays,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Flame,
   Instagram,
@@ -162,12 +164,12 @@ const Eyebrow = ({ children, light = false }: { children: React.ReactNode; light
   </p>
 );
 
-const FestivalButton = ({ href, children, secondary = false }: { href: string; children: React.ReactNode; secondary?: boolean }) => (
+const FestivalButton = ({ href, children, secondary = false, fullWidth = false }: { href: string; children: React.ReactNode; secondary?: boolean; fullWidth?: boolean }) => (
   <a
     href={href}
     target={href.startsWith('http') ? '_blank' : undefined}
     rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-    className={`group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${
+    className={`group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${fullWidth ? 'w-full' : ''} ${
       secondary
         ? 'border border-white/45 bg-black/20 text-white backdrop-blur-sm hover:bg-white/10 focus-visible:outline-white'
         : 'bg-[#E7B84B] text-[#123B2D] shadow-[0_12px_35px_rgba(0,0,0,0.18)] hover:-translate-y-0.5 hover:bg-[#F0C75D] focus-visible:outline-[#E7B84B]'
@@ -202,30 +204,39 @@ const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number
 );
 
 const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: number }) => (
-  <article className={`relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border p-5 ${option.featured ? 'border-[#123B2D] bg-[#123B2D] text-white shadow-xl' : 'border-[#123B2D]/15 bg-[#F5F0E5]'}`} data-reveal data-delay={String((index % 3) + 1)}>
-    {option.featured && <span className="mb-4 self-center rounded-full bg-[#E7B84B] px-3 py-1.5 text-[8px] font-bold uppercase tracking-[0.16em] text-[#123B2D]">Equilibrio ideal</span>}
-    <p className={`text-center text-[9px] font-bold uppercase tracking-[0.2em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>{option.eyebrow}</p>
-    <h3 className="mt-3 min-h-[3.75rem] text-center text-2xl leading-tight serif-title">{option.title}</h3>
-    <p className={`mt-3 min-h-[4.5rem] text-center text-xs leading-relaxed ${option.featured ? 'text-white/65' : 'text-[#1F2922]/60'}`}>{option.description}</p>
-    <div className={`my-5 border-y py-5 text-center ${option.featured ? 'border-white/10' : 'border-[#123B2D]/10'}`}>
-      <p className={`mx-auto mb-4 inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold whitespace-nowrap ${option.featured ? 'bg-white/10 text-[#E7B84B]' : 'bg-[#DDF3EA] text-[#005333]'}`}>💳 {option.installments}</p>
-      <p className="text-3xl serif-title">{option.price}</p>
-      <p className={`mt-1 text-[9px] font-bold uppercase tracking-[0.12em] ${option.featured ? 'text-white/45' : 'text-[#1F2922]/45'}`}>por persona · transferencia · 20% off</p>
+  <article className={`relative flex h-full min-w-0 flex-col overflow-hidden rounded-[1.75rem] border p-6 md:p-7 ${option.featured ? 'border-[#123B2D] bg-[#123B2D] text-white shadow-xl' : 'border-[#123B2D]/15 bg-[#F5F0E5]'}`} data-reveal data-delay={String((index % 3) + 1)}>
+    <div className="mb-4 flex h-7 items-center justify-center">
+      {option.featured && <span className="rounded-full bg-[#E7B84B] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#123B2D]">Equilibrio ideal</span>}
     </div>
-    <p className={`mb-3 text-center text-[9px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>Incluye</p>
-    <ul className="mb-5 space-y-2.5">
-      {option.includes.map(item => <li key={item} className={`flex gap-2 text-xs leading-relaxed ${option.featured ? 'text-white/75' : 'text-[#1F2922]/70'}`}><Check size={14} className="mt-0.5 shrink-0 text-[#E7B84B]" aria-hidden="true" />{item}</li>)}
+    <p className={`text-center text-[10px] font-bold uppercase tracking-[0.2em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>{option.eyebrow}</p>
+    <h3 className="mt-3 text-center text-3xl leading-[1.05] serif-title md:min-h-[5rem]">{option.title}</h3>
+    <p className={`mt-4 text-center text-sm leading-relaxed md:min-h-[5rem] ${option.featured ? 'text-white/70' : 'text-[#1F2922]/65'}`}>{option.description}</p>
+    <div className={`my-6 border-y py-6 text-center ${option.featured ? 'border-white/10' : 'border-[#123B2D]/10'}`}>
+      <p className={`mx-auto mb-4 inline-flex rounded-full px-3 py-1.5 text-[10px] font-bold whitespace-nowrap ${option.featured ? 'bg-white/10 text-[#E7B84B]' : 'bg-[#DDF3EA] text-[#005333]'}`}>💳 {option.installments}</p>
+      <p className="text-4xl serif-title">{option.price}</p>
+      <p className={`mt-2 text-[10px] font-bold uppercase tracking-[0.12em] ${option.featured ? 'text-white/50' : 'text-[#1F2922]/50'}`}>por persona · transferencia · 20% off</p>
+    </div>
+    <p className={`mb-4 text-center text-[10px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-[#E7B84B]' : 'text-[#B85A3D]'}`}>Incluye</p>
+    <ul className="mb-6 space-y-3">
+      {option.includes.map(item => <li key={item} className={`flex gap-2.5 text-sm leading-relaxed ${option.featured ? 'text-white/80' : 'text-[#1F2922]/75'}`}><Check size={16} className="mt-0.5 shrink-0 text-[#E7B84B]" aria-hidden="true" />{item}</li>)}
     </ul>
-    <div className={`mb-6 rounded-xl p-3 ${option.featured ? 'bg-white/[0.06]' : 'bg-[#123B2D]/[0.05]'}`}>
-      <p className={`mb-2 text-[9px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-white/45' : 'text-[#1F2922]/45'}`}>No incluye</p>
-      <p className={`text-[11px] leading-relaxed ${option.featured ? 'text-white/60' : 'text-[#1F2922]/60'}`}>{option.excludes.join(' · ')}</p>
+    <div className={`mb-7 rounded-2xl p-4 ${option.featured ? 'bg-white/[0.07]' : 'bg-[#123B2D]/[0.05]'}`}>
+      <p className={`mb-2 text-[10px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-white/50' : 'text-[#1F2922]/50'}`}>No incluye</p>
+      <p className={`text-xs leading-relaxed ${option.featured ? 'text-white/65' : 'text-[#1F2922]/65'}`}>{option.excludes.join(' · ')}</p>
     </div>
-    <div className="mt-auto text-center"><FestivalButton href={option.href}>{option.cta}</FestivalButton></div>
+    <div className="mt-auto"><FestivalButton href={option.href} fullWidth>{option.cta}</FestivalButton></div>
   </article>
 );
 
 const FestivalOctubre: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const accessRailRef = useRef<HTMLDivElement>(null);
+
+  const scrollAccessOptions = (direction: -1 | 1) => {
+    const rail = accessRailRef.current;
+    if (!rail) return;
+    rail.scrollBy({ left: direction * Math.min(rail.clientWidth * 0.86, 720), behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -525,24 +536,34 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="entradas" className="bg-[#FCFAF5] px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-[1500px]">
-            <div className="mb-12 text-center" data-reveal>
+        <section id="entradas" className="overflow-hidden bg-[#FCFAF5] px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-7xl">
+            <div className="mx-auto mb-10 max-w-3xl text-center md:mb-12" data-reveal>
               <Eyebrow>Modalidades de acceso</Eyebrow>
               <h2 className="text-4xl serif-title md:text-6xl">Elegí cómo sumarte.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60">Vení por el día o elegí una o dos noches en camping o habitación compartida. Todos los tickets con alojamiento incluyen desayuno.</p>
               <p className="mt-4 text-sm font-bold text-[#8B6A00]">✨ pagá en 3 cuotas sin interés</p>
             </div>
-            <div className="scrollbar-hide -mx-6 overflow-x-auto px-6 pb-4 md:-mx-10 md:px-10">
-              <div className="flex snap-x snap-mandatory gap-4 lg:mx-auto lg:grid lg:min-w-[1120px] lg:grid-cols-5">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <p className="max-w-lg text-xs leading-relaxed text-[#1F2922]/55 md:text-sm">
+                <span className="md:hidden">Deslizá para comparar las cinco opciones.</span>
+                <span className="hidden md:inline">Cinco opciones para comparar con calma: pase por el día, camping o habitación compartida.</span>
+              </p>
+              <div className="hidden shrink-0 items-center gap-2 md:flex" aria-label="Controles de modalidades">
+                <button type="button" onClick={() => scrollAccessOptions(-1)} aria-label="Ver modalidades anteriores" aria-controls="festival-access-options" className="flex h-11 w-11 items-center justify-center rounded-full border border-[#123B2D]/20 bg-white text-[#123B2D] transition hover:border-[#123B2D] hover:bg-[#123B2D] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D]"><ChevronLeft size={19} aria-hidden="true" /></button>
+                <button type="button" onClick={() => scrollAccessOptions(1)} aria-label="Ver más modalidades" aria-controls="festival-access-options" className="flex h-11 w-11 items-center justify-center rounded-full border border-[#123B2D]/20 bg-white text-[#123B2D] transition hover:border-[#123B2D] hover:bg-[#123B2D] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D]"><ChevronRight size={19} aria-hidden="true" /></button>
+              </div>
+            </div>
+            <div ref={accessRailRef} id="festival-access-options" className="scrollbar-hide -mx-6 scroll-px-6 overflow-x-auto px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
+              <div className="flex snap-x snap-mandatory items-stretch gap-5">
                 {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => (
-                  <div key={option.title} className="w-[calc(100vw-3rem)] shrink-0 snap-start lg:w-auto lg:shrink">
+                  <div key={option.title} className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-start md:w-[320px] lg:w-[330px] xl:w-[340px]">
                     <AccessCard option={option} index={index} />
                   </div>
                 ))}
               </div>
             </div>
-            <div className="mt-6 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm text-[#1F2922]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
+            <div className="mt-5 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm leading-relaxed text-[#1F2922]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
           </div>
         </section>
 
