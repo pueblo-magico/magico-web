@@ -15,6 +15,7 @@
 
 import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMercadoPago.ts';
 import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
+import { registrarUsoAplicacionApi } from '../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { ErrorProveedorPagosTransitorio } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
@@ -63,10 +64,18 @@ async function firmaValida(request: Request, env: any): Promise<{ ok: boolean; d
 }
 
 export async function onRequestPost({ request, env }: any) {
-  return observarSolicitud(request, 'integration.mercadopago.webhook', contexto => ejecutar(request, env, contexto));
+  return observarSolicitud(
+    request,
+    'integration.mercadopago.webhook',
+    contexto => ejecutar(request, env, contexto)
+  );
 }
 
-async function ejecutar(request: Request, env: any, contexto: ContextoObservabilidad) {
+async function ejecutar(
+  request: Request,
+  env: any,
+  contexto: ContextoObservabilidad
+) {
   contexto.setEventId(request.headers.get('x-request-id'));
   const limitada = respuestaLimite(await consumirLimite(request, env, 'webhook.mercadopago', 120, 60));
   if (limitada) {
@@ -81,6 +90,7 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
     return new Response('Firma inválida', { status: 401 });
   }
+  await registrarUsoAplicacionApi(env.DB, 'mercado_pago', request.method, '/api/webhook-mp');
 
   try {
     await procesarPagoMercadoPago(

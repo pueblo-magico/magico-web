@@ -17,7 +17,9 @@ async function bodySeguro(request: Request): Promise<Record<string, unknown> | R
   }
 }
 
-async function asignar(request: Request, env: any, params: any, correlationId: string): Promise<Response> {
+async function asignar(
+  request: Request, env: any, params: any, correlationId: string
+): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.asignar');
   if (auth instanceof Response) return auth;
   const body = await bodySeguro(request);
@@ -54,7 +56,9 @@ async function consultar(request: Request, env: any, params: any): Promise<Respo
   return json({ data: asignacion, meta: { version: 'v1' } });
 }
 
-async function liberar(request: Request, env: any, params: any, correlationId: string): Promise<Response> {
+async function liberar(
+  request: Request, env: any, params: any, correlationId: string
+): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.asignar');
   if (auth instanceof Response) return auth;
   const body = await bodySeguro(request);

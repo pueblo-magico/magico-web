@@ -69,16 +69,22 @@ test('crea, publica y audita una política sin modificar el snapshot pendiente e
   const { sqlite, db } = database();
   const repositorio = new D1RepositorioPoliticasCancelacion(db);
   const auditoria = new D1RegistroAuditoriaReservas(db);
-  const creada = await crearBorradorPoliticaCancelacion(borrador, 'admin@test', repositorio, auditoria);
+  const motivo = 'Nueva política comercial aprobada';
+  const creada = await crearBorradorPoliticaCancelacion(borrador, 'admin@test', repositorio, auditoria, motivo);
   assert.equal(creada.version, 2);
   assert.equal(creada.estado, 'borrador');
 
-  const publicada = await publicarPoliticaCancelacion(creada.id, 'admin@test', repositorio, auditoria);
+  const publicada = await publicarPoliticaCancelacion(creada.id, 'admin@test', repositorio, auditoria, motivo);
   assert.equal(publicada.estado, 'publicada');
   assert.deepEqual(
     sqlite.prepare("SELECT accion FROM auditoria_admin WHERE entidad_tipo = 'politica_cancelacion' ORDER BY id")
       .all().map(fila => fila.accion),
     ['crear_borrador_politica_cancelacion', 'publicar_politica_cancelacion']
+  );
+  assert.deepEqual(
+    sqlite.prepare("SELECT motivo FROM auditoria_admin WHERE entidad_tipo = 'politica_cancelacion' ORDER BY id")
+      .all().map(fila => fila.motivo),
+    [motivo, motivo]
   );
   assert.throws(
     () => sqlite.prepare("UPDATE politicas_cancelacion SET nombre = 'Mutada' WHERE id = ?").run(creada.id),
@@ -175,6 +181,7 @@ test('el contrato administrativo exige CSRF y permiso exclusivo de políticas', 
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf, Cookie: cookie },
     body: JSON.stringify({
       accion: 'crear_borrador',
+      motivo: 'Nueva política aprobada en QA',
       politica: {
         codigo: borrador.codigo, nombre: borrador.nombre, vigencia_desde: borrador.vigenciaDesde,
         reglas: borrador.reglas.map(regla => ({

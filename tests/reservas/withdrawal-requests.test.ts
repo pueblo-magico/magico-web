@@ -218,6 +218,10 @@ test('n8n reclama el email y confirma la entrega sin filtrar PII al outbox', asy
   assert.match(entrega.asunto, /We received/);
   assert.equal(entrega.intento, 1);
   assert.equal(entrega.max_intentos, 3);
+  assert.equal(entrega.estado, 'recibida');
+  assert.equal(entrega.codigo.startsWith('ARR-'), true);
+  assert.equal(entrega.mensaje_humano, null);
+  assert.equal(entrega.plantilla_version, 2);
 
   const resultado = await entregarNotificacion({ request: new Request('https://test/api/v1/integrations/arrepentimientos/notificaciones', {
     method: 'POST', headers, body: JSON.stringify({
@@ -235,6 +239,35 @@ test('n8n reclama el email y confirma la entrega sin filtrar PII al outbox', asy
   assert.equal(duplicado.status, 200);
   assert.equal(sqlite.prepare('SELECT estado FROM arrepentimiento_notificaciones').get()?.estado, 'entregada');
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM arrepentimiento_notificacion_intentos').get()?.n, 1);
+  sqlite.close();
+});
+
+test('separa el estado y el mensaje humano en una respuesta administrativa', async () => {
+  const { sqlite, env } = base();
+  await publica(env, 'withdrawal-qa-human-message-0001');
+  const id = Number(sqlite.prepare('SELECT id FROM solicitudes_arrepentimiento').get()?.id);
+  const actualizar = await requestAdmin(env, 'editor@test', 'PATCH', `https://test/api/v1/admin/arrepentimientos/${id}`, {
+    estado_actual: 'recibida', estado: 'rechazada', nota_interna: 'No corresponde aplicar el arrepentimiento.',
+    mensaje_cliente: 'Gracias por escribirnos. Tu estadía ya comenzó, por eso no podemos cancelar la reserva.',
+  });
+  assert.equal((await actualizarAdmin({ request: actualizar, env, params: { id } })).status, 200);
+
+  const uid = String(sqlite.prepare("SELECT notificacion_uid FROM arrepentimiento_notificaciones WHERE tipo = 'arrepentimiento_rechazado'").get()?.notificacion_uid);
+  const claim = await entregarNotificacion({ request: new Request('https://test/api/v1/integrations/arrepentimientos/notificaciones', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Integration-Id': 'n8n',
+      'X-Service-Secret': env.N8N_INBOUND_SECRET,
+    },
+    body: JSON.stringify({ accion: 'reclamar', notificacion_uid: uid }),
+  }), env });
+  assert.equal(claim.status, 200, await claim.clone().text());
+  const entrega: any = (await claim.json()).data;
+  assert.equal(entrega.estado, 'rechazada');
+  assert.equal(entrega.mensaje_humano, 'Gracias por escribirnos. Tu estadía ya comenzó, por eso no podemos cancelar la reserva.');
+  assert.doesNotMatch(entrega.cuerpo, /Gracias por escribirnos/);
+  assert.match(entrega.cuerpo, /fue rechazada/);
   sqlite.close();
 });
 

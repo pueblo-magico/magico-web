@@ -27,6 +27,7 @@ test('migra las tarifas legacy como un plan publicado en centavos', () => {
     base_calculo: 'unidad_noche', importe_centavos: 15_000_000,
   });
   assert.equal(db.prepare('SELECT COUNT(*) n FROM reglas_sena').get()?.n, 2);
+  assert.equal(db.prepare("SELECT dias_semana_mask FROM temporadas WHERE codigo = 'base'").get()?.dias_semana_mask, 127);
   db.close();
 });
 
@@ -47,6 +48,27 @@ test('publica sólo desayuno incluido y pensión completa a ARS 20.000 por comid
     UPDATE tarifas_alimentacion SET precio_comida_centavos = 1
     WHERE codigo = 'pension_completa'
   `).run(), /immutable/);
+  db.close();
+});
+
+test('crea una configuración única y válida para los horarios de comidas', () => {
+  const db = baseConTarifas();
+  const horarios = db.prepare(`
+    SELECT version, desayuno_desde, desayuno_hasta, almuerzo_desde,
+      almuerzo_hasta, cena_desde, cena_hasta
+    FROM configuracion_horarios_comidas WHERE id = 1
+  `).get();
+  assert.deepEqual({ ...horarios }, {
+    version: 1,
+    desayuno_desde: '09:00', desayuno_hasta: '10:00',
+    almuerzo_desde: '14:00', almuerzo_hasta: '15:00',
+    cena_desde: '20:00', cena_hasta: '21:00',
+  });
+  assert.throws(() => db.prepare(`
+    UPDATE configuracion_horarios_comidas
+    SET cena_desde = '22:00', cena_hasta = '21:00'
+    WHERE id = 1
+  `).run(), /CHECK constraint failed/);
   db.close();
 });
 

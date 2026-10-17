@@ -10,10 +10,11 @@ import {
   Mountains, Bank, DownloadSimple, FilePdf, CircleNotch, InstagramLogo,
   CaretLeft, CaretRight, ForkKnifeIcon, PawPrintIcon, WheelchairIcon,
 } from '@phosphor-icons/react';
-import { WA_MAGICO, SITE_URL } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO, SITE_URL } from './data/config';
 import { COLIVING_PRICES } from './data/retreats';
 import { ROUTES } from './routes';
 import { submitForm } from './lib/submitForm';
+import { usePublicPricingSummary } from '../components/booking/usePublicPricingSummary';
 
 const WA = (msg: string) =>
   `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(msg)}`;
@@ -779,12 +780,21 @@ const FAQS = [
   { Icon: CalendarIcon, q: '¿Puedo combinar días de trabajo remoto con la rutina de bienestar?', a: 'Sí, es justamente la idea. No hay horarios obligatorios: tenés espacios cómodos y conexión para trabajar, y podés sumarte a las prácticas de bienestar cuando quieras.' },
   { Icon: CaretDownIcon, q: '¿Cómo reservo mi lugar?', a: 'Los cupos son limitados para cuidar la experiencia. Escribinos por WhatsApp contándonos qué formato te interesa y te confirmamos disponibilidad.' },
   { Icon: ForkKnifeIcon, q: '¿Tienen opciones para dietas o alergias?', a: 'Sí, tenemos opciones de comida para todo tipo de dietas y restricciones alimentarias, incluidas opciones sin gluten. Lo que no podemos garantizar es un ambiente 100% libre de contaminación cruzada: cocinamos en una cocina y mesada compartida, sin productos envasados al vacío ni un proceso aislado. Para celiaquía severa o intolerancia alta al gluten no podemos asegurar inocuidad total, pero sí podemos garantizar platos que no llevan gluten entre sus ingredientes. Contanos tu caso al reservar.' },
-  { Icon: ClockIcon, q: '¿Cuáles son los horarios de las comidas?', a: 'Desayuno de 09:00 a 10:00 hs, almuerzo de 14:00 a 15:00 hs y cena de 20:00 a 21:00 hs. Fuera de esos horarios no hay servicio de cocina, así que si vas a llegar tarde avisanos — llegando desde las 19:00 hs ya llegás a tiempo para la cena.' },
+  { Icon: ClockIcon, q: '¿Cuáles son los horarios de las comidas?', a: '' },
   { Icon: PawPrintIcon, q: '¿Puedo llevar a mi mascota?', a: 'No, por el momento no aceptamos mascotas: en el campo hay animales de granja cerca y no contamos con instalaciones adecuadas para recibirlas.' },
   { Icon: WheelchairIcon, q: '¿Tienen accesibilidad para sillas de ruedas?', a: 'Por el momento no contamos con rampas ni espacios especialmente preparados para sillas de ruedas. Si tenés dudas puntuales sobre accesibilidad, escribinos por WhatsApp y lo vemos juntos.' },
 ];
 
-const FAQ: React.FC = () => (
+const FAQ: React.FC = () => {
+  const { data: precios } = usePublicPricingSummary();
+  const horarios = precios?.horarios_comidas;
+  const respuestaHorarios = horarios
+    ? `Desayuno de ${horarios.desayuno.desde} a ${horarios.desayuno.hasta} hs, almuerzo de ${horarios.almuerzo.desde} a ${horarios.almuerzo.hasta} hs y cena de ${horarios.cena.desde} a ${horarios.cena.hasta} hs. Fuera de esos horarios no hay servicio de cocina; si vas a llegar tarde, avisanos.`
+    : 'Los horarios vigentes se muestran en la reserva online antes de confirmar. Fuera de esos horarios no hay servicio de cocina; si vas a llegar tarde, avisanos.';
+  const preguntas = FAQS.map(faq => faq.q === '¿Cuáles son los horarios de las comidas?'
+    ? { ...faq, a: respuestaHorarios }
+    : faq);
+  return (
   <section id="faq" className="py-20 bg-white">
     <div className="max-w-3xl mx-auto px-6">
       <div data-reveal className="text-center mb-10">
@@ -792,7 +802,7 @@ const FAQ: React.FC = () => (
         <h2 className="text-3xl md:text-4xl font-serif text-brand">Antes de escribirnos</h2>
       </div>
       <div className="space-y-3">
-        {FAQS.map((faq, i) => {
+        {preguntas.map((faq, i) => {
           const Icon = faq.Icon;
           return (
             <div key={i} data-reveal className="bg-bone rounded-2xl border border-brand/5 px-6 py-5">
@@ -807,7 +817,8 @@ const FAQ: React.FC = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 // ── Permiso para descansar ──────────────────────────────────────────────────────
 const PermisoDescanso: React.FC = () => (
@@ -840,12 +851,10 @@ const CTAFinal: React.FC = () => (
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href={WA_COLIVING}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={RESERVATION_START_PATH}
             className="inline-flex items-center justify-center gap-3 bg-brand text-white px-10 py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-gold transition-colors duration-300 shadow-lg"
           >
-            <WhatsappLogo className="w-5 h-5 flex-shrink-0" weight="fill" />
+            <CalendarIcon className="w-5 h-5 flex-shrink-0" weight="bold" />
             Reservar mi lugar
           </a>
           <a

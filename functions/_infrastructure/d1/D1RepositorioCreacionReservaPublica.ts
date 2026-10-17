@@ -6,11 +6,13 @@ import type {
   CotizacionAceptada,
   ReservaPublicaCreada,
 } from '../../_domain/reservas/reservationCreation.ts';
+import type { OpcionPreparacionEstadia } from '../../_domain/reservas/baseConfiguration.ts';
 import { esRegimenAlimentacion } from '../../_domain/reservas/alimentacion.ts';
 
 type Statement = {
   bind(...values: unknown[]): Statement;
   first(): Promise<Record<string, unknown> | null>;
+  all(): Promise<{ results?: Record<string, unknown>[] }>;
 };
 type Database = {
   prepare(query: string): Statement;
@@ -58,22 +60,51 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
     if (!row) return null;
     const desglose = JSON.parse(String(row.desglose_json)) as Record<string, unknown>;
     const tipo = desglose.tipo_alojamiento;
-    const modalidad = desglose.modalidad ?? (tipo === 'domo' ? 'privada' : 'compartida');
+    const modalidad = desglose.modalidad ?? (tipo === 'domo' ? 'privada' : tipo === 'camping' ? 'camping' : 'compartida');
     const contexto = desglose.contexto ?? 'general';
     const regimen = desglose.regimen_alimentacion ?? 'desayuno_incluido';
-    if ((tipo !== 'domo' && tipo !== 'refugio') ||
-        (modalidad !== 'privada' && modalidad !== 'compartida') ||
+    if (!['domo', 'refugio', 'camping'].includes(String(tipo)) ||
+        !['privada', 'compartida', 'camping'].includes(String(modalidad)) ||
         (contexto !== 'general' && contexto !== 'retiro') || !esRegimenAlimentacion(regimen)) {
       return null;
     }
     return {
-      id: Number(row.id), codigo: String(row.codigo), tipo, modalidad, contexto,
+      id: Number(row.id), codigo: String(row.codigo),
+      tipo: tipo as CotizacionAceptada['tipo'],
+      modalidad: modalidad as CotizacionAceptada['modalidad'], contexto,
       regimenAlimentacion: regimen,
       fechaCheckin: String(row.fecha_checkin), fechaCheckout: String(row.fecha_checkout),
       personas: Number(row.cantidad_personas), moneda: String(row.moneda),
       totalCentavos: Number(row.subtotal_centavos), senaCentavos: Number(row.sena_centavos),
       expiresAt: String(row.expires_at),
     };
+  }
+
+  async listarOpcionesPreparacionAplicables(entrada: {
+    tipoAlojamiento: 'domo' | 'refugio' | 'camping';
+    modalidad: 'privada' | 'compartida' | 'camping';
+    cantidadPersonas: number;
+  }): Promise<OpcionPreparacionEstadia[]> {
+    const result = await this.db.prepare(`
+      SELECT id, tipo_alojamiento, modalidad, cantidad_personas, codigo, nombre,
+        descripcion, habilitada, orden, updated_at
+      FROM opciones_preparacion_estadia
+      WHERE tipo_alojamiento = ? AND modalidad = ? AND cantidad_personas = ?
+        AND habilitada = 1
+      ORDER BY orden, id
+    `).bind(entrada.tipoAlojamiento, entrada.modalidad, entrada.cantidadPersonas).all();
+    return (result.results || []).map(row => ({
+      id: Number(row.id),
+      tipoAlojamiento: row.tipo_alojamiento as OpcionPreparacionEstadia['tipoAlojamiento'],
+      modalidad: row.modalidad as OpcionPreparacionEstadia['modalidad'],
+      cantidadPersonas: Number(row.cantidad_personas),
+      codigo: String(row.codigo),
+      nombre: String(row.nombre),
+      descripcion: String(row.descripcion || ''),
+      habilitada: Number(row.habilitada) === 1,
+      orden: Number(row.orden),
+      actualizadoAt: String(row.updated_at),
+    }));
   }
 
   async buscarConsultaIntegracion(entrada: {
@@ -103,7 +134,8 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
       : 'crear_reserva_publica';
     const alojamientoLegacyId = solicitud.espacioCodigo === 'domo-1' ? 1
       : solicitud.espacioCodigo === 'domo-2' ? 2
-        : solicitud.espacioCodigo.startsWith('refugio') ? 3 : null;
+        : solicitud.espacioCodigo.startsWith('refugio') ? 3
+          : solicitud.espacioCodigo === 'camping-exterior' ? 4 : null;
     if (alojamientoLegacyId === null) throw new Error('Espacio sin proyección legacy.');
 
     const statements = [
@@ -148,6 +180,19 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
             updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
         WHERE reserva_id = (SELECT id FROM reservas WHERE reserva_uid = ?) AND tramo = 1
       `).bind(cotizacion.modalidad, `espacio:${solicitud.espacioCodigo}`, entrada.reservaUid),
+      this.db.prepare(`
+        INSERT INTO reserva_preferencias (
+          reserva_id, categoria, opcion_codigo, opcion_nombre, opcion_descripcion
+        )
+        SELECT id, 'preparacion_cama', ?, ?, ? FROM reservas
+        WHERE reserva_uid = ? AND ? IS NOT NULL
+      `).bind(
+        entrada.opcionPreparacion?.codigo || null,
+        entrada.opcionPreparacion?.nombre || null,
+        entrada.opcionPreparacion?.descripcion || '',
+        entrada.reservaUid,
+        entrada.opcionPreparacion?.codigo || null
+      ),
       this.db.prepare(`
         UPDATE reserva_estadia_espacios
         SET espacio_id = (SELECT id FROM espacios WHERE codigo = ?),

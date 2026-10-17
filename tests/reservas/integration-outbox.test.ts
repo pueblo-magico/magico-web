@@ -139,6 +139,45 @@ test('reintenta con backoff y entrega al menos una vez con event_id estable', as
   sqlite.close();
 });
 
+test('el despacho inmediato entrega sólo el objetivo y nunca vuelve a reclamar un entregado', async () => {
+  const sqlite = baseCompleta();
+  crearEvento(sqlite, 'evento:historico-pendiente');
+  sqlite.prepare(`
+    INSERT INTO reserva_eventos (
+      reserva_id, tipo, actor_tipo, actor_ref, correlation_id, payload_json,
+      evento_uid, version, agregado_tipo, agregado_id
+    ) SELECT reserva_id, 'qa.objetivo', 'sistema', 'qa', 'correlation-target',
+      '{}', 'evento:objetivo', 1, 'reserva', agregado_id
+    FROM reserva_eventos WHERE evento_uid = 'evento:historico-pendiente'
+  `).run();
+  const repositorio = new D1RepositorioOutboxIntegracion(d1(sqlite));
+  const entregados: string[] = [];
+  const entregador = { async entregar(evento: { eventId: string }) { entregados.push(evento.eventId); } };
+
+  const primera = await despacharEventosIntegracion(repositorio, entregador, {
+    consumer: 'live', eventIds: ['evento:objetivo'],
+    ahora: () => new Date('2099-10-01T10:00:00.000Z'),
+    generarClaimUid: () => 'claim-target-1',
+  });
+  assert.deepEqual(primera, { reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0 });
+  assert.deepEqual(entregados, ['evento:objetivo']);
+  assert.deepEqual(sqlite.prepare(`
+    SELECT event_id, estado FROM integration_outbox ORDER BY event_id
+  `).all().map(row => ({ ...row })), [
+    { event_id: 'evento:historico-pendiente', estado: 'pending' },
+    { event_id: 'evento:objetivo', estado: 'delivered' },
+  ]);
+
+  const segunda = await despacharEventosIntegracion(repositorio, entregador, {
+    consumer: 'live', eventIds: ['evento:objetivo'],
+    ahora: () => new Date('2099-10-01T10:01:00.000Z'),
+    generarClaimUid: () => 'claim-target-2',
+  });
+  assert.deepEqual(segunda, { reclamados: 0, entregados: 0, reprogramados: 0, deadLetter: 0 });
+  assert.deepEqual(entregados, ['evento:objetivo']);
+  sqlite.close();
+});
+
 test('agota intentos en dead letter y permite deduplicar por consumidor', async () => {
   const sqlite = baseCompleta();
   crearEvento(sqlite, 'reserva:outbox-dlq');

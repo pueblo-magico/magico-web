@@ -1,5 +1,5 @@
-export type AccommodationType = 'domo' | 'refugio';
-export type BookingMode = 'compartida' | 'privada';
+export type AccommodationType = 'domo' | 'refugio' | 'camping';
+export type BookingMode = 'compartida' | 'privada' | 'camping';
 export type MealPlan = 'desayuno_incluido' | 'pension_completa';
 export type PaymentMethod = 'mercado_pago_checkout' | 'transferencia_mp';
 
@@ -8,7 +8,83 @@ export interface PublicAccommodation {
   nombre: string;
   tipo: AccommodationType;
   capacidad_comercial: number;
-  modalidades: Array<{ codigo: BookingMode; unidad_venta: string }>;
+  servicios: Array<{
+    codigo: string;
+    nombre: string;
+    disponibilidad: 'incluido' | 'no_disponible';
+    detalle?: string;
+  }>;
+  opciones_preparacion: Array<{
+    modalidad: BookingMode;
+    cantidad_personas: number;
+    codigo: string;
+    nombre: string;
+    descripcion?: string;
+  }>;
+  modalidades: Array<{
+    codigo: BookingMode;
+    nombre?: string;
+    descripcion?: string;
+    unidad_venta: string;
+  }>;
+}
+
+export interface PublicPriceRule {
+  temporada_codigo: string;
+  fecha_desde: string;
+  fecha_hasta: string;
+  prioridad: number;
+  dias_semana: number[];
+  modalidad: 'cualquiera' | BookingMode;
+  ocupacion_min: number;
+  ocupacion_max: number;
+  base_calculo: 'unidad_noche' | 'persona_noche';
+  importe_centavos: number;
+}
+
+export interface PublicPricingSummary {
+  fecha_referencia: string;
+  plan: { codigo: string; version: number; moneda: string };
+  horarios_comidas: {
+    version: number;
+    desayuno: { desde: string; hasta: string };
+    almuerzo: { desde: string; hasta: string };
+    cena: { desde: string; hasta: string };
+  };
+  alimentacion: {
+    desayuno_incluido: null | {
+      version: number;
+      precio_comida_centavos: number;
+      comidas_adicionales_por_persona_noche: number;
+      precio_desayuno_centavos?: number;
+    };
+    pension_completa: null | {
+      version: number;
+      precio_comida_centavos: number;
+      comidas_adicionales_por_persona_noche: number;
+      adicional_por_persona_noche_centavos: number;
+      precio_desayuno_centavos?: number;
+      precio_almuerzo_centavos?: number;
+      precio_cena_centavos?: number;
+      ajuste_paquete_centavos?: number;
+    };
+  };
+  ajustes?: Array<{
+    codigo: string;
+    nombre: string;
+    anticipacion_desde_dias: number;
+    anticipacion_hasta_dias: number | null;
+    direccion: 'descuento' | 'recargo';
+    tipo: 'porcentaje_bps' | 'importe_fijo';
+    valor: number;
+  }>;
+  opciones: Array<{
+    tipo_alojamiento: AccommodationType;
+    modalidades: BookingMode[];
+    nombres_modalidades?: Partial<Record<BookingMode, string>>;
+    capacidad_comercial: number;
+    tarifas: PublicPriceRule[];
+  }>;
 }
 
 export interface QuoteRequest {
@@ -32,6 +108,9 @@ export interface QuoteResponse {
     regimen_alimentacion: MealPlan;
     alojamiento_centavos: number;
     alimentacion_centavos: number;
+    ajustes_precio?: Array<{ codigo: string; nombre: string; importeCentavos: number }>;
+    subtotal_antes_ajustes_centavos?: number;
+    ajuste_total_centavos?: number;
     subtotal_centavos: number;
     sena_centavos: number;
     saldo_centavos: number;
@@ -64,7 +143,24 @@ export interface ReservationResponse {
 
 export interface PublicReservationStatus {
   reserva: { codigo: string; estado: string; expires_at: string | null };
-  pago: { proveedor: 'mercado_pago'; estado: string };
+  pago: {
+    proveedor: 'mercado_pago';
+    estado: string;
+    metodo: PaymentMethod | null;
+    monto_centavos: number;
+    moneda: string;
+    checkout_url?: string;
+  };
+  transferencia: {
+    estado: 'disabled' | 'ready';
+    destino?: { cvu?: string; alias?: string; titular?: string; moneda: string };
+  };
+  cuenta_cobro: {
+    proveedor: string;
+    estado: string;
+    simulado?: boolean;
+    destino?: { cvu?: string; alias?: string; moneda?: string };
+  };
 }
 
 export class BookingApiError extends Error {
@@ -108,6 +204,16 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
 
 export async function listPublicAccommodations(): Promise<PublicAccommodation[]> {
   const response = await requestJson<{ data: PublicAccommodation[] }>('/api/v1/public/alojamientos?contexto=general');
+  if (!Array.isArray(response.data)) {
+    throw new BookingApiError(502, 'RESPUESTA_INVALIDA', 'No pudimos cargar los alojamientos.', true);
+  }
+  return response.data;
+}
+
+export async function getPublicPricingSummary(fecha = localTodayIso()): Promise<PublicPricingSummary | null> {
+  const response = await requestJson<{ data: PublicPricingSummary | null }>(
+    `/api/v1/public/precios?fecha=${encodeURIComponent(fecha)}`
+  );
   return response.data;
 }
 
@@ -134,9 +240,10 @@ export async function createPublicQuote(input: QuoteRequest): Promise<QuoteRespo
 export async function createPublicReservation(input: {
   quoteCode: string;
   spaceCode: string;
-  guest: { name: string; phone: string; email?: string };
+  guest: { name: string; phone: string; email: string };
   paymentMethod: PaymentMethod;
   payerDni?: string;
+  bedPreparationCode?: string | null;
   idempotencyKey: string;
 }): Promise<{ data: ReservationResponse; idempotent: boolean }> {
   const response = await requestJson<{ data: ReservationResponse; meta: { idempotente: boolean } }>('/api/v1/public/reservas', {
@@ -145,13 +252,16 @@ export async function createPublicReservation(input: {
     body: JSON.stringify({
       cotizacion_codigo: input.quoteCode,
       espacio_codigo: input.spaceCode,
-      cliente: { nombre: input.guest.name, telefono: input.guest.phone, email: input.guest.email || null },
+      cliente: { nombre: input.guest.name, telefono: input.guest.phone, email: input.guest.email },
       pago: {
         metodo: input.paymentMethod,
         ...(input.paymentMethod === 'transferencia_mp' ? {
           pagador: { documento_tipo: 'DNI', documento_numero: input.payerDni || '' },
         } : {}),
       },
+      ...(input.bedPreparationCode
+        ? { preferencias: { preparacion_cama: input.bedPreparationCode } }
+        : {}),
     }),
   });
   return { data: response.data, idempotent: response.meta.idempotente };

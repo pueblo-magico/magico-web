@@ -13,6 +13,7 @@ import { D1RepositorioDisponibilidad } from '../_infrastructure/d1/D1Repositorio
 import { D1RepositorioReservasManyChat } from '../_infrastructure/d1/D1RepositorioReservasManyChat.ts';
 import { D1RepositorioTarifas } from '../_infrastructure/d1/D1RepositorioTarifas.ts';
 import { D1RepositorioCotizaciones } from '../_infrastructure/d1/D1RepositorioCotizaciones.ts';
+import { registrarUsoAplicacionApi } from '../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import { D1RepositorioTarifasAlimentacion } from '../_infrastructure/d1/D1RepositorioTarifasAlimentacion.ts';
 import { MercadoPagoCheckoutReservas } from '../_infrastructure/mercadopago/MercadoPagoCheckoutReservas.ts';
 import { jsonReserva as json } from '../_interfaces/http/reservasHttp.ts';
@@ -32,6 +33,7 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
   if (!autenticarServicio('manychat', secreto, env, 'reservas:crear')) {
     return json({ error: 'No autorizado.' }, 401);
   }
+  await registrarUsoAplicacionApi(env.DB, 'manychat', request.method, '/api/manychat');
 
   const limitada = respuestaLimite(await consumirLimite(request, env, 'integracion.manychat', 30, 60, `manychat:${secreto}`));
   if (limitada) {

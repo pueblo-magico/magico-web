@@ -61,7 +61,7 @@ function sembrarFallas(sqlite: DatabaseSync) {
   sqlite.prepare(`
     INSERT INTO reserva_eventos (
       reserva_id, tipo, actor_tipo, correlation_id, evento_uid, agregado_tipo, agregado_id
-    ) VALUES (?, 'reserva.creada', 'sistema', 'request-ops-1', 'evento-ops-1', 'reserva', ?)
+    ) VALUES (?, 'reserva.retencion_iniciada', 'sistema', 'request-ops-1', 'evento-ops-1', 'reserva', ?)
   `).run(reservaId, String(reservaId));
   sqlite.exec(`
     UPDATE integration_outbox SET estado = 'dead_letter', attempts = 8,

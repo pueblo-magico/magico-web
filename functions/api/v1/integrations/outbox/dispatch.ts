@@ -1,5 +1,6 @@
 import { despacharEventosIntegracion } from '../../../../_application/reservas/despacharEventosIntegracion.ts';
 import { D1RepositorioOutboxIntegracion } from '../../../../_infrastructure/d1/D1RepositorioOutboxIntegracion.ts';
+import { registrarUsoAplicacionApi } from '../../../../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import {
   ErrorConfiguracionEntregaIntegracion,
   HttpEntregadorEventosIntegracion,
@@ -25,6 +26,7 @@ async function despachar(
   if (!autenticarServicio('outbox', secreto, env, 'integraciones:despachar')) {
     return json({ error: 'No autorizado.' }, 401);
   }
+  await registrarUsoAplicacionApi(env.DB, 'outbox', request.method, '/api/v1/integrations/outbox/dispatch');
   if (!habilitado(env.INTEGRATION_OUTBOX_ENABLED)) {
     return json({ error: 'El despacho de integraciones está desactivado.' }, 409);
   }

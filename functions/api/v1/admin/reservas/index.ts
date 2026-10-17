@@ -5,6 +5,11 @@ import { observarSolicitud } from '../../../../_interfaces/http/observability.ts
 import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../_interfaces/http/requestSecurity.ts';
 import { jsonReserva as json, respuestaErrorReserva } from '../../../../_interfaces/http/reservasHttp.ts';
 import { requirePermission } from '../../../../_lib/authGuard.ts';
+import { programarDespachoOutbox } from '../../../../_interfaces/http/backgroundOutboxDispatch.ts';
+import type {
+  DireccionOrdenReservasAdmin,
+  OrdenReservasAdmin,
+} from '../../../../_domain/reservas/adminReservationManagement.ts';
 
 async function listar(request: Request, env: any): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.leer');
@@ -20,6 +25,8 @@ async function listar(request: Request, env: any): Promise<Response> {
       origen: params.get('origen'),
       espacioCodigo: params.get('espacio'),
       titular: params.get('titular'),
+      orden: (params.get('orden') || undefined) as OrdenReservasAdmin | undefined,
+      direccion: (params.get('direccion') || undefined) as DireccionOrdenReservasAdmin | undefined,
     }, new D1RepositorioGestionReservasAdmin(env.DB));
     return json({ data: pagina.items, meta: {
       version: 'v1', pagina: pagina.pagina, limite: pagina.limite,
@@ -36,7 +43,12 @@ export async function onRequestGet({ request, env }: any): Promise<Response> {
   return observarSolicitud(request, 'admin.reservations.list', () => listar(request, env));
 }
 
-async function crear(request: Request, env: any, correlationId: string): Promise<Response> {
+async function crear(
+  request: Request,
+  env: any,
+  correlationId: string,
+  waitUntil?: (promise: Promise<unknown>) => void
+): Promise<Response> {
   const auth = await requirePermission(request, env, 'reservas.crear');
   if (auth instanceof Response) return auth;
   let body: Record<string, any>;
@@ -59,6 +71,12 @@ async function crear(request: Request, env: any, correlationId: string): Promise
       montoTotalCentavos: Number(body.monto_total_centavos),
       montoSenaCentavos: body.monto_sena_centavos == null ? null : Number(body.monto_sena_centavos),
     }, auth.email, correlationId, new D1RepositorioGestionReservasAdmin(env.DB));
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'admin.reservation.create',
+      { reservationId: reserva.id }
+    );
     return json({ data: reserva, meta: { version: 'v1' } }, 201);
   } catch (error) {
     return respuestaErrorReserva(error, {
@@ -67,9 +85,9 @@ async function crear(request: Request, env: any, correlationId: string): Promise
   }
 }
 
-export async function onRequestPost({ request, env }: any): Promise<Response> {
+export async function onRequestPost({ request, env, waitUntil }: any): Promise<Response> {
   return observarSolicitud(
     request, 'admin.reservations.create',
-    contexto => crear(request, env, contexto.requestId)
+    contexto => crear(request, env, contexto.requestId, waitUntil)
   );
 }

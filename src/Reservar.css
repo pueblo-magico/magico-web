@@ -1,0 +1,47 @@
+.reservation-page {
+  min-height: 100dvh;
+  color: #102f42;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(212, 175, 55, .11), transparent 25rem),
+    #f7f4ed;
+}
+
+.reservation-page__topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 82px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 9px clamp(20px, 4vw, 64px);
+  border-bottom: 1px solid rgba(0, 83, 51, .12);
+  background: rgba(255, 255, 255, .94);
+}
+
+.reservation-page__brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: #005333;
+  text-decoration: none;
+}
+
+.reservation-page__brand img { display: block; width: auto; height: 56px; }
+.reservation-page__brand span { padding-left: 18px; border-left: 1px solid #d7dedc; font-size: 11px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; }
+.reservation-page__topbar-actions { display: flex; align-items: center; gap: 20px; }
+.reservation-page__trust { max-width: 260px; color: #607185; font-size: 12px; line-height: 1.35; text-align: right; }
+.reservation-page__exit, .reservation-page__back-row a { display: inline-flex; align-items: center; gap: 8px; color: #005333; font-size: 13px; font-weight: 800; text-decoration: none; }
+.reservation-page__exit { min-height: 42px; padding: 9px 16px; border: 1px solid rgba(0, 83, 51, .28); border-radius: 999px; background: #fff; }
+.reservation-page__back-row { width: min(1320px, 100%); margin: 0 auto; padding: 22px clamp(16px, 3vw, 36px) 12px; }
+.reservation-page__content { width: min(1320px, 100%); margin: 0 auto; padding: 0 clamp(16px, 3vw, 36px) 48px; }
+.reservation-page__legal { width: min(360px, calc(100% - 32px)); margin: 18px auto 0; }
+
+@media (max-width: 720px) {
+  .reservation-page__topbar { min-height: 68px; padding: 7px 16px; }
+  .reservation-page__brand img { height: 46px; }
+  .reservation-page__brand span, .reservation-page__trust { display: none; }
+  .reservation-page__exit { min-height: 38px; padding: 7px 12px; }
+  .reservation-page__back-row { padding-top: 16px; }
+  .reservation-page__content { padding-inline: 0; padding-bottom: 18px; }
+}

@@ -9,6 +9,7 @@ import {
 
 const workflow = readFileSync(new URL('../../.github/workflows/deploy.yml', import.meta.url), 'utf8');
 const sql = readFileSync(new URL('../../scripts/reservas/reconciliar-cutover.sql', import.meta.url), 'utf8');
+const pricingGuard = readFileSync(new URL('../../scripts/reservas/verificar-tarifas.sql', import.meta.url), 'utf8');
 const wrangler = readFileSync(new URL('../../wrangler.toml', import.meta.url), 'utf8');
 const smoke = readFileSync(new URL('../../scripts/reservas/smoke-produccion.mjs', import.meta.url), 'utf8');
 
@@ -35,6 +36,14 @@ test('Wrangler separa explícitamente las bases de Preview y Producción', () =>
   assert.equal(production, '4431f6d6-052c-4f35-8fd7-4805b2d7a858');
   assert.equal(preview, 'd893fa4d-96d8-49f2-a9f5-d9feb55ab0d3');
   assert.notEqual(production, preview);
+});
+
+test('el control remoto valida la política publicada sin fijarla al plan semilla', () => {
+  assert.match(pricingGuard, /COUNT\(\*\) FROM planes_tarifa WHERE estado = 'publicado'/);
+  assert.match(pricingGuard, /NOT EXISTS \(SELECT 1 FROM reglas_precio/);
+  assert.match(pricingGuard, /NOT EXISTS \(SELECT 1 FROM reglas_sena/);
+  assert.doesNotMatch(pricingGuard, /codigo = 'alojamiento-base'/);
+  assert.doesNotMatch(pricingGuard, /reglas_precio[\s\S]*?\) = 5/);
 });
 
 test('la reconciliación SQL es de sólo lectura y no selecciona PII', () => {

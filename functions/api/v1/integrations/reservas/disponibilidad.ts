@@ -3,6 +3,7 @@ import { D1RepositorioDisponibilidad } from '../../../../_infrastructure/d1/D1Re
 import {
   autenticarIntegracionReservas,
   errorIntegracion,
+  registrarUsoIntegracionReservas,
   respuestaIntegracion,
 } from '../../../../_interfaces/http/integrationApiV1.ts';
 import { observarSolicitud } from '../../../../_interfaces/http/observability.ts';
@@ -11,6 +12,7 @@ import { consumirLimite, respuestaLimite } from '../../../../_interfaces/http/ra
 async function consultar(request: Request, env: any): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'reservas:disponibilidad');
   if (identidad instanceof Response) return identidad;
+  await registrarUsoIntegracionReservas(request, env, identidad);
   const limitada = respuestaLimite(await consumirLimite(
     request, env, 'integracion.v1.disponibilidad', 60, 60, `integracion:${identidad}`
   ));
@@ -20,16 +22,16 @@ async function consultar(request: Request, env: any): Promise<Response> {
   const checkOut = params.get('check_out') || '';
   const personas = Number(params.get('personas'));
   const tipo = params.get('tipo_alojamiento');
-  const modalidad = params.get('modalidad') || (tipo === 'domo' ? 'privada' : 'compartida');
+  const modalidad = params.get('modalidad') || (tipo === 'domo' ? 'privada' : tipo === 'camping' ? 'camping' : 'compartida');
   const contexto = params.get('contexto') || 'general';
   if (nochesEntre(checkIn, checkOut) === null || !Number.isInteger(personas) || personas < 1 ||
-      (tipo !== 'domo' && tipo !== 'refugio') || !['privada', 'compartida'].includes(modalidad) ||
+      !['domo', 'refugio', 'camping'].includes(String(tipo)) || !['privada', 'compartida', 'camping'].includes(modalidad) ||
       !['general', 'retiro'].includes(contexto)) {
     return errorIntegracion('SOLICITUD_INVALIDA', 'Los parámetros de disponibilidad son inválidos.', 400, false);
   }
   const resultado = await new D1RepositorioDisponibilidad(env.DB).consultar({
-    tipo, personas, fechaEntrada: checkIn, fechaSalida: checkOut,
-    modalidad: modalidad as 'privada' | 'compartida', contexto: contexto as 'general' | 'retiro',
+    tipo: tipo as 'domo' | 'refugio' | 'camping', personas, fechaEntrada: checkIn, fechaSalida: checkOut,
+    modalidad: modalidad as 'privada' | 'compartida' | 'camping', contexto: contexto as 'general' | 'retiro',
   });
   return respuestaIntegracion(identidad, {
     check_in: checkIn, check_out: checkOut, personas, tipo_alojamiento: tipo,

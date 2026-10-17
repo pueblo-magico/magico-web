@@ -51,7 +51,9 @@ export class MercadoPagoCheckoutReservas implements ProveedorCheckoutReserva {
       },
       body: JSON.stringify({
         items: [{
-          title: `Seña — ${solicitud.tipoAlojamiento === 'domo' ? 'Domo' : 'Refugio Compartido'}, Pueblo Mágico`,
+          title: `Seña — ${solicitud.tipoAlojamiento === 'domo'
+            ? 'Domo'
+            : solicitud.tipoAlojamiento === 'camping' ? 'Camping' : 'Refugio Compartido'}, Pueblo Mágico`,
           quantity: 1,
           unit_price: solicitud.montoSena,
           currency_id: 'ARS',

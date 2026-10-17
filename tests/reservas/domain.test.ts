@@ -23,6 +23,7 @@ const configuracion: ConfiguracionTarifa = {
     ['refugio', 1, 15, 'persona_noche', 3_500_000, 3, 7],
   ].map(([tipo, min, max, base, importe, exclusivaDesde, exclusivaHasta]) => ({
     temporadaCodigo: 'base', fechaDesde: '2000-01-01', fechaHasta: '2099-12-31', prioridad: 0,
+    diasSemana: [1, 2, 3, 4, 5, 6, 7],
     tipoAlojamiento: tipo as any, modalidad: 'cualquiera' as const,
     ocupacionMin: Number(min), ocupacionMax: Number(max), baseCalculo: base as any,
     importeCentavos: Number(importe), exclusividadDesde: exclusivaDesde as number | null,

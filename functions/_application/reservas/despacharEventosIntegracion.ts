@@ -20,6 +20,7 @@ export async function despacharEventosIntegracion(
   opciones: {
     consumer: string;
     limite?: number;
+    eventIds?: string[];
     maxIntentos?: number;
     ahora?: () => Date;
     aleatorio?: () => number;
@@ -29,12 +30,19 @@ export async function despacharEventosIntegracion(
   const ahora = opciones.ahora?.() ?? new Date();
   const maxIntentos = opciones.maxIntentos ?? 8;
   const claimUid = opciones.generarClaimUid?.() ?? crypto.randomUUID();
-  const eventos = await repositorio.reclamarLote({
+  const eventIds = [...new Set((opciones.eventIds || []).map(id => id.trim()).filter(Boolean))]
+    .slice(0, 100);
+  const claim = {
     claimUid,
-    limite: Math.max(1, Math.min(100, opciones.limite ?? 25)),
     ahora: ahora.toISOString(),
     claimExpiresAt: new Date(ahora.getTime() + 5 * 60_000).toISOString(),
-  });
+  };
+  const eventos = eventIds.length > 0
+    ? await repositorio.reclamarEventos?.({ ...claim, eventIds }) ?? []
+    : await repositorio.reclamarLote({
+        ...claim,
+        limite: Math.max(1, Math.min(100, opciones.limite ?? 25)),
+      });
   const resultado: ResultadoDespachoOutbox = {
     reclamados: eventos.length, entregados: 0, reprogramados: 0, deadLetter: 0,
   };

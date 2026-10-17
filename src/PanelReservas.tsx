@@ -1,5 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, Search, LogIn, LogOut, CalendarClock, Plus, Copy, Link2 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Trash2, Link2, Home, CalendarDays, ClipboardList, BarChart3, BadgeDollarSign, Settings, Users, Activity, ShieldAlert, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import {
+  Badge, Button, Card, Checkbox, CodeBadge, CopyButton, DateRangeField, DescriptionList,
+  DescriptionListItem, EmptyState, IconButton, Input, LoadingState, Modal, MoneyField, NumberField,
+  SearchField, Select, StatCard, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableHeader, TableRow, Textarea, ToggleGroup,
+} from '@pueblo-magico/react-ui';
+import { localTodayIso, type BookingMode, type MealPlan } from '../components/booking/bookingApi';
+import { estimateBookingPrice } from '../components/booking/pricingPreview';
+import { usePublicPricingSummary } from '../components/booking/usePublicPricingSummary';
+import './PanelReservas.css';
 
 // Dashboard interno de reservas — /admin/reservas. La API valida sesión,
 // permisos por rol y CSRF en cada mutación; la UI nunca decide autorización.
@@ -21,9 +32,37 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 // forma se colarían acá — el <style> de abajo las neutraliza con selectores
 // más específicos, sin tocar el CSS global del sitio.
 
-type TipoAlojamiento = 'domo' | 'refugio';
-type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'integraciones' | 'usuarios' | 'actividad';
+type TipoAlojamiento = 'domo' | 'refugio' | 'camping';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'precios' | 'integraciones' | 'usuarios' | 'actividad';
+
+const ADMIN_RESERVAS_BASE = '/admin/reservas';
+const RUTA_POR_VISTA: Record<VistaActiva, string> = {
+  operativa: ADMIN_RESERVAS_BASE,
+  historial: `${ADMIN_RESERVAS_BASE}/listado`,
+  ocupacion: `${ADMIN_RESERVAS_BASE}/bloqueos`,
+  metricas: `${ADMIN_RESERVAS_BASE}/reportes`,
+  consultas: `${ADMIN_RESERVAS_BASE}/consultas`,
+  arrepentimientos: `${ADMIN_RESERVAS_BASE}/arrepentimientos`,
+  configuracion: `${ADMIN_RESERVAS_BASE}/configuracion`,
+  precios: `${ADMIN_RESERVAS_BASE}/precios`,
+  integraciones: `${ADMIN_RESERVAS_BASE}/integraciones`,
+  usuarios: `${ADMIN_RESERVAS_BASE}/usuarios`,
+  actividad: `${ADMIN_RESERVAS_BASE}/actividad`,
+};
+const VISTA_POR_SEGMENTO = Object.fromEntries(
+  Object.entries(RUTA_POR_VISTA).map(([vista, ruta]) => [ruta.slice(ADMIN_RESERVAS_BASE.length + 1), vista])
+) as Record<string, VistaActiva>;
+
+const vistaDesdeRuta = (pathname: string): VistaActiva | null => {
+  const rutaNormalizada = pathname.replace(/\/+$/, '') || '/';
+  if (rutaNormalizada === ADMIN_RESERVAS_BASE) return 'operativa';
+  if (!rutaNormalizada.startsWith(`${ADMIN_RESERVAS_BASE}/`)) return null;
+  const segmento = rutaNormalizada.slice(ADMIN_RESERVAS_BASE.length + 1);
+  return VISTA_POR_SEGMENTO[segmento] ?? null;
+};
 type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
+type OrdenHistorial = 'creada' | 'titular' | 'alojamiento' | 'checkin' | 'estado' | 'origen' | 'total' | 'unidad';
+type DireccionOrdenHistorial = 'asc' | 'desc';
 
 type Alojamiento = {
   id: number;
@@ -34,6 +73,7 @@ type Alojamiento = {
 
 type Reserva = {
   id: number;
+  codigo: string;
   version: number;
   cliente_nombre: string;
   cliente_telefono: string | null;
@@ -51,6 +91,7 @@ type Reserva = {
   canal_origen: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  preferencias?: Array<{ categoria: 'preparacion_cama'; codigo: string; nombre: string; descripcion: string }>;
   cuenta_cobro?: {
     proveedor: 'cucuru' | 'cucuru_mock';
     estado: 'pending' | 'provisioning' | 'ready' | 'failed' | 'disabled' | 'unknown_outcome';
@@ -86,7 +127,7 @@ type Reserva = {
 };
 
 type ReservaAdminV1 = {
-  id: number; version: number; titular: string;
+  id: number; codigo: string; version: number; titular: string;
   clienteTelefono: string | null; clienteEmail: string | null;
   fechaCheckin: string; fechaCheckout: string; cantidadPersonas: number;
   estado: string; estadoFlujo: string; canalOrigen: string | null;
@@ -95,6 +136,7 @@ type ReservaAdminV1 = {
   montoTotalCentavos: number; montoSenaCentavos: number | null;
   unidadAsignada: string | null; manychatUserId: string | null; createdAt: string;
   excepciones?: Array<Record<string, any>>;
+  preferencias?: Array<{ categoria: 'preparacion_cama'; codigo: string; nombre: string; descripcion: string }>;
   cuentaCobro?: Reserva['cuenta_cobro'];
   metodoPago?: Reserva['metodo_pago'];
 };
@@ -105,6 +147,7 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
   const excepcion = item.excepciones?.[0];
   return {
     id: item.id,
+    codigo: item.codigo,
     version: item.version,
     cliente_nombre: item.titular,
     cliente_telefono: item.clienteTelefono,
@@ -122,6 +165,7 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
     canal_origen: item.canalOrigen,
     manychat_user_id: item.manychatUserId,
     created_at: item.createdAt,
+    preferencias: item.preferencias || [],
     cuenta_cobro: item.cuentaCobro ?? null,
     metodo_pago: item.metodoPago ?? null,
     excepcion_capacidad: excepcion ? {
@@ -263,6 +307,9 @@ type Metricas = {
 };
 
 const fmtMoney = (n: number) => `$${Math.round(n).toLocaleString('es-AR')}`;
+const fmtCentavos = (centavos: number, moneda = 'ARS') => new Intl.NumberFormat('es-AR', {
+  style: 'currency', currency: moneda, maximumFractionDigits: 0,
+}).format(centavos / 100);
 const toISODate = (d: Date) => d.toISOString().slice(0, 10);
 const fechaOperativaLocal = (instante: Date) => {
   const partes = new Intl.DateTimeFormat('en-CA', {
@@ -293,6 +340,13 @@ const fmtDateLong = (iso: string) => {
   const d = new Date(iso + 'T00:00:00Z');
   return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
 };
+const fmtFechaHora = (iso: string) => {
+  const normalizado = iso.includes('T') ? iso : iso.replace(' ', 'T');
+  const instante = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalizado) ? normalizado : `${normalizado}Z`;
+  return new Date(instante).toLocaleString('es-AR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+  });
+};
 const diasDesde = (iso: string) => {
   const normalizado = iso.includes('T') ? iso : iso.replace(' ', 'T');
   const instante = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalizado) ? normalizado : `${normalizado}Z`;
@@ -312,50 +366,85 @@ const waLink = (telefono: string) => `https://wa.me/${telefono.replace(/\D/g, ''
 const MetricCard: React.FC<{ label: string; value: string; accent?: 'brand' | 'gold' | 'red'; hint?: string; compact?: boolean; icon?: React.ReactNode }> = ({
   label, value, accent = 'brand', hint, compact, icon,
 }) => (
-  <div className={`bg-white rounded-xl border border-gray-200 shadow-sm ${compact ? 'p-4' : 'p-5'}`}>
-    <div className="flex items-center gap-1.5 mb-2">
-      {icon}
-      <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 truncate">{label}</p>
-    </div>
-    <p className={`${compact ? 'text-xl sm:text-2xl' : 'text-2xl'} font-bold tabular-nums ${accent === 'gold' ? 'text-gold' : accent === 'red' ? 'text-red-600' : 'text-brand'}`}>
-      {value}
-    </p>
-    {hint && <p className="text-[11px] text-gray-400 mt-1">{hint}</p>}
-  </div>
+  <StatCard
+    className="admin-metric-card bg-white shadow-sm"
+    description={hint}
+    emphasis={accent === 'gold' ? 'accent' : accent === 'red' ? 'danger' : 'brand'}
+    icon={icon}
+    label={label}
+    size={compact ? 'compact' : 'default'}
+    value={value}
+    variant="metric"
+  />
 );
 
-function useEscapeKey(onEscape: () => void) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onEscape(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onEscape]);
-}
+const RingMetric: React.FC<{
+  label: string;
+  value: number | null;
+  detail: string;
+  accent?: 'brand' | 'gold';
+}> = ({ label, value, detail, accent = 'brand' }) => {
+  const normalized = value === null ? 0 : Math.max(0, Math.min(100, value));
+  return (
+    <Card className="admin-report-chart admin-report-ring-card">
+      <div
+        className={`admin-report-ring admin-report-ring--${accent}`}
+        style={{ '--report-value': `${normalized * 3.6}deg` } as React.CSSProperties}
+        role="img"
+        aria-label={`${label}: ${value === null ? 'sin datos' : `${value}%`}`}
+      >
+        <span>{value === null ? '—' : `${value}%`}</span>
+      </div>
+      <div className="admin-report-ring-card__copy">
+        <h3>{label}</h3>
+        <p>{detail}</p>
+      </div>
+    </Card>
+  );
+};
+
+const FinancialCompositionChart: React.FC<{ collected: number; pending: number }> = ({ collected, pending }) => {
+  const total = collected + pending;
+  const collectedPct = total > 0 ? (collected / total) * 100 : 0;
+  const pendingPct = total > 0 ? 100 - collectedPct : 0;
+  return (
+    <Card className="admin-report-chart admin-report-financial">
+      <div className="admin-report-chart__heading">
+        <div>
+          <p>Reservas confirmadas</p>
+          <h3>Composición de ingresos</h3>
+        </div>
+        <strong>{fmtMoney(total)}</strong>
+      </div>
+      <div
+        className={`admin-report-stacked-bar${total === 0 ? ' admin-report-stacked-bar--empty' : ''}`}
+        role="img"
+        aria-label={`Señas cobradas ${fmtMoney(collected)}; saldo pendiente ${fmtMoney(pending)}`}
+      >
+        {total > 0 && <>
+          <span className="admin-report-stacked-bar__collected" style={{ width: `${collectedPct}%` }} />
+          <span className="admin-report-stacked-bar__pending" style={{ width: `${pendingPct}%` }} />
+        </>}
+      </div>
+      <div className="admin-report-legend">
+        <span><i className="admin-report-key admin-report-key--brand" aria-hidden="true" />Señas cobradas <strong>{fmtMoney(collected)}</strong></span>
+        <span><i className="admin-report-key admin-report-key--gold" aria-hidden="true" />Saldo pendiente <strong>{fmtMoney(pending)}</strong></span>
+      </div>
+    </Card>
+  );
+};
 
 const ModalBase: React.FC<{ onClose: () => void; children: React.ReactNode; titulo: string; ancho?: string }> = ({ onClose, children, titulo, ancho = 'sm:max-w-md' }) => {
-  useEscapeKey(onClose);
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
-      style={{ backgroundColor: 'rgba(15,20,18,0.55)' }}
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={titulo}
+    <Modal
+      closeLabel={`Cerrar ${titulo}`}
+      isOpen
+      onOpenChange={isOpen => { if (!isOpen) onClose(); }}
+      size={ancho === 'sm:max-w-3xl' ? 'wide' : 'default'}
+      title={titulo}
     >
-      <div
-        className={`bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full ${ancho} p-6 max-h-[90vh] overflow-y-auto`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-gray-800">{titulo}</h3>
-          <button onClick={onClose} className={`text-gray-400 hover:text-gray-700 rounded-full p-1 -m-1 ${FOCUS_RING}`} aria-label="Cerrar">
-            <X size={20} aria-hidden="true" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+      {children}
+    </Modal>
   );
 };
 
@@ -385,10 +474,11 @@ const ESPACIO_POR_ALOJAMIENTO: Record<number, string> = {
   1: 'domo-1',
   2: 'domo-2',
   3: 'refugio',
+  4: 'camping-exterior',
 };
 
-const modalidadPara = (alojamiento: Alojamiento | undefined): 'privada' | 'compartida' =>
-  alojamiento?.tipo === 'domo' ? 'privada' : 'compartida';
+const modalidadPara = (alojamiento: Alojamiento | undefined): 'privada' | 'compartida' | 'camping' =>
+  alojamiento?.tipo === 'domo' ? 'privada' : alojamiento?.tipo === 'camping' ? 'camping' : 'compartida';
 
 const ETIQUETAS_ESTADO_CUENTA = {
   pending: 'Pendiente',
@@ -435,15 +525,7 @@ const ModalReserva: React.FC<{
   const [motivoExcepcion, setMotivoExcepcion] = useState('');
   const [planCamas, setPlanCamas] = useState('');
   const [gestionandoCapacidad, setGestionandoCapacidad] = useState(false);
-  const [destinoCopiado, setDestinoCopiado] = useState<'alias' | 'cvu' | null>(null);
-
   const setCampo = (campo: keyof FormReserva, valor: string) => setForm(f => ({ ...f, [campo]: valor }));
-
-  const copiarDestinoCobro = async (tipo: 'alias' | 'cvu', valor: string) => {
-    await navigator.clipboard.writeText(valor);
-    setDestinoCopiado(tipo);
-    window.setTimeout(() => setDestinoCopiado(actual => actual === tipo ? null : actual), 1600);
-  };
 
   const validar = (): string | null => {
     if (!form.cliente_nombre.trim()) return 'Falta el nombre del huésped.';
@@ -611,15 +693,28 @@ const ModalReserva: React.FC<{
       )}
 
       {modo === 'editar' && (
-        <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-          Acá podés corregir datos del huésped y el canal. Las fechas, importes y asignaciones se conservan para no alterar inventario ni trazabilidad.
-        </p>
+        <div className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+          <p className="font-semibold text-gray-700">{reserva?.codigo} · creada el {reserva ? fmtFechaHora(reserva.created_at) : '—'}</p>
+          <p className="mt-1">Acá podés corregir datos del huésped y el canal. Las fechas, importes y asignaciones se conservan para no alterar inventario ni trazabilidad.</p>
+        </div>
       )}
 
       {soloLectura && (
         <p className="text-xs text-gray-500 mb-4 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
           Modo solo lectura — tu usuario no tiene permiso para crear, editar ni cancelar reservas.
         </p>
+      )}
+
+      {modo === 'editar' && (reserva?.preferencias?.length || 0) > 0 && (
+        <section className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3" aria-label="Preferencias de preparación">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">Preparación solicitada</p>
+          {reserva?.preferencias?.map(preferencia => (
+            <div key={preferencia.categoria} className="mt-2 text-sm text-emerald-950">
+              <strong>{preferencia.nombre}</strong>
+              {preferencia.descripcion && <p className="mt-0.5 text-xs text-emerald-800">{preferencia.descripcion}</p>}
+            </div>
+          ))}
+        </section>
       )}
 
       <fieldset disabled={soloLectura} className="space-y-3 mb-4 border-0 p-0 m-0 min-w-0">
@@ -750,26 +845,32 @@ const ModalReserva: React.FC<{
               {reserva.cuenta_cobro.alias && (
                 <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
                   <span className="min-w-0"><span className="text-gray-500">Alias:</span> <strong className="break-all">{reserva.cuenta_cobro.alias}</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => copiarDestinoCobro('alias', reserva.cuenta_cobro!.alias!)}
-                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
-                  >
-                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'alias' ? 'Copiado' : 'Copiar'}
-                  </button>
+                  <CopyButton
+                    className="shrink-0"
+                    copiedLabel="Alias copiado"
+                    errorLabel="No se pudo copiar el alias"
+                    label="Copiar alias"
+                    showLabel
+                    size="sm"
+                    value={reserva.cuenta_cobro.alias}
+                    variant="ghost"
+                  />
                 </div>
               )}
 
               {reserva.cuenta_cobro.cvu && (
                 <div className="flex items-center justify-between gap-2 rounded-md bg-gray-50 px-2.5 py-2">
                   <span className="min-w-0"><span className="text-gray-500">CVU:</span> <strong className="break-all tabular-nums">{reserva.cuenta_cobro.cvu}</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => copiarDestinoCobro('cvu', reserva.cuenta_cobro!.cvu!)}
-                    className={`inline-flex shrink-0 items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}
-                  >
-                    <Copy size={12} aria-hidden="true" /> {destinoCopiado === 'cvu' ? 'Copiado' : 'Copiar'}
-                  </button>
+                  <CopyButton
+                    className="shrink-0"
+                    copiedLabel="CVU copiado"
+                    errorLabel="No se pudo copiar el CVU"
+                    label="Copiar CVU"
+                    showLabel
+                    size="sm"
+                    value={reserva.cuenta_cobro.cvu}
+                    variant="ghost"
+                  />
                 </div>
               )}
 
@@ -996,25 +1097,69 @@ const EstadoBadge: React.FC<{ estado: string }> = ({ estado }) => (
   </span>
 );
 
-const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva) => void }> = ({ reservas, onSeleccionar }) => (
+const CabeceraHistorialOrdenable: React.FC<{
+  campo: OrdenHistorial;
+  label: string;
+  orden: OrdenHistorial;
+  direccion: DireccionOrdenHistorial;
+  onOrdenar: (campo: OrdenHistorial) => void;
+  alineacion?: 'left' | 'right';
+}> = ({ campo, label, orden, direccion, onOrdenar, alineacion = 'left' }) => {
+  const activa = campo === orden;
+  const Icono = activa ? (direccion === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th
+      scope="col"
+      aria-sort={activa ? (direccion === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={`border-b border-gray-200 px-3 py-2.5 ${alineacion === 'right' ? 'text-right' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={() => onOrdenar(campo)}
+        className={`inline-flex items-center gap-1 rounded hover:text-brand ${alineacion === 'right' ? 'ml-auto' : ''} ${FOCUS_RING}`}
+      >
+        {label}
+        <Icono size={13} aria-hidden="true" className={activa ? 'text-brand' : 'text-gray-400'} />
+        <span className="sr-only">
+          {activa ? `Orden ${direccion === 'asc' ? 'ascendente' : 'descendente'}. Cambiar dirección.` : 'Ordenar por esta columna.'}
+        </span>
+      </button>
+    </th>
+  );
+};
+
+const TablaHistorial: React.FC<{
+  reservas: Reserva[];
+  onSeleccionar: (r: Reserva) => void;
+  orden: OrdenHistorial;
+  direccion: DireccionOrdenHistorial;
+  onOrdenar: (campo: OrdenHistorial) => void;
+}> = ({ reservas, onSeleccionar, orden, direccion, onOrdenar }) => (
   <>
     {/* Tabla — pantallas sm y más grandes */}
     <div className="hidden sm:block overflow-x-auto">
       <table className="text-sm border-collapse w-full">
         <thead>
           <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500 bg-gray-50">
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Huésped</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Alojamiento</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5 tabular-nums">Fechas</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Estado</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Canal</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5 text-right tabular-nums">Total</th>
-            <th scope="col" className="border-b border-gray-200 px-3 py-2.5">Unidad</th>
+            <CabeceraHistorialOrdenable campo="creada" label="Reserva" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="titular" label="Huésped" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="alojamiento" label="Alojamiento" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="checkin" label="Fechas" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="estado" label="Estado" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="origen" label="Canal" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
+            <CabeceraHistorialOrdenable campo="total" label="Total" orden={orden} direccion={direccion} onOrdenar={onOrdenar} alineacion="right" />
+            <CabeceraHistorialOrdenable campo="unidad" label="Unidad" orden={orden} direccion={direccion} onOrdenar={onOrdenar} />
           </tr>
         </thead>
         <tbody>
           {reservas.map(r => (
             <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <td className="px-3 py-2.5 whitespace-nowrap">
+                <button onClick={() => onSeleccionar(r)} className={`font-mono text-xs font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}>
+                  {r.codigo}
+                </button>
+                <p className="text-[11px] text-gray-400 tabular-nums">Creada {fmtFechaHora(r.created_at)}</p>
+              </td>
               <td className="px-3 py-2.5">
                 <button onClick={() => onSeleccionar(r)} className={`font-semibold text-gray-800 hover:text-brand text-left rounded ${FOCUS_RING}`}>
                   {r.cliente_nombre}
@@ -1030,13 +1175,43 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
             </tr>
           ))}
           {reservas.length === 0 && (
-            <tr><td colSpan={7} className="px-3 py-8 text-center text-sm text-gray-400">Sin resultados para esa búsqueda.</td></tr>
+            <tr><td colSpan={8} className="px-3 py-8 text-center text-sm text-gray-400">Sin resultados para esa búsqueda.</td></tr>
           )}
         </tbody>
       </table>
     </div>
 
     {/* Lista de tarjetas — mobile */}
+    <div className="sm:hidden border-b border-gray-100 bg-gray-50 px-4 py-3">
+      <div className="flex items-end gap-2">
+        <Select
+          className="min-w-0 flex-1"
+          label="Ordenar por"
+          placeholder="Elegí una columna"
+          value={orden}
+          options={[
+            { value: 'creada', label: 'Reserva creada' },
+            { value: 'titular', label: 'Huésped' },
+            { value: 'alojamiento', label: 'Alojamiento' },
+            { value: 'checkin', label: 'Fecha de llegada' },
+            { value: 'estado', label: 'Estado' },
+            { value: 'origen', label: 'Canal' },
+            { value: 'total', label: 'Total' },
+            { value: 'unidad', label: 'Unidad' },
+          ]}
+          onChange={value => value && onOrdenar(value as OrdenHistorial)}
+        />
+        <button
+          type="button"
+          onClick={() => onOrdenar(orden)}
+          aria-label={`Orden ${direccion === 'asc' ? 'ascendente' : 'descendente'}. Cambiar dirección.`}
+          className={`mb-px inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-gray-300 bg-white text-brand ${FOCUS_RING}`}
+        >
+          {direccion === 'asc' ? <ArrowUp size={16} aria-hidden="true" /> : <ArrowDown size={16} aria-hidden="true" />}
+        </button>
+      </div>
+    </div>
+
     <div className="sm:hidden divide-y divide-gray-100">
       {reservas.map(r => (
         <button
@@ -1045,7 +1220,10 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
           className={`w-full text-left px-4 py-3.5 hover:bg-gray-50 ${FOCUS_RING}`}
         >
           <div className="flex items-start justify-between gap-2 mb-1">
-            <p className="font-semibold text-gray-800 text-sm truncate">{r.cliente_nombre}</p>
+            <div className="min-w-0">
+              <p className="font-semibold text-gray-800 text-sm truncate">{r.cliente_nombre}</p>
+              <p className="font-mono text-[11px] font-semibold text-brand truncate">{r.codigo}</p>
+            </div>
             <EstadoBadge estado={r.estado} />
           </div>
           <p className="text-xs text-gray-500 tabular-nums mb-0.5">
@@ -1055,6 +1233,7 @@ const TablaHistorial: React.FC<{ reservas: Reserva[]; onSeleccionar: (r: Reserva
             <span>{r.canal_origen || 'Sin canal'}{r.unidad_asignada ? ` · ${r.unidad_asignada}` : ''}</span>
             <span className="font-semibold text-gray-600 tabular-nums">{fmtMoney(r.monto_total)}</span>
           </div>
+          <p className="mt-1 text-[11px] text-gray-400 tabular-nums">Creada {fmtFechaHora(r.created_at)}</p>
         </button>
       ))}
       {reservas.length === 0 && (
@@ -1153,18 +1332,9 @@ const TablaConsultas: React.FC<{ consultas: Consulta[] }> = ({ consultas }) => (
 type ResumenSync = Record<string, { nuevas: number; actualizadas: number; canceladas: number } | { error: string }>;
 
 const SeccionAirbnb: React.FC<{ alojamientos: Alojamiento[]; onSincronizado: () => void }> = ({ alojamientos, onSincronizado }) => {
-  const [copiado, setCopiado] = useState<number | null>(null);
   const [sincronizando, setSincronizando] = useState(false);
   const [resumen, setResumen] = useState<ResumenSync | null>(null);
   const [error, setError] = useState('');
-
-  const copiarLink = (id: number) => {
-    const link = `${window.location.origin}/api/ical?alojamiento_id=${id}`;
-    navigator.clipboard.writeText(link).then(() => {
-      setCopiado(id);
-      setTimeout(() => setCopiado(null), 1800);
-    });
-  };
 
   const sincronizar = async () => {
     setSincronizando(true);
@@ -1189,16 +1359,20 @@ const SeccionAirbnb: React.FC<{ alojamientos: Alojamiento[]; onSincronizado: () 
 
       <div className="grid sm:grid-cols-3 gap-2 mb-4">
         {alojamientos.map(a => (
-          <button
+          <div
             key={a.id}
-            onClick={() => copiarLink(a.id)}
-            className={`flex items-center justify-between gap-2 text-xs border border-gray-200 rounded-lg px-3 py-2.5 hover:bg-gray-50 ${FOCUS_RING}`}
+            className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2.5 text-xs"
           >
             <span className="flex items-center gap-1.5 text-gray-600"><Link2 size={13} className="text-gray-400 flex-shrink-0" aria-hidden="true" />{a.nombre}</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-brand flex-shrink-0">
-              <Copy size={12} aria-hidden="true" /> {copiado === a.id ? 'Copiado' : 'Copiar link'}
-            </span>
-          </button>
+            <CopyButton
+              copiedLabel="Link copiado"
+              errorLabel="No se pudo copiar el link"
+              label={`Copiar link de ${a.nombre}`}
+              size="sm"
+              value={`${window.location.origin}/api/ical?alojamiento_id=${a.id}`}
+              variant="ghost"
+            />
+          </div>
         ))}
       </div>
       <p className="text-[11px] text-gray-400 mb-4">
@@ -1585,42 +1759,294 @@ type ConfiguracionBaseApi = {
     codigo: 'payment_hold_minutes'; valor: number; unidad: string; version: number;
     minimo: number; maximo: number; editable: boolean; fuente: string; actualizadoAt: string;
   }>;
+  horariosComidas: {
+    version: number; actualizadoAt: string;
+    desayuno: { desde: string; hasta: string };
+    almuerzo: { desde: string; hasta: string };
+    cena: { desde: string; hasta: string };
+  };
+  servicios: Array<{
+    id: number; tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
+    codigo: string; nombre: string; disponibilidad: 'incluido' | 'no_disponible';
+    detalle: string; visibleEnReserva: boolean; orden: number; actualizadoAt: string;
+  }>;
+  opcionesPreparacion: Array<{
+    id: number; tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
+    modalidad: 'privada' | 'compartida' | 'camping'; cantidadPersonas: number;
+    codigo: string; nombre: string; descripcion: string; habilitada: boolean;
+    orden: number; actualizadoAt: string;
+  }>;
   inventario: Array<{
     codigo: string; nombre: string; tipo: string; capacidadComercial: number;
-    capacidadOperativaMaxima: number; estado: string;
-    modalidades: Array<{ modalidad: string; contexto: string; unidadVenta: string }>;
+    capacidadOperativaMaxima: number; reservableGeneral: boolean; reservableRetiro: boolean;
+    estado: string; actualizadoAt: string;
+    modalidades: Array<{
+      id: number; modalidad: string; contexto: string; unidadVenta: string;
+      habilitada: boolean; nombreComercial: string; descripcionComercial: string;
+      actualizadoAt: string;
+    }>;
   }>;
   tarifa: null | {
-    codigo: string; nombre: string; moneda: string; version: number;
+    id: number; codigo: string; nombre: string; moneda: string; version: number;
     reglasPrecio: number; reglasSena: number; publicadoAt: string;
+    temporadas: Array<{
+      codigo: string; nombre: string; fechaDesde: string; fechaHasta: string; prioridad: number;
+      diasSemana: number[];
+      reglas: Array<{
+        tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
+        modalidad: 'cualquiera' | 'privada' | 'compartida' | 'camping';
+        ocupacionMin: number; ocupacionMax: number;
+        baseCalculo: 'unidad_noche' | 'persona_noche'; importeCentavos: number;
+        exclusividadDesde: number | null; exclusividadHasta: number | null;
+      }>;
+    }>;
+    senas: Array<{
+      subtotalDesdeCentavos: number; subtotalHastaCentavos: number | null;
+      tipo: 'porcentaje_bps' | 'importe_fijo'; valor: number;
+    }>;
+    ajustes: Array<{
+      codigo: string; nombre: string; anticipacionDesdeDias: number; anticipacionHastaDias: number | null;
+      direccion: 'descuento' | 'recargo'; tipo: 'porcentaje_bps' | 'importe_fijo'; valor: number;
+    }>;
   };
   politicaCancelacion: null | {
     codigo: string; nombre: string; version: number; estado: string; vigenciaDesde: string | null;
+    reglas: Array<{ horasMinimasAntes: number; porcentajeDevolucionBps: number }>;
   };
   alimentacion: Array<{
-    codigo: string; moneda: string; version: number; precioComidaCentavos: number;
-    comidasAdicionalesPorPersonaNoche: number;
+    id: number; codigo: 'desayuno_incluido' | 'pension_completa'; moneda: string; version: number;
+    precioComidaCentavos: number; comidasAdicionalesPorPersonaNoche: number; publicadoAt: string;
+    precioDesayunoCentavos: number; precioAlmuerzoCentavos: number; precioCenaCentavos: number;
+    ajustePaqueteCentavos: number;
   }>;
 };
 
-const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEditar }) => {
+type BorradorTarifaUi = NonNullable<ConfiguracionBaseApi['tarifa']>;
+type ResumenPlanTarifaUi = {
+  id: number; codigo: string; nombre: string; moneda: string; version: number;
+  estado: 'borrador' | 'publicado' | 'retirado'; publicadoAt: string | null; createdAt: string;
+};
+type BorradorPoliticaUi = NonNullable<ConfiguracionBaseApi['politicaCancelacion']>;
+type BorradorInventarioUi = ConfiguracionBaseApi['inventario'];
+type BorradorServicioUi = ConfiguracionBaseApi['servicios'][number];
+type BorradorOpcionPreparacionUi = ConfiguracionBaseApi['opcionesPreparacion'][number];
+type TipoAlojamientoTarifa = BorradorTarifaUi['temporadas'][number]['reglas'][number]['tipoAlojamiento'];
+
+const OPCIONES_ALOJAMIENTO_TARIFA: Array<{ value: TipoAlojamientoTarifa; label: string }> = [
+  { value: 'domo', label: 'Domo' },
+  { value: 'refugio', label: 'Refugio' },
+  { value: 'camping', label: 'Camping' },
+  { value: 'bell_tent', label: 'Carpa equipada' },
+];
+
+const ETIQUETA_ALOJAMIENTO_PUBLICO: Record<TipoAlojamiento, string> = {
+  domo: 'Domo', refugio: 'Refugio', camping: 'Camping',
+};
+const ETIQUETA_MODALIDAD_PUBLICA: Record<BookingMode, string> = {
+  compartida: 'Compartida', privada: 'Privada', camping: 'Camping',
+};
+
+const DIAS_SEMANA_TARIFA = [
+  { value: 1, label: 'Lun' }, { value: 2, label: 'Mar' }, { value: 3, label: 'Mié' },
+  { value: 4, label: 'Jue' }, { value: 5, label: 'Vie' }, { value: 6, label: 'Sáb' },
+  { value: 7, label: 'Dom' },
+] as const;
+
+const TODOS_LOS_DIAS_TARIFA = DIAS_SEMANA_TARIFA.map(dia => dia.value);
+
+type CambioConfiguracion = {
+  campo: string;
+  anterior: string;
+  nuevo: string;
+};
+
+type ConfirmacionConfiguracion = {
+  titulo: string;
+  descripcion: string;
+  cambios: CambioConfiguracion[];
+  etiquetaConfirmar: string;
+  ejecutar: (motivo: string) => Promise<boolean>;
+};
+
+const ETIQUETAS_CAMBIO: Record<string, string> = {
+  nombre: 'Nombre', moneda: 'Moneda', temporadas: 'Temporadas', reglas: 'Reglas', senas: 'Reglas de seña',
+  fechaDesde: 'Desde', fechaHasta: 'Hasta', prioridad: 'Prioridad', diasSemana: 'Días de aplicación',
+  tipoAlojamiento: 'Alojamiento',
+  modalidad: 'Modalidad', ocupacionMin: 'Ocupación mínima', ocupacionMax: 'Ocupación máxima',
+  baseCalculo: 'Base de cálculo', importeCentavos: 'Importe', exclusividadDesde: 'Exclusividad desde',
+  exclusividadHasta: 'Exclusividad hasta', subtotalDesdeCentavos: 'Subtotal desde',
+  subtotalHastaCentavos: 'Subtotal hasta', tipo: 'Tipo', valor: 'Valor', vigenciaDesde: 'Vigencia desde',
+  horasMinimasAntes: 'Horas mínimas', porcentajeDevolucionBps: 'Devolución', capacidadComercial: 'Capacidad comercial',
+  capacidadOperativaMaxima: 'Máximo físico/operativo', reservableGeneral: 'Venta general',
+  reservableRetiro: 'Retiros', estado: 'Estado comercial', contexto: 'Contexto', unidadVenta: 'Unidad de venta',
+  habilitada: 'Habilitada para reservas nuevas', precioComidaCentavos: 'Precio por comida', paymentHoldMinutes: 'Plazo de retención',
+};
+
+const valorCambio = (valor: unknown): string => {
+  if (valor === null || valor === undefined || valor === '') return 'Sin definir';
+  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+  return String(valor);
+};
+
+const resumirCambios = (anterior: unknown, nuevo: unknown, ruta = ''): CambioConfiguracion[] => {
+  if (Array.isArray(anterior) || Array.isArray(nuevo)) {
+    const antes = Array.isArray(anterior) ? anterior : [];
+    const despues = Array.isArray(nuevo) ? nuevo : [];
+    return Array.from({ length: Math.max(antes.length, despues.length) }, (_, indice) =>
+      resumirCambios(antes[indice], despues[indice], `${ruta}${ruta ? ' · ' : ''}${indice + 1}`)
+    ).flat();
+  }
+  if (anterior && nuevo && typeof anterior === 'object' && typeof nuevo === 'object') {
+    const claves = Array.from(new Set([...Object.keys(anterior), ...Object.keys(nuevo)]));
+    return claves.flatMap(clave => {
+      if (['id', 'codigo', 'version', 'actualizadoAt', 'publicadoAt'].includes(clave)) return [];
+      const etiqueta = ETIQUETAS_CAMBIO[clave] || clave;
+      return resumirCambios((anterior as any)[clave], (nuevo as any)[clave], `${ruta}${ruta ? ' · ' : ''}${etiqueta}`);
+    });
+  }
+  if (Object.is(anterior, nuevo)) return [];
+  return [{ campo: ruta || 'Valor', anterior: valorCambio(anterior), nuevo: valorCambio(nuevo) }];
+};
+
+const normalizarRangosSena = (reglas: BorradorTarifaUi['senas']): BorradorTarifaUi['senas'] => {
+  const ordenadas = [...reglas].sort((a, b) => a.subtotalDesdeCentavos - b.subtotalDesdeCentavos);
+  return ordenadas.map((regla, indice) => ({
+    ...regla,
+    subtotalDesdeCentavos: indice === 0 ? 0 : regla.subtotalDesdeCentavos,
+    subtotalHastaCentavos: indice === ordenadas.length - 1
+      ? null
+      : Math.max(regla.subtotalDesdeCentavos, ordenadas[indice + 1].subtotalDesdeCentavos - 1),
+  }));
+};
+
+const errorReglasSena = (reglas: BorradorTarifaUi['senas']): string => {
+  if (reglas.length === 0) return 'Agregá al menos una regla de seña.';
+  const ordenadas = [...reglas].sort((a, b) => a.subtotalDesdeCentavos - b.subtotalDesdeCentavos);
+  if (ordenadas[0].subtotalDesdeCentavos !== 0) return 'La primera regla debe comenzar en ARS 0.';
+  for (let indice = 0; indice < ordenadas.length; indice += 1) {
+    const regla = ordenadas[indice];
+    if (!Number.isSafeInteger(regla.subtotalDesdeCentavos) || regla.subtotalDesdeCentavos < 0) {
+      return 'Los límites de las reglas deben ser importes válidos.';
+    }
+    if (indice > 0 && regla.subtotalDesdeCentavos <= ordenadas[indice - 1].subtotalDesdeCentavos) {
+      return 'Cada regla debe comenzar en un importe mayor que la anterior.';
+    }
+    if (!Number.isSafeInteger(regla.valor) || regla.valor < 0 ||
+        (regla.tipo === 'porcentaje_bps' && regla.valor > 10_000)) {
+      return regla.tipo === 'porcentaje_bps'
+        ? 'El porcentaje de seña debe estar entre 0 % y 100 %.'
+        : 'El importe fijo de la seña debe ser válido.';
+    }
+  }
+  return '';
+};
+
+const opcionesModalidadParaEspacio = (espacio: BorradorInventarioUi[number]) => {
+  if (espacio.tipo === 'camping') return [{ value: 'camping', label: 'Camping' }];
+  if (espacio.tipo === 'bell_tent') return [{ value: 'privada', label: 'Privada' }, { value: 'camping', label: 'Camping' }];
+  if (espacio.tipo === 'domo') return [{ value: 'privada', label: 'Privada' }, { value: 'compartida', label: 'Compartida' }];
+  if (espacio.codigo === 'refugio-habitacion-4') return [{ value: 'privada', label: 'Privada' }, { value: 'compartida', label: 'Compartida' }];
+  return [{ value: 'compartida', label: 'Compartida' }];
+};
+
+const SeccionConfiguracionBase: React.FC<{ esSuperAdmin: boolean; modo?: 'base' | 'precios' }> = ({ esSuperAdmin, modo = 'base' }) => {
   const [configuracion, setConfiguracion] = useState<ConfiguracionBaseApi | null>(null);
   const [valor, setValor] = useState('15');
-  const [motivo, setMotivo] = useState('');
+  const [confirmacion, setConfirmacion] = useState<ConfirmacionConfiguracion | null>(null);
+  const [motivoConfirmacion, setMotivoConfirmacion] = useState('');
+  const [tarifaDraft, setTarifaDraft] = useState<BorradorTarifaUi | null>(null);
+  const [planesTarifa, setPlanesTarifa] = useState<ResumenPlanTarifaUi[]>([]);
+  const [politicaDraft, setPoliticaDraft] = useState<BorradorPoliticaUi | null>(null);
+  const [inventarioDraft, setInventarioDraft] = useState<BorradorInventarioUi>([]);
+  const [serviciosDraft, setServiciosDraft] = useState<BorradorServicioUi[]>([]);
+  const [opcionesPreparacionDraft, setOpcionesPreparacionDraft] = useState<BorradorOpcionPreparacionUi[]>([]);
+  const [vigenciaPolitica, setVigenciaPolitica] = useState('');
+  const [preciosComida, setPreciosComida] = useState<Record<string, string>>({});
+  const [horariosComidasDraft, setHorariosComidasDraft] = useState<ConfiguracionBaseApi['horariosComidas'] | null>(null);
   const [cargando, setCargando] = useState(true);
-  const [guardando, setGuardando] = useState(false);
+  const [guardando, setGuardando] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [mensaje, setMensaje] = useState('');
+  const [fechaPreview, setFechaPreview] = useState(localTodayIso());
+  const {
+    data: resumenPreciosPublicos,
+    loaded: previewPublicoCargado,
+    refresh: refrescarPreviewPublico,
+  } = usePublicPricingSummary(fechaPreview);
+
+  const planesPublicados = useMemo(
+    () => planesTarifa.filter(plan => plan.estado === 'publicado'),
+    [planesTarifa],
+  );
+  const planEfectivo = useMemo(
+    () => configuracion?.tarifa
+      ? planesTarifa.find(plan => plan.id === configuracion.tarifa?.id) ?? null
+      : null,
+    [configuracion?.tarifa, planesTarifa],
+  );
+  const otrasVersiones = useMemo(
+    () => planesTarifa.filter(plan => plan.id !== planEfectivo?.id),
+    [planesTarifa, planEfectivo?.id],
+  );
+  const planPublicoCoincide = Boolean(
+    planEfectivo && resumenPreciosPublicos &&
+    planEfectivo.codigo === resumenPreciosPublicos.plan.codigo &&
+    planEfectivo.version === resumenPreciosPublicos.plan.version
+  );
+  const publicacionInconsistente = planesPublicados.length !== 1 || (
+    previewPublicoCargado && Boolean(resumenPreciosPublicos) && !planPublicoCoincide
+  );
+  const opcionesPreview = useMemo(() => {
+    if (!resumenPreciosPublicos) return [];
+    return resumenPreciosPublicos.opciones.flatMap(opcion => opcion.modalidades.map(modalidad => {
+      const calcular = (mealPlan: MealPlan) => estimateBookingPrice([resumenPreciosPublicos], {
+        people: 2,
+        type: opcion.tipo_alojamiento,
+        mode: modalidad,
+        mealPlan,
+      });
+      return {
+        key: `${opcion.tipo_alojamiento}-${modalidad}`,
+        alojamiento: ETIQUETA_ALOJAMIENTO_PUBLICO[opcion.tipo_alojamiento],
+        modalidad: opcion.nombres_modalidades?.[modalidad] || ETIQUETA_MODALIDAD_PUBLICA[modalidad],
+        desayuno: calcular('desayuno_incluido'),
+        pensionCompleta: calcular('pension_completa'),
+      };
+    }));
+  }, [resumenPreciosPublicos]);
 
   const cargar = async () => {
     setCargando(true);
     setError('');
     try {
-      const res = await adminFetch('/api/v1/admin/configuracion-reservas');
-      const body: any = await res.json();
+      const [res, resPlanes] = await Promise.all([
+        adminFetch('/api/v1/admin/configuracion-reservas'),
+        adminFetch('/api/admin/tarifas'),
+      ]);
+      const [body, bodyPlanes]: any[] = await Promise.all([res.json(), resPlanes.json()]);
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      if (!resPlanes.ok) throw new Error(bodyPlanes.error || `HTTP ${resPlanes.status}`);
       setConfiguracion(body.data);
       setValor(String(body.data?.parametros?.[0]?.valor ?? 15));
+      setTarifaDraft(body.data?.tarifa ? {
+        ...JSON.parse(JSON.stringify(body.data.tarifa)),
+        ajustes: body.data.tarifa.ajustes || [],
+      } : null);
+      setPlanesTarifa(bodyPlanes.planes || []);
+      setPoliticaDraft(body.data?.politicaCancelacion ? JSON.parse(JSON.stringify(body.data.politicaCancelacion)) : null);
+      setInventarioDraft(JSON.parse(JSON.stringify(body.data?.inventario || [])));
+      setServiciosDraft(JSON.parse(JSON.stringify(body.data?.servicios || [])));
+      setOpcionesPreparacionDraft(JSON.parse(JSON.stringify(body.data?.opcionesPreparacion || [])));
+      setVigenciaPolitica(body.data?.politicaCancelacion?.vigenciaDesde?.slice(0, 16) || new Date(Date.now() + 60_000).toISOString().slice(0, 16));
+      setPreciosComida(Object.fromEntries((body.data?.alimentacion || []).flatMap((item: ConfiguracionBaseApi['alimentacion'][number]) => [
+        [`${item.codigo}:desayuno`, String(item.precioDesayunoCentavos / 100)],
+        [`${item.codigo}:almuerzo`, String(item.precioAlmuerzoCentavos / 100)],
+        [`${item.codigo}:cena`, String(item.precioCenaCentavos / 100)],
+        [`${item.codigo}:ajuste`, String(item.ajustePaqueteCentavos / 100)],
+      ])));
+      setHorariosComidasDraft(body.data?.horariosComidas
+        ? JSON.parse(JSON.stringify(body.data.horariosComidas))
+        : null);
     } catch (e: any) {
       setError(e.message || 'No se pudo cargar la configuración.');
     } finally {
@@ -1631,140 +2057,1142 @@ const SeccionConfiguracionBase: React.FC<{ puedeEditar: boolean }> = ({ puedeEdi
   useEffect(() => { cargar(); }, []);
 
   const parametro = configuracion?.parametros.find(item => item.codigo === 'payment_hold_minutes');
-  const guardar = async () => {
-    if (!parametro) return;
-    setGuardando(true);
+  const horariosComidasModificados = Boolean(
+    horariosComidasDraft && configuracion?.horariosComidas &&
+    resumirCambios(configuracion.horariosComidas, horariosComidasDraft).length > 0
+  );
+  const horariosComidasValidos = Boolean(horariosComidasDraft &&
+    [horariosComidasDraft.desayuno, horariosComidasDraft.almuerzo, horariosComidasDraft.cena]
+      .every(horario => /^\d{2}:\d{2}$/.test(horario.desde) && /^\d{2}:\d{2}$/.test(horario.hasta) && horario.desde < horario.hasta)
+  );
+  const ejecutar = async (clave: string, accion: () => Promise<void>, exito: string): Promise<boolean> => {
+    setGuardando(clave);
     setError('');
     setMensaje('');
     try {
-      const res = await adminFetch('/api/v1/admin/configuracion-reservas', {
+      await accion();
+      setMensaje(exito);
+      await cargar();
+      return true;
+    } catch (e: any) {
+      setError(e.message || 'No se pudo actualizar la configuración.');
+      return false;
+    } finally {
+      setGuardando(null);
+    }
+  };
+
+  const requestJson = async (url: string, init: RequestInit) => {
+    const res = await adminFetch(url, init);
+    const body: any = await res.json();
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    return body;
+  };
+
+  const guardarPlazo = async (motivo: string) => {
+    if (!parametro) return false;
+    return ejecutar('plazo', async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          accion: 'actualizar_parametro',
           codigo: parametro.codigo,
           valor: Number(valor),
           expected_version: parametro.version,
           motivo: motivo.trim(),
         }),
       });
-      const body: any = await res.json();
-      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
-      setMotivo('');
-      setMensaje('Configuración actualizada. Sólo afecta reservas nuevas.');
-      await cargar();
-    } catch (e: any) {
-      setError(e.message || 'No se pudo actualizar la configuración.');
-    } finally {
-      setGuardando(false);
+    }, 'Plazo actualizado. Sólo afecta reservas nuevas.');
+  };
+
+  const guardarModalidad = async (item: ConfiguracionBaseApi['inventario'][number]['modalidades'][number], motivo: string) => {
+    return ejecutar(`modalidad-${item.id}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_modalidad', id: item.id, modalidad: item.modalidad,
+          contexto: item.contexto, unidad_venta: item.unidadVenta, habilitada: item.habilitada,
+          nombre_comercial: item.nombreComercial,
+          descripcion_comercial: item.descripcionComercial,
+          expected_updated_at: item.actualizadoAt, motivo: motivo.trim(),
+        }),
+      });
+    }, 'Modalidad y condiciones de venta actualizadas para operaciones nuevas.');
+  };
+
+  const crearModalidad = async (espacio: BorradorInventarioUi[number], motivo: string) => {
+    const opciones = opcionesModalidadParaEspacio(espacio);
+    const opcion = opciones.find(candidata => !espacio.modalidades.some(item =>
+      item.modalidad === candidata.value && item.contexto === 'general'
+    ));
+    if (!opcion) throw new Error('No quedan modalidades operativas disponibles para este alojamiento.');
+    const unidadVenta = opcion.value === 'privada' ? 'espacio' : opcion.value === 'camping' ? 'parcela' : 'cama';
+    return ejecutar(`modalidad-nueva-${espacio.codigo}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'crear_modalidad', espacio_codigo: espacio.codigo, modalidad: opcion.value,
+          nombre_comercial: opcion.label, contexto: 'general', unidad_venta: unidadVenta,
+          descripcion_comercial: '', habilitada: false, motivo,
+        }),
+      });
+    }, 'Modalidad creada. Revisá sus condiciones antes de habilitarla.');
+  };
+
+  const guardarEspacio = async (espacio: ConfiguracionBaseApi['inventario'][number], motivo: string) => {
+    return ejecutar(`espacio-${espacio.codigo}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_espacio', codigo: espacio.codigo,
+          capacidad_comercial: espacio.capacidadComercial,
+          capacidad_operativa_maxima: espacio.capacidadOperativaMaxima,
+          reservable_general: espacio.reservableGeneral, reservable_retiro: espacio.reservableRetiro,
+          estado: espacio.estado, expected_updated_at: espacio.actualizadoAt,
+          motivo: motivo.trim(),
+        }),
+      });
+    }, 'Condiciones del alojamiento actualizadas para operaciones nuevas.');
+  };
+
+  const guardarServicio = async (item: BorradorServicioUi, motivo: string) => {
+    const nuevo = item.id < 0;
+    return ejecutar(`servicio-${item.id}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: nuevo ? 'crear_servicio_alojamiento' : 'actualizar_servicio_alojamiento',
+          ...(!nuevo ? { id: item.id, expected_updated_at: item.actualizadoAt } : { codigo: item.codigo }),
+          tipo_alojamiento: item.tipoAlojamiento, nombre: item.nombre,
+          disponibilidad: item.disponibilidad, detalle: item.detalle,
+          visible_en_reserva: item.visibleEnReserva, orden: item.orden, motivo,
+        }),
+      });
+    }, nuevo ? 'Servicio agregado a las opciones de reserva.' : 'Servicio actualizado en las opciones de reserva.');
+  };
+
+  const guardarOpcionPreparacion = async (item: BorradorOpcionPreparacionUi, motivo: string) => {
+    return ejecutar(`preparacion-${item.id}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_opcion_preparacion', id: item.id,
+          tipo_alojamiento: item.tipoAlojamiento, modalidad: item.modalidad,
+          cantidad_personas: item.cantidadPersonas, nombre: item.nombre,
+          descripcion: item.descripcion, habilitada: item.habilitada, orden: item.orden,
+          expected_updated_at: item.actualizadoAt, motivo,
+        }),
+      });
+    }, 'Opción de preparación actualizada para reservas nuevas.');
+  };
+
+  const actualizarEspacioDraft = (codigo: string, cambio: Partial<BorradorInventarioUi[number]>) => {
+    setInventarioDraft(actual => actual.map(item => item.codigo === codigo ? { ...item, ...cambio } : item));
+  };
+
+  const actualizarModalidadDraft = (
+    codigo: string,
+    id: number,
+    cambio: Partial<BorradorInventarioUi[number]['modalidades'][number]>
+  ) => {
+    setInventarioDraft(actual => actual.map(espacio => espacio.codigo !== codigo ? espacio : {
+      ...espacio,
+      modalidades: espacio.modalidades.map(item => item.id === id ? { ...item, ...cambio } : item),
+    }));
+  };
+
+  const actualizarServicioDraft = (id: number, cambio: Partial<BorradorServicioUi>) => {
+    setServiciosDraft(actual => actual.map(item => item.id === id ? { ...item, ...cambio } : item));
+  };
+
+  const actualizarOpcionPreparacionDraft = (id: number, cambio: Partial<BorradorOpcionPreparacionUi>) => {
+    setOpcionesPreparacionDraft(actual => actual.map(item => item.id === id ? { ...item, ...cambio } : item));
+  };
+
+  const agregarServicioDraft = () => {
+    const ahora = Date.now();
+    setServiciosDraft(actual => [...actual, {
+      id: -ahora,
+      tipoAlojamiento: 'refugio',
+      codigo: `servicio-${ahora}`,
+      nombre: 'Nuevo servicio',
+      disponibilidad: 'incluido',
+      detalle: '',
+      visibleEnReserva: true,
+      orden: Math.min(999, Math.max(0, ...actual.map(item => item.orden)) + 10),
+      actualizadoAt: '',
+    }]);
+  };
+
+  const publicarComida = async (item: ConfiguracionBaseApi['alimentacion'][number], motivo: string) => {
+    return ejecutar(`comida-${item.codigo}`, async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'publicar_tarifa_alimentacion', codigo: item.codigo,
+          precio_comida_centavos: Math.round(Number(preciosComida[`${item.codigo}:${item.codigo === 'pension_completa' ? 'almuerzo' : 'desayuno'}`] || 0) * 100),
+          precio_desayuno_centavos: Math.round(Number(preciosComida[`${item.codigo}:desayuno`] || 0) * 100),
+          precio_almuerzo_centavos: Math.round(Number(preciosComida[`${item.codigo}:almuerzo`] || 0) * 100),
+          precio_cena_centavos: Math.round(Number(preciosComida[`${item.codigo}:cena`] || 0) * 100),
+          ajuste_paquete_centavos: Math.round(Number(preciosComida[`${item.codigo}:ajuste`] || 0) * 100),
+          expected_version: item.version, motivo: motivo.trim(),
+        }),
+      });
+    }, 'Tarifa de alimentación publicada como una nueva versión.');
+  };
+
+  const guardarHorariosComidas = async (motivo: string) => {
+    if (!horariosComidasDraft) return false;
+    return ejecutar('horarios-comidas', async () => {
+      await requestJson('/api/v1/admin/configuracion-reservas', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'actualizar_horarios_comidas',
+          desayuno_desde: horariosComidasDraft.desayuno.desde,
+          desayuno_hasta: horariosComidasDraft.desayuno.hasta,
+          almuerzo_desde: horariosComidasDraft.almuerzo.desde,
+          almuerzo_hasta: horariosComidasDraft.almuerzo.hasta,
+          cena_desde: horariosComidasDraft.cena.desde,
+          cena_hasta: horariosComidasDraft.cena.hasta,
+          expected_version: horariosComidasDraft.version,
+          motivo: motivo.trim(),
+        }),
+      });
+      refrescarPreviewPublico();
+    }, 'Horarios de comidas actualizados.');
+  };
+
+  const actualizarTemporada = (indice: number, cambio: Partial<BorradorTarifaUi['temporadas'][number]>) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual, temporadas: actual.temporadas.map((item, i) => i === indice ? { ...item, ...cambio } : item),
+    } : actual);
+  };
+
+  const alternarDiaTemporada = (indice: number, dia: number, seleccionado: boolean) => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const temporada = actual.temporadas[indice];
+      if (!temporada) return actual;
+      const actuales = temporada.diasSemana || TODOS_LOS_DIAS_TARIFA;
+      const diasSemana = seleccionado
+        ? Array.from(new Set([...actuales, dia])).sort((a, b) => a - b)
+        : actuales.filter(item => item !== dia);
+      if (diasSemana.length === 0) return actual;
+      return {
+        ...actual,
+        temporadas: actual.temporadas.map((item, posicion) =>
+          posicion === indice ? { ...item, diasSemana } : item
+        ),
+      };
+    });
+  };
+
+  const dividirTemporadaPorSemana = (indice: number) => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const temporada = actual.temporadas[indice];
+      if (!temporada) return actual;
+      const codigos = new Set(actual.temporadas.map(item => item.codigo));
+      const codigoBase = `${temporada.codigo.replace(/-(semana|fin-semana)$/i, '')}-fin-semana`.slice(0, 50);
+      let codigoFinSemana = codigoBase;
+      let sufijo = 2;
+      while (codigos.has(codigoFinSemana)) {
+        codigoFinSemana = `${codigoBase.slice(0, 47)}-${sufijo}`;
+        sufijo += 1;
+      }
+      const entreSemana = {
+        ...temporada,
+        nombre: `${temporada.nombre} · entre semana`,
+        diasSemana: [1, 2, 3, 4, 5],
+      };
+      const finSemana = {
+        ...temporada,
+        codigo: codigoFinSemana,
+        nombre: `${temporada.nombre} · fin de semana`,
+        diasSemana: [6, 7],
+        reglas: temporada.reglas.map(regla => ({ ...regla })),
+      };
+      return {
+        ...actual,
+        temporadas: actual.temporadas.flatMap((item, posicion) =>
+          posicion === indice ? [entreSemana, finSemana] : [item]
+        ),
+      };
+    });
+  };
+
+  const eliminarTemporada = (indice: number) => {
+    setTarifaDraft(actual => !actual || actual.temporadas.length <= 1 ? actual : {
+      ...actual,
+      temporadas: actual.temporadas.filter((_, posicion) => posicion !== indice),
+    });
+  };
+
+  const agregarTemporada = () => setTarifaDraft(actual => {
+    if (!actual) return actual;
+    const base = actual.temporadas.at(-1);
+    if (!base) return actual;
+    const numero = actual.temporadas.length + 1;
+    return {
+      ...actual,
+      temporadas: [...actual.temporadas, {
+        ...base,
+        codigo: `temporada-${numero}`,
+        nombre: `Temporada ${numero}`,
+        prioridad: Math.max(...actual.temporadas.map(item => item.prioridad), 0) + 1,
+        reglas: base.reglas.map(regla => ({ ...regla })),
+      }],
+    };
+  });
+
+  const iniciarPlanAlternativo = () => setTarifaDraft(actual => actual ? ({
+    ...actual,
+    codigo: `plan-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}`,
+    nombre: `${actual.nombre} · alternativa`,
+    version: 0,
+  }) : actual);
+
+  const actualizarReglaPrecio = (temporadaIndice: number, reglaIndice: number, cambio: Partial<BorradorTarifaUi['temporadas'][number]['reglas'][number]>) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual,
+      temporadas: actual.temporadas.map((temporada, i) => i !== temporadaIndice ? temporada : {
+        ...temporada, reglas: temporada.reglas.map((regla, j) => j === reglaIndice ? { ...regla, ...cambio } : regla),
+      }),
+    } : actual);
+  };
+
+  const agregarReglaPrecio = (temporadaIndice: number) => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const temporada = actual.temporadas[temporadaIndice];
+      if (!temporada) return actual;
+      const tiposActivos = OPCIONES_ALOJAMIENTO_TARIFA
+        .map(opcion => opcion.value)
+        .filter(tipo => inventarioDraft.some(espacio =>
+          espacio.tipo === tipo && espacio.estado === 'activo' && espacio.reservableGeneral
+        ));
+      const tipoSinTarifa = tiposActivos.find(tipo => !temporada.reglas.some(regla => regla.tipoAlojamiento === tipo));
+      const tipoAlojamiento = tipoSinTarifa ?? tiposActivos[0] ?? 'domo';
+      const capacidad = Math.max(1, ...inventarioDraft
+        .filter(espacio => espacio.tipo === tipoAlojamiento)
+        .map(espacio => espacio.capacidadComercial));
+      const nuevaRegla: BorradorTarifaUi['temporadas'][number]['reglas'][number] = {
+        tipoAlojamiento,
+        modalidad: tipoAlojamiento === 'camping' ? 'camping' : 'cualquiera',
+        ocupacionMin: 1,
+        ocupacionMax: capacidad,
+        baseCalculo: 'persona_noche',
+        importeCentavos: 0,
+        exclusividadDesde: null,
+        exclusividadHasta: null,
+      };
+      return {
+        ...actual,
+        temporadas: actual.temporadas.map((item, indice) => indice === temporadaIndice
+          ? { ...item, reglas: [...item.reglas, nuevaRegla] }
+          : item),
+      };
+    });
+  };
+
+  const eliminarReglaPrecio = (temporadaIndice: number, reglaIndice: number) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual,
+      temporadas: actual.temporadas.map((temporada, indice) => indice === temporadaIndice
+        ? { ...temporada, reglas: temporada.reglas.filter((_, posicion) => posicion !== reglaIndice) }
+        : temporada),
+    } : actual);
+  };
+
+  const actualizarSena = (indice: number, cambio: Partial<BorradorTarifaUi['senas'][number]>) => {
+    setTarifaDraft(actual => actual ? {
+      ...actual,
+      senas: normalizarRangosSena(actual.senas.map((item, i) => i === indice ? { ...item, ...cambio } : item)),
+    } : actual);
+  };
+
+  const agregarSena = () => {
+    setTarifaDraft(actual => {
+      if (!actual) return actual;
+      const ordenadas = [...actual.senas].sort((a, b) => a.subtotalDesdeCentavos - b.subtotalDesdeCentavos);
+      const ultima = ordenadas.at(-1);
+      const desde = (ultima?.subtotalDesdeCentavos ?? 0) + 15_000_000;
+      return {
+        ...actual,
+        senas: normalizarRangosSena([
+          ...ordenadas,
+          { subtotalDesdeCentavos: desde, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 3000 },
+        ]),
+      };
+    });
+  };
+
+  const eliminarSena = (indice: number) => {
+    setTarifaDraft(actual => {
+      if (!actual || actual.senas.length <= 1) return actual;
+      return { ...actual, senas: normalizarRangosSena(actual.senas.filter((_, i) => i !== indice)) };
+    });
+  };
+
+  const agregarAjuste = () => setTarifaDraft(actual => actual ? ({
+    ...actual,
+    ajustes: [...(actual.ajustes || []), {
+      codigo: `ajuste-${(actual.ajustes || []).length + 1}`,
+      nombre: 'Nueva regla',
+      anticipacionDesdeDias: 0,
+      anticipacionHastaDias: 3,
+      direccion: 'descuento',
+      tipo: 'porcentaje_bps',
+      valor: 1000,
+    }],
+  }) : actual);
+
+  const actualizarAjuste = (indice: number, cambio: Partial<BorradorTarifaUi['ajustes'][number]>) =>
+    setTarifaDraft(actual => actual ? ({
+      ...actual,
+      ajustes: (actual.ajustes || []).map((regla, posicion) => posicion === indice ? { ...regla, ...cambio } : regla),
+    }) : actual);
+
+  const eliminarAjuste = (indice: number) => setTarifaDraft(actual => actual ? ({
+    ...actual,
+    ajustes: (actual.ajustes || []).filter((_, posicion) => posicion !== indice),
+  }) : actual);
+
+  const publicarTarifa = async (motivo: string) => {
+    if (!tarifaDraft) return false;
+    return ejecutar('tarifa', async () => {
+      const borrador = await requestJson('/api/admin/tarifas', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'crear_borrador', motivo, plan: {
+          codigo: tarifaDraft.codigo, nombre: tarifaDraft.nombre, moneda: tarifaDraft.moneda,
+          temporadas: tarifaDraft.temporadas.map(temporada => ({
+            codigo: temporada.codigo, nombre: temporada.nombre,
+            fecha_desde: temporada.fechaDesde, fecha_hasta: temporada.fechaHasta, prioridad: temporada.prioridad,
+            dias_semana: temporada.diasSemana,
+            reglas: temporada.reglas.map(regla => ({
+              tipo_alojamiento: regla.tipoAlojamiento, modalidad: regla.modalidad,
+              ocupacion_min: regla.ocupacionMin, ocupacion_max: regla.ocupacionMax,
+              base_calculo: regla.baseCalculo, importe_centavos: regla.importeCentavos,
+              exclusividad_desde: regla.exclusividadDesde, exclusividad_hasta: regla.exclusividadHasta,
+            })),
+          })),
+          senas: tarifaDraft.senas.map(regla => ({
+            subtotal_desde_centavos: regla.subtotalDesdeCentavos,
+            subtotal_hasta_centavos: regla.subtotalHastaCentavos,
+            tipo: regla.tipo, valor: regla.valor,
+          })),
+          ajustes: (tarifaDraft.ajustes || []).map(regla => ({
+            codigo: regla.codigo, nombre: regla.nombre,
+            anticipacion_desde_dias: regla.anticipacionDesdeDias,
+            anticipacion_hasta_dias: regla.anticipacionHastaDias,
+            direccion: regla.direccion, tipo: regla.tipo, valor: regla.valor,
+          })),
+        } }),
+      });
+      await requestJson('/api/admin/tarifas', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'publicar', plan_id: borrador.plan.id, motivo }),
+      });
+      refrescarPreviewPublico();
+    }, 'Nueva versión de precios y seña publicada.');
+  };
+
+  const publicarPolitica = async (motivo: string) => {
+    if (!politicaDraft) return false;
+    return ejecutar('politica', async () => {
+      const borrador = await requestJson('/api/admin/politicas-reserva', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'crear_borrador', motivo, politica: {
+          codigo: politicaDraft.codigo, nombre: politicaDraft.nombre,
+          vigencia_desde: new Date(vigenciaPolitica).toISOString(),
+          reglas: politicaDraft.reglas.map(regla => ({
+            horas_minimas_antes: regla.horasMinimasAntes,
+            porcentaje_devolucion_bps: regla.porcentajeDevolucionBps,
+          })),
+        } }),
+      });
+      await requestJson('/api/admin/politicas-reserva', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'publicar', politica_id: borrador.politica.id, motivo }),
+      });
+    }, 'Nueva política de cancelación publicada.');
+  };
+
+  const pedirConfirmacion = (datos: Omit<ConfirmacionConfiguracion, 'ejecutar'> & { ejecutar: (motivo: string) => Promise<boolean> }) => {
+    if (datos.cambios.length === 0) return;
+    setMotivoConfirmacion('');
+    setConfirmacion(datos);
+  };
+
+  const confirmarCambio = async () => {
+    if (!confirmacion || motivoConfirmacion.trim().length < 5) return;
+    const guardado = await confirmacion.ejecutar(motivoConfirmacion.trim());
+    if (guardado) {
+      setConfirmacion(null);
+      setMotivoConfirmacion('');
     }
   };
 
+  const confirmarTarifa = () => {
+    if (!tarifaDraft || !configuracion?.tarifa) return;
+    const errorSena = errorReglasSena(tarifaDraft.senas);
+    if (errorSena) {
+      setError(errorSena);
+      return;
+    }
+    pedirConfirmacion({
+      titulo: 'Publicar precios y seña',
+      descripcion: 'Se creará una nueva versión para reservas futuras.',
+      cambios: resumirCambios(configuracion.tarifa, tarifaDraft),
+      etiquetaConfirmar: 'Publicar nueva versión',
+      ejecutar: publicarTarifa,
+    });
+  };
+
+  const confirmarPolitica = () => {
+    if (!politicaDraft || !configuracion?.politicaCancelacion) return;
+    pedirConfirmacion({
+      titulo: 'Publicar política de cancelación',
+      descripcion: 'La nueva versión se aplicará a operaciones futuras desde la vigencia indicada.',
+      cambios: resumirCambios(
+        { ...configuracion.politicaCancelacion, vigenciaDesde: configuracion.politicaCancelacion.vigenciaDesde?.slice(0, 16) || '' },
+        { ...politicaDraft, vigenciaDesde: vigenciaPolitica }
+      ),
+      etiquetaConfirmar: 'Publicar nueva política',
+      ejecutar: publicarPolitica,
+    });
+  };
+
+  const confirmarEspacio = (espacio: BorradorInventarioUi[number], original: BorradorInventarioUi[number]) => {
+    const seleccionar = (item: BorradorInventarioUi[number]) => ({
+      capacidadComercial: item.capacidadComercial,
+      capacidadOperativaMaxima: item.capacidadOperativaMaxima,
+      reservableGeneral: item.reservableGeneral,
+      reservableRetiro: item.reservableRetiro,
+      estado: item.estado,
+    });
+    pedirConfirmacion({
+      titulo: `Guardar condiciones de ${espacio.nombre}`,
+      descripcion: 'Estas condiciones afectarán sólo a operaciones nuevas.',
+      cambios: resumirCambios(seleccionar(original), seleccionar(espacio)),
+      etiquetaConfirmar: 'Guardar condiciones',
+      ejecutar: motivo => guardarEspacio(espacio, motivo),
+    });
+  };
+
+  const confirmarModalidad = (
+    espacio: BorradorInventarioUi[number],
+    item: BorradorInventarioUi[number]['modalidades'][number],
+    original: BorradorInventarioUi[number]['modalidades'][number]
+  ) => pedirConfirmacion({
+    titulo: `Guardar modalidad de ${espacio.nombre}`,
+    descripcion: 'La disponibilidad para reservas existentes no se modifica.',
+    cambios: resumirCambios(original, item),
+    etiquetaConfirmar: 'Guardar modalidad',
+    ejecutar: motivo => guardarModalidad(item, motivo),
+  });
+
+  const confirmarServicio = (item: BorradorServicioUi) => {
+    const original = configuracion?.servicios.find(actual => actual.id === item.id);
+    const seleccionar = (servicio: BorradorServicioUi) => ({
+      alojamiento: servicio.tipoAlojamiento,
+      nombre: servicio.nombre,
+      disponibilidad: servicio.disponibilidad,
+      detalle: servicio.detalle,
+      visibleEnReserva: servicio.visibleEnReserva,
+      orden: servicio.orden,
+    });
+    pedirConfirmacion({
+      titulo: `${original ? 'Guardar' : 'Agregar'} servicio de alojamiento`,
+      descripcion: 'La información se mostrará en las opciones de reserva, sin modificar precio ni disponibilidad.',
+      cambios: original
+        ? resumirCambios(seleccionar(original), seleccionar(item))
+        : resumirCambios({}, seleccionar(item)),
+      etiquetaConfirmar: original ? 'Guardar servicio' : 'Agregar servicio',
+      ejecutar: motivo => guardarServicio(item, motivo),
+    });
+  };
+
+  const confirmarOpcionPreparacion = (item: BorradorOpcionPreparacionUi) => {
+    const original = configuracion?.opcionesPreparacion.find(actual => actual.id === item.id);
+    if (!original) return;
+    pedirConfirmacion({
+      titulo: `Guardar preparación “${item.nombre}”`,
+      descripcion: 'La opción se solicitará únicamente en reservas nuevas que coincidan con estas condiciones.',
+      cambios: resumirCambios(original, item),
+      etiquetaConfirmar: 'Guardar opción',
+      ejecutar: motivo => guardarOpcionPreparacion(item, motivo),
+    });
+  };
+
+  const confirmarComida = (item: ConfiguracionBaseApi['alimentacion'][number]) => pedirConfirmacion({
+    titulo: `Publicar tarifa de ${item.codigo === 'pension_completa' ? 'pensión completa' : 'desayuno incluido'}`,
+    descripcion: 'Se publicará una nueva versión para operaciones futuras.',
+    cambios: resumirCambios(
+      item.codigo === 'pension_completa' ? {
+        desayuno: item.precioDesayunoCentavos / 100,
+        almuerzo: item.precioAlmuerzoCentavos / 100,
+        cena: item.precioCenaCentavos / 100,
+        ajustePaquete: item.ajustePaqueteCentavos / 100,
+      } : { desayuno: item.precioDesayunoCentavos / 100 },
+      item.codigo === 'pension_completa' ? {
+        desayuno: Number(preciosComida[`${item.codigo}:desayuno`] || 0),
+        almuerzo: Number(preciosComida[`${item.codigo}:almuerzo`] || 0),
+        cena: Number(preciosComida[`${item.codigo}:cena`] || 0),
+        ajustePaquete: Number(preciosComida[`${item.codigo}:ajuste`] || 0),
+      } : { desayuno: Number(preciosComida[`${item.codigo}:desayuno`] || 0) }
+    ).map(cambio => ({ ...cambio, anterior: `ARS ${cambio.anterior}`, nuevo: `ARS ${cambio.nuevo}` })),
+    etiquetaConfirmar: 'Publicar nueva versión',
+    ejecutar: motivo => publicarComida(item, motivo),
+  });
+
+  const confirmarHorariosComidas = () => {
+    if (!horariosComidasDraft || !configuracion?.horariosComidas) return;
+    pedirConfirmacion({
+      titulo: 'Guardar horarios de comidas',
+      descripcion: 'Los nuevos horarios se mostrarán en la reserva online y en la página de estadías.',
+      cambios: resumirCambios(configuracion.horariosComidas, horariosComidasDraft),
+      etiquetaConfirmar: 'Guardar horarios',
+      ejecutar: guardarHorariosComidas,
+    });
+  };
+
+  const confirmarPlazo = () => {
+    if (!parametro) return;
+    pedirConfirmacion({
+      titulo: 'Cambiar plazo de retención',
+      descripcion: 'El nuevo plazo se usará al iniciar reservas futuras.',
+      cambios: [{ campo: 'Plazo de retención', anterior: `${parametro.valor} minutos`, nuevo: `${Number(valor)} minutos` }],
+      etiquetaConfirmar: 'Guardar plazo',
+      ejecutar: guardarPlazo,
+    });
+  };
+
   if (cargando && !configuracion) {
-    return <div className="flex justify-center py-16"><RefreshCw className="animate-spin text-gray-400" aria-label="Cargando configuración" /></div>;
+    return <LoadingState className="py-16" label="Cargando configuración" />;
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Configuración base</h2>
+    <div className="admin-config">
+      <div className="admin-config__intro">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">{modo === 'precios' ? 'Políticas de precios' : 'Configuración base'}</h2>
         <p className="mt-1 text-xs text-gray-500">
-          Valores efectivos usados por reservas. No se muestran secretos. Los cambios afectan sólo operaciones futuras.
+          {modo === 'precios'
+            ? 'Construí ofertas vendibles con temporadas, tarifas, alimentación, ajustes y reglas de seña.'
+            : 'Administrá estructuras, capacidades, modalidades operativas y parámetros generales.'}
         </p>
+        {!esSuperAdmin && <p className="mt-2 text-xs font-semibold text-amber-700">Vista de solo lectura. Sólo un superadministrador puede publicar cambios.</p>}
       </div>
 
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">{error}</p>}
       {mensaje && <p className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700" role="status">{mensaje}</p>}
 
-      {parametro && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Retención de pago</p>
-              <p className="mt-1 text-2xl font-bold text-brand">{parametro.valor} minutos</p>
-              <p className="mt-1 text-xs text-gray-400">
-                Versión {parametro.version} · unidad: {parametro.unidad} · fuente: {parametro.fuente}
-                {parametro.actualizadoAt ? ` · vigente desde ${fmtFechaHora(parametro.actualizadoAt)}` : ''}
-              </p>
-            </div>
-            {puedeEditar && <div className="grid w-full gap-2 sm:max-w-md">
-              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_minutes">
-                Nuevo plazo ({parametro.minimo}–{parametro.maximo} minutos)
-              </label>
-              <input
-                id="config_hold_minutes" type="number" min={parametro.minimo} max={parametro.maximo}
-                value={valor} onChange={event => setValor(event.target.value)}
-                disabled={!parametro.editable || guardando}
-                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
-              />
-              <label className="text-xs font-semibold text-gray-600" htmlFor="config_hold_reason">Motivo del cambio</label>
-              <textarea
-                id="config_hold_reason" rows={2} maxLength={500} value={motivo}
-                onChange={event => setMotivo(event.target.value)} disabled={!parametro.editable || guardando}
-                placeholder="Ej. Ajuste operativo aprobado"
-                className={`rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`}
-              />
-              <button
-                type="button" onClick={guardar}
-                disabled={!parametro.editable || guardando || motivo.trim().length < 5 || Number(valor) === parametro.valor}
-                className={`justify-self-end rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}
-              >
-                {guardando ? 'Guardando…' : 'Guardar plazo'}
-              </button>
-            </div>}
+      {modo === 'precios' && <section className="admin-pricing-overview rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Política efectiva y vista pública</h3>
+            <p className="text-xs text-gray-500">Confirmá qué versión cotiza hoy y revisá el precio que recibe el huésped.</p>
           </div>
-        </section>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Tarifa publicada</p>
-          {configuracion?.tarifa ? (
-            <><p className="mt-2 font-semibold text-gray-800">{configuracion.tarifa.nombre}</p>
-            <p className="text-xs text-gray-500">{configuracion.tarifa.codigo} · v{configuracion.tarifa.version} · {configuracion.tarifa.moneda}</p>
-            <p className="mt-2 text-xs text-gray-500">{configuracion.tarifa.reglasPrecio} reglas de precio · {configuracion.tarifa.reglasSena} reglas de seña</p></>
-          ) : <p className="mt-2 text-sm text-amber-700">Sin tarifa publicada.</p>}
-        </section>
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Política de cancelación</p>
-          {configuracion?.politicaCancelacion ? (
-            <><p className="mt-2 font-semibold text-gray-800">{configuracion.politicaCancelacion.nombre}</p>
-            <p className="text-xs text-gray-500">{configuracion.politicaCancelacion.codigo} · v{configuracion.politicaCancelacion.version}</p>
-            <p className="mt-2 text-xs text-gray-500">Estado: {configuracion.politicaCancelacion.estado}
-              {configuracion.politicaCancelacion.vigenciaDesde ? ` · vigente desde ${fmtDateLong(configuracion.politicaCancelacion.vigenciaDesde.slice(0, 10))}` : ''}
-            </p></>
-          ) : <p className="mt-2 text-sm text-amber-700">Sin política configurada.</p>}
-        </section>
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Alimentación</p>
-          <ul className="mt-2 space-y-2 text-xs text-gray-600">
-            {(configuracion?.alimentacion || []).map(item => (
-              <li key={item.codigo}><strong>{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</strong><br />
-                v{item.version} · {fmtMoney(item.precioComidaCentavos / 100)} por comida · {item.comidasAdicionalesPorPersonaNoche} adicionales</li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-100 px-5 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Inventario y modalidades efectivas</p>
+          <Badge variant={publicacionInconsistente ? 'danger' : 'success'}>
+            {publicacionInconsistente ? 'Requiere revisión' : 'Publicación consistente'}
+          </Badge>
         </div>
-        <ul className="divide-y divide-gray-100">
-          {(configuracion?.inventario || []).map(espacio => (
-            <li key={espacio.codigo} className="px-5 py-3 text-sm">
-              <div className="flex flex-col justify-between gap-1 sm:flex-row">
-                <span className="font-semibold text-gray-800">{espacio.nombre} <span className="font-normal text-gray-400">({espacio.codigo})</span></span>
-                <span className="text-xs text-gray-500">Comercial {espacio.capacidadComercial} · máximo {espacio.capacidadOperativaMaxima} · {espacio.estado}</span>
+
+        {publicacionInconsistente && <div className="admin-pricing-alert mt-3" role="alert">
+          <AlertTriangle aria-hidden="true" size={18} />
+          <div>
+            <strong>El estado publicado no es consistente.</strong>
+            <p>
+              {planesPublicados.length !== 1
+                ? `Hay ${planesPublicados.length} planes marcados como publicados; debería existir exactamente uno.`
+                : `La API pública responde ${resumenPreciosPublicos?.plan.codigo || 'otro plan'} v${resumenPreciosPublicos?.plan.version || '—'}, distinto de la política administrativa.`}
+              {' '}Revisalo antes de habilitar nuevas ventas.
+            </p>
+          </div>
+        </div>}
+
+        <div className="admin-pricing-overview__grid mt-3">
+          <Card tone="muted" className="admin-pricing-current p-4">
+            <div className="admin-pricing-current__heading">
+              <div>
+                <p className="admin-pricing-eyebrow">Efectiva ahora</p>
+                <h4>{planEfectivo?.nombre || 'Sin política publicada'}</h4>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                {espacio.modalidades.length > 0
-                  ? espacio.modalidades.map(item => `${item.modalidad}/${item.contexto} por ${item.unidadVenta}`).join(' · ')
-                  : 'Sin modalidades habilitadas'}
-              </p>
-            </li>
-          ))}
-        </ul>
+              <Badge variant={planEfectivo ? 'success' : 'danger'}>{planEfectivo ? 'Vigente' : 'Bloqueante'}</Badge>
+            </div>
+            {planEfectivo && <>
+              <div className="admin-pricing-current__meta">
+                <CodeBadge>{planEfectivo.codigo}</CodeBadge>
+                <span>Versión {planEfectivo.version}</span>
+                <span>{planEfectivo.moneda}</span>
+              </div>
+              <p className="admin-pricing-current__published">Publicada {planEfectivo.publicadoAt ? fmtFechaHora(planEfectivo.publicadoAt) : 'sin fecha registrada'}</p>
+              <p className="admin-pricing-current__note">Las nuevas cotizaciones toman esta política. Las reservas existentes conservan su precio registrado.</p>
+            </>}
+          </Card>
+
+          <Card className="admin-pricing-preview p-4">
+            <div className="admin-pricing-preview__heading">
+              <div>
+                <p className="admin-pricing-eyebrow">Vista pública</p>
+                <h4>2 personas · 1 noche</h4>
+              </div>
+              <label className="admin-pricing-preview__date">Fecha representativa
+                <input type="date" value={fechaPreview} onChange={event => setFechaPreview(event.target.value)} className={FOCUS_RING} />
+              </label>
+            </div>
+
+            {!previewPublicoCargado ? <LoadingState className="py-5" label="Calculando precios públicos" /> :
+              !resumenPreciosPublicos ? <div className="admin-pricing-preview__empty">
+                <AlertTriangle aria-hidden="true" size={18} />
+                <span>No hay una política pública aplicable para esta fecha.</span>
+              </div> : <>
+                <p className="admin-pricing-preview__source">
+                  Respuesta pública: <CodeBadge>{resumenPreciosPublicos.plan.codigo}</CodeBadge> · v{resumenPreciosPublicos.plan.version}
+                </p>
+                <div className="admin-pricing-preview__grid">
+                  {opcionesPreview.map(opcion => <div className="admin-pricing-preview__option" key={opcion.key}>
+                    <div><strong>{opcion.alojamiento}</strong><span>{opcion.modalidad}</span></div>
+                    <dl>
+                      <div><dt>Con desayuno</dt><dd>{opcion.desayuno ? fmtCentavos(opcion.desayuno.totalCentavos, opcion.desayuno.currency) : 'Sin tarifa'}</dd></div>
+                      <div><dt>Por persona</dt><dd>{opcion.desayuno ? fmtCentavos(opcion.desayuno.perPersonCentavos, opcion.desayuno.currency) : '—'}</dd></div>
+                      <div><dt>Pensión completa</dt><dd>{opcion.pensionCompleta ? fmtCentavos(opcion.pensionCompleta.totalCentavos, opcion.pensionCompleta.currency) : 'No disponible'}</dd></div>
+                    </dl>
+                  </div>)}
+                  {opcionesPreview.length === 0 && <p className="admin-pricing-preview__empty">No hay ofertas vendibles para 2 personas en esta fecha.</p>}
+                </div>
+              </>}
+            <a className={`admin-pricing-preview__link ${FOCUS_RING}`} href="/reservar?paso=fechas" target="_blank" rel="noreferrer">
+              <Link2 aria-hidden="true" size={15} />Abrir reserva pública
+            </a>
+          </Card>
+        </div>
+
+        <details className="admin-pricing-history mt-3">
+          <summary>
+            <span>Historial y borradores</span>
+            <Badge variant="neutral">{otrasVersiones.length}</Badge>
+          </summary>
+          {otrasVersiones.length === 0 ? <p className="admin-pricing-history__empty">Todavía no hay otras versiones.</p> :
+            <div className="admin-config__horizontal-scroll mt-3 flex gap-2 pb-1">{otrasVersiones.map(plan => <Card key={plan.id} tone="muted" className="min-w-[220px] p-3">
+              <div className="flex items-start justify-between gap-2">
+                <strong className="text-sm">{plan.nombre}</strong>
+                <Badge variant={plan.estado === 'publicado' ? 'danger' : plan.estado === 'borrador' ? 'warning' : 'neutral'}>
+                  {plan.estado === 'publicado' ? 'publicado · conflicto' : plan.estado}
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs text-gray-500"><CodeBadge>{plan.codigo}</CodeBadge> · v{plan.version} · {plan.moneda}</p>
+              <p className="mt-2 text-[11px] text-gray-500">{plan.publicadoAt ? `Publicada ${fmtFechaHora(plan.publicadoAt)}` : `Creada ${fmtFechaHora(plan.createdAt)}`}</p>
+            </Card>)}</div>}
+        </details>
+      </section>}
+
+      {modo === 'precios' && <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Precios y seña</strong><small>Tarifas, temporadas y anticipo requerido</small></span></summary>
+        <div className="admin-config__section-body space-y-4 border-t border-gray-100">
+          {!tarifaDraft ? <p className="text-sm text-amber-700">Sin tarifa publicada.</p> : <>
+            <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="grid flex-1 gap-3 md:grid-cols-3">
+              <label className="text-xs font-semibold text-gray-600">Nombre del plan
+                <input value={tarifaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setTarifaDraft({ ...tarifaDraft, nombre: event.target.value })}
+                  className={`mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm ${FOCUS_RING}`} />
+              </label>
+              <label className="text-xs font-semibold text-gray-600">Código del plan
+                <input value={tarifaDraft.codigo} disabled={!esSuperAdmin} onChange={event => setTarifaDraft({ ...tarifaDraft, codigo: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+              </label>
+              <div className="text-xs text-gray-500"><strong className="block text-gray-700">Versión vigente</strong>v{tarifaDraft.version} · {tarifaDraft.moneda}</div>
+            </div>
+            {esSuperAdmin && <Button size="sm" variant="secondary" onPress={iniciarPlanAlternativo}><Plus size={15} />Nuevo plan desde éste</Button>}
+            </div>
+            <div className="flex justify-end">{esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarTemporada}><Plus size={15} />Agregar temporada</Button>}</div>
+            {tarifaDraft.temporadas.map((temporada, temporadaIndice) => (
+              <div key={`${temporada.codigo}-${temporadaIndice}`} className="admin-config__season rounded-lg border border-gray-200 p-4">
+                <div className="grid gap-3 md:grid-cols-5">
+                  <label className="text-xs font-semibold text-gray-600">Temporada
+                    <input value={temporada.nombre} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { nombre: event.target.value })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <label className="text-xs font-semibold text-gray-600">Desde
+                    <input type="date" value={temporada.fechaDesde} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { fechaDesde: event.target.value })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <label className="text-xs font-semibold text-gray-600">Hasta
+                    <input type="date" value={temporada.fechaHasta} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { fechaHasta: event.target.value })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <label className="text-xs font-semibold text-gray-600">Prioridad
+                    <input type="number" min={0} value={temporada.prioridad} disabled={!esSuperAdmin} onChange={event => actualizarTemporada(temporadaIndice, { prioridad: Number(event.target.value) })} className={`mt-1 w-full rounded border px-2 py-2 text-sm ${FOCUS_RING}`} />
+                  </label>
+                  <div className="text-xs text-gray-500"><strong className="block text-gray-700">Código</strong>{temporada.codigo}</div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-end justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2">
+                  <fieldset>
+                    <legend className="text-xs font-semibold text-gray-600">Días en los que se aplica este precio</legend>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                      {DIAS_SEMANA_TARIFA.map(dia => <Checkbox
+                        key={dia.value}
+                        isDisabled={!esSuperAdmin || (temporada.diasSemana?.length === 1 && temporada.diasSemana.includes(dia.value))}
+                        isSelected={(temporada.diasSemana || TODOS_LOS_DIAS_TARIFA).includes(dia.value)}
+                        onChange={seleccionado => alternarDiaTemporada(temporadaIndice, dia.value, seleccionado)}
+                      >{dia.label}</Checkbox>)}
+                    </div>
+                  </fieldset>
+                  {esSuperAdmin && <div className="flex flex-wrap gap-2">
+                    {(temporada.diasSemana || TODOS_LOS_DIAS_TARIFA).length === 7 && <Button
+                      size="sm"
+                      variant="secondary"
+                      onPress={() => dividirTemporadaPorSemana(temporadaIndice)}
+                    >Dividir semana / fin de semana</Button>}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      isDisabled={tarifaDraft.temporadas.length <= 1}
+                      onPress={() => eliminarTemporada(temporadaIndice)}
+                    ><Trash2 size={14} />Eliminar período</Button>
+                  </div>}
+                </div>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Tarifas de alojamiento</p>
+                    <p className="mt-1 text-xs text-gray-500">Agregá una fila por alojamiento, modalidad o rango de ocupación que quieras vender.</p>
+                  </div>
+                  {esSuperAdmin && <Button size="sm" variant="secondary" onPress={() => agregarReglaPrecio(temporadaIndice)}><Plus size={15} />Agregar tarifa</Button>}
+                </div>
+                <div className="admin-config__horizontal-scroll mt-2">
+                  <table className="min-w-[940px] w-full text-left text-xs">
+                    <thead><tr className="border-b text-gray-500"><th className="py-2">Alojamiento</th><th>Modalidad</th><th>Ocupación</th><th>Base</th><th>Precio ARS</th><th>Exclusividad</th>{esSuperAdmin && <th className="w-12"><span className="sr-only">Acciones</span></th>}</tr></thead>
+                    <tbody>{temporada.reglas.map((regla, reglaIndice) => (
+                      <tr key={reglaIndice} className="border-b border-gray-100">
+                        <td className="py-2"><select aria-label={`Alojamiento de tarifa ${reglaIndice + 1}`} value={regla.tipoAlojamiento} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { tipoAlojamiento: event.target.value as TipoAlojamientoTarifa })} className="rounded border px-2 py-1">{OPCIONES_ALOJAMIENTO_TARIFA.map(opcion => <option key={opcion.value} value={opcion.value}>{opcion.label}</option>)}</select></td>
+                        <td><select value={regla.modalidad} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { modalidad: event.target.value as any })} className="rounded border px-2 py-1"><option value="cualquiera">Cualquiera</option><option value="privada">Privada</option><option value="compartida">Compartida</option><option value="camping">Camping</option></select></td>
+                        <td><input aria-label="Ocupación mínima" type="number" min={1} value={regla.ocupacionMin} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { ocupacionMin: Number(event.target.value) })} className="w-14 rounded border px-2 py-1" /> – <input aria-label="Ocupación máxima" type="number" min={1} value={regla.ocupacionMax} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { ocupacionMax: Number(event.target.value) })} className="w-14 rounded border px-2 py-1" /></td>
+                        <td><select value={regla.baseCalculo} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { baseCalculo: event.target.value as any })} className="rounded border px-2 py-1"><option value="persona_noche">Persona/noche</option><option value="unidad_noche">Unidad/noche</option></select></td>
+                        <td><input aria-label="Precio en ARS" type="number" min={0} value={regla.importeCentavos / 100} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { importeCentavos: Math.round(Number(event.target.value) * 100) })} className="w-28 rounded border px-2 py-1" /></td>
+                        <td><input aria-label="Exclusividad desde" type="number" min={1} placeholder="Desde" value={regla.exclusividadDesde ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { exclusividadDesde: event.target.value ? Number(event.target.value) : null })} className="w-20 rounded border px-2 py-1" /> – <input aria-label="Exclusividad hasta" type="number" min={1} placeholder="Hasta" value={regla.exclusividadHasta ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarReglaPrecio(temporadaIndice, reglaIndice, { exclusividadHasta: event.target.value ? Number(event.target.value) : null })} className="w-20 rounded border px-2 py-1" /></td>
+                        {esSuperAdmin && <td className="pl-2"><IconButton icon={<Trash2 size={15} />} label={`Eliminar tarifa ${reglaIndice + 1}`} variant="secondary" isDisabled={temporada.reglas.length <= 1} onPress={() => eliminarReglaPrecio(temporadaIndice, reglaIndice)} /></td>}
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+            <div className="rounded-lg border border-gray-200 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Ajustes sobre el total</p>
+                  <p className="mt-1 text-xs text-gray-500">Aplicá descuentos o recargos según la anticipación entre la compra y el check-in.</p>
+                </div>
+                {esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarAjuste}><Plus size={15} />Agregar ajuste</Button>}
+              </div>
+              {(tarifaDraft.ajustes || []).length === 0 ? <p className="mt-3 rounded-lg bg-gray-50 p-3 text-xs text-gray-500">No hay ajustes configurados.</p> :
+                <div className="mt-3 space-y-2">{(tarifaDraft.ajustes || []).map((regla, indice) => <div key={`${regla.codigo}-${indice}`} className="grid gap-2 rounded-lg bg-gray-50 p-3 md:grid-cols-[1.2fr_.8fr_.8fr_.8fr_.9fr_.8fr_auto]">
+                  <label className="text-xs text-gray-600">Nombre<input value={regla.nombre} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { nombre: event.target.value })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Desde (días)<input type="number" min={0} value={regla.anticipacionDesdeDias} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { anticipacionDesdeDias: Number(event.target.value) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Hasta (días)<input type="number" min={0} placeholder="Sin límite" value={regla.anticipacionHastaDias ?? ''} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { anticipacionHastaDias: event.target.value === '' ? null : Number(event.target.value) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  <label className="text-xs text-gray-600">Efecto<select value={regla.direccion} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { direccion: event.target.value as any })} className="mt-1 w-full rounded border px-2 py-1"><option value="descuento">Descuento</option><option value="recargo">Recargo</option></select></label>
+                  <label className="text-xs text-gray-600">Cálculo<select value={regla.tipo} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { tipo: event.target.value as any })} className="mt-1 w-full rounded border px-2 py-1"><option value="porcentaje_bps">Porcentaje</option><option value="importe_fijo">Importe fijo</option></select></label>
+                  <label className="text-xs text-gray-600">{regla.tipo === 'porcentaje_bps' ? 'Porcentaje' : 'ARS'}<input type="number" min={0} value={regla.valor / 100} disabled={!esSuperAdmin} onChange={event => actualizarAjuste(indice, { valor: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  {esSuperAdmin && <div className="flex items-end"><IconButton icon={<Trash2 size={15} />} label={`Eliminar ajuste ${indice + 1}`} variant="secondary" onPress={() => eliminarAjuste(indice)} /></div>}
+                </div>)}</div>}
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Reglas de seña</p>
+                  <p className="mt-1 text-xs text-gray-500">Cada umbral comienza en el importe indicado, inclusive. El límite anterior se calcula automáticamente para evitar huecos o superposiciones.</p>
+                </div>
+                {esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarSena}><Plus size={15} />Agregar regla</Button>}
+              </div>
+              <div className="mt-2 space-y-2">{tarifaDraft.senas.map((regla, indice) => (
+                <div key={`${regla.subtotalDesdeCentavos}-${indice}`} className="grid gap-2 rounded-lg bg-gray-50 p-3 sm:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+                  <label className="text-xs text-gray-600">Desde (ARS, inclusive)<input type="number" min={0} step="0.01" value={regla.subtotalDesdeCentavos / 100} disabled={!esSuperAdmin || indice === 0} onChange={event => actualizarSena(indice, { subtotalDesdeCentavos: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1 disabled:bg-gray-100" /></label>
+                  <label className="text-xs text-gray-600">Hasta (ARS, inclusive)<input value={regla.subtotalHastaCentavos == null ? 'Sin límite' : (regla.subtotalHastaCentavos / 100).toFixed(2)} disabled className="mt-1 w-full rounded border bg-gray-100 px-2 py-1 text-gray-600" /></label>
+                  <label className="text-xs text-gray-600">Tipo<select value={regla.tipo} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { tipo: event.target.value as any })} className="mt-1 w-full rounded border px-2 py-1"><option value="porcentaje_bps">Porcentaje</option><option value="importe_fijo">Importe fijo</option></select></label>
+                  <label className="text-xs text-gray-600">{regla.tipo === 'porcentaje_bps' ? 'Porcentaje' : 'Importe (ARS)'}<input type="number" min={0} step={regla.tipo === 'porcentaje_bps' ? '0.01' : '0.01'} max={regla.tipo === 'porcentaje_bps' ? 100 : undefined} value={regla.valor / 100} disabled={!esSuperAdmin} onChange={event => actualizarSena(indice, { valor: Math.round(Number(event.target.value) * 100) })} className="mt-1 w-full rounded border px-2 py-1" /></label>
+                  {esSuperAdmin && <div className="flex items-end"><IconButton icon={<Trash2 size={16} />} label={`Eliminar regla de seña ${indice + 1}`} variant="secondary" isDisabled={tarifaDraft.senas.length <= 1} onPress={() => eliminarSena(indice)} /></div>}
+                </div>
+              ))}</div>
+              {errorReglasSena(tarifaDraft.senas) && <p role="alert" className="mt-2 text-xs font-semibold text-red-700">{errorReglasSena(tarifaDraft.senas)}</p>}
+            </div>
+            {esSuperAdmin && <button type="button" onClick={confirmarTarifa} disabled={guardando !== null || !configuracion?.tarifa || Boolean(errorReglasSena(tarifaDraft.senas)) || resumirCambios(configuracion.tarifa, tarifaDraft).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'tarifa' ? 'Publicando…' : 'Publicar nueva versión de precios y seña'}</button>}
+          </>}
+        </div>
+      </details>}
+
+      {modo === 'base' && <details open className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Modalidades de reserva</strong><small>Alojamientos, capacidades y condiciones de venta</small></span></summary>
+        <div className="admin-config__section-body space-y-3 border-t border-gray-100">
+          <p className="text-xs text-gray-500">Definí cuándo se puede vender cada alojamiento, su capacidad y la unidad que descuenta inventario. Los cambios afectan sólo operaciones nuevas.</p>
+          {inventarioDraft.map(espacio => {
+            const original = configuracion?.inventario.find(item => item.codigo === espacio.codigo);
+            const espacioModificado = Boolean(original) && JSON.stringify({
+              capacidadComercial: espacio.capacidadComercial,
+              capacidadOperativaMaxima: espacio.capacidadOperativaMaxima,
+              reservableGeneral: espacio.reservableGeneral,
+              reservableRetiro: espacio.reservableRetiro,
+              estado: espacio.estado,
+            }) !== JSON.stringify({
+              capacidadComercial: original?.capacidadComercial,
+              capacidadOperativaMaxima: original?.capacidadOperativaMaxima,
+              reservableGeneral: original?.reservableGeneral,
+              reservableRetiro: original?.reservableRetiro,
+              estado: original?.estado,
+            });
+            return <Card key={espacio.codigo} variant="outlined" className="admin-config__lodging space-y-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div><strong>{espacio.nombre}</strong><p className="text-xs text-gray-500">{espacio.codigo} · {espacio.tipo}</p></div>
+                <Badge variant={espacio.estado === 'activo' ? 'success' : espacio.estado === 'inactivo' ? 'danger' : 'warning'}>{espacio.estado === 'activo' ? 'Activo' : espacio.estado === 'inactivo' ? 'Inactivo' : 'Configuración pendiente'}</Badge>
+              </div>
+              <div className="admin-config__lodging-fields">
+                <NumberField decrementLabel="Reducir capacidad comercial" incrementLabel="Aumentar capacidad comercial"
+                  isDisabled={!esSuperAdmin} label="Capacidad comercial" minValue={0} showStepper={false}
+                  value={espacio.capacidadComercial} onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadComercial: value })} />
+                <NumberField decrementLabel="Reducir máximo operativo" incrementLabel="Aumentar máximo operativo"
+                  isDisabled={!esSuperAdmin} label="Máximo físico/operativo" minValue={0} showStepper={false}
+                  value={espacio.capacidadOperativaMaxima} onChange={value => actualizarEspacioDraft(espacio.codigo, { capacidadOperativaMaxima: value })} />
+                <Select label="Estado comercial" placeholder="Elegí un estado" value={espacio.estado} isDisabled={!esSuperAdmin}
+                  options={[{ value: 'activo', label: 'Activo' }, { value: 'configuracion_pendiente', label: 'Configuración pendiente' }, { value: 'inactivo', label: 'Inactivo' }]}
+                  onChange={value => value && actualizarEspacioDraft(espacio.codigo, { estado: value })} />
+              </div>
+              <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
+                <Checkbox isSelected={espacio.reservableGeneral} isDisabled={!esSuperAdmin}
+                  onChange={isSelected => actualizarEspacioDraft(espacio.codigo, { reservableGeneral: isSelected })}>Venta general</Checkbox>
+                <Checkbox isSelected={espacio.reservableRetiro} isDisabled={!esSuperAdmin}
+                  onChange={isSelected => actualizarEspacioDraft(espacio.codigo, { reservableRetiro: isSelected })}>Retiros</Checkbox>
+              </div>
+              {espacio.tipo === 'camping' && espacio.estado !== 'activo' && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">Para activar Camping: definí una capacidad mayor a cero, habilitá al menos un contexto, guardá estas condiciones y luego habilitá su modalidad. También debe existir una regla de precio publicada para camping.</p>}
+              {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !espacioModificado || espacio.capacidadOperativaMaxima < espacio.capacidadComercial}
+                isLoading={guardando === `espacio-${espacio.codigo}`} onPress={() => original && confirmarEspacio(espacio, original)}>Guardar condiciones del alojamiento</Button>}
+              {esSuperAdmin && opcionesModalidadParaEspacio(espacio).some(opcion => !espacio.modalidades.some(item => item.modalidad === opcion.value && item.contexto === 'general')) &&
+                <Button size="sm" variant="secondary" isLoading={guardando === `modalidad-nueva-${espacio.codigo}`} onPress={() => pedirConfirmacion({
+                  titulo: `Crear modalidad para ${espacio.nombre}`,
+                  descripcion: 'Se agregará deshabilitada para que puedas revisar su nombre y unidad de venta.',
+                  cambios: [{ campo: 'Modalidad', anterior: 'No existe', nuevo: 'Nueva modalidad deshabilitada' }],
+                  etiquetaConfirmar: 'Crear modalidad',
+                  ejecutar: motivo => crearModalidad(espacio, motivo),
+                })}><Plus size={15} />Crear modalidad</Button>}
+              <div className="admin-config__modalities">{espacio.modalidades.map(item => {
+                const originalModalidad = original?.modalidades.find(actual => actual.id === item.id);
+                const modalidadModificada = Boolean(originalModalidad) && JSON.stringify(item) !== JSON.stringify(originalModalidad);
+                const contextoPermitido = item.contexto === 'general' ? original?.reservableGeneral : original?.reservableRetiro;
+                const puedeHabilitar = original?.estado === 'activo' && (original?.capacidadComercial || 0) > 0 && Boolean(contextoPermitido);
+                return <Card key={item.id} tone="muted" className="admin-config__modality">
+                  <div className="admin-config__modality-fields">
+                    <label className="text-xs font-semibold text-gray-600">Nombre comercial<input value={item.nombreComercial} disabled={!esSuperAdmin} onChange={event => actualizarModalidadDraft(espacio.codigo, item.id, { nombreComercial: event.target.value })} className="mt-1 w-full rounded border px-2 py-2 text-sm" /></label>
+                    <Select label="Modalidad" placeholder="Elegí" value={item.modalidad} isDisabled={!esSuperAdmin}
+                      options={opcionesModalidadParaEspacio(espacio)}
+                      onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, {
+                        modalidad: value,
+                        unidadVenta: value === 'privada' ? 'espacio' : value === 'camping' ? 'parcela' : item.unidadVenta === 'parcela' ? 'cama' : item.unidadVenta,
+                      })} />
+                    <Select label="Contexto" placeholder="Elegí" value={item.contexto} isDisabled={!esSuperAdmin}
+                      options={[{ value: 'general', label: 'Venta general' }, { value: 'retiro', label: 'Retiro' }]}
+                      onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, { contexto: value })} />
+                    <Select label="Unidad de venta" placeholder="Elegí" value={item.unidadVenta} isDisabled={!esSuperAdmin}
+                      options={item.modalidad === 'privada' ? [{ value: 'espacio', label: 'Espacio completo' }] : item.modalidad === 'camping' ? [{ value: 'parcela', label: 'Parcela' }] : [{ value: 'cama', label: 'Cama' }, { value: 'espacio', label: 'Espacio completo' }]}
+                      onChange={value => value && actualizarModalidadDraft(espacio.codigo, item.id, { unidadVenta: value })} />
+                  </div>
+                  <Textarea label="Información para huéspedes" rows={2}
+                    description="Explicá qué debe traer la persona y qué incluye esta modalidad. Se mostrará durante la reserva."
+                    placeholder="Ej.: Traé tu propia carpa · Ropa blanca incluida"
+                    value={item.descripcionComercial} isDisabled={!esSuperAdmin}
+                    onChange={value => actualizarModalidadDraft(espacio.codigo, item.id, { descripcionComercial: value })} />
+                  <Checkbox className="admin-config__modality-toggle" isSelected={item.habilitada} isDisabled={!esSuperAdmin || (!item.habilitada && !puedeHabilitar)}
+                    onChange={isSelected => actualizarModalidadDraft(espacio.codigo, item.id, { habilitada: isSelected })}>Habilitada para reservas nuevas</Checkbox>
+                  {!puedeHabilitar && <p className="admin-config__modality-warning text-xs text-amber-700">Primero activá el alojamiento, asignale capacidad y habilitá el contexto seleccionado.</p>}
+                  {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modalidadModificada || (item.habilitada && !puedeHabilitar)}
+                    className="admin-config__modality-action" isLoading={guardando === `modalidad-${item.id}`} onPress={() => originalModalidad && confirmarModalidad(espacio, item, originalModalidad)}>Guardar modalidad</Button>}
+                </Card>;
+              })}</div>
+            </Card>;
+          })}
+          <p className="text-xs text-gray-500">Deshabilitar una modalidad evita nuevas cotizaciones; no modifica reservas existentes. La activación comercial no reemplaza la regla de precio publicada ni crea unidades físicas.</p>
+        </div>
+      </details>}
+
+      {modo === 'base' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Servicios y limitaciones</strong><small>Qué tiene y qué no tiene cada alojamiento · {serviciosDraft.filter(item => item.visibleEnReserva).length} visibles</small></span></summary>
+        <div className="admin-config__section-body space-y-4 border-t border-gray-100">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="max-w-3xl text-xs text-gray-500">Mostrá información concreta antes de cotizar. Usá “No disponible” para restricciones importantes, como baño privado o electricidad, y ocultá sólo los datos que no deban publicarse.</p>
+            {esSuperAdmin && <Button size="sm" variant="secondary" onPress={agregarServicioDraft}><Plus size={15} />Agregar servicio</Button>}
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {serviciosDraft.map(item => {
+              const original = configuracion?.servicios.find(actual => actual.id === item.id);
+              const modificado = item.id < 0 || (Boolean(original) && JSON.stringify(item) !== JSON.stringify(original));
+              return <Card key={item.id} tone="muted" className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Select label="Alojamiento" placeholder="Elegí" value={item.tipoAlojamiento} isDisabled={!esSuperAdmin}
+                    options={OPCIONES_ALOJAMIENTO_TARIFA}
+                    onChange={value => value && actualizarServicioDraft(item.id, { tipoAlojamiento: value as BorradorServicioUi['tipoAlojamiento'] })} />
+                  <Select label="Disponibilidad" placeholder="Elegí" value={item.disponibilidad} isDisabled={!esSuperAdmin}
+                    options={[{ value: 'incluido', label: 'Disponible / incluido' }, { value: 'no_disponible', label: 'No disponible' }]}
+                    onChange={value => value && actualizarServicioDraft(item.id, { disponibilidad: value as BorradorServicioUi['disponibilidad'] })} />
+                </div>
+                <Input label="Nombre visible" value={item.nombre} isDisabled={!esSuperAdmin}
+                  onChange={value => actualizarServicioDraft(item.id, { nombre: value })} />
+                <Textarea label="Detalle opcional" rows={2} maxLength={240} isDisabled={!esSuperAdmin}
+                  placeholder="Ej.: Disponible en las duchas exteriores compartidas."
+                  value={item.detalle} onChange={value => actualizarServicioDraft(item.id, { detalle: value })} />
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Checkbox isSelected={item.visibleEnReserva} isDisabled={!esSuperAdmin}
+                      onChange={isSelected => actualizarServicioDraft(item.id, { visibleEnReserva: isSelected })}>Visible en la reserva</Checkbox>
+                    <NumberField className="w-28" label="Orden" minValue={0} maxValue={999} showStepper={false}
+                      decrementLabel="Bajar orden" incrementLabel="Subir orden" isDisabled={!esSuperAdmin}
+                      value={item.orden} onChange={value => actualizarServicioDraft(item.id, { orden: value })} />
+                  </div>
+                  {esSuperAdmin && <div className="flex gap-2">
+                    {item.id < 0 && <Button size="sm" variant="secondary" onPress={() => setServiciosDraft(actual => actual.filter(servicio => servicio.id !== item.id))}>Descartar</Button>}
+                    <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modificado || !item.nombre.trim()}
+                      isLoading={guardando === `servicio-${item.id}`} onPress={() => confirmarServicio(item)}>{item.id < 0 ? 'Agregar' : 'Guardar'}</Button>
+                  </div>}
+                </div>
+              </Card>;
+            })}
+          </div>
+        </div>
+      </details>}
+
+      {modo === 'base' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Preparación de camas</strong><small>Preferencias obligatorias según alojamiento, modalidad y cantidad de personas · {opcionesPreparacionDraft.filter(item => item.habilitada).length} activas</small></span></summary>
+        <div className="admin-config__section-body space-y-4 border-t border-gray-100">
+          <p className="max-w-3xl text-xs text-gray-500">Estas opciones organizan la preparación previa y no cambian precio, capacidad ni inventario físico. Si hay opciones activas para una combinación, el huésped deberá elegir una antes de reservar.</p>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {opcionesPreparacionDraft.map(item => {
+              const original = configuracion?.opcionesPreparacion.find(actual => actual.id === item.id);
+              const modificado = Boolean(original) && JSON.stringify(item) !== JSON.stringify(original);
+              return <Card key={item.id} tone="muted" className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Select label="Alojamiento" placeholder="Elegí" value={item.tipoAlojamiento} isDisabled={!esSuperAdmin}
+                    options={OPCIONES_ALOJAMIENTO_TARIFA}
+                    onChange={value => value && actualizarOpcionPreparacionDraft(item.id, { tipoAlojamiento: value as BorradorOpcionPreparacionUi['tipoAlojamiento'] })} />
+                  <Select label="Modalidad" placeholder="Elegí" value={item.modalidad} isDisabled={!esSuperAdmin}
+                    options={[{ value: 'privada', label: 'Privada' }, { value: 'compartida', label: 'Compartida' }, { value: 'camping', label: 'Camping' }]}
+                    onChange={value => value && actualizarOpcionPreparacionDraft(item.id, { modalidad: value as BorradorOpcionPreparacionUi['modalidad'] })} />
+                  <NumberField label="Personas" minValue={1} maxValue={20} showStepper={false}
+                    decrementLabel="Reducir personas" incrementLabel="Aumentar personas" isDisabled={!esSuperAdmin}
+                    value={item.cantidadPersonas} onChange={value => actualizarOpcionPreparacionDraft(item.id, { cantidadPersonas: value })} />
+                </div>
+                <Input label="Nombre visible" value={item.nombre} isDisabled={!esSuperAdmin}
+                  onChange={value => actualizarOpcionPreparacionDraft(item.id, { nombre: value })} />
+                <Textarea label="Explicación para huéspedes" rows={2} maxLength={240} isDisabled={!esSuperAdmin}
+                  value={item.descripcion} onChange={value => actualizarOpcionPreparacionDraft(item.id, { descripcion: value })} />
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <Checkbox isSelected={item.habilitada} isDisabled={!esSuperAdmin}
+                      onChange={isSelected => actualizarOpcionPreparacionDraft(item.id, { habilitada: isSelected })}>Solicitar en reservas nuevas</Checkbox>
+                    <NumberField className="w-28" label="Orden" minValue={0} maxValue={999} showStepper={false}
+                      decrementLabel="Bajar orden" incrementLabel="Subir orden" isDisabled={!esSuperAdmin}
+                      value={item.orden} onChange={value => actualizarOpcionPreparacionDraft(item.id, { orden: value })} />
+                  </div>
+                  {esSuperAdmin && <Button size="sm" variant="secondary" isDisabled={guardando !== null || !modificado || !item.nombre.trim()}
+                    isLoading={guardando === `preparacion-${item.id}`} onPress={() => confirmarOpcionPreparacion(item)}>Guardar opción</Button>}
+                </div>
+              </Card>;
+            })}
+          </div>
+        </div>
+      </details>}
+
+      {modo === 'precios' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Alimentación</strong><small>Horarios, regímenes y precio por comida</small></span></summary>
+        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-2">
+        {horariosComidasDraft && <Card tone="muted" className="p-4 sm:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="font-semibold">Horarios del servicio</p>
+              <p className="text-xs text-gray-500">Versión {horariosComidasDraft.version} · se muestran en la reserva online y en la página de estadías.</p>
+            </div>
+            {esSuperAdmin && <Button size="sm" variant="secondary"
+              isDisabled={guardando !== null || !horariosComidasModificados || !horariosComidasValidos}
+              isLoading={guardando === 'horarios-comidas'} onPress={confirmarHorariosComidas}>Guardar horarios</Button>}
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {(['desayuno', 'almuerzo', 'cena'] as const).map(comida => <div key={comida} className="grid grid-cols-2 gap-2 rounded-lg border border-gray-200 bg-white p-3">
+              <p className="col-span-2 text-xs font-semibold capitalize text-gray-700">{comida}</p>
+              <Input type="time" label="Desde" value={horariosComidasDraft[comida].desde} isDisabled={!esSuperAdmin}
+                onChange={value => setHorariosComidasDraft(actual => actual ? { ...actual, [comida]: { ...actual[comida], desde: value } } : actual)} />
+              <Input type="time" label="Hasta" value={horariosComidasDraft[comida].hasta} isDisabled={!esSuperAdmin}
+                onChange={value => setHorariosComidasDraft(actual => actual ? { ...actual, [comida]: { ...actual[comida], hasta: value } } : actual)} />
+            </div>)}
+          </div>
+          {!horariosComidasValidos && <p className="mt-2 text-xs font-semibold text-red-700" role="alert">Cada horario debe tener una hora de inicio anterior a la hora de cierre.</p>}
+        </Card>}
+        {(configuracion?.alimentacion || []).map(item => <div key={item.codigo} className="rounded-lg border border-gray-200 p-3">
+          <p className="font-semibold">{item.codigo === 'pension_completa' ? 'Pensión completa' : 'Desayuno incluido'}</p>
+          <p className="text-xs text-gray-500">v{item.version} · {item.comidasAdicionalesPorPersonaNoche} comidas adicionales por persona/noche</p>
+          <div className={`mt-3 grid gap-2 ${item.codigo === 'pension_completa' ? 'sm:grid-cols-3' : ''}`}>
+            {(item.codigo === 'pension_completa' ? ['desayuno', 'almuerzo', 'cena'] as const : ['desayuno'] as const).map(comida => <MoneyField key={comida} currency="ARS" decrementLabel={`Reducir ${comida}`} incrementLabel={`Aumentar ${comida}`}
+              isDisabled={!esSuperAdmin} label={comida[0].toUpperCase() + comida.slice(1)} minValue={0} showStepper={false}
+              value={Number(preciosComida[`${item.codigo}:${comida}`] || 0)} onChange={value => setPreciosComida(actual => ({ ...actual, [`${item.codigo}:${comida}`]: String(value) }))} />)}
+          </div>
+          {item.codigo === 'pension_completa' && <MoneyField className="mt-2" currency="ARS" decrementLabel="Reducir ajuste" incrementLabel="Aumentar ajuste"
+            isDisabled={!esSuperAdmin} label="Ajuste del paquete por persona/noche (negativo = descuento)" showStepper={false}
+            value={Number(preciosComida[`${item.codigo}:ajuste`] || 0)} onChange={value => setPreciosComida(actual => ({ ...actual, [`${item.codigo}:ajuste`]: String(value) }))} />}
+          <p className="mt-2 text-xs text-gray-500">{item.codigo === 'pension_completa'
+            ? 'La pensión completa suma almuerzo + cena y aplica el ajuste del paquete. El desayuno continúa incluido en el alojamiento.'
+            : 'El desayuno está incluido en el alojamiento; este valor deja explícito su precio de referencia.'}</p>
+          {esSuperAdmin && <button type="button" onClick={() => confirmarComida(item)} disabled={guardando !== null || (item.codigo === 'pension_completa' ? [
+            ['desayuno', item.precioDesayunoCentavos], ['almuerzo', item.precioAlmuerzoCentavos],
+            ['cena', item.precioCenaCentavos], ['ajuste', item.ajustePaqueteCentavos],
+          ] : [['desayuno', item.precioDesayunoCentavos]]).every(([clave, centavos]) => Math.round(Number(preciosComida[`${item.codigo}:${clave}`] || 0) * 100) === centavos)} className={`mt-3 rounded-lg border border-brand px-3 py-2 text-xs font-semibold text-brand disabled:opacity-50 ${FOCUS_RING}`}>{guardando === `comida-${item.codigo}` ? 'Publicando…' : 'Publicar nueva versión'}</button>}
+        </div>)}</div>
+      </details>}
+
+      {modo === 'base' && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Política de cancelación</strong><small>Vigencia y porcentajes de devolución</small></span></summary>
+        <div className="admin-config__section-body space-y-3 border-t border-gray-100">{!politicaDraft ? <p className="text-sm text-amber-700">Sin política configurada.</p> : <>
+          <div className="grid gap-3 sm:grid-cols-3"><label className="text-xs font-semibold text-gray-600">Nombre<input value={politicaDraft.nombre} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, nombre: event.target.value })} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label><div className="text-xs text-gray-500"><strong className="block text-gray-700">Código y versión</strong>{politicaDraft.codigo} · v{politicaDraft.version}</div><label className="text-xs font-semibold text-gray-600">Vigente desde<input type="datetime-local" value={vigenciaPolitica} disabled={!esSuperAdmin} onChange={event => setVigenciaPolitica(event.target.value)} className="mt-1 w-full rounded border px-3 py-2 text-sm" /></label></div>
+          <div className="space-y-2">{politicaDraft.reglas.map((regla, indice) => <div key={indice} className="grid gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-2"><label className="text-xs text-gray-600">Horas mínimas antes del check-in<input type="number" min={0} value={regla.horasMinimasAntes} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, horasMinimasAntes: Number(event.target.value) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label><label className="text-xs text-gray-600">Devolución (%)<input type="number" min={0} max={100} value={regla.porcentajeDevolucionBps / 100} disabled={!esSuperAdmin} onChange={event => setPoliticaDraft({ ...politicaDraft, reglas: politicaDraft.reglas.map((item, i) => i === indice ? { ...item, porcentajeDevolucionBps: Math.round(Number(event.target.value) * 100) } : item) })} className="mt-1 w-full rounded border px-2 py-1" /></label></div>)}</div>
+          {esSuperAdmin && <button type="button" onClick={confirmarPolitica} disabled={guardando !== null || !vigenciaPolitica || !configuracion?.politicaCancelacion || resumirCambios({ ...configuracion.politicaCancelacion, vigenciaDesde: configuracion.politicaCancelacion.vigenciaDesde?.slice(0, 16) || '' }, { ...politicaDraft, vigenciaDesde: vigenciaPolitica }).length === 0} className={`rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>{guardando === 'politica' ? 'Publicando…' : 'Publicar nueva política'}</button>}
+        </>}</div>
+      </details>}
+
+      {modo === 'base' && parametro && <details className="admin-config__section rounded-xl border border-gray-200 bg-white shadow-sm">
+        <summary><span><strong>Retención de pago</strong><small>{parametro.valor} minutos para completar la seña</small></span></summary>
+        <div className="admin-config__section-body grid gap-3 border-t border-gray-100 sm:grid-cols-3"><div className="text-xs text-gray-500">Versión {parametro.version}<br />Rango permitido: {parametro.minimo}–{parametro.maximo} minutos</div>{esSuperAdmin && <><NumberField decrementLabel="Reducir plazo" incrementLabel="Aumentar plazo" label="Nuevo plazo" minValue={parametro.minimo} maxValue={parametro.maximo} showStepper={false} value={Number(valor)} onChange={value => setValor(String(value))} /><div className="flex items-end"><Button size="sm" isLoading={guardando === 'plazo'} onPress={confirmarPlazo} isDisabled={guardando !== null || Number(valor) === parametro.valor || Number(valor) < parametro.minimo || Number(valor) > parametro.maximo}>Guardar plazo</Button></div></>}</div>
+      </details>}
+
+      <section className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-xs text-gray-600">
+        <strong className="text-gray-800">Fuera de esta pantalla:</strong> credenciales y activación de proveedores de pago permanecen en variables seguras del entorno. Las capacidades físicas y excepciones de capacidad siguen el flujo operativo auditado.
       </section>
+
+      {confirmacion && (
+        <ModalBase onClose={() => guardando === null && setConfirmacion(null)} titulo={confirmacion.titulo} ancho="sm:max-w-3xl">
+          <p className="text-sm text-gray-600">{confirmacion.descripcion}</p>
+          <div className="admin-config-change-summary mt-4 overflow-hidden rounded-xl border border-gray-200">
+            <div className="admin-config-change-summary__head" aria-hidden="true">
+              <span>Cambio</span><span>Valor anterior</span><span>Valor nuevo</span>
+            </div>
+            <div className="max-h-[42vh] overflow-y-auto">
+              {confirmacion.cambios.map((cambio, indice) => (
+                <div className="admin-config-change-summary__row" key={`${cambio.campo}-${indice}`}>
+                  <strong>{cambio.campo}</strong>
+                  <span className="admin-config-change-summary__old">{cambio.anterior}</span>
+                  <span className="admin-config-change-summary__new">{cambio.nuevo}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Textarea
+            autoFocus
+            className="mt-4"
+            description="Obligatorio · entre 5 y 500 caracteres. Quedará asociado al cambio en la auditoría."
+            isRequired
+            label="Motivo del cambio"
+            maxLength={500}
+            minLength={5}
+            onChange={setMotivoConfirmacion}
+            placeholder="Ej. Ajuste comercial aprobado por administración"
+            rows={3}
+            value={motivoConfirmacion}
+          />
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="secondary" isDisabled={guardando !== null} onPress={() => setConfirmacion(null)}>Cancelar</Button>
+            <Button isLoading={guardando !== null} isDisabled={guardando !== null || motivoConfirmacion.trim().length < 5} onPress={confirmarCambio}>{confirmacion.etiquetaConfirmar}</Button>
+          </div>
+        </ModalBase>
+      )}
     </div>
   );
 };
@@ -1778,7 +3206,7 @@ type GrupoMetricaEstadia = {
 // Cards de "Métricas Operativas" — personas y noches por tipo_estadia desde
 // el 06/08, para que contabilidad cruce volumen de gente alojada/alimentada
 // contra gastos reales. Ver functions/api/admin/metricas.ts.
-const SeccionMetricasOperativas: React.FC = () => {
+const SeccionMetricasOperativas: React.FC<{ mostrarGrafico?: boolean }> = ({ mostrarGrafico = false }) => {
   const [grupos, setGrupos] = useState<GrupoMetricaEstadia[] | null>(null);
   const [error, setError] = useState('');
 
@@ -1810,6 +3238,33 @@ const SeccionMetricasOperativas: React.FC = () => {
           );
         })}
       </div>
+      {mostrarGrafico && grupos !== null && (() => {
+        const maxPersonas = Math.max(0, ...TIPOS_ESTADIA.map(t => grupos.find(g => g.tipo_estadia === t.value)?.total_personas || 0));
+        return (
+          <Card className="admin-report-chart admin-report-types">
+            <div className="admin-report-chart__heading">
+              <div>
+                <p>Desde el 06/08</p>
+                <h3>Personas por tipo de estadía</h3>
+              </div>
+            </div>
+            <ul className="admin-report-bars" aria-label="Personas y noches por tipo de estadía">
+              {TIPOS_ESTADIA.map(t => {
+                const grupo = grupos.find(g => g.tipo_estadia === t.value);
+                const personas = grupo?.total_personas || 0;
+                const noches = Math.round(grupo?.total_noches || 0);
+                const width = maxPersonas > 0 ? (personas / maxPersonas) * 100 : 0;
+                return (
+                  <li key={t.value}>
+                    <div className="admin-report-bars__label"><span>{t.label}</span><strong>{personas} personas · {noches} noches</strong></div>
+                    <div className="admin-report-bars__track" aria-hidden="true"><span style={{ width: `${width}%` }} /></div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        );
+      })()}
     </div>
   );
 };
@@ -1834,11 +3289,13 @@ const ACCION_LABEL: Record<string, string> = {
   crear_estadia_no_comercial: 'Registró una estadía no comercial',
   cancelar_estadia_no_comercial: 'Canceló una estadía no comercial',
   actualizar_configuracion_reservas: 'Actualizó configuración de reservas',
-};
-
-const fmtFechaHora = (iso: string) => {
-  const d = new Date(iso.replace(' ', 'T') + (iso.endsWith('Z') ? '' : 'Z'));
-  return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+  actualizar_modalidad_comercial: 'Actualizó una modalidad comercial',
+  actualizar_espacio_comercial: 'Actualizó condiciones comerciales de un alojamiento',
+  publicar_tarifa_alimentacion: 'Publicó una tarifa de alimentación',
+  crear_borrador_tarifa: 'Creó un borrador de precios',
+  publicar_plan_tarifa: 'Publicó precios y seña',
+  crear_borrador_politica_cancelacion: 'Creó un borrador de cancelación',
+  publicar_politica_cancelacion: 'Publicó una política de cancelación',
 };
 
 const TIPO_OCUPACION_LABEL: Record<string, string> = {
@@ -1957,11 +3414,18 @@ const SeccionOcupacionOperativa: React.FC = () => {
           <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Nueva ocupación</h2>
           <p className="text-xs text-gray-500 mt-1">Bloqueá inventario o registrá una estadía sin ingreso comercial.</p>
         </div>
-        <div className="grid grid-cols-2 gap-2" role="group" aria-label="Clase de ocupación">
-          {([['bloqueo', 'Bloqueo'], ['estadia_no_comercial', 'Estadía interna']] as const).map(([value, label]) => (
-            <button key={value} type="button" onClick={() => cambiarClase(value)} className={`text-sm font-semibold rounded-lg px-3 py-2 border ${FOCUS_RING} ${clase === value ? 'bg-brand text-white border-brand' : 'border-gray-300 text-gray-600'}`}>{label}</button>
-          ))}
-        </div>
+        <ToggleGroup
+          disallowEmptySelection
+          label="Clase de ocupación"
+          labelVisibility="hidden"
+          onChange={values => values[0] && cambiarClase(values[0] as 'bloqueo' | 'estadia_no_comercial')}
+          options={[
+            { value: 'bloqueo', label: 'Bloqueo' },
+            { value: 'estadia_no_comercial', label: 'Estadía interna' },
+          ]}
+          selectionMode="single"
+          value={[clase]}
+        />
         <label className="block text-xs font-semibold text-gray-600">Inventario
           <select required className={`${INPUT_CLS} mt-1`} value={objetivo} onChange={e => setObjetivo(e.target.value)}>
             <option value="" disabled>Elegir espacio o unidad</option>
@@ -1973,14 +3437,17 @@ const SeccionOcupacionOperativa: React.FC = () => {
             </optgroup>
           </select>
         </label>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="block text-xs font-semibold text-gray-600">Desde (inclusive)
-            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
-          </label>
-          <label className="block text-xs font-semibold text-gray-600">Hasta (checkout)
-            <input required type="date" className={`${INPUT_CLS} mt-1`} value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
-          </label>
-        </div>
+        <DateRangeField
+          endLabel="Hasta (checkout)"
+          isRequired
+          label="Fechas de ocupación"
+          onChange={range => {
+            setFechaDesde(range?.start || '');
+            setFechaHasta(range?.end || '');
+          }}
+          startLabel="Desde (inclusive)"
+          value={fechaDesde && fechaHasta ? { start: fechaDesde, end: fechaHasta } : null}
+        />
         <label className="block text-xs font-semibold text-gray-600">Tipo
           <select className={`${INPUT_CLS} mt-1`} value={tipo} onChange={e => setTipo(e.target.value)}>
             {(clase === 'bloqueo'
@@ -1989,20 +3456,24 @@ const SeccionOcupacionOperativa: React.FC = () => {
           </select>
         </label>
         {clase === 'estadia_no_comercial' && (
-          <label className="block text-xs font-semibold text-gray-600">Personas
-            <input required min={1} type="number" className={`${INPUT_CLS} mt-1`} value={cantidadPersonas} onChange={e => setCantidadPersonas(Number(e.target.value))} />
-          </label>
+          <NumberField decrementLabel="Quitar persona" incrementLabel="Agregar persona" isRequired label="Personas"
+            minValue={1} onChange={setCantidadPersonas} value={cantidadPersonas} />
         )}
-        <label className="block text-xs font-semibold text-gray-600">{clase === 'bloqueo' ? 'Motivo' : 'Referencia operativa'}
-          <textarea required minLength={3} rows={3} className={`${INPUT_CLS} mt-1`} value={detalle} onChange={e => setDetalle(e.target.value)} placeholder={clase === 'bloqueo' ? 'Ej. reparación de techo' : 'Ej. voluntariado de huerta'} />
-        </label>
+        <Textarea isRequired label={clase === 'bloqueo' ? 'Motivo' : 'Referencia operativa'} minLength={3} rows={3}
+          value={detalle} onChange={setDetalle} placeholder={clase === 'bloqueo' ? 'Ej. reparación de techo' : 'Ej. voluntariado de huerta'} />
         <button disabled={guardando || cargando} className={`w-full text-sm font-semibold rounded-lg px-4 py-2.5 text-white bg-brand disabled:opacity-60 ${FOCUS_RING}`}>{guardando ? 'Guardando…' : 'Registrar ocupación'}</button>
       </form>
 
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-4 sm:px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
           <div><h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Bloqueos y estadías internas</h2><p className="text-xs text-gray-400 mt-1">El historial cancelado se conserva para auditoría.</p></div>
-          <button onClick={cargar} disabled={cargando} aria-label="Actualizar ocupación" className={`p-2 rounded-lg border border-gray-300 disabled:opacity-60 ${FOCUS_RING}`}><RefreshCw size={15} className={cargando ? 'animate-spin' : ''} /></button>
+          <IconButton
+            icon={cargando ? null : <RefreshCw size={15} />}
+            isLoading={cargando}
+            label="Actualizar ocupación"
+            onPress={cargar}
+            variant="secondary"
+          />
         </div>
         {error && <p className="m-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">{error}</p>}
         <ul className="divide-y divide-gray-100">
@@ -2162,7 +3633,7 @@ const SeccionArrepentimientos: React.FC<{ puedeGestionar: boolean }> = ({ puedeG
             <option value="">Todos los estados</option>
             {Object.entries(ESTADO_ARREPENTIMIENTO_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <button type="button" onClick={cargar} aria-label="Actualizar solicitudes" className={`rounded-lg border border-gray-300 p-2 ${FOCUS_RING}`}><RefreshCw size={15} /></button>
+          <IconButton icon={<RefreshCw size={15} />} label="Actualizar solicitudes" onPress={cargar} variant="secondary" />
         </div>
       </div>
       {error && <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -2228,6 +3699,16 @@ type EstadoIntegracionesApi = {
   eventos: EventoIntegracionOperativo[];
 };
 type EstadoComunicacionOperativa = 'pendiente' | 'procesando' | 'entregada' | 'sin_canal' | 'dead_letter';
+type CategoriaEventosIntegracion = 'eventos' | 'comunicaciones' | 'mercado_pago' | 'aplicaciones';
+type AplicacionApiAdmin = {
+  codigo: string; nombre: string; tipo: string; estado: string; configurada: boolean;
+  registrado_at: string | null; first_used_at: string | null; last_used_at: string | null;
+  request_count: number;
+  endpoints: Array<{
+    method: string; path: string; first_used_at: string | null;
+    last_used_at: string | null; request_count: number;
+  }>;
+};
 type EstadoOperacionesMvpApi = {
   reservas: {
     pendientesPago: number;
@@ -2284,6 +3765,9 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
   const [eventoReproceso, setEventoReproceso] = useState<string | null>(null);
   const [intencionReproceso, setIntencionReproceso] = useState<string | null>(null);
   const [motivo, setMotivo] = useState('');
+  const [categoriaEventosActiva, setCategoriaEventosActiva] = useState<CategoriaEventosIntegracion>('eventos');
+  const [aplicaciones, setAplicaciones] = useState<AplicacionApiAdmin[] | null>(null);
+  const [cargandoAplicaciones, setCargandoAplicaciones] = useState(false);
 
   const cargar = async () => {
     setCargando(true);
@@ -2306,6 +3790,27 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
   };
 
   useEffect(() => { cargar(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cargarAplicaciones = async () => {
+    if (!esSuperAdmin) return;
+    setCargandoAplicaciones(true);
+    setError('');
+    try {
+      const response = await adminFetch('/api/v1/admin/integraciones/aplicaciones');
+      const body: any = await response.json();
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      setAplicaciones(body.data?.aplicaciones || []);
+    } catch (cause: any) {
+      setError(cause.message || 'No se pudo consultar el registro de aplicaciones API.');
+    } finally {
+      setCargandoAplicaciones(false);
+    }
+  };
+
+  useEffect(() => {
+    if (categoriaEventosActiva === 'aplicaciones' && aplicaciones === null) cargarAplicaciones();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoriaEventosActiva, esSuperAdmin]);
 
   const despachar = async () => {
     setProcesando(true);
@@ -2486,12 +3991,48 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
         <p className="text-xs text-gray-500">Pendiente más antiguo: hace {fmtDuracion(estado.oldestPendingAgeSeconds)}.</p>
       )}
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white p-1 shadow-sm" role="tablist" aria-label="Categorías de eventos de integración">
+        <div className="flex min-w-max gap-1">
+          {([
+            { key: 'eventos', label: 'Eventos recientes', cantidad: estado?.eventos.length || 0 },
+            { key: 'comunicaciones', label: 'Comunicaciones de reservas', cantidad: operaciones?.comunicaciones.intenciones.length || 0 },
+            { key: 'mercado_pago', label: 'Mercado Pago reciente', cantidad: operaciones?.pagos.eventos.length || 0 },
+            ...(esSuperAdmin ? [{ key: 'aplicaciones' as const, label: 'Aplicaciones API', cantidad: aplicaciones?.length || 0 }] : []),
+          ] as Array<{ key: CategoriaEventosIntegracion; label: string; cantidad: number }>).map(categoria => (
+            <button
+              key={categoria.key}
+              type="button"
+              role="tab"
+              aria-selected={categoriaEventosActiva === categoria.key}
+              aria-controls={`integraciones-panel-${categoria.key}`}
+              id={`integraciones-tab-${categoria.key}`}
+              onClick={() => setCategoriaEventosActiva(categoria.key)}
+              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors ${FOCUS_RING} ${
+                categoriaEventosActiva === categoria.key
+                  ? 'bg-brand text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              {categoria.label}
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${categoriaEventosActiva === categoria.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                {categoria.cantidad}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {categoriaEventosActiva === 'eventos' && <section
+        id="integraciones-panel-eventos"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-eventos"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
         <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Eventos recientes</h3>
         </div>
         {cargando && !estado ? (
-          <div className="flex justify-center py-12"><RefreshCw className="animate-spin text-gray-300" aria-label="Cargando eventos" /></div>
+          <LoadingState className="py-12" label="Cargando eventos" />
         ) : (
           <ul className="divide-y divide-gray-100">
             {(estado?.eventos || []).map(evento => {
@@ -2545,9 +4086,14 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             )}
           </ul>
         )}
-      </section>
+      </section>}
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      {categoriaEventosActiva === 'comunicaciones' && <section
+        id="integraciones-panel-comunicaciones"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-comunicaciones"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
         <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Comunicaciones de reservas</h3>
           <p className="mt-1 text-xs text-gray-500">Intenciones durables, sin datos personales. El canal de correo se habilita por separado.</p>
@@ -2601,9 +4147,14 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             <li className="px-5 py-8 text-center text-sm text-gray-400">Todavía no hay comunicaciones registradas.</li>
           )}
         </ul>
-      </section>
+      </section>}
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      {categoriaEventosActiva === 'mercado_pago' && <section
+        id="integraciones-panel-mercado_pago"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-mercado_pago"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
         <div className="border-b border-gray-100 px-4 py-3 sm:px-5">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Mercado Pago reciente</h3>
         </div>
@@ -2623,20 +4174,75 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             <li className="px-5 py-8 text-center text-sm text-gray-400">No hay webhooks de Mercado Pago registrados.</li>
           )}
         </ul>
-      </section>
+      </section>}
+
+      {categoriaEventosActiva === 'aplicaciones' && esSuperAdmin && <section
+        id="integraciones-panel-aplicaciones"
+        role="tabpanel"
+        aria-labelledby="integraciones-tab-aplicaciones"
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+      >
+        <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Aplicaciones registradas y endpoints</h3>
+            <p className="mt-1 text-xs text-gray-500">El seguimiento comienza desde la fecha de registro mostrada. Nunca se exponen credenciales ni valores secretos.</p>
+          </div>
+          <Button type="button" onPress={cargarAplicaciones} isDisabled={cargandoAplicaciones} isLoading={cargandoAplicaciones}
+            size="sm" shape="rounded" variant="secondary" className="self-start">
+            {!cargandoAplicaciones && <RefreshCw size={14} aria-hidden="true" />} Actualizar registro
+          </Button>
+        </div>
+        {cargandoAplicaciones && aplicaciones === null ? <LoadingState className="py-12" label="Cargando aplicaciones" /> :
+          <ul className="divide-y divide-gray-100">{(aplicaciones || []).map(aplicacion => <Card as="li" variant="default" key={aplicacion.codigo} className="rounded-none border-0 px-4 py-4 shadow-none sm:px-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong className="text-sm text-gray-800">{aplicacion.nombre}</strong>
+                  <Badge variant={aplicacion.configurada ? 'success' : 'neutral'}>{aplicacion.configurada ? 'Configurada' : 'Sin credencial'}</Badge>
+                  <Badge variant="outline">{aplicacion.tipo.replace('_', ' ')}</Badge>
+                </div>
+                <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-gray-500">Código: <CodeBadge>{aplicacion.codigo}</CodeBadge><span>· registrada {aplicacion.registrado_at ? fmtFechaHora(aplicacion.registrado_at) : 'sin fecha disponible'}</span></p>
+              </div>
+              <DescriptionList columns={3} density="compact" className="min-w-full text-xs lg:min-w-[420px]">
+                <DescriptionListItem label="Primer uso">{aplicacion.first_used_at ? fmtFechaHora(aplicacion.first_used_at) : 'Sin uso'}</DescriptionListItem>
+                <DescriptionListItem label="Último uso">{aplicacion.last_used_at ? fmtFechaHora(aplicacion.last_used_at) : 'Sin uso'}</DescriptionListItem>
+                <DescriptionListItem label="Solicitudes">{aplicacion.request_count}</DescriptionListItem>
+              </DescriptionList>
+            </div>
+            {aplicacion.endpoints.length > 0 ? <TableContainer label={`Endpoints de ${aplicacion.nombre}`} className="mt-4 rounded-lg border border-gray-100">
+              <Table density="compact" className="min-w-[720px] text-xs">
+                <TableHeader><TableRow><TableHead>Método</TableHead><TableHead>Endpoint</TableHead><TableHead>Primer uso</TableHead><TableHead>Último uso</TableHead><TableHead className="text-right">Solicitudes</TableHead></TableRow></TableHeader>
+                <TableBody>{aplicacion.endpoints.map(endpoint => <TableRow key={`${endpoint.method}-${endpoint.path}`}>
+                  <TableCell><CodeBadge tone="info">{endpoint.method}</CodeBadge></TableCell>
+                  <TableCell><code className="font-mono text-gray-700">{endpoint.path}</code></TableCell>
+                  <TableCell className="text-gray-500">{endpoint.first_used_at ? fmtFechaHora(endpoint.first_used_at) : '—'}</TableCell>
+                  <TableCell className="text-gray-500">{endpoint.last_used_at ? fmtFechaHora(endpoint.last_used_at) : '—'}</TableCell>
+                  <TableCell className="text-right font-semibold text-gray-700">{endpoint.request_count}</TableCell>
+                </TableRow>)}</TableBody>
+              </Table>
+            </TableContainer> : <EmptyState className="mt-3 rounded-lg bg-gray-50 px-3 py-2" alignment="start" size="compact" title="Identidad registrada, sin endpoint implementado actualmente." />}
+          </Card>)}
+          {!cargandoAplicaciones && aplicaciones?.length === 0 && <li><EmptyState size="compact" title="No hay aplicaciones registradas." /></li>}
+          </ul>}
+      </section>}
     </div>
   );
 };
 
 const PanelReservas: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [auth, setAuth] = useState<{ email: string; rol: Rol } | null | 'cargando'>('cargando');
   const [sesionExpirada, setSesionExpirada] = useState(false);
-  const [vistaActiva, setVistaActiva] = useState<VistaActiva>('operativa');
+  const vistaEnRuta = vistaDesdeRuta(location.pathname);
+  const vistaActiva = vistaEnRuta ?? 'operativa';
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [reservasHistorial, setReservasHistorial] = useState<Reserva[] | null>(null);
   const [historialPagina, setHistorialPagina] = useState(1);
   const [historialTotalPaginas, setHistorialTotalPaginas] = useState(1);
   const [historialTotal, setHistorialTotal] = useState(0);
+  const [historialOrden, setHistorialOrden] = useState<OrdenHistorial>('checkin');
+  const [historialDireccion, setHistorialDireccion] = useState<DireccionOrdenHistorial>('desc');
   const [consultas, setConsultas] = useState<Consulta[] | null>(null);
   const [alojamientos, setAlojamientos] = useState<Alojamiento[]>([]);
   const [metricas, setMetricas] = useState<Metricas | null>(null);
@@ -2681,10 +4287,17 @@ const PanelReservas: React.FC = () => {
       .finally(() => setLoading(false));
   };
 
-  const cargarHistorial = (pagina = historialPagina, titular = busqueda) => {
+  const cargarHistorial = (
+    pagina = historialPagina,
+    titular = busqueda,
+    orden = historialOrden,
+    direccion = historialDireccion
+  ) => {
     setLoading(true);
     setError(null);
-    const params = new URLSearchParams({ pagina: String(pagina), limite: '25' });
+    const params = new URLSearchParams({
+      pagina: String(pagina), limite: '25', orden, direccion,
+    });
     if (titular.trim()) params.set('titular', titular.trim());
     return paginaReservasV1(params)
       .then(({ reservas: items, meta }) => {
@@ -2700,6 +4313,14 @@ const PanelReservas: React.FC = () => {
         return [];
       })
       .finally(() => setLoading(false));
+  };
+
+  const ordenarHistorial = (campo: OrdenHistorial) => {
+    const nuevaDireccion: DireccionOrdenHistorial =
+      campo === historialOrden ? (historialDireccion === 'asc' ? 'desc' : 'asc') : 'asc';
+    setHistorialOrden(campo);
+    setHistorialDireccion(nuevaDireccion);
+    void cargarHistorial(1, busqueda, campo, nuevaDireccion);
   };
 
   const cargarConsultas = () => {
@@ -2722,6 +4343,21 @@ const PanelReservas: React.FC = () => {
       .then(data => setAuth({ email: data.email, rol: data.rol }))
       .catch(() => setAuth(null));
   }, []);
+
+  useEffect(() => {
+    if (vistaEnRuta === null) navigate(ADMIN_RESERVAS_BASE, { replace: true });
+  }, [navigate, vistaEnRuta]);
+
+  const rolEnSesion = typeof auth === 'object' && auth ? auth.rol : null;
+  useEffect(() => {
+    if (!rolEnSesion) return;
+    const puedeEditarRuta = rolEnSesion === 'super_admin' || rolEnSesion === 'editor';
+    const requiereEdicion = vistaActiva === 'ocupacion';
+    const requiereSuperAdmin = vistaActiva === 'usuarios' || vistaActiva === 'actividad';
+    if ((requiereEdicion && !puedeEditarRuta) || (requiereSuperAdmin && rolEnSesion !== 'super_admin')) {
+      navigate(ADMIN_RESERVAS_BASE, { replace: true });
+    }
+  }, [navigate, rolEnSesion, vistaActiva]);
 
   useEffect(() => {
     if (auth === 'cargando' || !auth) return;
@@ -2836,7 +4472,7 @@ const PanelReservas: React.FC = () => {
   if (auth === 'cargando') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <RefreshCw className="animate-spin text-gray-300" size={28} aria-hidden="true" />
+        <LoadingState label="Cargando panel de reservas" />
       </div>
     );
   }
@@ -2854,23 +4490,54 @@ const PanelReservas: React.FC = () => {
   const esSuperAdmin = auth.rol === 'super_admin';
   const puedeEditar = auth.rol === 'super_admin' || auth.rol === 'editor';
 
-  const TABS: { key: VistaActiva; label: string }[] = [
-    { key: 'operativa', label: 'Operativa' },
-    ...(puedeEditar ? [{ key: 'ocupacion' as VistaActiva, label: 'Bloqueos' }] : []),
-    { key: 'metricas', label: 'Métricas' },
-    { key: 'historial', label: 'Historial' },
-    { key: 'consultas', label: 'Consultas' },
-    { key: 'arrepentimientos', label: 'Arrepentimientos' },
-    { key: 'configuracion', label: 'Configuración' },
-    { key: 'integraciones', label: 'Integraciones' },
+  const vistaMeta: Record<VistaActiva, { titulo: string; descripcion: string }> = {
+    operativa: { titulo: 'Hoy en Pueblo Mágico', descripcion: 'Llegadas, salidas y ocupación que necesitan atención.' },
+    ocupacion: { titulo: 'Bloqueos y ocupación', descripcion: 'Gestioná mantenimiento, eventos y estadías internas sin perder trazabilidad.' },
+    metricas: { titulo: 'Reportes', descripcion: 'Indicadores operativos y financieros calculados con datos reales de reservas.' },
+    historial: { titulo: 'Reservas', descripcion: 'Buscá, revisá y gestioná cada estadía desde un solo lugar.' },
+    consultas: { titulo: 'Consultas', descripcion: 'Revisá las consultas que todavía no se convirtieron en reservas.' },
+    arrepentimientos: { titulo: 'Arrepentimientos', descripcion: 'Gestioná solicitudes y su seguimiento con acceso según tu rol.' },
+    configuracion: { titulo: 'Configuración', descripcion: 'Parámetros comerciales y operativos del sistema de reservas.' },
+    precios: { titulo: 'Políticas de precios', descripcion: 'Ofertas, temporadas, alimentación, ajustes y reglas de seña.' },
+    integraciones: { titulo: 'Integraciones', descripcion: 'Estado, eventos y reintentos de las conexiones externas.' },
+    usuarios: { titulo: 'Usuarios', descripcion: 'Administrá accesos y permisos del equipo.' },
+    actividad: { titulo: 'Actividad', descripcion: 'Consultá el registro de auditoría del sistema.' },
+  };
+
+  const navPrincipal: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
+    { key: 'operativa', label: 'Inicio', icon: <Home aria-hidden="true" /> },
+    { key: 'historial', label: 'Reservas', icon: <CalendarDays aria-hidden="true" /> },
+    ...(puedeEditar ? [{ key: 'ocupacion' as VistaActiva, label: 'Bloqueos', icon: <ClipboardList aria-hidden="true" /> }] : []),
+    { key: 'metricas', label: 'Reportes', icon: <BarChart3 aria-hidden="true" /> },
+  ];
+  const navOperaciones: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
+    { key: 'consultas', label: 'Consultas', icon: <MessageCircle aria-hidden="true" /> },
+    { key: 'arrepentimientos', label: 'Arrepentimientos', icon: <ShieldAlert aria-hidden="true" /> },
+  ];
+  const navSistema: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
+    { key: 'configuracion', label: 'Configuración', icon: <Settings aria-hidden="true" /> },
+    { key: 'precios', label: 'Políticas de precios', icon: <BadgeDollarSign aria-hidden="true" /> },
+    { key: 'integraciones', label: 'Integraciones', icon: <Link2 aria-hidden="true" /> },
     ...(esSuperAdmin ? [
-      { key: 'usuarios' as VistaActiva, label: 'Usuarios' },
-      { key: 'actividad' as VistaActiva, label: 'Actividad' },
+      { key: 'usuarios' as VistaActiva, label: 'Usuarios', icon: <Users aria-hidden="true" /> },
+      { key: 'actividad' as VistaActiva, label: 'Actividad', icon: <Activity aria-hidden="true" /> },
     ] : []),
   ];
+  const navItems = [...navPrincipal, ...navOperaciones, ...navSistema];
+  const navButton = ({ key, label, icon }: typeof navItems[number]) => (
+    <button
+      key={key}
+      type="button"
+      className={`admin-nav-button ${FOCUS_RING}`}
+      aria-current={vistaActiva === key ? 'page' : undefined}
+      onClick={() => navigate(RUTA_POR_VISTA[key])}
+    >
+      {icon}<span>{label}</span>
+    </button>
+  );
 
   return (
-    <div className="admin-panel-scope min-h-screen bg-gray-50">
+    <div className="admin-panel-scope min-h-screen">
       <style>{`
         .admin-panel-scope, .admin-panel-scope * {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
@@ -2880,14 +4547,29 @@ const PanelReservas: React.FC = () => {
         }
       `}</style>
 
-      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between gap-2 mb-3 sm:mb-0">
-            <div>
-              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-400">Pueblo Mágico</p>
-              <h1 className="text-lg sm:text-xl font-bold text-brand">Dashboard de Reservas</h1>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="admin-shell">
+        <aside className="admin-sidebar" aria-label="Navegación del panel">
+          <div className="admin-sidebar__brand"><img src="/uploads/pueblo_magico_logo_marron.svg" alt="Pueblo Mágico" /><small>Reservas</small></div>
+          <div className="admin-sidebar__scroll">
+            <nav className="admin-sidebar__nav" aria-label="Principal">{navPrincipal.map(navButton)}</nav>
+            <p className="admin-sidebar__section">Operaciones</p>
+            <nav className="admin-sidebar__nav" aria-label="Operaciones">{navOperaciones.map(navButton)}</nav>
+            <p className="admin-sidebar__section">Sistema</p>
+            <nav className="admin-sidebar__nav" aria-label="Sistema">{navSistema.map(navButton)}</nav>
+          </div>
+          <div className="admin-sidebar__user">
+            <span className="admin-sidebar__avatar">{auth.email.slice(0, 1)}</span>
+            <span><strong>{auth.email.split('@')[0]}</strong><small>{ROL_LABEL[auth.rol]}</small></span>
+            <button type="button" className={`admin-sidebar__logout ${FOCUS_RING}`} onClick={cerrarSesion} aria-label="Cerrar sesión" title={auth.email}><LogOut size={17} aria-hidden="true" /></button>
+          </div>
+        </aside>
+
+        <div className="admin-workspace">
+          <header className="admin-topbar">
+            <div className="admin-topbar__identity"><p>Administración de reservas</p><h1>Pueblo Mágico</h1></div>
+            <span className="admin-mobile-brand"><img src="/uploads/pueblo_magico_logo_marron.svg" alt="Pueblo Mágico" /><span>Reservas</span></span>
+            <div className="admin-topbar__actions">
+              <span className="admin-date-chip"><CalendarDays size={16} aria-hidden="true" /> {fmtDateLong(fechaOperativaLocal(new Date()))}</span>
               {esSuperAdmin && (
                 <button
                   onClick={() => descargarReporteServidor()}
@@ -2909,14 +4591,13 @@ const PanelReservas: React.FC = () => {
                   <span className="hidden sm:inline">Nueva reserva</span>
                 </button>
               )}
-              <button
-                onClick={actualizar}
-                disabled={loading}
-                aria-label="Actualizar"
-                className={`inline-flex items-center gap-2 text-sm font-semibold border border-gray-300 rounded-lg px-3 py-2.5 hover:bg-gray-100 transition-colors disabled:opacity-60 ${FOCUS_RING}`}
-              >
-                <RefreshCw size={15} className={loading ? 'animate-spin' : ''} aria-hidden="true" />
-              </button>
+              <IconButton
+                icon={loading ? null : <RefreshCw size={15} />}
+                isLoading={loading}
+                label="Actualizar"
+                onPress={actualizar}
+                variant="secondary"
+              />
               <button
                 onClick={cerrarSesion}
                 aria-label="Cerrar sesión"
@@ -2927,29 +4608,14 @@ const PanelReservas: React.FC = () => {
                 <span className="hidden sm:inline">Salir</span>
               </button>
             </div>
-          </div>
+          </header>
 
-          <div className="flex overflow-x-auto bg-gray-100 rounded-lg p-1 sm:inline-flex sm:mt-3" role="tablist" aria-label="Vista">
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={vistaActiva === t.key}
-                onClick={() => setVistaActiva(t.key)}
-                className={`flex-1 flex-shrink-0 sm:flex-none text-sm font-semibold px-3 sm:px-4 py-2 rounded-md transition-colors ${FOCUS_RING} ${
-                  vistaActiva === t.key ? 'bg-brand text-white' : 'text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
+          <nav className="admin-mobile-nav" aria-label="Secciones del panel">{navItems.map(navButton)}</nav>
 
-      <InstalarBanner />
+          <InstalarBanner />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <main className="admin-content">
+            <div className="admin-view-heading"><h2>{vistaMeta[vistaActiva].titulo}</h2><p>{vistaMeta[vistaActiva].descripcion}</p></div>
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-6" role="alert">
             No se pudo cargar: {error}
@@ -2985,7 +4651,7 @@ const PanelReservas: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
+            <div className="admin-surface bg-white rounded-xl border border-gray-200 shadow-sm mb-6 overflow-hidden">
               {!loading && reservas.length === 0 ? (
                 <div className="px-6 py-12 text-center">
                   <p className="text-sm font-semibold text-gray-600 mb-1">Todavía no hay reservas cargadas</p>
@@ -3086,27 +4752,39 @@ const PanelReservas: React.FC = () => {
         {vistaActiva === 'ocupacion' && puedeEditar && <SeccionOcupacionOperativa />}
 
         {vistaActiva === 'metricas' && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <MetricCard label="Reservas confirmadas" value={metricas ? String(metricas.total_confirmadas) : '—'} />
-            <MetricCard label="Ingresos por señas" value={metricas ? fmtMoney(metricas.ingresos_senas) : '—'} accent="gold" />
-            <MetricCard label="Saldo pendiente a cobrar" value={metricas ? fmtMoney(metricas.saldo_pendiente_total) : '—'} hint="Al check-in, confirmadas" />
-            <MetricCard label="Total a facturar" value={metricas ? fmtMoney(metricas.total_a_facturar) : '—'} accent="gold" hint="Si se cobra todo" />
-            <MetricCard label="Ocupación (14 días)" value={ocupacionPct !== null ? `${ocupacionPct}%` : '—'} />
-            <MetricCard
-              label="Conversión ManyChat"
-              value={metricas?.conversion_manychat.pct !== null && metricas ? `${metricas.conversion_manychat.pct}%` : 'Sin datos'}
-              hint={metricas ? `${metricas.conversion_manychat.confirmadas} de ${metricas.conversion_manychat.total} pagaron` : undefined}
-            />
-            {esSuperAdmin && <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between col-span-2 lg:col-span-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Exportar</p>
-              <button
-                onClick={() => descargarReporteServidor()}
-                className={`inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}
-              >
-                <Download size={15} aria-hidden="true" /> Descargar reporte minimizado
-              </button>
-            </div>}
-            {puedeEditar && <SeccionAirbnb alojamientos={alojamientos} onSincronizado={handleGuardado} />}
+          <div className="admin-reports">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <MetricCard label="Reservas confirmadas" value={metricas ? String(metricas.total_confirmadas) : '—'} />
+              <MetricCard label="Ingresos por señas" value={metricas ? fmtMoney(metricas.ingresos_senas) : '—'} accent="gold" />
+              <MetricCard label="Saldo pendiente a cobrar" value={metricas ? fmtMoney(metricas.saldo_pendiente_total) : '—'} hint="Al check-in, confirmadas" />
+              <MetricCard label="Total a facturar" value={metricas ? fmtMoney(metricas.total_a_facturar) : '—'} accent="gold" hint="Si se cobra todo" />
+            </div>
+
+            <div className="admin-report-charts" aria-label="Gráficos de reportes">
+              <FinancialCompositionChart collected={metricas?.ingresos_senas || 0} pending={metricas?.saldo_pendiente_total || 0} />
+              <RingMetric label="Ocupación · próximos 14 días" value={ocupacionPct} detail="Capacidad ocupada en la ventana visible" />
+              <RingMetric
+                label="Conversión ManyChat"
+                value={metricas?.conversion_manychat.pct ?? null}
+                detail={metricas ? `${metricas.conversion_manychat.confirmadas} de ${metricas.conversion_manychat.total} reservas pagaron` : 'Cargando datos'}
+                accent="gold"
+              />
+            </div>
+
+            <SeccionMetricasOperativas mostrarGrafico />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+              {esSuperAdmin && <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Exportar</p>
+                <button
+                  onClick={() => descargarReporteServidor()}
+                  className={`inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline rounded ${FOCUS_RING}`}
+                >
+                  <Download size={15} aria-hidden="true" /> Descargar reporte minimizado
+                </button>
+              </div>}
+              {puedeEditar && <SeccionAirbnb alojamientos={alojamientos} onSincronizado={handleGuardado} />}
+            </div>
           </div>
         )}
 
@@ -3117,17 +4795,14 @@ const PanelReservas: React.FC = () => {
                 Historial completo {loading && <span className="font-normal normal-case text-gray-400">(cargando…)</span>}
               </h2>
               <div className="flex gap-2">
-                <div className="relative flex-1 sm:flex-none">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
-                  <input
-                    type="search"
-                    value={busqueda}
-                    onChange={e => setBusqueda(e.target.value)}
-                    placeholder="Buscar por nombre…"
-                    aria-label="Buscar reservas"
-                    className={`text-sm border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 sm:py-2 w-full sm:w-64 ${FOCUS_RING}`}
-                  />
-                </div>
+                <SearchField
+                  className="admin-history-search flex-1 sm:flex-none sm:w-64"
+                  clearLabel="Limpiar búsqueda"
+                  label="Buscar reservas"
+                  onChange={setBusqueda}
+                  placeholder="Buscar por nombre o ID…"
+                  value={busqueda}
+                />
                 {esSuperAdmin && (
                   <button
                     onClick={() => descargarReporteServidor(busqueda.trim() ? { titular: busqueda.trim() } : undefined)}
@@ -3139,8 +4814,14 @@ const PanelReservas: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <TablaHistorial reservas={reservasHistorialFiltradas} onSeleccionar={r => abrirPorId(r.id)} />
+            <div className="admin-surface bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <TablaHistorial
+                reservas={reservasHistorialFiltradas}
+                onSeleccionar={r => abrirPorId(r.id)}
+                orden={historialOrden}
+                direccion={historialDireccion}
+                onOrdenar={ordenarHistorial}
+              />
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
               <span>{historialTotal} reserva{historialTotal === 1 ? '' : 's'} · página {historialPagina} de {historialTotalPaginas}</span>
@@ -3170,7 +4851,7 @@ const PanelReservas: React.FC = () => {
             <p className="text-xs text-gray-400 mb-4">
               Llegaron al último paso del flujo de ManyChat (fecha, alojamiento y monto ya cotizados) pero no completaron el pago.
             </p>
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="admin-surface bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <TablaConsultas consultas={consultas || []} />
             </div>
           </>
@@ -3178,11 +4859,14 @@ const PanelReservas: React.FC = () => {
 
         {vistaActiva === 'arrepentimientos' && <SeccionArrepentimientos puedeGestionar={puedeEditar} />}
 
-        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase puedeEditar={esSuperAdmin} />}
+        {vistaActiva === 'configuracion' && <SeccionConfiguracionBase esSuperAdmin={esSuperAdmin} modo="base" />}
+        {vistaActiva === 'precios' && <SeccionConfiguracionBase esSuperAdmin={esSuperAdmin} modo="precios" />}
         {vistaActiva === 'integraciones' && <SeccionIntegraciones esSuperAdmin={esSuperAdmin} />}
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}
-      </main>
+          </main>
+        </div>
+      </div>
 
       {celdaMultiple && (
         <ModalSeleccionarReserva

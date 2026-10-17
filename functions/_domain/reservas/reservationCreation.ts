@@ -5,11 +5,12 @@ export type SolicitudCrearReservaPublica = {
   espacioCodigo: string;
   clienteNombre: string;
   clienteTelefono: string | null;
-  clienteEmail: string | null;
+  clienteEmail: string;
   metodoPago?: 'mercado_pago_checkout' | 'transferencia_mp';
   pagadorDocumentoHash?: string | null;
   pagadorDocumentoUltimos4?: string | null;
   idioma?: 'es' | 'en';
+  preferenciaPreparacionCodigo?: string | null;
   idempotencyKey: string;
   canalOrigen?: string;
   referenciaIntegracion?: {
@@ -23,8 +24,8 @@ export type SolicitudCrearReservaPublica = {
 export type CotizacionAceptada = {
   id: number;
   codigo: string;
-  tipo: 'domo' | 'refugio';
-  modalidad: 'privada' | 'compartida';
+  tipo: 'domo' | 'refugio' | 'camping';
+  modalidad: 'privada' | 'compartida' | 'camping';
   contexto: 'general' | 'retiro';
   regimenAlimentacion: RegimenAlimentacion;
   fechaCheckin: string;
@@ -53,6 +54,8 @@ export type ErrorCreacionReserva =
   | 'CONSULTA_NO_ENCONTRADA'
   | 'COTIZACION_NO_ENCONTRADA'
   | 'COTIZACION_VENCIDA'
+  | 'PREFERENCIA_PREPARACION_REQUERIDA'
+  | 'PREFERENCIA_PREPARACION_INVALIDA'
   | 'INVENTARIO_NO_DISPONIBLE';
 
 export type ResultadoCreacionReservaPublica =

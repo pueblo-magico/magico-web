@@ -7,6 +7,7 @@ const OPERACIONES: Record<string, string> = {
   '/api/cotizar': 'public.quote',
   '/api/disponibilidad': 'public.availability',
   '/api/v1/public/alojamientos': 'public.v1.accommodations',
+  '/api/v1/public/precios': 'public.v1.prices',
   '/api/v1/public/disponibilidad': 'public.v1.availability',
   '/api/v1/public/cotizaciones': 'public.v1.quotes',
   '/api/v1/public/reservas': 'public.v1.reservations',

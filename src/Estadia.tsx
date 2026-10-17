@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LanguageProvider } from '../contexts/LanguageContext';
+import { Accordion, AccordionMediaHeader } from '@pueblo-magico/react-ui';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
@@ -14,17 +15,268 @@ import {
   ClockIcon, UsersThreeIcon, CalendarIcon, WhatsappLogoIcon,
   ForkKnifeIcon, PawPrintIcon, WheelchairIcon
 } from '@phosphor-icons/react';
-import { WA_MAGICO, SITE_URL } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO, SITE_URL } from './data/config';
 import { ESTADIA_PRICES } from './data/retreats';
 import { ROUTES } from './routes';
+import {
+  type AccommodationType,
+  type PublicPriceRule,
+  type PublicPricingSummary,
+} from '../components/booking/bookingApi';
+import { usePublicPricingSummary } from '../components/booking/usePublicPricingSummary';
 
 const WA = (msg: string) =>
   `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(msg)}`;
 
 const WA_ESTADIA = WA('Hola! Vengo de la web y quiero consultar una estadía en Pueblo Mágico ✨');
 
+const ETIQUETAS_ALOJAMIENTO: Record<AccommodationType, string> = {
+  domo: 'Domo geodésico',
+  refugio: 'Refugio de Piedra',
+  camping: 'Camping',
+};
+
+const ETIQUETAS_MODALIDAD: Record<string, string> = {
+  cualquiera: 'Cualquier modalidad',
+  compartida: 'Compartida',
+  privada: 'Privada',
+  camping: 'Camping',
+};
+
+const pesos = (centavos: number) =>
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })
+    .format(centavos / 100);
+
+const reglasDe = (precios: PublicPricingSummary | null, tipo: AccommodationType) =>
+  precios?.opciones.find(opcion => opcion.tipo_alojamiento === tipo)?.tarifas || [];
+
+function tarifaDesde(reglas: PublicPriceRule[]): { importe: number; unidad: string } | null {
+  const porPersona = reglas.filter(regla => regla.base_calculo === 'persona_noche');
+  const candidatas = porPersona.length > 0 ? porPersona : reglas;
+  if (candidatas.length === 0) return null;
+  const menor = candidatas.reduce((actual, regla) =>
+    regla.importe_centavos < actual.importe_centavos ? regla : actual
+  );
+  return {
+    importe: menor.importe_centavos,
+    unidad: menor.base_calculo === 'persona_noche' ? 'persona/noche' : 'unidad/noche',
+  };
+}
+
+function textoTarifas(reglas: PublicPriceRule[], cargado: boolean): string {
+  if (!cargado) return 'Cargando tarifas vigentes…';
+  if (reglas.length === 0) return 'Consultá disponibilidad y precio para tus fechas';
+  const persona = tarifaDesde(reglas.filter(regla => regla.base_calculo === 'persona_noche'));
+  const unidad = tarifaDesde(reglas.filter(regla => regla.base_calculo === 'unidad_noche'));
+  return [
+    persona && `desde ${pesos(persona.importe)} por persona/noche`,
+    unidad && `desde ${pesos(unidad.importe)} por unidad/noche`,
+  ].filter(Boolean).join(' · ');
+}
+
+function textoModalidades(precios: PublicPricingSummary | null, tipo: AccommodationType, cargado: boolean): string {
+  if (!cargado) return 'consultando modalidades…';
+  if (!precios) return 'consultá las modalidades disponibles en la reserva online';
+  const opcion = precios?.opciones.find(item => item.tipo_alojamiento === tipo);
+  if (!opcion) return 'no disponible para nuevas reservas online';
+  return opcion.modalidades.map(modalidad =>
+    (opcion.nombres_modalidades?.[modalidad] || ETIQUETAS_MODALIDAD[modalidad]).toLocaleLowerCase('es-AR')
+  ).join(' y ');
+}
+
+function etiquetaModalidad(
+  precios: PublicPricingSummary | null,
+  tipo: AccommodationType,
+  modalidad: string,
+): string {
+  if (modalidad === 'cualquiera') return ETIQUETAS_MODALIDAD.cualquiera;
+  const opcion = precios?.opciones.find(item => item.tipo_alojamiento === tipo);
+  return opcion?.nombres_modalidades?.[modalidad as keyof typeof opcion.nombres_modalidades]
+    || ETIQUETAS_MODALIDAD[modalidad]
+    || modalidad;
+}
+
+function partesPrecioRegla(
+  regla: PublicPriceRule,
+  adicionalPersona = 0,
+): { principal: string; adicional: string | null } {
+  if (regla.base_calculo === 'persona_noche') {
+    return { principal: pesos(regla.importe_centavos + adicionalPersona), adicional: null };
+  }
+  return {
+    principal: pesos(regla.importe_centavos),
+    adicional: adicionalPersona > 0 ? `+ ${pesos(adicionalPersona)}/persona` : null,
+  };
+}
+
+const ORDEN_TIPO_TARIFA: Record<AccommodationType, number> = {
+  camping: 0,
+  refugio: 1,
+  domo: 2,
+};
+
+const ORDEN_MODALIDAD_TARIFA: Record<string, number> = {
+  camping: 0,
+  compartida: 1,
+  cualquiera: 2,
+  privada: 3,
+};
+
+function textoDiasTarifa(dias: number[]): string {
+  const normalizados = [...new Set(dias)].sort((a, b) => a - b);
+  const clave = normalizados.join(',');
+  if (clave === '1,2,3,4,5,6,7') return 'todos los días';
+  if (clave === '1,2,3,4,7') return 'domingo a jueves';
+  if (clave === '1,2,3,4') return 'lunes a jueves';
+  if (clave === '5,6,7') return 'viernes a domingo';
+  if (clave === '5,6') return 'viernes y sábado';
+  if (clave === '7') return 'domingo';
+  const nombres = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+  return normalizados.map(dia => nombres[dia - 1]).filter(Boolean).join(', ');
+}
+
+type FilaTarifaVista = {
+  regla: PublicPriceRule;
+  modalidadEtiqueta: string;
+  ofertas: Array<{
+    tipo: AccommodationType;
+    ocupaciones: Array<{ minimo: number; maximo: number }>;
+  }>;
+};
+
+function agruparFilasTarifa(
+  precios: PublicPricingSummary | null,
+  filas: Array<PublicPriceRule & { tipo: AccommodationType }>,
+): FilaTarifaVista[] {
+  const grupos = new Map<string, FilaTarifaVista>();
+
+  filas.forEach(fila => {
+    const modalidadEtiqueta = etiquetaModalidad(precios, fila.tipo, fila.modalidad);
+    const clave = [
+      fila.temporada_codigo,
+      fila.fecha_desde,
+      fila.fecha_hasta,
+      fila.prioridad,
+      [...fila.dias_semana].sort((a, b) => a - b).join(','),
+      fila.modalidad,
+      modalidadEtiqueta,
+      fila.base_calculo,
+      fila.importe_centavos,
+    ].join('|');
+    const grupo = grupos.get(clave);
+    if (grupo) {
+      const ofertaExistente = grupo.ofertas.find(oferta => oferta.tipo === fila.tipo);
+      const ocupacion = { minimo: fila.ocupacion_min, maximo: fila.ocupacion_max };
+      if (ofertaExistente) ofertaExistente.ocupaciones.push(ocupacion);
+      else grupo.ofertas.push({ tipo: fila.tipo, ocupaciones: [ocupacion] });
+      return;
+    }
+    grupos.set(clave, {
+      regla: fila,
+      modalidadEtiqueta,
+      ofertas: [{
+        tipo: fila.tipo,
+        ocupaciones: [{ minimo: fila.ocupacion_min, maximo: fila.ocupacion_max }],
+      }],
+    });
+  });
+
+  return [...grupos.values()]
+    .map(grupo => ({
+      ...grupo,
+      ofertas: grupo.ofertas.sort((a, b) => ORDEN_TIPO_TARIFA[a.tipo] - ORDEN_TIPO_TARIFA[b.tipo]),
+    }))
+    .sort((a, b) => {
+      const modalidad = (ORDEN_MODALIDAD_TARIFA[a.regla.modalidad] ?? 99) -
+        (ORDEN_MODALIDAD_TARIFA[b.regla.modalidad] ?? 99);
+      return modalidad || ORDEN_TIPO_TARIFA[a.ofertas[0].tipo] - ORDEN_TIPO_TARIFA[b.ofertas[0].tipo];
+    });
+}
+
+function nombreGrupoTarifa(grupo: FilaTarifaVista): string {
+  return grupo.ofertas.map((oferta, indice) => {
+    const nombre = ETIQUETAS_ALOJAMIENTO[oferta.tipo];
+    return indice === 0 ? nombre : nombre.charAt(0).toLocaleLowerCase('es-AR') + nombre.slice(1);
+  }).join(' o ');
+}
+
+function detalleGrupoTarifa(grupo: FilaTarifaVista): string {
+  const capacidades = grupo.ofertas.map(oferta => {
+    const rangos = oferta.ocupaciones
+      .map(ocupacion => `${ocupacion.minimo}–${ocupacion.maximo}`)
+      .join(' y ');
+    return grupo.ofertas.length === 1
+      ? `${rangos} personas`
+      : `${ETIQUETAS_ALOJAMIENTO[oferta.tipo]} ${rangos}`;
+  }).join(' · ');
+  const unidad = grupo.regla.base_calculo === 'unidad_noche' ? 'precio por unidad' : 'precio por persona';
+  return `${grupo.modalidadEtiqueta} · ${capacidades} · ${unidad}`;
+}
+
+function textoComidasOpcionales(precios: PublicPricingSummary | null): string {
+  const pension = precios?.alimentacion.pension_completa;
+  const almuerzo = pension?.precio_almuerzo_centavos ?? pension?.precio_comida_centavos ?? 0;
+  const cena = pension?.precio_cena_centavos ?? pension?.precio_comida_centavos ?? 0;
+  if (almuerzo <= 0 && cena <= 0) return 'Comidas opcionales';
+  if (almuerzo === cena) return `Almuerzo o cena +${pesos(almuerzo)} c/u`;
+  return `Almuerzo +${pesos(almuerzo)} · cena +${pesos(cena)}`;
+}
+
+function textoComidaDesdePorPersona(precios: PublicPricingSummary | null): string {
+  const pension = precios?.alimentacion.pension_completa;
+  const preciosPublicados = [
+    pension?.precio_almuerzo_centavos ?? pension?.precio_comida_centavos ?? 0,
+    pension?.precio_cena_centavos ?? pension?.precio_comida_centavos ?? 0,
+  ].filter(precio => precio > 0);
+
+  if (preciosPublicados.length === 0) return 'Comidas opcionales';
+  return `Desde +${pesos(Math.min(...preciosPublicados))} por persona/comida`;
+}
+
+function textoTarifasPublicadas(precios: PublicPricingSummary | null, cargado: boolean): string {
+  if (!cargado) return 'Cargando las tarifas vigentes…';
+  if (!precios || precios.opciones.length === 0) {
+    return 'Consultá el precio y la disponibilidad para tus fechas en la reserva online.';
+  }
+
+  const opciones = precios.opciones
+    .map(opcion => {
+      const resumen = textoTarifas(opcion.tarifas, true);
+      return resumen.startsWith('Consultá')
+        ? null
+        : `${ETIQUETAS_ALOJAMIENTO[opcion.tipo_alojamiento]} ${resumen}`;
+    })
+    .filter((opcion): opcion is string => Boolean(opcion));
+
+  if (opciones.length === 0) {
+    return 'Consultá el precio y la disponibilidad para tus fechas en la reserva online.';
+  }
+
+  return `${opciones.join(' · ')}. El total se calcula con tus fechas, ocupación y modalidad.`;
+}
+
+function textoPensionCompleta(precios: PublicPricingSummary | null, cargado: boolean): string {
+  if (!cargado) return 'Cargando la política de alimentación vigente…';
+  const pension = precios?.alimentacion.pension_completa;
+  if (!pension) return 'Consultá las opciones de alimentación disponibles al reservar.';
+  const adicional = pension.adicional_por_persona_noche_centavos;
+  return adicional > 0
+    ? `Suma ${pesos(adicional)} por persona/noche a la tarifa del alojamiento. La reserva muestra el total cerrado antes de confirmar.`
+    : 'La reserva calcula el total cerrado según el alojamiento, la ocupación y las noches elegidas.';
+}
+
+function textoHorarioComida(
+  precios: PublicPricingSummary | null,
+  comida: 'desayuno' | 'almuerzo' | 'cena',
+  cargado: boolean,
+): string {
+  if (!cargado) return 'Cargando…';
+  const horario = precios?.horarios_comidas[comida];
+  return horario ? `${horario.desde}–${horario.hasta}` : 'Consultar';
+}
+
 // ── Sección Hero ─────────────────────────────────────────────────────────────
-const Hero: React.FC = () => (
+const Hero: React.FC<{ tarifaDesdeActual: { importe: number; unidad: string } | null; cargado: boolean }> = ({ tarifaDesdeActual, cargado }) => (
   <section className="relative h-[92vh] min-h-[600px] w-full flex items-end overflow-hidden">
     <img
       src="/uploads/hero-estadia.webp"
@@ -45,7 +297,9 @@ const Hero: React.FC = () => (
         Ecolodge de montaña en las Sierras Grandes: Refugio de Piedra, domos geodésicos y camping. Elegí cómo querés vivir Pueblo Mágico.
       </p>
       <p className="text-gold text-xs font-bold uppercase tracking-widest mb-5">
-        ✦ Desde $20.000/persona/noche con desayuno — sumá comidas y experiencias a tu gusto
+        ✦ {tarifaDesdeActual
+          ? `Desde ${pesos(tarifaDesdeActual.importe)}/${tarifaDesdeActual.unidad} con desayuno — sumá comidas y experiencias a tu gusto`
+          : cargado ? 'Consultá disponibilidad y precio real antes de reservar' : 'Cargando tarifas vigentes…'}
       </p>
       <div className="flex flex-wrap gap-2 mb-7">
         {['Para emprendedores & creativos', 'Parejas', 'Grupos & familias'].map(chip => (
@@ -56,12 +310,10 @@ const Hero: React.FC = () => (
       </div>
       <div className="flex flex-col sm:flex-row gap-4">
         <a
-          href={WA_ESTADIA}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={RESERVATION_START_PATH}
           className="inline-flex items-center justify-center gap-2 bg-gold text-white px-8 py-4 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-brand transition-[background-color,color] duration-300 shadow-lg"
         >
-          <WhatsappLogo className="w-4 h-4 flex-shrink-0" weight="fill" />
+          <CalendarIcon className="w-4 h-4 flex-shrink-0" weight="bold" />
           Reservar mi lugar
         </a>
         <a
@@ -77,7 +329,7 @@ const Hero: React.FC = () => (
 );
 
 // ── Strip de inclusiones ──────────────────────────────────────────────────────
-const Inclusiones: React.FC = () => {
+const Inclusiones: React.FC<{ tarifaDesdeActual: { importe: number; unidad: string } | null; cargado: boolean }> = ({ tarifaDesdeActual, cargado }) => {
   const items = [
     { icon: <Bed className="w-5 h-5" weight="duotone" />,      label: 'Alojamiento' },
     { icon: <Towel className="w-5 h-5" weight="duotone" />,    label: 'Ropa blanca' },
@@ -107,7 +359,9 @@ const Inclusiones: React.FC = () => {
         </div>
         <div className="w-full text-center">
           <span className="text-gold/60 text-[10px] uppercase tracking-widest font-bold">
-            Desde $20.000/persona/noche con desayuno · sumá almuerzo, cena o pensión completa a tu gusto · Sin sorpresas ocultas
+            {tarifaDesdeActual
+              ? `Desde ${pesos(tarifaDesdeActual.importe)}/${tarifaDesdeActual.unidad} con desayuno · sumá almuerzo, cena o pensión completa a tu gusto · Sin sorpresas ocultas`
+              : cargado ? 'Consultá precio y disponibilidad en la reserva online · Sin sorpresas ocultas' : 'Cargando tarifas vigentes…'}
           </span>
         </div>
       </div>
@@ -115,50 +369,55 @@ const Inclusiones: React.FC = () => {
   );
 };
 
-// ── Tabla de tarifas: con desayuno vs. pensión completa ──────────────────────
-const PRECIOS_TABLA = [
-  { label: 'Camping', nota: 'Traé tu carpa', desayuno: ESTADIA_PRICES.carpaDesde, pension: ESTADIA_PRICES.pensionCompletaCarpa, destacado: false },
-  { label: 'Refugio de Piedra o domo compartido', nota: 'Camas individuales', desayuno: ESTADIA_PRICES.ecoRefugioDesde, pension: ESTADIA_PRICES.pensionCompletaEcoRefugio, destacado: false },
-  { label: 'Domo privado', nota: `Hasta 7 personas · 1 persona sola: $${ESTADIA_PRICES.domoPrivadoSolo.toLocaleString('es-AR')}`, desayuno: ESTADIA_PRICES.domoPrivado, pension: ESTADIA_PRICES.pensionCompletaDomoPrivado, destacado: true },
-];
-
 // ── Alojamientos ─────────────────────────────────────────────────────────────
 const ALOJAMIENTOS = [
   {
+    tipo: 'domo' as const,
     name: 'Domo Geodésico',
     tag: 'MÁS SOLICITADO',
     tagColor: 'bg-gold text-white',
-    shortDesc: `7 camas de una plaza · compartido desde $${ESTADIA_PRICES.ecoRefugioDesde.toLocaleString('es-AR')} · privado $${ESTADIA_PRICES.domoPrivado.toLocaleString('es-AR')} por persona/noche con desayuno`,
-    desc: 'Esfera geométrica en plena montaña con ventanas panorámicas al cielo. 7 camas de una plaza. Podés reservar el domo privado, solo para vos o tu grupo (1 persona sola: $100.000/noche). Ropa blanca incluida. Baños compartidos a metros del domo.',
+    shortLead: '7 camas de una plaza',
+    desc: 'Esfera geométrica en plena montaña con ventanas panorámicas al cielo. 7 camas de una plaza, ropa blanca incluida y baños compartidos a metros del domo. Las modalidades disponibles se muestran según la configuración vigente.',
     image: '/uploads/domos.webp',
-    details: ['7 camas de 1 plaza', 'Privado desde 1 persona', 'Ropa blanca incluida', 'Baños compartidos fuera del domo', 'Desayuno incluido · sumá comidas', 'Programa Reset Vital'],
-    wa: WA('Hola! Quiero consultar disponibilidad de un Domo Geodésico en Pueblo Mágico ✨'),
+    details: ['7 camas de 1 plaza', 'Ropa blanca incluida', 'Baños compartidos fuera del domo', 'Desayuno incluido · sumá comidas', 'Programa Reset Vital'],
   },
   {
+    tipo: 'refugio' as const,
     name: 'Refugio de Piedra',
     tag: 'COLIVING',
     tagColor: 'bg-bone text-brand border border-brand/20',
-    shortDesc: `Casa de piedra · habitaciones compartidas o una entera para tu grupo · desde $${ESTADIA_PRICES.ecoRefugioDesde.toLocaleString('es-AR')}/noche con desayuno`,
-    desc: 'La casa de piedra es el corazón de Pueblo Mágico: recepción, salón y comedor, con las habitaciones a pasos. No es un hotel: es una casa grande de montaña para vivir en comunidad. Compartí habitación con otros viajeros o reservá una entera, solo para tu grupo. Baños compartidos.',
+    shortLead: 'Casa de piedra · habitaciones compartidas o una entera para tu grupo',
+    desc: 'La casa de piedra es el corazón de Pueblo Mágico: recepción, salón y comedor, con las habitaciones a pasos. No es un hotel: es una casa grande de montaña para vivir en comunidad. Baños compartidos. Las modalidades disponibles se muestran según la configuración vigente.',
     image: '/uploads/habitaciones.webp',
     details: ['Programa Reset Vital', 'Camas individuales', 'Baños compartidos', 'Habitación entera para tu grupo', 'Desayuno incluido · sumá comidas'],
-    wa: WA('Hola! Quiero consultar disponibilidad en el Refugio de Piedra de Pueblo Mágico 🏡'),
   },
   {
+    tipo: 'camping' as const,
     name: 'Camping',
     tag: 'LA MÁS ECONÓMICA',
     tagColor: 'bg-bone text-brand border border-brand/20',
-    shortDesc: `Bajo las estrellas · duchas calientes · desde $${ESTADIA_PRICES.carpaDesde.toLocaleString('es-AR')}/noche con desayuno`,
+    shortLead: 'Bajo las estrellas · duchas calientes · traé tu carpa',
     desc: 'Instalá tu carpa en pleno campo y dormí bajo las estrellas de los Gigantes. Para quienes buscan la experiencia más cruda y auténtica de la montaña, con la puerta de entrada más accesible a Pueblo Mágico. Duchas calientes y baños disponibles.',
     image: '/uploads/exterior.webp',
     details: ['Programa Reset Vital', 'Traé tu carpa', 'Duchas calientes y baños', 'Fogón comunitario', 'Desayuno incluido · sumá comidas'],
-    wa: WA('Hola! Quiero consultar sobre el camping en Pueblo Mágico ⛺'),
   },
 ];
 
-const Alojamientos: React.FC = () => {
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
-  const [bookingOpen, setBookingOpen] = useState(false);
+const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: boolean }> = ({ precios, cargado }) => {
+  const adicionalPension = precios?.alimentacion.pension_completa?.adicional_por_persona_noche_centavos || 0;
+  const precioAlmuerzo = precios?.alimentacion.pension_completa?.precio_almuerzo_centavos
+    ?? precios?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
+  const precioCena = precios?.alimentacion.pension_completa?.precio_cena_centavos
+    ?? precios?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
+  const filasTarifa = precios?.opciones.flatMap(opcion => opcion.tarifas.map(regla => ({
+    ...regla,
+    tipo: opcion.tipo_alojamiento,
+  }))) || [];
+  const gruposTarifa = agruparFilasTarifa(precios, filasTarifa);
+  const periodosTarifa = [...new Set(filasTarifa.map(row => textoDiasTarifa(row.dias_semana)).filter(Boolean))];
+  const periodoTarifa = periodosTarifa.length === 1
+    ? periodosTarifa[0]
+    : periodosTarifa.length > 1 ? 'según el día elegido' : 'tarifas vigentes';
 
   return (
     <section id="alojamientos" className="py-20 bg-bone">
@@ -166,98 +425,108 @@ const Alojamientos: React.FC = () => {
         <div data-reveal className="text-center mb-10">
           <p className="inline-block bg-brand text-white font-bold tracking-widest uppercase text-[10px] px-4 py-2 rounded-full mb-4">Puerta de entrada</p>
           <h2 className="text-3xl md:text-4xl font-serif text-brand mb-2">Elegí tu alojamiento</h2>
-          <p className="text-dark/60 text-sm max-w-md mx-auto">Tres opciones, una misma invitación — todas incluyen desayuno y el retiro autoguiado Reset Vital. Vos decidís cuánto sumar.</p>
+          <p className="text-dark/60 text-sm max-w-md mx-auto">Conocé las opciones disponibles — las modalidades habilitadas y sus tarifas se actualizan desde la configuración de reservas.</p>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
+        <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
 
           {/* Acordeón de cards + precios */}
-          <div>
-            <div className="space-y-3 mb-5">
-              {ALOJAMIENTOS.map((aloj, i) => (
-                <div key={i}
-                  className="bg-white rounded-2xl border border-brand/5 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200"
-                  onClick={() => setOpenIdx(openIdx === i ? null : i)}>
-
-                  {/* Fila compacta siempre visible */}
-                  <div className="flex items-stretch">
-                    <div className="w-[130px] flex-shrink-0">
-                      <img src={aloj.image} alt={aloj.name}
-                        className="w-full h-full object-cover"
-                        style={{ minHeight: 88 }} loading="lazy" />
-                    </div>
-                    <div className="flex-1 px-4 py-3 flex items-center justify-between gap-3 min-w-0">
-                      <div className="min-w-0">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mb-1 inline-block ${aloj.tagColor}`}>{aloj.tag}</span>
-                        <h3 className="font-serif text-[17px] text-brand leading-tight">{aloj.name}</h3>
-                        <p className="text-dark/50 text-xs mt-0.5 leading-snug line-clamp-2">{aloj.shortDesc}</p>
-                      </div>
-                      <span className={`w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center bg-bone transition-transform duration-300 ${openIdx === i ? 'rotate-180' : ''}`}>
-                        <CaretDown weight="bold" className="w-3 h-3 text-brand" />
-                      </span>
-                    </div>
+          <div className="min-w-0">
+            <Accordion
+              className="estadia-accommodations-accordion mb-5"
+              defaultExpandedItems={[ALOJAMIENTOS[0].tipo]}
+              headingLevel={3}
+              items={ALOJAMIENTOS.map(aloj => ({
+                id: aloj.tipo,
+                headerLayout: 'media' as const,
+                triggerLabel: `Ver detalles de ${aloj.name}`,
+                header: (
+                  <AccordionMediaHeader
+                    media={<img src={aloj.image} alt="" loading="lazy" />}
+                    eyebrow={<span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider inline-block ${aloj.tagColor}`}>{aloj.tag}</span>}
+                    heading={aloj.name}
+                    description={`${aloj.shortLead} · ${textoModalidades(precios, aloj.tipo, cargado)} · ${textoTarifas(reglasDe(precios, aloj.tipo), cargado)}`}
+                  />
+                ),
+                content: (
+                  <div>
+                    <p className="text-dark/65 text-sm leading-relaxed mb-3">{aloj.desc}</p>
+                    <ul className="flex flex-wrap gap-2 mb-4">
+                      {aloj.details.map(detail => (
+                        <li key={detail} className="flex items-center gap-1.5 text-xs text-dark/60 bg-bone rounded-full px-3 py-1">
+                          <CheckCircle className="w-3.5 h-3.5 text-gold flex-shrink-0" weight="duotone" />
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href={RESERVATION_START_PATH}
+                      className="inline-flex items-center justify-center gap-2 bg-brand text-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gold transition-colors w-full">
+                      <CalendarIcon className="w-4 h-4" weight="bold" />
+                      Reservar ahora
+                    </a>
                   </div>
-
-                  {/* Contenido expandido */}
-                  {openIdx === i && (
-                    <div className="px-4 pb-4 border-t border-brand/5">
-                      <p className="text-dark/65 text-sm leading-relaxed mt-3 mb-3">{aloj.desc}</p>
-                      <ul className="flex flex-wrap gap-2 mb-4">
-                        {aloj.details.map((d, j) => (
-                          <li key={j} className="flex items-center gap-1.5 text-xs text-dark/60 bg-bone rounded-full px-3 py-1">
-                            <CheckCircle className="w-3.5 h-3.5 text-gold flex-shrink-0" weight="duotone" />
-                            {d}
-                          </li>
-                        ))}
-                      </ul>
-                      <a href={aloj.wa} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 bg-brand text-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gold transition-colors w-full">
-                        <WhatsappLogo className="w-4 h-4" weight="fill" />
-                        Consultar por WhatsApp
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ),
+              }))}
+              type="single"
+            />
 
             {/* Nota de disponibilidad privada */}
-            <div className="bg-brand/5 border border-brand/10 rounded-2xl px-5 py-4 mb-4 flex gap-3 items-start">
+            {precios?.opciones.some(opcion => opcion.modalidades.includes('privada')) && <div className="bg-brand/5 border border-brand/10 rounded-2xl px-5 py-4 mb-4 flex gap-3 items-start">
               <span className="text-gold text-base flex-shrink-0 mt-0.5">✦</span>
               <p className="text-dark/70 text-sm leading-relaxed">
                 <strong className="text-brand font-semibold">Uso privado disponible</strong> — según las fechas, podés reservar un domo exclusivo o habitaciones privadas en el Refugio de Piedra, tanto para grupos como para personas solas cuando el espacio tiene poca ocupación.{' '}
                 <a href={WA_ESTADIA} target="_blank" rel="noopener noreferrer" className="text-brand font-semibold underline underline-offset-2 hover:text-gold transition-colors">Consultá disponibilidad por WhatsApp.</a>
               </p>
-            </div>
+            </div>}
 
             {/* Tabla de precios compacta */}
-            <div className="bg-white rounded-2xl p-5 border border-gold/30 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gold/30 p-4 shadow-sm sm:p-5">
               <div className="flex items-center gap-2 mb-1">
                 <CurrencyCircleDollar className="w-5 h-5 text-gold flex-shrink-0" weight="duotone" />
                 <p className="text-brand font-serif text-lg">Tarifas</p>
               </div>
-              <p className="inline-block bg-gold/10 text-gold text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3">
-                ✦ Precio por persona / noche
+              <p className="mb-4 inline-block rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-gold">
+                {precios
+                  ? `✦ Plan publicado v${precios.plan.version} · ${periodoTarifa} · valores por noche`
+                  : '✦ Valores por noche según la tarifa vigente'}
               </p>
-              <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-end px-1 mb-1.5">
+              <div className="mb-1.5 grid grid-cols-[minmax(0,1fr)_minmax(76px,auto)_minmax(88px,auto)] items-end gap-x-2 px-1 sm:grid-cols-[minmax(0,1fr)_112px_112px] sm:gap-x-3">
                 <span />
-                <span className="text-dark/40 text-[10px] uppercase tracking-widest text-center w-24">Con desayuno</span>
-                <span className="text-gold text-[10px] uppercase tracking-widest font-bold text-center w-24">Pensión completa</span>
+                <span className="text-center text-[9px] uppercase tracking-[0.18em] text-dark/40 sm:text-[10px]">Con desayuno</span>
+                <span className="text-center text-[9px] font-bold uppercase tracking-[0.18em] text-gold sm:text-[10px]">Pensión completa</span>
               </div>
-              {PRECIOS_TABLA.map(row => (
-                <div key={row.label} className={`grid grid-cols-[1fr_auto_auto] gap-x-3 items-center bg-bone rounded-xl px-4 py-3 border mb-2 ${row.destacado ? 'border-gold/40' : 'border-brand/10'}`}>
-                  <div>
-                    <p className="text-brand text-sm font-semibold leading-tight">{row.label}</p>
-                    {row.nota && <p className="text-dark/45 text-[11px] mt-0.5">{row.nota}</p>}
-                  </div>
-                  <p className="text-brand text-lg font-serif text-center w-24">${row.desayuno.toLocaleString('es-AR')}</p>
-                  <p className="text-gold text-lg font-serif text-center w-24">${row.pension.toLocaleString('es-AR')}</p>
-                </div>
-              ))}
+              {!cargado && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">Cargando tarifas vigentes…</p>}
+              {cargado && gruposTarifa.length === 0 && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">No hay tarifas publicadas aplicables hoy. Consultá el precio en la reserva online.</p>}
+              <div className="space-y-2">
+                {gruposTarifa.map((grupo, indice) => {
+                  const desayuno = partesPrecioRegla(grupo.regla);
+                  const pension = partesPrecioRegla(grupo.regla, adicionalPension);
+                  return (
+                    <div key={`${grupo.regla.temporada_codigo}-${grupo.regla.modalidad}-${grupo.regla.importe_centavos}-${indice}`}
+                      className={`rounded-xl border bg-bone px-4 py-3.5 ${grupo.regla.modalidad === 'privada' ? 'border-gold/40' : 'border-brand/10'}`}>
+                      <div className="grid grid-cols-[minmax(0,1fr)_minmax(76px,auto)_minmax(88px,auto)] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_112px_112px] sm:gap-x-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold leading-tight text-brand">{nombreGrupoTarifa(grupo)}</p>
+                          <p className="mt-1 text-[11px] leading-snug text-dark/45">{detalleGrupoTarifa(grupo)}</p>
+                        </div>
+                        <p className="whitespace-nowrap text-center font-serif text-sm leading-snug text-brand sm:text-lg">{desayuno.principal}</p>
+                        <p className="text-center font-serif text-sm leading-snug text-gold sm:text-lg">
+                          <span className="block whitespace-nowrap">{pension.principal}</span>
+                          {pension.adicional && <span className="mt-0.5 block text-[10px] font-sans font-semibold sm:text-xs">{pension.adicional}</span>}
+                        </p>
+                      </div>
+                      {periodosTarifa.length > 1 && <p className="mt-2 border-t border-brand/10 pt-2 text-[11px] text-dark/55">
+                        <strong className="font-semibold text-brand">Tarifa aplicable:</strong> {textoDiasTarifa(grupo.regla.dias_semana)}
+                      </p>}
+                    </div>
+                  );
+                })}
+              </div>
               <p className="text-dark/50 text-xs leading-relaxed mt-2">
-                <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. Podés sumar almuerzo o cena a +${ESTADIA_PRICES.almuerzo.toLocaleString('es-AR')} c/u.<br />
+                <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. {precioAlmuerzo > 0 || precioCena > 0 ? <>Podés sumar {precioAlmuerzo === precioCena ? <>almuerzo o cena a +{pesos(precioAlmuerzo)} c/u.</> : <>almuerzo a +{pesos(precioAlmuerzo)} y cena a +{pesos(precioCena)}.</>}</> : 'Consultá las comidas opcionales al reservar.'}<br />
                 <strong className="text-gold">Pensión completa:</strong> alojamiento + desayuno, almuerzo y cena, precio total cerrado.
               </p>
+              {precios && <p className="text-dark/40 text-[11px] leading-relaxed mt-2">Vigencia consultada: {precios.fecha_referencia}. El total final depende de las fechas, la ocupación y la modalidad elegida, y se confirma antes de reservar.</p>}
               <p className="text-center text-dark/40 text-xs mt-3">
                 ¿Dudas para armar tu estadía? —{' '}
                 <a href="#escalera" className="text-brand font-semibold underline underline-offset-2 hover:text-gold transition-colors">ver cómo armar tu estadía</a>. Sin sorpresas ocultas.
@@ -269,22 +538,8 @@ const Alojamientos: React.FC = () => {
           {/* top-36: debajo del header + la barra de secciones (~123px). Con
               max-h + scroll interno el widget nunca queda más alto que la
               pantalla, aunque crezca al cambiar de opción. */}
-          <div id="reservar" className="order-first lg:order-none lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:rounded-2xl">
-
-            <div className="bg-white rounded-2xl overflow-hidden shadow-lg border border-brand/5">
-              {!bookingOpen && <div style={{ background: '#005333', padding: '16px 20px' }}>
-                <p style={{ fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', fontWeight: 700, color: 'rgba(212,175,55,0.85)', marginBottom: 5 }}>
-                  RESERVÁ TU LUGAR
-                </p>
-                <h3 style={{ fontFamily: 'Georgia, serif', fontSize: 18, fontWeight: 400, color: 'white', margin: '0 0 3px' }}>
-                  Verificar disponibilidad
-                </h3>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
-                  y estimar el costo de tu estadía
-                </p>
-              </div>}
-              <BookingWidget onOpenChange={setBookingOpen} />
-            </div>
+          <div id="reservar" className="order-first min-w-0 max-w-full lg:order-none lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto lg:rounded-2xl">
+            <BookingWidget />
             <WithdrawalAccessLink embedded />
           </div>
         </div>
@@ -294,38 +549,45 @@ const Alojamientos: React.FC = () => {
 };
 
 // ── Escalera de valor ─────────────────────────────────────────────────────────
-const ESCALERA = [
-  {
-    icon: <Bed className="w-6 h-6" weight="duotone" />,
-    step: '1',
-    title: 'Vení a Pueblo Mágico',
-    price: `Desde $${ESTADIA_PRICES.carpaDesde.toLocaleString('es-AR')}/persona/noche`,
-    desc: 'Alojamiento + desayuno. Refugio de Piedra, domo compartido o privado, o camping.',
-  },
-  {
-    icon: <ForkKnife className="w-6 h-6" weight="duotone" />,
-    step: '2',
-    title: 'Quedate a comer',
-    price: `Almuerzo o cena +$${ESTADIA_PRICES.almuerzo.toLocaleString('es-AR')} c/u`,
-    desc: `O sumá la pensión completa a precio cerrado — desde $${ESTADIA_PRICES.pensionCompletaCarpa.toLocaleString('es-AR')}/persona/noche.`,
-  },
-  {
-    icon: <Leaf className="w-6 h-6" weight="duotone" />,
-    step: '3',
-    title: 'Viví Reset Vital',
-    price: 'Programa digital incluido',
-    desc: `Guía autoguiada gratis en toda estadía. Sumá las actividades grupales presenciales por +$${ESTADIA_PRICES.resetVitalPresencial.toLocaleString('es-AR')} por persona, tarifa única.`,
-  },
-  {
-    icon: <HeartStraight className="w-6 h-6" weight="duotone" />,
-    step: '4',
-    title: 'Personalizá tu experiencia',
-    price: 'Precio independiente',
-    desc: 'Cabalgatas, trekking guiado, masajes, reiki, coaching, talleres artesanales y más. Consultanos.',
-  },
-];
+const EscaleraDeValor: React.FC<{
+  tarifaDesdeActual: { importe: number; unidad: string } | null;
+  precios: PublicPricingSummary | null;
+  cargado: boolean;
+}> = ({ tarifaDesdeActual, precios, cargado }) => {
+  const escalera = [
+    {
+      icon: <Bed className="w-6 h-6" weight="duotone" />,
+      step: '1',
+      title: 'Vení a Pueblo Mágico',
+      price: tarifaDesdeActual
+        ? `Desde ${pesos(tarifaDesdeActual.importe)}/${tarifaDesdeActual.unidad}`
+        : cargado ? 'Consultá el precio para tus fechas' : 'Cargando tarifa vigente…',
+      desc: 'Alojamiento + desayuno. Refugio de Piedra, domo compartido o privado, o camping, según disponibilidad online.',
+    },
+    {
+      icon: <ForkKnife className="w-6 h-6" weight="duotone" />,
+      step: '2',
+      title: 'Quedate a comer',
+      price: textoComidaDesdePorPersona(precios),
+      desc: 'O sumá la pensión completa. La reserva calcula el total cerrado según tu alojamiento, ocupación y cantidad de noches.',
+    },
+    {
+      icon: <Leaf className="w-6 h-6" weight="duotone" />,
+      step: '3',
+      title: 'Viví Reset Vital',
+      price: 'Programa digital incluido',
+      desc: `Guía autoguiada gratis en toda estadía. Sumá las actividades grupales presenciales por +$${ESTADIA_PRICES.resetVitalPresencial.toLocaleString('es-AR')} por persona, tarifa única.`,
+    },
+    {
+      icon: <HeartStraight className="w-6 h-6" weight="duotone" />,
+      step: '4',
+      title: 'Personalizá tu experiencia',
+      price: 'Precio independiente',
+      desc: 'Cabalgatas, trekking guiado, masajes, reiki, coaching, talleres artesanales y más. Consultanos.',
+    },
+  ];
 
-const EscaleraDeValor: React.FC = () => (
+  return (
   <section id="escalera" className="py-20 bg-white border-t border-brand/5">
     <div className="max-w-6xl mx-auto px-6 lg:px-12">
       <div data-reveal className="text-center mb-12">
@@ -335,7 +597,7 @@ const EscaleraDeValor: React.FC = () => (
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {ESCALERA.map((s, i) => (
+        {escalera.map((s, i) => (
           <div key={i} data-reveal data-delay={`${i + 1}` as any} className="relative bg-bone rounded-2xl p-5 border border-brand/5">
             <span className="absolute -top-3 -left-3 w-7 h-7 rounded-full bg-brand text-white text-xs font-bold flex items-center justify-center">{s.step}</span>
             <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-brand mb-3 shadow-sm">
@@ -356,10 +618,18 @@ const EscaleraDeValor: React.FC = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 // ── Horarios y Pensión Completa de Montaña ───────────────────────────────────
-const HorariosPension: React.FC = () => (
+const HorariosPension: React.FC<{
+  precios: PublicPricingSummary | null;
+  cargado: boolean;
+}> = ({ precios, cargado }) => {
+  const desayunoHabilitado = Boolean(precios?.alimentacion.desayuno_incluido);
+  const pensionHabilitada = Boolean(precios?.alimentacion.pension_completa);
+
+  return (
   <section className="py-14 bg-bone">
     <div className="max-w-4xl mx-auto px-6">
       <div data-reveal className="bg-white rounded-2xl border border-brand/10 shadow-sm p-6 md:p-8">
@@ -370,13 +640,14 @@ const HorariosPension: React.FC = () => (
           <div>
             <h2 className="font-serif text-xl md:text-2xl text-brand leading-tight">Horarios y Gastronomía de Montaña</h2>
             <p className="inline-block bg-gold/10 text-gold text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full mt-2">
-              ✦ Desayuno incluido · almuerzo y cena, menú del día opcional
+              ✦ {desayunoHabilitado ? 'Desayuno incluido' : 'Alimentación configurable'} · {textoComidasOpcionales(precios)}
             </p>
           </div>
         </div>
 
         <p className="text-dark/70 text-sm leading-relaxed mb-5">
-          <strong className="text-brand font-semibold">Tarifa base: desde $20.000 por persona / noche</strong> (camping) o $35.000 (Refugio de Piedra o domo compartido) — incluye alojamiento y desayuno. Domo privado: $50.000 por persona / noche (1 persona sola: $100.000). Sumá almuerzo o cena a +$20.000 cada uno, o pensión completa a precio cerrado: $45.000 camping / $60.000 Refugio de Piedra o domo compartido / $75.000 domo privado, por persona/noche.
+          <strong className="text-brand font-semibold">Tarifas publicadas:</strong>{' '}
+          {textoTarifasPublicadas(precios, cargado)}
         </p>
 
         <div className="grid sm:grid-cols-2 gap-4 mb-5">
@@ -395,15 +666,15 @@ const HorariosPension: React.FC = () => (
           <ul className="space-y-2">
             <li className="flex items-start gap-2 text-sm text-dark/65">
               <CheckCircle className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" weight="duotone" />
-              <span><strong className="text-brand font-medium">Desayuno:</strong> incluido siempre, todas las noches.</span>
+              <span><strong className="text-brand font-medium">Desayuno:</strong> {desayunoHabilitado ? 'incluido según la política publicada.' : 'la disponibilidad se confirma al cotizar.'}</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-dark/65">
               <CheckCircle className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" weight="duotone" />
-              <span><strong className="text-brand font-medium">Almuerzo y cena:</strong> opcionales, +$20.000 cada uno por persona — menú del día, sumalos los días que quieras.</span>
+              <span><strong className="text-brand font-medium">Almuerzo y cena:</strong> {textoComidasOpcionales(precios)} — menú del día; la reserva aplica los valores publicados.</span>
             </li>
             <li className="flex items-start gap-2 text-sm text-dark/65">
               <CheckCircle className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" weight="duotone" />
-              <span><strong className="text-brand font-medium">Pensión completa:</strong> si preferís las 3 comidas todos los días, sale a precio cerrado ($45.000 camping / $60.000 Refugio de Piedra o domo compartido / $75.000 domo privado, por persona/noche) — más conveniente que sumar cada comida suelta.</span>
+              <span><strong className="text-brand font-medium">Pensión completa:</strong> {pensionHabilitada ? textoPensionCompleta(precios, cargado) : 'no está habilitada en la política publicada para esta fecha.'}</span>
             </li>
           </ul>
         </div>
@@ -413,19 +684,19 @@ const HorariosPension: React.FC = () => (
           <div className="grid grid-cols-3 gap-2 mb-2">
             <div className="bg-bone rounded-lg px-2 py-2 text-center">
               <p className="text-dark/40 text-[10px] uppercase tracking-widest">Desayuno</p>
-              <p className="text-brand text-sm font-semibold">09:00–10:00</p>
+              <p className="text-brand text-sm font-semibold">{textoHorarioComida(precios, 'desayuno', cargado)}</p>
             </div>
             <div className="bg-bone rounded-lg px-2 py-2 text-center">
               <p className="text-dark/40 text-[10px] uppercase tracking-widest">Almuerzo</p>
-              <p className="text-brand text-sm font-semibold">14:00–15:00</p>
+              <p className="text-brand text-sm font-semibold">{textoHorarioComida(precios, 'almuerzo', cargado)}</p>
             </div>
             <div className="bg-bone rounded-lg px-2 py-2 text-center">
               <p className="text-dark/40 text-[10px] uppercase tracking-widest">Cena</p>
-              <p className="text-brand text-sm font-semibold">20:00–21:00</p>
+              <p className="text-brand text-sm font-semibold">{textoHorarioComida(precios, 'cena', cargado)}</p>
             </div>
           </div>
           <p className="text-dark/50 text-xs leading-relaxed">
-            Fuera de estos horarios no se presta servicio de cocina. Si llegás a partir de las 19:00 hs, contás con la cena en su horario habitual; las comidas no consumidas por llegadas tardías sin aviso no son acumulables ni reembolsables.
+            Fuera de estos horarios no se presta servicio de cocina. El día del check-in contás con la cena dentro del horario publicado; las comidas no consumidas por llegadas tardías sin aviso no son acumulables ni reembolsables.
           </p>
         </div>
 
@@ -484,11 +755,23 @@ const HorariosPension: React.FC = () => (
           <p className="text-dark/50 text-xs leading-relaxed mt-2">
             Actividades y traslados a consultar: temazcal ceremonial, cabalgatas, traslado desde Córdoba / Villa Carlos Paz.
           </p>
+          <div className="mt-5 bg-brand rounded-xl px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-white/85 text-sm leading-relaxed">
+              ¿Querés hacer un retiro u organizar una experiencia con tu comunidad, empresa o escuela?
+            </p>
+            <a
+              href={ROUTES.ORGANIZA_EXPERIENCIA}
+              className="inline-flex flex-shrink-0 items-center justify-center gap-1.5 rounded-full bg-gold px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-white hover:text-brand"
+            >
+              Contactanos <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
       </div>
     </div>
   </section>
-);
+  );
+};
 
 // ── Galería del lugar ─────────────────────────────────────────────────────────
 const GALERIA = [
@@ -890,9 +1173,14 @@ const CTAFinal: React.FC = () => (
 
 // ── Página principal ──────────────────────────────────────────────────────────
 const Estadia: React.FC = () => {
+  const { data: preciosPublicos, loaded: preciosCargados } = usePublicPricingSummary();
+  const todasLasReglas = preciosPublicos?.opciones.flatMap(opcion => opcion.tarifas) || [];
+  const tarifaDesdeActual = tarifaDesde(todasLasReglas);
+
   useEffect(() => {
     const TITLE = 'Ecolodge de Montaña en Córdoba — Refugio de Piedra, Domos y Camping | Pueblo Mágico';
-    const DESC = `Ecolodge de montaña en Los Gigantes, Córdoba: Refugio de Piedra, domos geodésicos y camping. Energía solar, baños secos y compost. Desde $${ESTADIA_PRICES.carpaDesde.toLocaleString('es-AR')}/persona/noche con desayuno.`;
+    const desdeSeo = tarifaDesde(todasLasReglas);
+    const DESC = `Ecolodge de montaña en Los Gigantes, Córdoba: Refugio de Piedra, domos geodésicos y camping. Energía solar, baños secos y compost.${desdeSeo ? ` Desde ${pesos(desdeSeo.importe)}/${desdeSeo.unidad} con desayuno.` : ' Consultá disponibilidad y precio en línea.'}`;
     const URL = SITE_URL + ROUTES.ESTADIA;
     const IMG = `${SITE_URL}/uploads/campoentero.webp`;
     const prevTitle = document.title;
@@ -932,6 +1220,19 @@ const Estadia: React.FC = () => {
     setMeta('meta[name="twitter:image"]',       'name',    'twitter:image');
     setMeta('meta[name="twitter:image"]',       'content', IMG);
 
+    const ofertas = preciosPublicos?.opciones.flatMap(opcion => opcion.tarifas.map(regla => ({
+      '@type': 'Offer',
+      name: `${ETIQUETAS_ALOJAMIENTO[opcion.tipo_alojamiento]} · ${etiquetaModalidad(preciosPublicos, opcion.tipo_alojamiento, regla.modalidad)}`,
+      price: String(regla.importe_centavos / 100),
+      priceCurrency: preciosPublicos.plan.moneda,
+      priceValidUntil: regla.fecha_hasta,
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: String(regla.importe_centavos / 100),
+        priceCurrency: preciosPublicos.plan.moneda,
+        unitText: regla.base_calculo === 'persona_noche' ? 'por persona por noche' : 'por unidad por noche',
+      },
+    }))) || [];
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'LodgingBusiness',
@@ -965,30 +1266,17 @@ const Estadia: React.FC = () => {
         'Compostamos todos los residuos compostables',
         'Starlink',
       ].map(name => ({ '@type': 'LocationFeatureSpecification', name, value: true })),
-      // Precios por persona por noche — misma fuente que la tabla de tarifas.
-      'makesOffer': [
-        ['Camping · con desayuno', ESTADIA_PRICES.carpaDesde],
-        ['Camping · pensión completa', ESTADIA_PRICES.pensionCompletaCarpa],
-        ['Refugio de Piedra o domo compartido · con desayuno', ESTADIA_PRICES.ecoRefugioDesde],
-        ['Refugio de Piedra o domo compartido · pensión completa', ESTADIA_PRICES.pensionCompletaEcoRefugio],
-        ['Domo privado · con desayuno', ESTADIA_PRICES.domoPrivado],
-        ['Domo privado · pensión completa', ESTADIA_PRICES.pensionCompletaDomoPrivado],
-      ].map(([name, price]) => ({
-        '@type': 'Offer', name, price: String(price), priceCurrency: 'ARS',
-        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(price), priceCurrency: 'ARS', unitText: 'por persona por noche' },
-      })).concat({
-        '@type': 'Offer', name: 'Domo privado · 1 persona sola · con desayuno', price: String(ESTADIA_PRICES.domoPrivadoSolo), priceCurrency: 'ARS',
-        priceSpecification: { '@type': 'UnitPriceSpecification', price: String(ESTADIA_PRICES.domoPrivadoSolo), priceCurrency: 'ARS', unitText: 'por noche' },
-      }),
+      ...(ofertas.length > 0 ? { makesOffer: ofertas } : {}),
     };
     const ld = document.createElement('script');
     ld.type = 'application/ld+json';
     ld.id   = 'ld-estadia';
     ld.textContent = JSON.stringify(schema);
-    if (!document.getElementById('ld-estadia')) document.head.appendChild(ld);
+    document.getElementById('ld-estadia')?.remove();
+    document.head.appendChild(ld);
 
     return () => { document.title = prevTitle; document.getElementById('ld-estadia')?.remove(); };
-  }, []);
+  }, [preciosPublicos]);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -1006,12 +1294,12 @@ const Estadia: React.FC = () => {
       <div className="font-sans antialiased">
         <Header />
         <main>
-          <Hero />
-          <Inclusiones />
-          <Alojamientos />
+          <Hero tarifaDesdeActual={tarifaDesdeActual} cargado={preciosCargados} />
+          <Inclusiones tarifaDesdeActual={tarifaDesdeActual} cargado={preciosCargados} />
+          <Alojamientos precios={preciosPublicos} cargado={preciosCargados} />
           <SectionRegeneracion />
-          <EscaleraDeValor />
-          <HorariosPension />
+          <EscaleraDeValor tarifaDesdeActual={tarifaDesdeActual} precios={preciosPublicos} cargado={preciosCargados} />
+          <HorariosPension precios={preciosPublicos} cargado={preciosCargados} />
           <Galeria />
           {/* Mini CTA puente */}
           <div style={{ background: '#005333', padding: '24px', textAlign: 'center' }}>

@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { WhatsAppButton } from '../components/WhatsAppButton';
-import { WA_VUELO_CONDOR, SITE_URL } from './data/config';
+import { RESERVATION_START_PATH, SITE_URL } from './data/config';
 import { RETREATS_DATA } from './data/retreats';
 import { ROUTES } from './routes';
 
@@ -141,9 +141,6 @@ const VueloDelCondorContent: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const MSG_VUELO = encodeURIComponent(RETREATS_DATA.vueloDelCondor.message);
-  const WA_HREF = `https://wa.me/${WA_VUELO_CONDOR}?text=${MSG_VUELO}`;
-
   return (
     <div className="bg-white text-gray-800 overflow-x-hidden">
       <Header />
@@ -195,7 +192,7 @@ const VueloDelCondorContent: React.FC = () => {
             {t.vuelo_condor.cta.subtitle}
           </p>
           <div data-reveal data-delay="2" className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="btn-gold inline-block text-lg py-5 px-10">
+            <a href={RESERVATION_START_PATH} className="btn-gold inline-block text-lg py-5 px-10">
               {t.vuelo_condor.cta.btn}
             </a>
           </div>
@@ -221,9 +218,7 @@ const VueloDelCondorContent: React.FC = () => {
             <p className="text-sm font-bold text-brand-green truncate">USD 1.800 — {RETREATS_DATA.vueloDelCondor.dates}</p>
           </div>
           <a
-            href={WA_HREF}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={RESERVATION_START_PATH}
             className="btn-gold text-xs py-3 px-5 flex-shrink-0"
           >
             Reservar

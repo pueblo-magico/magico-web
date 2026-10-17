@@ -28,3 +28,19 @@ WRESERV-43 agrega el primer contrato de correo para el lanzamiento. Crear una so
 Cuando n8n recibe `arrepentimiento.notificacion_pendiente`, reclama los datos sensibles con `POST /api/v1/integrations/arrepentimientos/notificaciones`, identidad `n8n` y alcance `comunicaciones:entregar`. Después de enviar el correo, informa `entregada`, `retry` o `dead_letter` al mismo endpoint. La reserva y la decisión administrativa no se revierten si el correo falla.
 
 Administración ve el último estado de entrega y puede reprocesar un `dead_letter` con motivo auditado. La nota interna nunca se usa en la plantilla: sólo `mensaje_cliente` puede llegar al huésped. Las decisiones sobre ManyChat quedan fuera de este flujo.
+
+## Reservas por email
+
+El mismo webhook de n8n procesa `comunicacion.intencion_creada`. n8n reclama la
+intención mediante `POST /api/v1/integrations/comunicaciones/notificaciones`; la
+API resuelve el email y renderiza la versión inmutable de la plantilla sólo para
+un consumidor autenticado. El outbox no contiene email, nombre ni cuerpo.
+
+La respuesta incluye el código, fechas, importe de la seña, vencimiento y un
+enlace del ambiente actual. El consumidor informa `entregada`, `retry` o
+`dead_letter`. Si no existe email, Reservas finaliza la intención como
+`sin_canal` sin llamar al proveedor y conserva el caso visible para Operaciones.
+
+Para evitar dos correos al crear una reserva pública, el evento
+`reserva.retencion_iniciada` produce un único mensaje combinado de recepción y
+pago pendiente. `reserva.creada_admin` conserva su mensaje independiente.

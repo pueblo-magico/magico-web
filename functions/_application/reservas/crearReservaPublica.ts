@@ -25,6 +25,7 @@ async function hashSolicitud(solicitud: SolicitudCrearReservaPublica): Promise<s
     pagadorDocumentoHash: solicitud.pagadorDocumentoHash || null,
     pagadorDocumentoUltimos4: solicitud.pagadorDocumentoUltimos4 || null,
     idioma: solicitud.idioma || 'es',
+    preferenciaPreparacionCodigo: solicitud.preferenciaPreparacionCodigo?.trim() || null,
     canalOrigen: solicitud.canalOrigen?.trim() || 'Web',
     referenciaIntegracion: solicitud.referenciaIntegracion ? {
       integracion: solicitud.referenciaIntegracion.integracion,
@@ -48,11 +49,15 @@ export async function crearReservaPublica(
   const metodoPago = solicitud.metodoPago || 'mercado_pago_checkout';
   const pagadorDocumentoHash = solicitud.pagadorDocumentoHash || null;
   const pagadorDocumentoUltimos4 = solicitud.pagadorDocumentoUltimos4 || null;
+  const clienteEmail = typeof solicitud.clienteEmail === 'string'
+    ? solicitud.clienteEmail.trim().toLowerCase()
+    : '';
   if (!solicitud.idempotencyKey || solicitud.idempotencyKey.length < 8 || solicitud.idempotencyKey.length > 128) {
     return error('IDEMPOTENCY_KEY_REQUERIDA', 'Se requiere un Idempotency-Key de 8 a 128 caracteres.');
   }
-  if (!solicitud.cotizacionCodigo || !solicitud.espacioCodigo || !solicitud.clienteNombre.trim()) {
-    return error('SOLICITUD_INVALIDA', 'Cotización, espacio y nombre son obligatorios.');
+  if (!solicitud.cotizacionCodigo || !solicitud.espacioCodigo ||
+      !solicitud.clienteNombre.trim() || !clienteEmail) {
+    return error('SOLICITUD_INVALIDA', 'Cotización, espacio, nombre y email son obligatorios.');
   }
   const checkoutValido = metodoPago === 'mercado_pago_checkout' &&
     pagadorDocumentoHash === null && pagadorDocumentoUltimos4 === null;
@@ -75,8 +80,9 @@ export async function crearReservaPublica(
   if (solicitud.cotizacionCodigo.length > 100 || solicitud.espacioCodigo.length > 100 ||
       solicitud.clienteNombre.trim().length > 120 ||
       (solicitud.clienteTelefono?.trim().length ?? 0) > 40 ||
-      (solicitud.clienteEmail?.trim().length ?? 0) > 254 ||
-      (solicitud.clienteEmail !== null && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(solicitud.clienteEmail.trim()))) {
+      clienteEmail.length > 254 ||
+      (solicitud.preferenciaPreparacionCodigo?.trim().length ?? 0) > 80 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clienteEmail)) {
     return error('SOLICITUD_INVALIDA', 'Los datos del titular tienen un formato o longitud inválidos.');
   }
 
@@ -94,6 +100,28 @@ export async function crearReservaPublica(
   if (!cotizacion) return error('COTIZACION_NO_ENCONTRADA', 'La cotización no existe.');
   if (Date.parse(cotizacion.expiresAt) <= ahora().getTime()) {
     return error('COTIZACION_VENCIDA', 'La cotización venció; solicitá una nueva.');
+  }
+
+  const opcionesPreparacion = await repositorio.listarOpcionesPreparacionAplicables({
+    tipoAlojamiento: cotizacion.tipo,
+    modalidad: cotizacion.modalidad,
+    cantidadPersonas: cotizacion.personas,
+  });
+  const preferenciaCodigo = solicitud.preferenciaPreparacionCodigo?.trim() || null;
+  if (opcionesPreparacion.length > 0 && !preferenciaCodigo) {
+    return error(
+      'PREFERENCIA_PREPARACION_REQUERIDA',
+      'Elegí cómo querés que preparemos las camas antes de reservar.'
+    );
+  }
+  const opcionPreparacion = preferenciaCodigo
+    ? opcionesPreparacion.find(item => item.codigo === preferenciaCodigo) || null
+    : null;
+  if (preferenciaCodigo && !opcionPreparacion) {
+    return error(
+      'PREFERENCIA_PREPARACION_INVALIDA',
+      'La opción de preparación elegida no está disponible para esta estadía.'
+    );
   }
 
   let consultaId: number | null = null;
@@ -135,11 +163,12 @@ export async function crearReservaPublica(
         ...solicitud,
         clienteNombre: solicitud.clienteNombre.trim(),
         clienteTelefono: solicitud.clienteTelefono?.trim() || null,
-        clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
+        clienteEmail,
         metodoPago,
         pagadorDocumentoHash,
         pagadorDocumentoUltimos4,
         idioma: solicitud.idioma || 'es',
+        preferenciaPreparacionCodigo: preferenciaCodigo,
         canalOrigen: solicitud.canalOrigen?.trim() || 'Web',
         referenciaIntegracion: referencia ? {
           integracion: referencia.integracion,
@@ -154,6 +183,7 @@ export async function crearReservaPublica(
       reservaUid: uuid,
       reservaCodigo: `RES-${uuid}`,
       holdExpiresAt,
+      opcionPreparacion,
     });
     return { ok: true, valor: creada };
   } catch {

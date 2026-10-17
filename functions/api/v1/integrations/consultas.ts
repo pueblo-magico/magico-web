@@ -3,6 +3,7 @@ import { D1RepositorioCreacionConsultaIntegracion } from '../../../_infrastructu
 import {
   autenticarIntegracionReservas,
   errorIntegracion,
+  registrarUsoIntegracionReservas,
   respuestaIntegracion,
 } from '../../../_interfaces/http/integrationApiV1.ts';
 import { observarSolicitud } from '../../../_interfaces/http/observability.ts';
@@ -23,6 +24,7 @@ function numeroOpcional(valor: unknown): number | null {
 async function crear(request: Request, env: any): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'consultas:crear');
   if (identidad instanceof Response) return identidad;
+  await registrarUsoIntegracionReservas(request, env, identidad);
   const limitada = respuestaLimite(await consumirLimite(
     request, env, 'integracion.v1.consultas', 30, 60, `integracion:${identidad}`
   ));

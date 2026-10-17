@@ -4,13 +4,12 @@ import {
   Sparkles, Users, BookOpen, ChevronDown, Mountain, Target, Star,
 } from 'lucide-react';
 import { img } from './lib/img';
-import { WA_MAGICO } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO } from './data/config';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
 
 const WA_INFO    = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Me interesa el retiro DESPERTAR (9 al 12 de octubre). ¿Me pueden dar más info?')}`;
-const WA_RESERVA = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Quiero reservar mi lugar para el retiro DESPERTAR (9 al 12 de octubre). ¿Cómo procedo?')}`;
 
 const C = {
   green: '#005333',
@@ -221,9 +220,7 @@ const Despertar: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
             <a
-              href={WA_RESERVA}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={RESERVATION_START_PATH}
               className="btn-gold text-sm py-4 px-8 inline-block"
             >
               Reservar mi lugar
@@ -627,7 +624,7 @@ const Despertar: React.FC = () => {
             </ul>
           </div>
 
-          <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer" className="btn-gold text-sm py-4 px-10 inline-block">
+          <a href={RESERVATION_START_PATH} className="btn-gold text-sm py-4 px-10 inline-block">
             Consultar valores y reservar
           </a>
         </div>
@@ -654,7 +651,7 @@ const Despertar: React.FC = () => {
             Es una decisión.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer"
+            <a href={RESERVATION_START_PATH}
               className="btn-gold text-sm py-5 px-10 inline-block">
               Reservar mi lugar
             </a>

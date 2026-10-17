@@ -62,6 +62,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/estadia',
   },
   {
+    path: '/reservar',
+    title: 'Reservá tu estadía — Pueblo Mágico',
+    description: 'Elegí fechas, alojamiento y comidas, consultá disponibilidad y reservá tu estadía en Pueblo Mágico.',
+    image: 'https://experienciamagico.com/uploads/domos_2.jpg',
+    canonical: 'https://experienciamagico.com/reservar',
+  },
+  {
     path: '/politica-de-privacidad',
     title: 'Política de Privacidad — Pueblo Mágico',
     description: 'Política de privacidad y protección de datos personales de Pueblo Mágico conforme a la Ley 25.326. Información sobre recopilación, uso y derechos sobre tus datos.',
@@ -227,6 +234,17 @@ const shellReservas = template
 mkdirSync(join(DIST, 'admin', 'reservas'), { recursive: true });
 writeFileSync(join(DIST, 'admin', 'reservas', 'index.html'), shellReservas);
 console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
+
+const ADMIN_RESERVAS_SECTIONS = [
+  'listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos',
+  'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad',
+];
+for (const section of ADMIN_RESERVAS_SECTIONS) {
+  const sectionDirectory = join(DIST, 'admin', 'reservas', section);
+  mkdirSync(sectionDirectory, { recursive: true });
+  writeFileSync(join(sectionDirectory, 'index.html'), shellReservas);
+}
+console.log(`  ✓ admin/reservas/{${ADMIN_RESERVAS_SECTIONS.join(',')}}/index.html`);
 
 // ─── Per-route JSON-LD builder ───────────────────────────────────────────────
 function buildJsonLD(route) {

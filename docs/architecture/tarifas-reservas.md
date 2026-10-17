@@ -13,6 +13,8 @@ WRESERV-2 / WRESERV-25 reemplaza los importes embebidos en los handlers por plan
 
 Los planes publicados y sus reglas son inmutables por triggers de D1. Para cambiar un precio se crea una versión nueva en borrador y se publica; la versión publicada anterior pasa a `retirado` en la misma operación atómica.
 
+Cuando existen planes publicados con códigos distintos, el plan efectivo para cotizaciones y para la pantalla administrativa es el publicado más recientemente (`publicado_at`, con `id` como desempate). Así la administración y el flujo público nunca muestran o aplican planes diferentes.
+
 ## Resolución y validaciones
 
 Cada noche se resuelve por separado, para permitir estadías que atraviesan temporadas. Gana la temporada vigente de mayor prioridad. Dentro de ella debe existir exactamente una regla compatible con tipo de alojamiento, modalidad y ocupación.

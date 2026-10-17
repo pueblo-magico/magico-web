@@ -399,7 +399,7 @@
       "coworkingBadge": "Coworking & Coliving",
       "card_extra_text": "También podés solo alojarte si querés — desde $20.000/persona/noche con desayuno, en carpa, Refugio de Piedra o domo compartido. Sumá almuerzo, cena o pensión completa a tu gusto.",
       "btn": "RESERVAR MI LUGAR", 
-      "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
+      "link": "/reservar?paso=fechas",
       "cards": [
         {
           "id": 1,
@@ -956,7 +956,7 @@
       ],
       "book": "RESERVAR",
       "lang": "ENGLISH",
-      "bookLink": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20una%20experiencia%20en%20M%C3%A1gico%20Ensue%C3%B1o.%20%E2%9C%A8"
+      "bookLink": "/reservar?paso=fechas"
     },
     "pillars": [
       {
@@ -2994,7 +2994,7 @@
       "coworkingBadge": "Coworking & Coliving",
       "card_extra_text": "You can also just book accommodation if you wish — from $20,000/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
       "btn": "Book my spot", 
-      "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
+      "link": "/reservar?paso=fechas",
       "cards": [
         {
           "id": 1,
@@ -3551,7 +3551,7 @@
       ],
       "book": "BOOK NOW",
       "lang": "ESPAÑOL",
-      "bookLink": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20una%20experiencia%20en%20M%C3%A1gico%20Ensue%C3%B1o.%20%E2%9C%A8"
+      "bookLink": "/reservar?paso=fechas"
     },
     "pillars": [
       {

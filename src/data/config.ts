@@ -10,6 +10,9 @@ export const WA_CICLO_VITAL_FEMENINO = '34621076042';
 
 export const SITE_URL = 'https://experienciamagico.com';
 
+// Canonical entry point for CTAs that promise to start a reservation.
+export const RESERVATION_START_PATH = '/reservar?paso=fechas';
+
 // Datos públicos de la campaña de reforestación. Se inyectan en build time y
 // pueden quedar vacíos: la landing deriva a WhatsApp hasta que estén configurados.
 export const REFORESTATION_CONTRIBUTION = {

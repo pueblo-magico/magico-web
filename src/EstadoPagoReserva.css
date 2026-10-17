@@ -25,8 +25,25 @@
 .payment-return h1 { margin: 0 0 14px; font-family: Georgia, serif; font-size: clamp(2rem, 7vw, 3.2rem); line-height: 1.04; }
 .payment-return p { line-height: 1.65; }
 .payment-return__code { margin: 24px 0; padding: 15px; border-radius: 14px; background: #f4f7f5; overflow-wrap: anywhere; }
+.payment-return__payment { margin: 24px 0 4px; padding: 20px; border: 1px solid #d7e4dc; border-radius: 18px; background: #f7fbf8; text-align: left; }
+.payment-return__payment-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.payment-return__payment-summary span { display: grid; gap: 4px; color: #52665e; font-size: .86rem; }
+.payment-return__payment-summary strong { color: #063f2b; font-size: 1.1rem; }
+.payment-return__primary { display: block; padding: 14px 18px; border-radius: 999px; background: #00633f; color: white; font-weight: 800; text-align: center; text-decoration: none; }
+.payment-return__payment-note { margin: 0; color: #53665e; }
+.payment-return__transfer h2 { margin: 0 0 6px; font-family: Georgia, serif; font-size: 1.25rem; }
+.payment-return__transfer > p { margin: 0 0 14px; color: #53665e; }
+.payment-return__datum { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #dce7e0; }
+.payment-return__datum > span { display: grid; gap: 2px; color: #53665e; font-size: .82rem; }
+.payment-return__datum strong { color: #082a20; font-size: .95rem; overflow-wrap: anywhere; }
+.payment-return__warning { padding: 10px 12px; border-radius: 10px; background: #fff3d6; color: #835d00 !important; font-weight: 700; }
 .payment-return__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
 .payment-return__actions a { padding: 13px 20px; border-radius: 999px; background: #005333; color: white; font-weight: 750; text-decoration: none; }
 .payment-return__actions a + a { background: transparent; border: 1px solid #005333; color: #005333; }
 
 @keyframes payment-return-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 520px) {
+  .payment-return__payment-summary { grid-template-columns: 1fr; }
+  .payment-return__datum { align-items: flex-start; flex-direction: column; }
+}

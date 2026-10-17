@@ -65,9 +65,23 @@ import type {
   DestinoCobroProveedor,
 } from '../../_domain/reservas/collectionAccounts.ts';
 import type {
+  CambioModalidadComercial,
+  CambioServicioAlojamiento,
+  CambioEspacioComercial,
+  CambioHorariosComidas,
   CambioParametroOperativo,
+  CambioTarifaAlimentacion,
+  NuevaModalidadComercial,
+  NuevoServicioAlojamiento,
+  CambioOpcionPreparacionEstadia,
   ConfiguracionBaseReservas,
+  EspacioComercialActualizado,
+  HorariosComidas,
+  ModalidadComercialActualizada,
   ParametroOperativoReserva,
+  ServicioAlojamiento,
+  OpcionPreparacionEstadia,
+  TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
 import type {
   EstadoOperativoOutbox,
@@ -96,6 +110,10 @@ export interface RepositorioInventarioAlojamiento {
     modalidad?: ModalidadAlojamiento
   ): Promise<EspacioInventario[]>;
   listarModalidades(espacioId: number): Promise<ModalidadEspacio[]>;
+  listarServicios(tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent'): Promise<ServicioAlojamiento[]>;
+  listarOpcionesPreparacion(
+    tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent'
+  ): Promise<OpcionPreparacionEstadia[]>;
   listarUnidadesAsignables(espacioId: number): Promise<UnidadAsignable[]>;
 }
 
@@ -192,6 +210,10 @@ export interface RepositorioTarifasAlimentacion {
   obtenerPublicada(regimen: RegimenAlimentacion): Promise<ConfiguracionTarifaAlimentacion | null>;
 }
 
+export interface RepositorioHorariosComidas {
+  obtener(): Promise<HorariosComidas>;
+}
+
 export interface RepositorioCotizaciones {
   guardar(
     solicitud: SolicitudCotizacion,
@@ -207,6 +229,11 @@ export type SolicitudIdempotenteGuardada = {
 export interface RepositorioCreacionReservaPublica {
   buscarIdempotencia(clave: string, alcance?: string): Promise<SolicitudIdempotenteGuardada | null>;
   obtenerCotizacion(codigo: string): Promise<CotizacionAceptada | null>;
+  listarOpcionesPreparacionAplicables(entrada: {
+    tipoAlojamiento: 'domo' | 'refugio' | 'camping';
+    modalidad: 'privada' | 'compartida' | 'camping';
+    cantidadPersonas: number;
+  }): Promise<OpcionPreparacionEstadia[]>;
   buscarConsultaIntegracion(entrada: {
     codigo: string;
     integracion: 'n8n';
@@ -225,6 +252,7 @@ export interface RepositorioCreacionReservaPublica {
     reservaUid: string;
     reservaCodigo: string;
     holdExpiresAt: string;
+    opcionPreparacion: OpcionPreparacionEstadia | null;
   }): Promise<ReservaPublicaCreada>;
 }
 
@@ -253,6 +281,46 @@ export interface RepositorioConfiguracionBaseReservas {
     correlationId: string;
     operacionUid: string;
   }): Promise<ParametroOperativoReserva | null>;
+  actualizarModalidad(entrada: CambioModalidadComercial & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ModalidadComercialActualizada | null>;
+  crearModalidad(entrada: NuevaModalidadComercial & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ModalidadComercialActualizada | null>;
+  actualizarServicio(entrada: CambioServicioAlojamiento & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ServicioAlojamiento | null>;
+  crearServicio(entrada: NuevoServicioAlojamiento & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<ServicioAlojamiento | null>;
+  actualizarOpcionPreparacion(entrada: CambioOpcionPreparacionEstadia & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<OpcionPreparacionEstadia | null>;
+  actualizarEspacio(entrada: CambioEspacioComercial & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<EspacioComercialActualizado | null>;
+  publicarTarifaAlimentacion(entrada: CambioTarifaAlimentacion & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<TarifaAlimentacionActualizada | null>;
+  actualizarHorariosComidas(entrada: CambioHorariosComidas & {
+    actorEmail: string;
+    correlationId: string;
+    operacionUid: string;
+  }): Promise<HorariosComidas | null>;
 }
 
 export interface RepositorioRetencionesReserva {
@@ -423,7 +491,7 @@ export interface RepositorioReservasManyChat {
 export type SolicitudPreferenciaPago = {
   reservaId: number;
   reservaCodigo?: string;
-  tipoAlojamiento: 'domo' | 'refugio';
+  tipoAlojamiento: 'domo' | 'refugio' | 'camping';
   montoSena: number;
 };
 
@@ -441,7 +509,7 @@ export interface ProveedorCheckoutReserva {
 export type CheckoutReservaPublica = {
   reservaId: number;
   reservaCodigo: string;
-  tipoAlojamiento: 'domo' | 'refugio';
+  tipoAlojamiento: 'domo' | 'refugio' | 'camping';
   montoSenaCentavos: number;
   moneda: string;
   estadoFlujo: string;
@@ -467,6 +535,17 @@ export type EstadoReservaPublica = {
   estado: string;
   expiresAt: string | null;
   pagoEstado: string | null;
+  metodoPago: 'mercado_pago_checkout' | 'transferencia_mp' | null;
+  montoSenaCentavos: number;
+  moneda: string;
+  checkoutUrl: string | null;
+  cuentaCobro: {
+    estado: string;
+    cvu: string | null;
+    alias: string | null;
+    moneda: string;
+    simulada: boolean;
+  } | null;
 };
 
 export interface RepositorioConsultaEstadoReservaPublica {
@@ -712,6 +791,12 @@ export interface RepositorioOutboxIntegracion {
   reclamarLote(entrada: {
     claimUid: string;
     limite: number;
+    ahora: string;
+    claimExpiresAt: string;
+  }): Promise<EventoOutboxIntegracion[]>;
+  reclamarEventos?(entrada: {
+    claimUid: string;
+    eventIds: string[];
     ahora: string;
     claimExpiresAt: string;
   }): Promise<EventoOutboxIntegracion[]>;

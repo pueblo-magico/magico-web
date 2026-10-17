@@ -4,6 +4,24 @@ Este runbook implementa WRESERV-41. n8n sólo agenda y observa llamadas HTTP;
 las reglas de vencimiento, leases, reintentos e idempotencia permanecen dentro
 de Reservas.
 
+## Modelo de ejecución
+
+La creación de reservas y las notificaciones de arrepentimiento intentan despachar
+en segundo plano mediante `waitUntil` únicamente los eventos producidos por esa
+operación. Nunca reclaman el lote histórico general. La respuesta al cliente o al
+administrador no espera a n8n: si la entrega falla, el evento vuelve a `pending`
+con su política de reintentos.
+
+El workflow programado de outbox se mantiene activo como red de recuperación. Su
+función es procesar eventos que no pudieron salir en vivo, quedaron pendientes por
+una interrupción del runtime o ya alcanzaron su próximo intento. El vencimiento de
+retenciones continúa siendo un job programado porque depende del paso del tiempo,
+no de una acción nueva del usuario.
+
+Un evento en estado `delivered` no es elegible para el despacho inmediato ni para
+el job de recuperación. La entrega sólo puede repetirse después de un reproceso
+administrativo explícito de un evento en `dead_letter`.
+
 ## Frecuencia y endpoints
 
 Importar `docs/integrations/n8n-jobs-operativos.workflow.json`. El workflow
@@ -77,18 +95,20 @@ Alertar de inmediato ante `dead_letter` o errores repetidos. La recuperación de
 un evento agotado se hace desde el panel admin con motivo auditado; no se edita
 D1 manualmente.
 
-## Envío de arrepentimientos por email
+## Envío de comunicaciones transaccionales por email
 
 Importar `docs/integrations/n8n-arrepentimientos-email.workflow.json`. El
-workflow queda inactivo, no contiene credenciales y no conserva datos de
-ejecuciones exitosas, fallidas ni manuales, porque durante la entrega procesa el
-email del huésped.
+workflow atiende tanto `arrepentimiento.notificacion_pendiente` como
+`comunicacion.intencion_creada`. Queda inactivo, no contiene credenciales y no
+conserva datos de ejecuciones exitosas, fallidas ni manuales, porque durante la
+entrega procesa el email del huésped.
 
 Después de importar:
 
-1. Asignar una credencial SMTP al nodo **Enviar email**.
-2. Configurar `RESERVAS_API_BASE_URL` y `RESERVAS_EMAIL_FROM` como variables de
-   n8n. La URL no lleva `/` final.
+1. Confirmar que el nodo **Enviar email** usa la credencial OAuth2 conectada
+   `Gmail account`. El remitente es la cuenta autorizada por esa credencial.
+2. Configurar `RESERVAS_API_BASE_URL` como variable de n8n. La URL no lleva `/`
+   final.
 3. Configurar `INTEGRATION_EVENTS_WEBHOOK_SECRET` y `N8N_INBOUND_SECRET` como
    secretos de proceso de n8n; deben coincidir con el ambiente Cloudflare.
 4. Para Preview, cambiar el path del Webhook a `reservas-eventos-preview`. No
@@ -97,7 +117,19 @@ Después de importar:
    `/webhook-test/...`) a `INTEGRATION_EVENTS_WEBHOOK_URL` del ambiente.
 
 El workflow autentica el Bearer enviado por Reservas, ignora con `202` los
-eventos que no sean `arrepentimiento.notificacion_pendiente` y procesa el email:
+eventos que no sean comunicaciones admitidas y procesa el email. Para
+arrepentimientos usa el contrato existente. Para reservas usa
+`POST /api/v1/integrations/comunicaciones/notificaciones` con las mismas
+acciones `reclamar` y `resultado`, pero identifica la entrega mediante
+`intencion_uid`.
+
+Las comunicaciones de reserva cubren: pago pendiente, pago aprobado, retención
+vencida, modificación, cancelación y reservas administrativas creadas. La
+creación pública y el inicio de la retención producen un único email combinado
+de pago pendiente. Si la reserva no tiene email, la intención queda en
+`sin_canal`, el workflow responde `200` y no llama a Gmail.
+
+El flujo de arrepentimiento funciona así:
 
 1. Leer `notification_id` del evento. El evento no contiene PII.
 2. Reclamar la entrega con `POST /api/v1/integrations/arrepentimientos/notificaciones`,
@@ -108,10 +140,10 @@ eventos que no sean `arrepentimiento.notificacion_pendiente` y procesa el email:
 4. Informar el resultado al mismo endpoint con `accion=resultado`, los tres IDs
    devueltos (`notificacion_uid`, `claim_uid`, `delivery_uid`) y uno de:
    `entregada`, `retry` o `dead_letter`. En una falla, enviar sólo un
-   `error_code` estable como `SMTP_TIMEOUT`; nunca el mensaje crudo del proveedor.
+   `error_code` estable como `EMAIL_DELIVERY_ERROR`; nunca el mensaje crudo del proveedor.
 
 Un resultado repetido con el mismo `delivery_uid` es idempotente. Ante una falla
-SMTP, los primeros intentos registran `retry` y el webhook responde `503` para
+de Gmail, los primeros intentos registran `retry` y el webhook responde `503` para
 que el dispatcher no marque el evento como entregado. Al llegar a
 `max_intentos`, registra `dead_letter` y responde `200`; queda visible para
 reproceso manual en Administración. Un `409 NOTIFICACION_NO_DISPONIBLE`
@@ -125,11 +157,17 @@ significa que otro proceso conserva el lease o que la entrega ya terminó.
    desde Administración.
 3. Confirmar que llega el correo, la notificación queda `entregada` y la
    ejecución no queda guardada en el historial al finalizar.
-4. Repetir en ES y EN con dos solicitudes nuevas.
-5. Probar la falla con una credencial SMTP inválida: los primeros intentos deben
+4. Repetir en ES y EN con dos solicitudes nuevas y dos reservas nuevas.
+5. Confirmar para una reserva pendiente que el mensaje incluye código, fechas,
+   seña, vencimiento y el enlace del mismo ambiente. Confirmar después el pago y
+   verificar que llega un segundo mensaje con enlace a la reserva confirmada.
+6. Crear una reserva sin email: debe quedar `sin_canal`, sin llamada a Gmail y sin
+   bloquear la reserva.
+7. Probar la falla desconectando temporalmente la credencial Gmail sólo en Preview:
+   los primeros intentos deben
    quedar en `pendiente` y devolver `503`; el tercero debe quedar en
-   `dead_letter`. Restaurar SMTP y usar **Reintentar email** desde Administración.
-6. Reemplazar la URL de test por `/webhook/`, activar el workflow de Preview y
+   `dead_letter`. Reconectar Gmail y usar **Reintentar email** desde Administración.
+8. Reemplazar la URL de test por `/webhook/`, activar el workflow de Preview y
    ejecutar nuevamente el recorrido antes de configurar Producción.
 
 ## Pausa, recuperación y cutover

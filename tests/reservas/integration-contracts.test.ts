@@ -196,6 +196,7 @@ test('n8n registra una consulta idempotente sin bloquear inventario y la vincula
       body: JSON.stringify({
         cotizacion_codigo: cotizacion.data.cotizacion.codigo,
         espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        preferencias: { preparacion_cama: 'cama_doble' },
         consulta_codigo: bodyCreada.data.consulta.codigo,
         contacto_id: 'otro-contacto',
         conversacion_id: consultaPayload.conversacion_id,
@@ -214,6 +215,7 @@ test('n8n registra una consulta idempotente sin bloquear inventario y la vincula
       body: JSON.stringify({
         cotizacion_codigo: cotizacion.data.cotizacion.codigo,
         espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        preferencias: { preparacion_cama: 'cama_doble' },
         consulta_codigo: bodyCreada.data.consulta.codigo,
         contacto_id: consultaPayload.contacto_id,
         conversacion_id: consultaPayload.conversacion_id,
@@ -253,6 +255,7 @@ test('n8n crea una reserva idempotente y conserva referencias externas', async (
   const payload = {
     cotizacion_codigo: cotizacion.data.cotizacion.codigo,
     espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+    preferencias: { preparacion_cama: 'cama_doble' },
     contacto_id: 'contacto-n8n-42',
     conversacion_id: 'conversacion-n8n-99',
     cliente: { nombre: 'Huésped desde n8n', telefono: '+5493515550000', email: 'N8N@Example.Test' },
@@ -318,8 +321,9 @@ test('n8n no puede reutilizar una clave con otra referencia de contacto', async 
       body: JSON.stringify({
         cotizacion_codigo: cotizacion.data.cotizacion.codigo,
         espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        preferencias: { preparacion_cama: 'cama_doble' },
         contacto_id: contactoId,
-        cliente: { nombre: 'Titular n8n' },
+        cliente: { nombre: 'Titular n8n', email: 'titular-n8n@example.test' },
       }),
     }), env,
   });

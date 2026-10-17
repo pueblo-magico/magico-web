@@ -1,5 +1,6 @@
 import { expirarRetenciones } from '../../../../_application/reservas/expirarRetenciones.ts';
 import { D1RepositorioRetencionesReserva } from '../../../../_infrastructure/d1/D1RepositorioRetencionesReserva.ts';
+import { registrarUsoAplicacionApi } from '../../../../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import { observarSolicitud } from '../../../../_interfaces/http/observability.ts';
 import { autenticarServicio } from '../../../../_interfaces/http/serviceAuth.ts';
 import { jsonReserva as json } from '../../../../_interfaces/http/reservasHttp.ts';
@@ -10,6 +11,7 @@ async function expirar(request: Request, env: Record<string, any>): Promise<Resp
   if (!autenticarServicio('n8n', secreto, env, 'reservas:expirar')) {
     return json({ error: 'No autorizado.' }, 401);
   }
+  await registrarUsoAplicacionApi(env.DB, 'n8n', request.method, '/api/v1/integrations/reservas/expirar-retenciones');
 
   try {
     const resultado = await expirarRetenciones(new D1RepositorioRetencionesReserva(env.DB));

@@ -13,20 +13,20 @@ export async function onRequestGet({ request, env }: any) {
   const checkOut = params.get('check_out') || '';
   const personas = Number(params.get('personas'));
   const tipo = params.get('tipo_alojamiento');
-  const modalidad = params.get('modalidad') || (tipo === 'domo' ? 'privada' : 'compartida');
+  const modalidad = params.get('modalidad') || (tipo === 'domo' ? 'privada' : tipo === 'camping' ? 'camping' : 'compartida');
   const contexto = params.get('contexto') || 'general';
 
   if (nochesEntre(checkIn, checkOut) === null || !Number.isInteger(personas) || personas < 1 ||
-      (tipo !== 'domo' && tipo !== 'refugio') ||
-      !['privada', 'compartida'].includes(modalidad) || !['general', 'retiro'].includes(contexto)) {
+      !['domo', 'refugio', 'camping'].includes(String(tipo)) ||
+      !['privada', 'compartida', 'camping'].includes(modalidad) || !['general', 'retiro'].includes(contexto)) {
     return jsonPublico(request, 'GET', {
       error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'Fechas, personas, alojamiento, modalidad o contexto inválidos.' },
     }, 400);
   }
 
   const resultado = await new D1RepositorioDisponibilidad(env.DB).consultar({
-    tipo, personas, fechaEntrada: checkIn, fechaSalida: checkOut,
-    modalidad: modalidad as 'privada' | 'compartida', contexto: contexto as 'general' | 'retiro',
+    tipo: tipo as 'domo' | 'refugio' | 'camping', personas, fechaEntrada: checkIn, fechaSalida: checkOut,
+    modalidad: modalidad as 'privada' | 'compartida' | 'camping', contexto: contexto as 'general' | 'retiro',
   });
   return jsonPublico(request, 'GET', {
     data: {

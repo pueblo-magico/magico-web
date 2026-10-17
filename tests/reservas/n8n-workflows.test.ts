@@ -15,7 +15,7 @@ function nodeByName(document: any, name: string): any {
   return node;
 }
 
-test('el workflow de email es importable, permanece inactivo y no contiene secretos', () => {
+test('el workflow de email transaccional es importable, permanece inactivo y no contiene secretos', () => {
   const document = workflow(emailPath);
   const raw = readFileSync(emailPath, 'utf8');
   assert.equal(document.active, false);
@@ -25,12 +25,12 @@ test('el workflow de email es importable, permanece inactivo y no contiene secre
   assert.match(raw, /\$env\.INTEGRATION_EVENTS_WEBHOOK_SECRET/);
   assert.match(raw, /\$env\.N8N_INBOUND_SECRET/);
   assert.match(raw, /\$vars\.RESERVAS_API_BASE_URL/);
-  assert.match(raw, /\$vars\.RESERVAS_EMAIL_FROM/);
+  assert.match(raw, /Gmail account/);
   assert.doesNotMatch(raw, /Bearer\s+[A-Za-z0-9_-]{24,}/);
   assert.doesNotMatch(raw, /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
 });
 
-test('el workflow autentica, filtra el evento y usa el contrato de notificaciones', () => {
+test('el workflow autentica y admite arrepentimientos y comunicaciones de reserva', () => {
   const document = workflow(emailPath);
   const webhook = nodeByName(document, 'Webhook eventos Reservas');
   assert.equal(webhook.parameters.path, 'reservas-eventos');
@@ -40,13 +40,25 @@ test('el workflow autentica, filtra el evento y usa el contrato de notificacione
 
   const claim = JSON.stringify(nodeByName(document, 'Reclamar notificación').parameters);
   assert.match(claim, /arrepentimientos\/notificaciones/);
+  assert.match(claim, /comunicaciones\/notificaciones/);
   assert.match(claim, /notificacion_uid/);
+  assert.match(claim, /intencion_uid/);
   assert.match(claim, /X-Integration-Id/);
   assert.match(claim, /X-Service-Secret/);
 
+  const filter = JSON.stringify(nodeByName(document, 'Es email transaccional').parameters);
+  assert.match(filter, /arrepentimiento\.notificacion_pendiente/);
+  assert.match(filter, /comunicacion\.intencion_creada/);
+  assert.ok(nodeByName(document, 'Tiene destinatario email'));
+  assert.equal(nodeByName(document, 'Responder sin email').parameters.options.responseCode, 200);
+
   const email = nodeByName(document, 'Enviar email');
-  assert.equal(email.type, 'n8n-nodes-base.emailSend');
-  assert.equal(email.parameters.emailFormat, 'text');
+  assert.equal(email.type, 'n8n-nodes-base.gmail');
+  assert.equal(email.credentials.gmailOAuth2.name, 'Gmail account');
+  assert.equal(email.parameters.emailType, 'html');
+  assert.match(email.parameters.message, /mensaje_humano/);
+  assert.match(email.parameters.message, /RECHAZADA/);
+  assert.match(email.parameters.message, /Mensaje del equipo de Pueblo Mágico/);
   assert.equal(email.onError, 'continueErrorOutput');
 });
 
@@ -68,5 +80,5 @@ test('los jobs operativos siguen separados del workflow de correo', () => {
   assert.ok(nodeByName(jobs, 'Vencer retenciones'));
   assert.ok(nodeByName(jobs, 'Despachar outbox'));
   assert.equal(jobs.active, false);
-  assert.equal(jobs.nodes.some((node: any) => node.type === 'n8n-nodes-base.emailSend'), false);
+  assert.equal(jobs.nodes.some((node: any) => node.type === 'n8n-nodes-base.gmail'), false);
 });
