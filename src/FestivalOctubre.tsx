@@ -46,12 +46,12 @@ const navigation: PageNavigation = {
     { id: 'propuesta', label: 'La propuesta' },
     { id: 'para-quien', label: 'Para quién es' },
     { id: 'experiencias', label: 'Experiencias' },
-    { id: 'temazcal', label: 'Temazcal' },
     { id: 'artistas', label: 'Artistas' },
     { id: 'equipo', label: 'Equipo' },
     { id: 'fin-de-semana', label: 'Fin de semana' },
     { id: 'entradas', label: 'Entradas' },
     { id: 'lugar', label: 'El lugar' },
+    { id: 'temazcal', label: 'Temazcal' },
     { id: 'preguntas', label: 'Preguntas' },
   ],
 };
@@ -179,7 +179,7 @@ const FestivalButton = ({ href, children, secondary = false }: { href: string; c
 );
 
 const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number }) => (
-  <article className="rounded-2xl border border-[#123B2D]/10 bg-[#123B2D]/[0.02] p-7" data-reveal data-delay={String((index % 3) + 1)}>
+  <article className="h-full rounded-2xl border border-[#123B2D]/10 bg-[#123B2D]/[0.02] p-7" data-reveal data-delay={String((index % 3) + 1)}>
     <div className="mb-5 h-14 w-14 overflow-hidden rounded-full bg-[#123B2D]/10">
       <img
         src={img(member.image, 800)}
@@ -444,23 +444,6 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="temazcal" className="bg-white px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-5xl text-center">
-            <div data-reveal>
-              <p className="mb-5 inline-block rounded-full bg-[#B85A3D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">Ceremonia del domingo · Cupo limitado</p>
-              <h2 className="text-4xl leading-tight serif-title md:text-5xl">¿Qué es el Temazcal?</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#1F2922]/65 md:text-lg">Una ceremonia ancestral de calor, vapor y encuentro que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
-            </div>
-            <div className="mt-12 overflow-hidden rounded-[2rem] border border-[#123B2D]/10 bg-[#F5F0E5]" data-reveal data-delay="1">
-              <img src={img('/uploads/temazcal.webp', 1400)} alt="Ceremonia de Temazcal en Pueblo Mágico" loading="lazy" width="1400" height="900" className="aspect-[16/8] w-full object-cover" />
-              <div className="mx-auto max-w-3xl px-6 py-8 md:px-10">
-                <p className="text-sm leading-relaxed text-[#1F2922]/65">La participación es opcional, requiere inscripción previa y tiene un valor adicional. Si estás embarazada o tenés una condición cardíaca, respiratoria o de presión, consultanos antes para evaluar si esta experiencia es adecuada para vos.</p>
-                <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#123B2D]/25 px-5 py-2.5 text-sm font-semibold text-[#123B2D] transition hover:bg-[#123B2D] hover:text-white"><MessageCircle size={16} aria-hidden="true" />Consultar por WhatsApp</a>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section id="artistas" className="overflow-hidden bg-[#111914] px-6 py-20 text-white md:px-10 md:py-28">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto mb-12 max-w-3xl text-center" data-reveal>
@@ -468,39 +451,47 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">La música que nos reúne.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
             </div>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-              {FESTIVAL_OCTUBRE.artists.map((artist, index) => (
-                <article key={artist.name} className="group overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
-                  <div className="relative aspect-[4/5] overflow-hidden">
-                    <img src={img(artist.image, 900)} alt={artist.imageAlt} loading="lazy" width="900" height="1125" className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.04]" />
-                    <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(17,25,20,0.88),transparent_65%)]" />
-                    <span className="absolute right-5 top-5 rounded-full border border-white/20 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/75 backdrop-blur-sm">Acto 0{index + 1}</span>
-                    <p className="absolute bottom-4 left-5 right-5 text-[9px] uppercase tracking-[0.14em] text-white/45">{artist.imageNote}</p>
-                  </div>
-                  <div className="p-6">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E7B84B]">{artist.style}</p>
-                    <h3 className="mt-2 text-3xl serif-title md:text-4xl">{artist.name}</h3>
-                    <p className="mt-4 text-sm leading-relaxed text-white/60">{artist.bio}</p>
-                    {'sourceUrl' in artist && artist.sourceUrl && (
-                      <a href={artist.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex text-[10px] font-bold uppercase tracking-[0.14em] text-white/50 underline decoration-[#E7B84B] underline-offset-4">Referencia pública</a>
-                    )}
-                  </div>
-                </article>
-              ))}
+            <div className="scrollbar-hide -mx-6 overflow-x-auto px-6 pb-4 md:-mx-10 md:px-10" aria-label="Artistas confirmados">
+              <div className="flex snap-x snap-mandatory gap-5">
+                {FESTIVAL_OCTUBRE.artists.map((artist, index) => (
+                  <article key={artist.name} className="group w-[calc(100vw-3rem)] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
+                    <div className="relative aspect-[4/5] overflow-hidden">
+                      <img src={img(artist.image, 900)} alt={artist.imageAlt} loading="lazy" width="900" height="1125" className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.04]" />
+                      <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(17,25,20,0.88),transparent_65%)]" />
+                      <span className="absolute right-5 top-5 rounded-full border border-white/20 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/75 backdrop-blur-sm">Acto 0{index + 1}</span>
+                      <p className="absolute bottom-4 left-5 right-5 text-[9px] uppercase tracking-[0.14em] text-white/45">{artist.imageNote}</p>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E7B84B]">{artist.style}</p>
+                      <h3 className="mt-2 text-3xl serif-title md:text-4xl">{artist.name}</h3>
+                      <p className="mt-4 text-sm leading-relaxed text-white/60">{artist.bio}</p>
+                      {'sourceUrl' in artist && artist.sourceUrl && (
+                        <a href={artist.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex text-[10px] font-bold uppercase tracking-[0.14em] text-white/50 underline decoration-[#E7B84B] underline-offset-4">Referencia pública</a>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
             <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 text-center text-sm text-white/55">La programación horaria completa se publicará en las redes de Pueblo Mágico.</div>
           </div>
         </section>
 
         <section id="equipo" className="bg-white px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-7xl">
             <div className="mb-14 text-center" data-reveal>
               <p className="mb-5 inline-block rounded-full bg-[#123B2D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-white">Quiénes te acompañan</p>
               <h2 className="text-3xl leading-tight text-[#123B2D] serif-title md:text-4xl">Facilitadores, anfitriones y dirección musical</h2>
               <p className="mx-auto mt-4 max-w-lg text-base text-[#1F2922]/60">Un equipo y una comunidad de referentes que suman su energía a esta celebración.</p>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
-              {FESTIVAL_OCTUBRE.team.map((member, index) => <TeamCard key={member.fullName} member={member} index={index} />)}
+            <div className="scrollbar-hide -mx-6 overflow-x-auto px-6 pb-4 md:-mx-10 md:px-10" aria-label="Equipo de AtardeSer">
+              <div className="flex snap-x snap-mandatory items-stretch gap-5">
+                {FESTIVAL_OCTUBRE.team.map((member, index) => (
+                  <div key={member.fullName} className="w-[calc(100vw-3rem)] max-w-[320px] shrink-0 snap-start">
+                    <TeamCard member={member} index={index} />
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="relative mt-16 overflow-hidden rounded-3xl bg-[#123B2D] p-8 text-center text-white md:p-12" data-reveal data-delay="2">
               <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#E7B84B]/25 blur-[100px]" />
@@ -542,9 +533,13 @@ const FestivalOctubre: React.FC = () => {
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60">Vení por el día o elegí una o dos noches en camping o habitación compartida. Todos los tickets con alojamiento incluyen desayuno.</p>
               <p className="mt-4 text-sm font-bold text-[#8B6A00]">✨ pagá en 3 cuotas sin interés</p>
             </div>
-            <div className="-mx-6 overflow-x-auto px-6 pb-4">
-              <div className="mx-auto grid min-w-[1120px] grid-cols-5 gap-4">
-                {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => <AccessCard key={option.title} option={option} index={index} />)}
+            <div className="scrollbar-hide -mx-6 overflow-x-auto px-6 pb-4 md:-mx-10 md:px-10">
+              <div className="flex snap-x snap-mandatory gap-4 lg:mx-auto lg:grid lg:min-w-[1120px] lg:grid-cols-5">
+                {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => (
+                  <div key={option.title} className="w-[calc(100vw-3rem)] shrink-0 snap-start lg:w-auto lg:shrink">
+                    <AccessCard option={option} index={index} />
+                  </div>
+                ))}
               </div>
             </div>
             <div className="mt-6 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm text-[#1F2922]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
@@ -572,6 +567,23 @@ const FestivalOctubre: React.FC = () => {
               <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
               <img src={img('/uploads/atardeser/familias.jpeg', 700)} alt="Familias compartiendo en Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
               <img src={img('/uploads/atardeser/ninez.jpeg', 700)} alt="Niños y adultos celebrando al aire libre" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+            </div>
+          </div>
+        </section>
+
+        <section id="temazcal" className="bg-white px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-5xl text-center">
+            <div data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#B85A3D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">Ceremonia del domingo · Cupo limitado</p>
+              <h2 className="text-4xl leading-tight serif-title md:text-5xl">¿Qué es el Temazcal?</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#1F2922]/65 md:text-lg">Una ceremonia ancestral de calor, vapor y encuentro que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
+            </div>
+            <div className="mt-12 overflow-hidden rounded-[2rem] border border-[#123B2D]/10 bg-[#F5F0E5]" data-reveal data-delay="1">
+              <img src={img('/uploads/temazcal.webp', 1400)} alt="Ceremonia de Temazcal en Pueblo Mágico" loading="lazy" width="1400" height="900" className="aspect-[16/8] w-full object-cover" />
+              <div className="mx-auto max-w-3xl px-6 py-8 md:px-10">
+                <p className="text-sm leading-relaxed text-[#1F2922]/65">La participación es opcional, requiere inscripción previa y tiene un valor adicional. Si estás embarazada o tenés una condición cardíaca, respiratoria o de presión, consultanos antes para evaluar si esta experiencia es adecuada para vos.</p>
+                <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#123B2D]/25 px-5 py-2.5 text-sm font-semibold text-[#123B2D] transition hover:bg-[#123B2D] hover:text-white"><MessageCircle size={16} aria-hidden="true" />Consultar por WhatsApp</a>
+              </div>
             </div>
           </div>
         </section>
