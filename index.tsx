@@ -101,7 +101,8 @@ root.render(
               <Route path="/killa-raymi" element={<KillaRaymi />} />
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
               <Route path="/sunset-y-rio" element={<SunsetRio />} />
-              <Route path="/festival-31-octubre" element={<FestivalOctubre />} />
+              <Route path="/festival-atardeser" element={<FestivalOctubre />} />
+              <Route path="/festival-31-octubre" element={<Navigate to="/festival-atardeser" replace />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/cordoba-fly-fishing" element={<CordobaFlyFishing />} />
               <Route path="/voluntariado" element={<Voluntariado />} />

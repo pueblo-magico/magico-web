@@ -199,28 +199,25 @@ const ExperienceCard = ({ experience, index }: { experience: FestivalExperience;
 );
 
 const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number }) => (
-  <article className="group overflow-hidden rounded-[1.75rem] border border-[#123B2D]/10 bg-[#FCFAF5]" data-reveal data-delay={String((index % 3) + 1)}>
-    <div className="relative aspect-[4/4.7] overflow-hidden bg-[#123B2D]">
+  <article className="rounded-2xl border border-[#123B2D]/10 bg-[#123B2D]/[0.02] p-7" data-reveal data-delay={String((index % 3) + 1)}>
+    <div className="mb-5 h-14 w-14 overflow-hidden rounded-full bg-[#123B2D]/10">
       <img
         src={img(member.image, 800)}
-        alt={member.name === 'Mati Onix' ? 'Mati Onix tocando en Pueblo Mágico' : member.fullName}
+        alt={member.fullName}
         loading="lazy"
-        width="800"
-        height="940"
-        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]"
+        width="160"
+        height="160"
+        className="h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(9,22,16,0.78),transparent_55%)]" />
-      <p className="absolute bottom-5 left-5 text-3xl text-white serif-title">{member.name}</p>
     </div>
-    <div className="p-5">
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#B85A3D]">{member.role}</p>
-      <p className="mt-3 text-sm leading-relaxed text-[#1F2922]/65">{member.description}</p>
-      {'instagram' in member && member.instagram && (
-        <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#123B2D] underline decoration-[#E7B84B] decoration-2 underline-offset-4">
-          <Instagram size={14} aria-hidden="true" /> Instagram
-        </a>
-      )}
-    </div>
+    <p className="text-base font-bold text-[#1F2922]">{member.name}</p>
+    <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-[#123B2D]">{member.role}</p>
+    <p className="mt-3 text-sm leading-relaxed text-[#1F2922]/65">{member.description}</p>
+    {'instagram' in member && member.instagram && (
+      <a href={member.instagram} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#123B2D] underline decoration-[#E7B84B] decoration-2 underline-offset-4">
+        <Instagram size={14} aria-hidden="true" /> Instagram
+      </a>
+    )}
   </article>
 );
 
@@ -454,22 +451,23 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="equipo" className="bg-[#F5F0E5] px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-12 grid gap-8 lg:grid-cols-[1fr_0.65fr] lg:items-end" data-reveal>
-              <div>
-                <Eyebrow>Quienes lo hacen posible</Eyebrow>
-                <h2 className="max-w-3xl text-4xl leading-tight serif-title md:text-6xl">Un equipo que vive el lugar y cuida cada detalle.</h2>
-              </div>
-              <p className="text-sm leading-relaxed text-[#1F2922]/60">AtardeSer nace como una coproducción entre Kintu y Pueblo Mágico. El equipo reúne hospitalidad, bienestar, producción y dirección musical para crear una experiencia cercana y bien sostenida.</p>
+        <section id="equipo" className="bg-white px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-14 text-center" data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#123B2D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.4em] text-white">Quiénes te acompañan</p>
+              <h2 className="text-3xl leading-tight text-[#123B2D] serif-title md:text-4xl">Facilitadores, anfitriones y dirección musical</h2>
+              <p className="mx-auto mt-4 max-w-lg text-base text-[#1F2922]/60">Un equipo y una comunidad de referentes que suman su energía a esta celebración.</p>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
               {FESTIVAL_OCTUBRE.team.map((member, index) => <TeamCard key={member.fullName} member={member} index={index} />)}
             </div>
-            <div className="mt-8 rounded-[2rem] bg-[#123B2D] px-7 py-8 text-center text-white md:px-12 md:py-10" data-reveal>
+            <div className="relative mt-16 overflow-hidden rounded-3xl bg-[#123B2D] p-8 text-center text-white md:p-12" data-reveal data-delay="2">
+              <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#E7B84B]/25 blur-[100px]" />
+              <div className="relative z-10">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#E7B84B]">Una coproducción de</p>
               <h3 className="mt-3 text-3xl serif-title md:text-4xl">Kintu × Pueblo Mágico</h3>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65">Dos equipos que se encuentran para cuidar la producción, la hospitalidad y el sentido de una celebración creada en conexión con el lugar.</p>
+              </div>
             </div>
           </div>
         </section>

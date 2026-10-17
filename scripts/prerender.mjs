@@ -114,15 +114,15 @@ export const ROUTES = [
     path: '/sunset-y-rio',
     title: 'Sunset y Río — en la montaña · 30 oct al 1 nov · Los Gigantes | Pueblo Mágico',
     description: 'Un sábado de río, el sol cayendo con música y un fogón con guitarreada a la noche. A 90 km de Córdoba. Vení con tus amigos o venite solo o sola.',
-    image: 'https://experienciamagico.com/uploads/sunset-rio-og.jpg',
+    image: 'https://experienciamagico.com/uploads/atardeser/celebracion-grupal.jpeg',
     canonical: 'https://experienciamagico.com/sunset-y-rio',
   },
   {
-    path: '/festival-31-octubre',
+    path: '/festival-atardeser',
     title: 'Música, naturaleza y encuentro · 31 de octubre | Pueblo Mágico',
     description: 'Un día para cambiar de ritmo: electrónica orgánica, música en vivo, naturaleza y experiencias para compartir en las Sierras de Córdoba.',
     image: 'https://experienciamagico.com/uploads/sunset-rio-og.jpg',
-    canonical: 'https://experienciamagico.com/festival-31-octubre',
+    canonical: 'https://experienciamagico.com/festival-atardeser',
   },
   {
     path: '/empresas',

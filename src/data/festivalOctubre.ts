@@ -11,8 +11,8 @@ export const FESTIVAL_OCTUBRE = {
   startDate: '2026-10-30',
   endDate: '2026-11-01',
   location: 'Pueblo Mágico, Los Gigantes, Córdoba',
-  route: '/festival-31-octubre',
-  canonical: `${SITE_URL}/festival-31-octubre`,
+  route: '/festival-atardeser',
+  canonical: `${SITE_URL}/festival-atardeser`,
   description:
     'AtardeSer es una celebración de música en vivo, DJs, naturaleza y experiencias para compartir en familia en las Sierras de Córdoba.',
   images: {
@@ -23,7 +23,7 @@ export const FESTIVAL_OCTUBRE = {
     og: '/uploads/atardeser/celebracion-grupal.jpeg',
     gallery: [
       { src: '/uploads/atardeser/celebracion-grupal.jpeg', alt: 'Celebración con música y baile en Pueblo Mágico' },
-      { src: '/uploads/atardeser/mati-en-magico.jpeg', alt: 'Mati Onix tocando en una celebración en Pueblo Mágico' },
+      { src: '/uploads/atardeser/mationix.jpg', alt: 'Mationix, artista de progressive tribal organic house' },
       { src: '/uploads/atardeser/baile-en-familia.jpeg', alt: 'Personas de distintas edades bailando al aire libre' },
     ],
   },
@@ -36,12 +36,12 @@ export const FESTIVAL_OCTUBRE = {
   },
   artists: [
     {
-      name: 'Mati Onix',
+      name: 'Mationix',
       style: 'Live set · progressive tribal organic house',
-      bio: 'Un set híbrido que cruza frecuencias electrónicas, percusiones orgánicas e instrumentos étnicos en vivo. Movimiento libre y una experiencia sonora inmersiva.',
-      image: '/uploads/atardeser/mati-en-magico.jpeg',
-      imageAlt: 'Mati Onix tocando en Pueblo Mágico',
-      imageNote: 'Mati Onix en Pueblo Mágico',
+      bio: 'Un set híbrido que cruza frecuencias electrónicas, percusiones orgánicas e instrumentos étnicos en vivo. Movimiento libre y una experiencia sonora inmersiva. Presenta su primer EP, Movimiento Vital.',
+      image: '/uploads/atardeser/mationix.jpg',
+      imageAlt: 'Mationix, artista de progressive tribal organic house',
+      imageNote: 'Imagen oficial del artista',
     },
     {
       name: 'Mauri Sayri · Maurión',
@@ -146,10 +146,10 @@ export const FESTIVAL_OCTUBRE = {
     { name: 'China', fullName: 'China Dericia', role: 'Movimiento · bienestar · hospitalidad', description: 'Guía prácticas de yoga, movimiento consciente, respiración y canto para volver al cuerpo durante el encuentro.', image: '/uploads/china.jpeg', instagram: 'https://www.instagram.com/bambu.alquimia.terapeutica/' },
     { name: 'Nicole', fullName: 'Nicole Rosignoli Miranda', role: 'Cuidado · integración · salud cíclica', description: 'Psicóloga gestáltica. Acompaña espacios grupales e integra naturaleza, cuerpo y cuidado de los procesos.', image: '/uploads/nicole-rosignoli.webp', instagram: 'https://www.instagram.com/thematriiz/' },
     { name: 'Jasper', fullName: 'Jasper Felix Meyer', role: 'Producción · tecnología · música', description: 'Conecta producción, comunicación, música y herramientas digitales para darle forma al encuentro.', image: '/uploads/jasper.png', instagram: 'https://www.instagram.com/itsjasperrz/' },
-    { name: 'Mati Onix', fullName: 'Mati Onix', role: 'Dirección musical · live set', description: 'Parte del equipo musical y de la grilla central. Acompaña la identidad sonora de esta primera edición.', image: '/uploads/atardeser/mati-en-magico.jpeg' },
+    { name: 'Mationix', fullName: 'Mationix', role: 'Dirección musical · live set', description: 'Parte del equipo musical y de la grilla central. Acompaña la identidad sonora de esta primera edición.', image: '/uploads/atardeser/mationix.jpg' },
   ],
   experiences: [
-    { title: 'Música en vivo y DJs', description: 'Cuatro artistas confirmados para un viaje que va del movimiento del día al fuego de la noche.', image: '/uploads/atardeser/mati-en-magico.jpeg', alt: 'Música en vivo en Pueblo Mágico' },
+    { title: 'Música en vivo y DJs', description: 'Cuatro artistas confirmados para un viaje que va del movimiento del día al fuego de la noche.', image: '/uploads/atardeser/mationix.jpg', alt: 'Mationix durante una presentación musical' },
     { title: 'Río y montaña', description: 'Caminatas, agua y el paisaje de Los Gigantes como parte de la experiencia.', image: '/uploads/sunset-rio-rio-real.webp', alt: 'Río entre las sierras cerca de Pueblo Mágico' },
     { title: 'Movimiento y bienestar', description: 'Yoga y propuestas de movimiento para volver al cuerpo y cambiar de ritmo.', image: '/uploads/atardeser/movimiento.jpeg', alt: 'Movimiento y baile al aire libre' },
     { title: 'Temazcal del domingo', description: 'Ceremonia con cupo limitado, inscripción previa y valor adicional.', image: '/uploads/temazcal.webp', alt: 'Espacio de ceremonia de temazcal en Pueblo Mágico' },
