@@ -48,6 +48,8 @@ const COPY = {
     previousMonth: 'Mes anterior', nextMonth: 'Mes siguiente',
     dateHelp: 'La salida debe ser posterior a la llegada.', continue: 'Continuar', back: 'Volver', edit: 'Editar',
     dateNoticeTitle: 'Disponibilidad en tiempo real', dateNotice: 'Verificamos las fechas, el alojamiento y el precio antes de crear la reserva.',
+    arrivalTitle: 'Horarios de llegada y salida', arrivalTime: 'Check-in desde las 13:00 hs', departureTime: 'Check-out hasta las 11:00 hs',
+    arrivalHelp: 'Podés llegar antes o quedarte después para disfrutar del predio; fuera de esos horarios el alojamiento puede estar en limpieza.',
     selectionPending: 'El precio se calcula al verificar disponibilidad.', selectionTitle: 'Tu reserva',
     stayTitle: 'Elegí cómo querés quedarte', accommodation: 'Alojamiento', domo: 'Domo',
     refugio: 'Refugio de piedra', camping: 'Camping', mode: 'Modalidad', compartida: 'Compartida', privada: 'Privada',
@@ -70,8 +72,13 @@ const COPY = {
     total: 'Total de la estadía', fromTotal: 'Total desde', fromNight: 'Desde por noche', perPerson: 'Por persona',
     estimatedPrice: 'Estimado con las tarifas publicadas para tu selección.', startingPriceHelp: 'Elegí tus fechas para calcular el total de la estadía.',
     unavailablePrice: 'No hay una tarifa publicada para esta selección.', deposit: 'Seña', balance: 'Saldo al llegar',
-    quoteValid: 'Cotización válida durante', consentPrefix: 'Leí y acepto los',
+    quoteValid: 'Cotización válida durante', consentPrefix: 'Leí y acepto las condiciones de esta estadía, la política de cambios y cancelación, los',
     terms: 'Términos y Condiciones', privacy: 'Política de Privacidad', reserve: 'Crear reserva',
+    conditionsTitle: 'Condiciones de tu reserva', conditionsIntro: 'Revisá la información aplicable a esta selección antes de crear la reserva.',
+    mealConditionsTitle: 'Comidas y horarios', extendedUseTitle: 'Uso extendido del predio',
+    extendedUseCopy: 'Antes del check-in o después del check-out podés disfrutar del río y del predio, pero no tendrás disponible el espacio de alojamiento mientras se prepara para el siguiente ingreso.',
+    changesTitle: 'Saldo, cambios y cancelación', changesCopy: 'El saldo pendiente se abona al llegar. Reprogramaciones de fecha o ajustes de comidas deben solicitarse con al menos 24 horas de anticipación.',
+    fullPolicy: 'Ver política completa', includedConditionsTitle: 'Servicios y limitaciones del alojamiento',
     reserving: 'Creando reserva…', privacyNote: 'Usamos tus datos únicamente para gestionar esta reserva.',
     secureNote: 'La disponibilidad y el precio se verificaron automáticamente.',
     pendingTitle: 'Tu lugar está retenido',
@@ -111,6 +118,8 @@ const COPY = {
     previousMonth: 'Previous month', nextMonth: 'Next month',
     dateHelp: 'Departure must be after arrival.', continue: 'Continue', back: 'Back', edit: 'Edit',
     dateNoticeTitle: 'Live availability', dateNotice: 'We verify dates, accommodation and price before creating the reservation.',
+    arrivalTitle: 'Arrival and departure times', arrivalTime: 'Check-in from 1:00 pm', departureTime: 'Check-out by 11:00 am',
+    arrivalHelp: 'You may arrive earlier or stay later to enjoy the property; outside these hours the accommodation may be undergoing cleaning.',
     selectionPending: 'The price is calculated after checking availability.', selectionTitle: 'Your reservation',
     stayTitle: 'Choose how you want to stay', accommodation: 'Accommodation', domo: 'Dome',
     refugio: 'Stone shelter', camping: 'Camping', mode: 'Room type', compartida: 'Shared', privada: 'Private',
@@ -133,7 +142,12 @@ const COPY = {
     total: 'Stay total', fromTotal: 'Total from', fromNight: 'From per night', perPerson: 'Per person',
     estimatedPrice: 'Estimated from the published rates for your selection.', startingPriceHelp: 'Choose your dates to calculate the stay total.',
     unavailablePrice: 'There is no published rate for this selection.', deposit: 'Deposit', balance: 'Balance on arrival', quoteValid: 'Quote valid for',
-    consentPrefix: 'I have read and accept the', terms: 'Terms and Conditions', privacy: 'Privacy Policy',
+    consentPrefix: 'I have read and accept these stay conditions, the change and cancellation policy, the', terms: 'Terms and Conditions', privacy: 'Privacy Policy',
+    conditionsTitle: 'Your booking conditions', conditionsIntro: 'Review the information that applies to this selection before creating the booking.',
+    mealConditionsTitle: 'Meals and service times', extendedUseTitle: 'Extended use of the property',
+    extendedUseCopy: 'Before check-in or after check-out you may enjoy the river and the property, but the accommodation space will not be available while it is prepared for the next arrival.',
+    changesTitle: 'Balance, changes and cancellation', changesCopy: 'The remaining balance is due on arrival. Date changes or meal adjustments must be requested at least 24 hours in advance.',
+    fullPolicy: 'View full policy', includedConditionsTitle: 'Accommodation services and limitations',
     reserve: 'Create reservation', reserving: 'Creating reservation…',
     privacyNote: 'We only use your details to manage this reservation.', secureNote: 'Availability and pricing were verified automatically.', pendingTitle: 'Your place is being held',
     pendingCopy: 'Your reservation is confirmed once we verify the deposit.', reservationCode: 'Reservation code',
@@ -996,6 +1010,10 @@ export const BookingWidget: React.FC<{
                     <span><Users size={28} /><span><strong>{c.people}</strong><small>{language === 'es' ? '¿Quiénes vienen?' : 'Who is coming?'}</small></span></span>
                     <div className="booking-counter" aria-label={c.people}><button type="button" aria-label={`${c.people} -`} onClick={() => { setPeople(value => Math.max(1, value - 1)); resetQuote(); }}><Minus /></button><output aria-live="polite">{people}</output><button type="button" aria-label={`${c.people} +`} onClick={() => { setPeople(value => value + 1); resetQuote(); }}><Plus /></button></div>
                   </div>
+                  <div className="booking-arrival-summary" aria-label={c.arrivalTitle}>
+                    <Clock3 size={22} aria-hidden="true" />
+                    <span><strong>{c.arrivalTitle}</strong><small>{c.arrivalTime} · {c.departureTime}</small><small>{c.arrivalHelp}</small></span>
+                  </div>
                   <div className="booking-notice booking-notice--gold"><CalendarDays size={22} /><span><strong>{c.dateNoticeTitle}</strong>{c.dateNotice}</span></div>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
                   <div className="booking-actions"><button className="booking-button" type="button" onClick={goToStay}>{c.continue}<ArrowRight size={18} /></button></div>
@@ -1036,7 +1054,6 @@ export const BookingWidget: React.FC<{
                     <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => goToStep(1)}>{c.edit}</button></div>
                     <div><BedDouble /><span><small>{c.stayTitle}</small><strong>{c[type]} · {selectedModeName}</strong>{selectedModeDescription && <em>{selectedModeDescription}</em>}{selectedBedPreparation && <em>{c.bedPreparation}: {selectedBedPreparation.nombre}</em>}<em>{c[mealPlan]} · {mealPlanHelp(mealPlan)}</em></span><button type="button" onClick={() => goToStep(2)}>{c.edit}</button></div>
                   </div>
-                  {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--review" aria-label={c.utilities}>{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
                   <div className="booking-grid">
                     <label className="booking-field booking-field--full">{c.name}<span><UserRound /><input value={guest.name} onChange={event => setGuest({ ...guest, name: event.target.value })} autoComplete="name" required /></span></label>
@@ -1046,8 +1063,19 @@ export const BookingWidget: React.FC<{
                   <p className="booking-section-title">{c.paymentMethod}</p>
                   <div className="booking-choice-grid booking-payment-methods">{quote.metodos_pago.map(option => <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>{option === 'mercado_pago_checkout' ? <CreditCard size={23} /> : <Landmark size={23} />}<span>{option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
                   {paymentMethod === 'transferencia_mp' && <label className="booking-field booking-field--full booking-dni-field">{c.dni}<span><UserRound /><input inputMode="numeric" value={payerDni} onChange={event => setPayerDni(event.target.value)} autoComplete="off" pattern="[0-9. -]{7,12}" required /></span><small>{c.dniHelp}</small></label>}
+                  <section className="booking-conditions" aria-labelledby="booking-conditions-title">
+                    <header><ShieldCheck size={24} aria-hidden="true" /><span><h4 id="booking-conditions-title">{c.conditionsTitle}</h4><p>{c.conditionsIntro}</p></span></header>
+                    {renderPriceSummary('booking-conditions__price')}
+                    <div className="booking-conditions__grid">
+                      <div><Clock3 aria-hidden="true" /><span><strong>{c.arrivalTitle}</strong><small>{c.arrivalTime}<br />{c.departureTime}</small></span></div>
+                      <div><Utensils aria-hidden="true" /><span><strong>{c.mealConditionsTitle}</strong><small>{c[mealPlan]} · {mealPlanHelp(mealPlan)}</small></span></div>
+                    </div>
+                    {selectedUtilities.length > 0 && <div className="booking-conditions__section"><strong>{c.includedConditionsTitle}</strong><div className="booking-utilities booking-utilities--review" aria-label={c.utilities}>{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div></div>}
+                    <div className="booking-conditions__detail"><Leaf aria-hidden="true" /><span><strong>{c.extendedUseTitle}</strong><small>{c.extendedUseCopy}</small></span></div>
+                    <div className="booking-conditions__detail booking-conditions__detail--gold"><CalendarDays aria-hidden="true" /><span><strong>{c.changesTitle}</strong><small>{c.changesCopy} <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer">{c.fullPolicy}</a>.</small></span></div>
+                  </section>
                   <div className="booking-notice"><ShieldCheck size={20} /> {c.privacyNote}</div>
-                  <label className="booking-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank">{c.privacy}</a>.</span></label>
+                  <label className="booking-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer">{c.privacy}</a>.</span></label>
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
                   <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => goToStep(2)}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !guest.email.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
                 </form>

@@ -114,6 +114,22 @@ test('muestra servicios disponibles y limitaciones explícitas del alojamiento s
   assert.match(styles, /\.booking-utility--unavailable/);
 });
 
+test('expone las condiciones aplicables antes de crear la reserva', () => {
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(widget, /Horarios de llegada y salida/);
+  assert.match(widget, /Check-in desde las 13:00 hs/);
+  assert.match(widget, /Check-out hasta las 11:00 hs/);
+  assert.match(widget, /Condiciones de tu reserva/);
+  assert.match(widget, /selectedUtilities\.length > 0/);
+  assert.match(widget, /mealPlanHelp\(mealPlan\)/);
+  assert.match(widget, /El saldo pendiente se abona al llegar/);
+  assert.match(widget, /Reprogramaciones de fecha o ajustes de comidas deben solicitarse con al menos 24 horas/);
+  assert.match(widget, /Leí y acepto las condiciones de esta estadía/);
+  assert.match(styles, /\.booking-conditions\s*\{/);
+  assert.match(styles, /\.booking-conditions__grid/);
+});
+
 test('pide y envía la preparación de camas configurada para domo privado de dos personas', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
