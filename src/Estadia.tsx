@@ -96,13 +96,17 @@ function etiquetaModalidad(
     || modalidad;
 }
 
-function textoPrecioRegla(regla: PublicPriceRule, adicionalPersona = 0): string {
+function partesPrecioRegla(
+  regla: PublicPriceRule,
+  adicionalPersona = 0,
+): { principal: string; adicional: string | null } {
   if (regla.base_calculo === 'persona_noche') {
-    return `${pesos(regla.importe_centavos + adicionalPersona)}/persona`;
+    return { principal: pesos(regla.importe_centavos + adicionalPersona), adicional: null };
   }
-  return adicionalPersona > 0
-    ? `${pesos(regla.importe_centavos)}/unidad + ${pesos(adicionalPersona)}/persona`
-    : `${pesos(regla.importe_centavos)}/unidad`;
+  return {
+    principal: pesos(regla.importe_centavos),
+    adicional: adicionalPersona > 0 ? `+ ${pesos(adicionalPersona)}/persona` : null,
+  };
 }
 
 const ORDEN_TIPO_TARIFA: Record<AccommodationType, number> = {
@@ -124,6 +128,7 @@ function textoDiasTarifa(dias: number[]): string {
   if (clave === '1,2,3,4,5,6,7') return 'todos los días';
   if (clave === '1,2,3,4,7') return 'domingo a jueves';
   if (clave === '1,2,3,4') return 'lunes a jueves';
+  if (clave === '5,6,7') return 'viernes a domingo';
   if (clave === '5,6') return 'viernes y sábado';
   if (clave === '7') return 'domingo';
   const nombres = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
@@ -204,7 +209,8 @@ function detalleGrupoTarifa(grupo: FilaTarifaVista): string {
       ? `${rangos} personas`
       : `${ETIQUETAS_ALOJAMIENTO[oferta.tipo]} ${rangos}`;
   }).join(' · ');
-  return `${grupo.modalidadEtiqueta} · ${capacidades}`;
+  const unidad = grupo.regla.base_calculo === 'unidad_noche' ? 'precio por unidad' : 'precio por persona';
+  return `${grupo.modalidadEtiqueta} · ${capacidades} · ${unidad}`;
 }
 
 function textoComidasOpcionales(precios: PublicPricingSummary | null): string {
@@ -492,22 +498,29 @@ const Alojamientos: React.FC<{ precios: PublicPricingSummary | null; cargado: bo
               {!cargado && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">Cargando tarifas vigentes…</p>}
               {cargado && gruposTarifa.length === 0 && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">No hay tarifas publicadas aplicables hoy. Consultá el precio en la reserva online.</p>}
               <div className="space-y-2">
-                {gruposTarifa.map((grupo, indice) => (
-                  <div key={`${grupo.regla.temporada_codigo}-${grupo.regla.modalidad}-${grupo.regla.importe_centavos}-${indice}`}
-                    className={`rounded-xl border bg-bone px-4 py-3.5 ${grupo.regla.modalidad === 'privada' ? 'border-gold/40' : 'border-brand/10'}`}>
-                    <div className="grid grid-cols-[minmax(0,1fr)_minmax(76px,auto)_minmax(88px,auto)] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_112px_112px] sm:gap-x-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold leading-tight text-brand">{nombreGrupoTarifa(grupo)}</p>
-                        <p className="mt-1 text-[11px] leading-snug text-dark/45">{detalleGrupoTarifa(grupo)}</p>
+                {gruposTarifa.map((grupo, indice) => {
+                  const desayuno = partesPrecioRegla(grupo.regla);
+                  const pension = partesPrecioRegla(grupo.regla, adicionalPension);
+                  return (
+                    <div key={`${grupo.regla.temporada_codigo}-${grupo.regla.modalidad}-${grupo.regla.importe_centavos}-${indice}`}
+                      className={`rounded-xl border bg-bone px-4 py-3.5 ${grupo.regla.modalidad === 'privada' ? 'border-gold/40' : 'border-brand/10'}`}>
+                      <div className="grid grid-cols-[minmax(0,1fr)_minmax(76px,auto)_minmax(88px,auto)] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_112px_112px] sm:gap-x-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold leading-tight text-brand">{nombreGrupoTarifa(grupo)}</p>
+                          <p className="mt-1 text-[11px] leading-snug text-dark/45">{detalleGrupoTarifa(grupo)}</p>
+                        </div>
+                        <p className="whitespace-nowrap text-center font-serif text-sm leading-snug text-brand sm:text-lg">{desayuno.principal}</p>
+                        <p className="text-center font-serif text-sm leading-snug text-gold sm:text-lg">
+                          <span className="block whitespace-nowrap">{pension.principal}</span>
+                          {pension.adicional && <span className="mt-0.5 block text-[10px] font-sans font-semibold sm:text-xs">{pension.adicional}</span>}
+                        </p>
                       </div>
-                      <p className="break-words text-center font-serif text-sm leading-snug text-brand sm:text-lg">{textoPrecioRegla(grupo.regla)}</p>
-                      <p className="break-words text-center font-serif text-sm leading-snug text-gold sm:text-lg">{textoPrecioRegla(grupo.regla, adicionalPension)}</p>
+                      {periodosTarifa.length > 1 && <p className="mt-2 border-t border-brand/10 pt-2 text-[11px] text-dark/55">
+                        <strong className="font-semibold text-brand">Tarifa aplicable:</strong> {textoDiasTarifa(grupo.regla.dias_semana)}
+                      </p>}
                     </div>
-                    {periodosTarifa.length > 1 && <p className="mt-2 border-t border-brand/10 pt-2 text-[11px] text-dark/55">
-                      <strong className="font-semibold text-brand">Tarifa aplicable:</strong> {textoDiasTarifa(grupo.regla.dias_semana)}
-                    </p>}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <p className="text-dark/50 text-xs leading-relaxed mt-2">
                 <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. {precioAlmuerzo > 0 || precioCena > 0 ? <>Podés sumar {precioAlmuerzo === precioCena ? <>almuerzo o cena a +{pesos(precioAlmuerzo)} c/u.</> : <>almuerzo a +{pesos(precioAlmuerzo)} y cena a +{pesos(precioCena)}.</>}</> : 'Consultá las comidas opcionales al reservar.'}<br />
