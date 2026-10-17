@@ -5,6 +5,15 @@ SELECT CASE WHEN
   EXISTS (SELECT 1 FROM schema_migrations WHERE version = '0006')
   AND EXISTS (SELECT 1 FROM schema_migrations WHERE version = '0031')
   AND EXISTS (SELECT 1 FROM schema_migrations WHERE version = '0033')
+  AND EXISTS (SELECT 1 FROM schema_migrations WHERE version = '0037')
+  AND EXISTS (
+    SELECT 1 FROM pragma_table_info('cotizaciones')
+    WHERE name = 'subtotal_antes_ajustes_centavos'
+  )
+  AND EXISTS (
+    SELECT 1 FROM pragma_table_info('cotizaciones')
+    WHERE name = 'ajuste_total_centavos'
+  )
   AND (SELECT COUNT(*) FROM planes_tarifa WHERE estado = 'publicado') = 1
   AND NOT EXISTS (
     SELECT 1 FROM planes_tarifa p

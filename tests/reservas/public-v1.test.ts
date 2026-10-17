@@ -353,6 +353,64 @@ test('cotiza pensión completa con dos comidas de ARS 20.000 por persona y noche
   sqlite.close();
 });
 
+test('persiste cotizaciones con recargos sin romper la igualdad de sus componentes', async () => {
+  const { sqlite, db } = baseMigrada();
+  sqlite.prepare(`
+    INSERT INTO reglas_ajuste_precio (
+      plan_tarifa_id, codigo, nombre, anticipacion_desde_dias,
+      anticipacion_hasta_dias, direccion, tipo, valor
+    )
+    SELECT id, 'recargo-qa', 'Recargo QA', 0, NULL, 'recargo', 'porcentaje_bps', 1000
+    FROM planes_tarifa WHERE estado = 'publicado'
+  `).run();
+
+  const response = await crearCotizacion({
+    request: new Request('https://test/api/v1/public/cotizaciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in: '2027-04-10', check_out: '2027-04-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
+        regimen_alimentacion: 'pension_completa',
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 200);
+  const body = await response.json() as any;
+  assert.equal(body.data.precio.subtotal_antes_ajustes_centavos, 31_000_000);
+  assert.equal(body.data.precio.ajuste_total_centavos, 3_100_000);
+  assert.equal(body.data.precio.subtotal_centavos, 34_100_000);
+
+  const snapshot = sqlite.prepare(`
+    SELECT subtotal_antes_ajustes_centavos, ajuste_total_centavos,
+           alojamiento_centavos, alimentacion_centavos, subtotal_centavos
+    FROM cotizaciones ORDER BY id DESC LIMIT 1
+  `).get() as Record<string, number>;
+  assert.equal(snapshot.subtotal_antes_ajustes_centavos,
+    snapshot.alojamiento_centavos + snapshot.alimentacion_centavos);
+  assert.equal(snapshot.subtotal_centavos,
+    snapshot.subtotal_antes_ajustes_centavos + snapshot.ajuste_total_centavos);
+  sqlite.close();
+});
+
+test('cotizaciones v1 transforma fallas inesperadas en un error JSON estable', async () => {
+  const response = await crearCotizacion({
+    request: new Request('https://test/api/v1/public/cotizaciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in: '2027-04-10', check_out: '2027-04-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
+      }),
+    }),
+    env: env({ prepare() { throw new Error('database unavailable'); } }),
+  });
+
+  assert.equal(response.status, 500);
+  assert.match(response.headers.get('content-type') || '', /application\/json/);
+  assert.equal((await response.json() as any).error.codigo, 'ERROR_INTERNO');
+});
+
 test('rechaza regímenes de alimentación fuera del contrato', async () => {
   const { sqlite, db } = baseMigrada();
   const response = await crearCotizacion({

@@ -6,7 +6,24 @@ import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
-export async function onRequestPost({ request, env }: any) {
+export async function onRequestPost(context: any) {
+  try {
+    return await procesarCotizacion(context);
+  } catch (error) {
+    console.error(JSON.stringify({
+      evento: 'cotizacion_publica_error',
+      mensaje: error instanceof Error ? error.message : 'Error desconocido',
+    }));
+    return jsonPublico(context.request, 'POST', {
+      error: {
+        codigo: 'ERROR_INTERNO',
+        mensaje: 'No pudimos calcular la cotización. Intentá nuevamente en unos minutos.',
+      },
+    }, 500);
+  }
+}
+
+async function procesarCotizacion({ request, env }: any) {
   const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.v1.cotizaciones', 60, 60));
   if (limitada) return limitada;
   const lectura = await leerJsonPublico(request, 'POST');

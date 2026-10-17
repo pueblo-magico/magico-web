@@ -216,8 +216,8 @@ test('persiste un snapshot con código, hash y vencimiento sin datos personales'
   assert.match(guardada.codigo, /^COT-[0-9a-f-]+$/);
   assert.ok(Date.parse(guardada.expiresAt) > Date.now());
   assert.equal(values[0], guardada.codigo);
-  assert.match(String(values[15]), /^[a-f0-9]{64}$/);
-  assert.equal(String(values[14]).includes('cliente'), false);
+  assert.match(String(values[17]), /^[a-f0-9]{64}$/);
+  assert.equal(String(values[16]).includes('cliente'), false);
 });
 
 test('falla cerrado si D1 no devuelve el snapshot insertado', async () => {
