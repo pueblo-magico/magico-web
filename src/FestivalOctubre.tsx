@@ -328,7 +328,7 @@ const FestivalOctubre: React.FC = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(10,20,14,0.56)_0%,rgba(10,20,14,0.82)_62%,rgba(10,20,14,0.94)_100%)] max-md:bg-[linear-gradient(to_top,rgba(10,20,14,0.97)_0%,rgba(10,20,14,0.78)_58%,rgba(10,20,14,0.5)_100%)]" />
           <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,rgba(10,20,14,0.7),transparent)]" />
 
-          <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-16 pt-28 text-center md:px-10 md:pb-20 md:pt-32">
+          <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-16 pt-20 text-center md:px-10 md:pb-20 md:pt-20">
               <div className="mx-auto max-w-4xl">
               <div className="mb-6 flex flex-wrap justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/80">
                 <span className="rounded-full border border-white/25 bg-black/15 px-4 py-2 backdrop-blur-sm">Sábado 31 de octubre de 2026</span>
