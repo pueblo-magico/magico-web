@@ -314,7 +314,7 @@ const FestivalOctubre: React.FC = () => {
       <Header subNavigation={<PageSectionNav navigation={navigation} minimumSections={5} />} />
 
       <main>
-        <section className="relative flex min-h-[980px] items-end overflow-hidden bg-[#111914] md:min-h-[880px] md:items-center">
+        <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-[#111914]">
           <picture className="absolute inset-0">
             <source media="(max-width: 640px)" srcSet={img(FESTIVAL_OCTUBRE.images.heroMobile, 1000)} />
             <img
@@ -325,48 +325,30 @@ const FestivalOctubre: React.FC = () => {
               className="h-full w-full object-cover object-center max-sm:object-[57%_center]"
             />
           </picture>
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,20,14,0.94)_0%,rgba(10,20,14,0.65)_52%,rgba(10,20,14,0.2)_100%)] max-md:bg-[linear-gradient(to_top,rgba(10,20,14,0.99)_0%,rgba(10,20,14,0.88)_44%,rgba(10,20,14,0.25)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(10,20,14,0.56)_0%,rgba(10,20,14,0.82)_62%,rgba(10,20,14,0.94)_100%)] max-md:bg-[linear-gradient(to_top,rgba(10,20,14,0.97)_0%,rgba(10,20,14,0.78)_58%,rgba(10,20,14,0.5)_100%)]" />
           <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,rgba(10,20,14,0.7),transparent)]" />
 
-          <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-12 pt-40 md:px-10 md:py-36 lg:px-16">
-            <div className="grid items-end gap-10 lg:grid-cols-[1.08fr_0.72fr] lg:gap-16">
-              <div className="max-w-3xl">
-              <div className="mb-7 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/80">
+          <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-16 pt-28 text-center md:px-10 md:pb-20 md:pt-32">
+              <div className="mx-auto max-w-4xl">
+              <div className="mb-6 flex flex-wrap justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/80">
                 <span className="rounded-full border border-white/25 bg-black/15 px-4 py-2 backdrop-blur-sm">Sábado 31 de octubre de 2026</span>
                 <span className="rounded-full border border-white/25 bg-black/15 px-4 py-2 backdrop-blur-sm">Los Gigantes · Córdoba</span>
               </div>
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.32em] text-[#E7B84B]">{FESTIVAL_OCTUBRE.nameStatus}</p>
-              <h1 className="max-w-3xl text-6xl leading-[0.9] text-white serif-title sm:text-7xl md:text-8xl">Atarde<span className="text-[#E7B84B]">Ser</span></h1>
-              <p className="mt-7 max-w-2xl text-base leading-relaxed text-white/75 md:text-lg">
+              <h1 className="text-6xl leading-[0.9] text-white serif-title sm:text-7xl md:text-8xl lg:text-9xl">Atarde<span className="text-[#E7B84B]">Ser</span></h1>
+              <p className="mx-auto mt-7 max-w-3xl text-base leading-relaxed text-white/75 md:text-lg">
                 Un día para encontrarnos, celebrar y conectar con el pulso natural. Live sets y música en vivo con DJs invitados, naturaleza y experiencias para compartir en el corazón de la montaña. Vení por el día o quedate a vivir el finde completo.
               </p>
-              <div className="mt-7"><Countdown /></div>
-              <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <div className="mt-7 flex justify-center"><Countdown /></div>
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <FestivalButton href={FESTIVAL_OCTUBRE.contact.general}>Quiero sumarme</FestivalButton>
                 <FestivalButton href="#propuesta" secondary>Conocer la propuesta</FestivalButton>
               </div>
-              <div className="mt-8 flex items-center gap-3 text-xs text-white/55">
+              <div className="mt-8 flex items-center justify-center gap-3 text-xs text-white/55">
                 <Clock3 size={15} aria-hidden="true" />
                 <span>Preventa abierta · cupos de alojamiento limitados</span>
               </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3" data-reveal data-delay="2">
-                {FESTIVAL_OCTUBRE.images.gallery.map((photo, index) => (
-                  <div key={photo.src} className={`relative overflow-hidden rounded-[1.5rem] border border-white/15 ${index === 0 ? 'col-span-2 aspect-[16/8]' : 'aspect-square'}`}>
-                    <img src={img(photo.src, 900)} alt={photo.alt} className="h-full w-full object-cover" width="900" height="700" />
-                    <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(10,20,14,0.55),transparent_55%)]" />
-                  </div>
-                ))}
-                <a href="#entradas" className="col-span-2 flex items-center justify-between gap-5 rounded-[1.5rem] border border-white/15 bg-[#0A140E]/70 p-5 text-white backdrop-blur-md transition hover:border-[#E7B84B]/60">
-                  <span>
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-[#E7B84B]">Pase por el día</span>
-                    <span className="mt-1 block text-sm text-white/60">También hay opciones con una o dos noches</span>
-                  </span>
-                  <span className="shrink-0 text-2xl text-[#E7B84B] serif-title">AR$ 35.000</span>
-                </a>
-              </div>
-            </div>
           </div>
           <a href="#propuesta" aria-label="Ir a la propuesta" className="absolute bottom-8 right-6 z-10 hidden h-12 w-12 items-center justify-center rounded-full border border-white/25 text-white/70 transition hover:bg-white/10 md:flex">
             <ArrowDown size={18} aria-hidden="true" />
