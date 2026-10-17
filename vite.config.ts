@@ -62,6 +62,11 @@ export default defineConfig({
     host: true,
     // choose a constant port so the URL doesn't shift each time you restart
     // and so you can bookmark or open it without guessing.
-    port: 5173
+    port: 5173,
+    // Las Functions (/api: login del panel, formularios, CSV) no corren en
+    // Vite: se reenvían a `npx wrangler pages dev dist --port 8788`.
+    proxy: {
+      '/api': 'http://127.0.0.1:8788',
+    },
   }
 })

@@ -1,5 +1,23 @@
 {
   "es": {
+    "aliados": {
+      "title": "Organizaciones ambientales aliadas",
+      "note": "Con Acción Ambiental ya cerramos un acuerdo de trabajo conjunto. Bosques de Agua y Acción Serrana aportan conocimiento técnico y experiencia territorial según cada intervención.",
+      "items": [
+        {"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Conservación del ambiente: difusión, educación y acción ambiental en la provincia de Córdoba."},
+        {"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restauran el bosque nativo de altura y las cuencas hídricas de las Sierras Grandes."},
+        {"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regeneran los bosques de altura y sus nacientes de agua junto a las comunidades locales."},
+        {"name":"Consciencia Nativa","text":"Provee los árboles nativos de la campaña de reforestación."}
+      ]
+    },
+    "practicas": {
+      "title": "La regeneración también está en la operación diaria",
+      "items": [
+        {"title":"Energía solar casi al 100%","text":"El generador solo se usa en emergencias o en días muy nublados."},
+        {"title":"Baños secos","text":"No usan ni contaminan agua: cuidamos las nacientes de los arroyos serranos."},
+        {"title":"Compost","text":"Los residuos orgánicos y de los baños secos vuelven al suelo como abono."}
+      ]
+    },
     "booking": {
       "months": [
         { "label": "Octubre", "short": "Oct" }, { "label": "Noviembre", "short": "Nov" }, { "label": "Diciembre", "short": "Dic" }, { "label": "Enero", "short": "Ene" }, { "label": "Febrero", "short": "Feb" }
@@ -22,11 +40,11 @@
       "refugioFull": "Refugio de Piedra",
       "carpaFull": "Camping",
       "carpaRegimen": "Alojamiento + desayuno",
-      "carpaNote": "Camping — te confirmamos disponibilidad y coordinamos todo por WhatsApp.",
+      "carpaNote": "Camping — te confirmamos disponibilidad y coordinamos todo por WhatsApp. ¿Querés venir sin comidas? Consultanos por esa opción.",
       "roomType": "Tipo de habitación",
       "sharedRoom": "Compartida",
       "privateRoom": "Privada",
-      "mealPlan": "Comidas", "mealBreakfast": "Con desayuno", "mealFullBoard": "Pensión completa", "mealBreakfastNote": "Alojamiento + desayuno. Almuerzo o cena se suman aparte (+$20.000 c/u).", "mealFullBoardNote": "Desayuno, almuerzo y cena incluidos — precio total cerrado por persona/noche.", "privateDomoNote": "Domo privado: hasta 7 personas ($50.000 por persona/noche con desayuno; 1 persona sola $100.000)",
+      "mealPlan": "Comidas", "mealBreakfast": "Con desayuno", "mealFullBoard": "Pensión completa", "mealBreakfastNote": "Alojamiento + desayuno. Almuerzo o cena se suman aparte (+$20.000 c/u).", "mealFullBoardNote": "Desayuno, almuerzo y cena incluidos — precio total cerrado por persona/noche.", "weekendNote": "🌙 Viernes y sábado se reservan solo con pensión completa: esas noches ya incluyen desayuno, almuerzo y cena.", "weekendRegimenSuffix": " (viernes y sábado con pensión completa)", "nightsAt": "{nights} a {precio}", "privateDomoNote": "Domo privado: de 2 a 7 personas ($50.000 por persona/noche con desayuno)",
       "retiroNote": "🗓️ Los fines de semana puede haber retiros o eventos en los domos — consultanos disponibilidad: te confirmamos por WhatsApp si hay lugar antes de cerrar la reserva.",
       "unavailableForDates": "Esa opción no tiene lugar en las fechas que elegiste — probá con otras fechas.",
       "capacityExceeded": "El {tipo} tiene capacidad para hasta {max} personas — para grupos más grandes, escribinos por WhatsApp.",
@@ -36,14 +54,14 @@
       },
       "groupTeaser": "👥 ¿Van 3 o más? Hay tarifas especiales para grupos.",
       "perPersonPerNight": "persona/noche",
-      "discountApplied": "🎉 Precio promocional: ahorrás ${ahorro} por persona por noche.",
-      "privacySurcharge": "Privacidad: +${extra} por persona por noche.",
+      "discountApplied": "🎉 Precio promocional: ahorrás {ahorro} por persona por noche.",
+      "privacySurcharge": "Privacidad: +{extra} por persona por noche.",
       "privacyIncluded": "✓ Privacidad incluida, sin cargo extra.",
       "monthUrgency": {
         "pocosLugares": "⚡ Pocos lugares para {month}",
         "ultimosLugares": "🔥 Últimos lugares para {month}"
       },
-      "senaNote": "Seña para congelar la tarifa: ${monto} ({pct}% del total) · el resto se abona al llegar",
+      "senaNote": "Seña para congelar la tarifa: {monto} ({pct}% del total) · el otro 50% se abona a más tardar al llegar",
       "clear": "limpiar",
       "confirmWhatsapp": "Confirmar por WhatsApp",
       "checkAvailability": "Consultar disponibilidad",
@@ -117,12 +135,18 @@
         "description": "Una campaña para seguir regenerando la montaña con bosque nativo, trabajo territorial y una comunidad que cuida lo que ama.",
         "primaryCta": "Quiero aportar",
         "secondaryCta": "Conocer el proyecto",
-        "imageAlt": "Grupo de voluntariado con plantines nativos durante una jornada de reforestación en las sierras"
+        "imageAlt": "Grupo de voluntariado con plantines nativos durante una jornada de reforestación en las sierras",
+        "raisedLabel": "recaudado para la seña",
+        "ofGoal": "de",
+        "daysLeft": "Faltan {days} días para completar la seña",
+        "lastDay": "¡Hoy es el último día para completar la seña!",
+        "donors": "{count} personas ya aportaron",
+        "voucherBadge": "Voucher solidario"
       },
       "impact": {
         "eyebrow": "Una historia que ya empezó",
         "title": "Raíces para el futuro de la montaña",
-        "description": "La nueva meta continúa un trabajo sostenido de restauración junto a Consciencia Nativa y otras organizaciones ambientales.",
+        "description": "La nueva meta continúa un trabajo sostenido de restauración junto a organizaciones ambientales de la región. Los árboles nativos de esta campaña se compran a Consciencia Nativa.",
         "stats": [
           { "value": "+25.000", "label": "árboles nativos plantados", "description": "El recorrido acumulado que impulsa esta nueva etapa.", "href": "#mapas", "action": "Ver áreas reforestadas" },
           { "value": "+10.000", "label": "nuevos árboles", "description": "La meta de plantación de esta campaña.", "href": "#mapas", "action": "Conocer áreas previstas" },
@@ -243,7 +267,9 @@
             "steps": [],
             "photos": []
           }
-        ]
+        ],
+        "toggleOpen": "Ver bitácora: avances y fotos",
+        "toggleClose": "Ocultar bitácora"
       },
       "story": {
         "eyebrow": "Montañas vivas, comunidades fuertes",
@@ -316,10 +342,159 @@
         "contactCta": "Contactar directamente",
         "whatsappMessage": "Hola, formo parte de una empresa y quiero conocer cómo podemos colaborar con la campaña de reforestación de 10.000 árboles nativos. Me gustaría conversar sobre opciones de financiamiento, voluntariado corporativo o una alianza de impacto."
       },
+      "gift": {
+        "eyebrow": "Un regalo que crece",
+        "title": "Regalá árboles nativos",
+        "description": "Para un cumpleaños, las fiestas o alguien que ama la montaña. Cada árbol cuesta $1.500 y vos elegís cuántos regalar.",
+        "certificate": "Quien lo recibe obtiene un certificado con la ubicación donde se plantan sus árboles, una vez plantados (temporada 2026–2027).",
+        "cta": "Regalar por WhatsApp",
+        "whatsappMessage": "¡Hola! Quiero regalar árboles nativos 🌳\n\nCantidad de árboles: [completar]\nPara: [nombre]\nDe parte de: [nombre]\n\n¿Cómo sigo?"
+      },
+      "faq": {
+        "eyebrow": "Preguntas frecuentes",
+        "title": "Antes de aportar",
+        "items": [
+          {
+            "q": "¿Qué es el voucher solidario?",
+            "a": "Comprás un voucher de $30.000 o $50.000: ese dinero financia los tabaquillos de la campaña y el mismo valor vuelve a vos para usar en Pueblo Mágico. Cuando nos mandás el comprobante por WhatsApp, te enviamos tu voucher."
+          },
+          {
+            "q": "¿Cómo uso el voucher?",
+            "a": "Sirve para cualquier experiencia o estadía en Pueblo Mágico y es válido por 6 meses. Para usarlo, reservá por WhatsApp y mencioná tu voucher."
+          },
+          {
+            "q": "¿A qué cuenta transfiero?",
+            "a": "Voucher, aporte libre y regalo usan la misma cuenta: alias pueblo-magico, titular Diego Epelman. Todo suma a la misma meta."
+          },
+          {
+            "q": "¿Cómo sé que mi aporte se usa para los árboles?",
+            "a": "La barra de recaudación se actualiza con los aportes confirmados, y en la bitácora publicamos cada avance con fechas y fotos. También estamos implementando el registro con punto GPS de cada plantación."
+          },
+          {
+            "q": "¿Cómo funciona el regalo de árboles?",
+            "a": "Nos escribís por WhatsApp con la cantidad y el nombre de quien lo recibe. Esa persona obtiene un certificado con la ubicación donde se plantan sus árboles, una vez plantados."
+          },
+          {
+            "q": "¿Puedo aportar desde el exterior?",
+            "a": "Sí. Podés aportar por transferencia internacional SEPA (en euros) o con criptomonedas (BTC y ETH). Elegí el método en «Elegí cómo aportar» y ahí vas a ver los datos para transferir."
+          }
+        ]
+      },
+      "share": {
+        "cta": "Compartí la campaña",
+        "message": "🌱 Estoy apoyando la campaña para plantar 10.000 árboles nativos en las Sierras de Córdoba. Con el voucher solidario, lo que aportás vuelve como voucher para Pueblo Mágico. Sumate: {url}"
+      },
+      "sticky": {
+        "cta": "Aportar"
+      },
+      "transparency": {
+        "eyebrow": "Transparencia",
+        "title": "Cuentas claras y compromisos medibles",
+        "description": "Qué se hace con cada aporte, en qué estamos trabajando y cómo vamos a validar el impacto desde afuera.",
+        "tabs": {
+          "accounts": "Rendición de cuentas",
+          "working": "En qué trabajamos",
+          "next": "Compromisos y próximos pasos"
+        },
+        "accounts": {
+          "rows": [
+            {
+              "label": "Costo total de los árboles",
+              "value": "$15.000.000",
+              "detail": "10.000 tabaquillos × $1.500 cada uno."
+            },
+            {
+              "label": "Aportes de la comunidad",
+              "value": "{raised}",
+              "detail": "Vouchers solidarios y aportes libres confirmados. Se actualiza periódicamente."
+            },
+            {
+              "label": "Pueblo Mágico",
+              "value": "Fondos propios",
+              "detail": "Está adelantando el pago de los árboles para no frenar el proyecto. Los aportes de la comunidad lo cofinancian."
+            }
+          ],
+          "expenses": "Al cerrar cada fase publicamos acá el detalle de gastos: árboles, vivero, materiales y logística.",
+          "tax": "Por ahora los aportes no son deducibles de impuestos. Cuando los canalicemos a través de una fundación, vamos a poder emitir recibos deducibles."
+        },
+        "commitmentsTitle": "Nuestros compromisos",
+        "commitments": [
+          {
+            "title": "Una sola especie: tabaquillo",
+            "text": "Esta campaña planta tabaquillo (Polylepis australis), árbol nativo de las Sierras Grandes de Córdoba que protege el suelo y las nacientes de agua."
+          },
+          {
+            "title": "Supervivencia pública",
+            "text": "Vamos a publicar qué porcentaje de los árboles plantados sigue vivo al año 1, al año 3 y al año 5."
+          }
+        ],
+        "nextTitle": "Hoja de ruta de validación",
+        "next": [
+          {
+            "when": "2026",
+            "title": "Rendición de cuentas por fase",
+            "text": "Ingresos y gastos publicados al cierre de cada fase."
+          },
+          {
+            "when": "2026–2027",
+            "title": "Aportes a través de una fundación",
+            "text": "Para emitir recibos deducibles de impuestos."
+          },
+          {
+            "when": "2027",
+            "title": "Estándares internacionales de restauración",
+            "text": "Alinear el proyecto con los estándares de la Society for Ecological Restoration (SER) y los principios de la Década de la ONU sobre la Restauración de los Ecosistemas."
+          },
+          {
+            "when": "2027–2028",
+            "title": "Informe de supervivencia · año 1",
+            "text": "Con medición validada por universidades."
+          },
+          {
+            "when": "2029–2032",
+            "title": "Informes de supervivencia · años 3 y 5",
+            "text": "Seguimiento de largo plazo del bosque plantado."
+          },
+          {
+            "when": "A evaluar",
+            "title": "Certificación comunitaria de carbono",
+            "text": "Plan Vivo u otro estándar, solo cuando haya mediciones suficientes. Hasta entonces no hacemos afirmaciones de CO₂."
+          }
+        ]
+      },
+      "voucher": {
+        "eyebrow": "Voucher solidario",
+        "title": "Tu aporte vuelve como voucher",
+        "description": "Comprá un voucher de Pueblo Mágico: lo que pagás financia los tabaquillos de la campaña y vos lo usás en una experiencia o estadía.",
+        "priceOptions": [
+          {
+            "label": "Voucher",
+            "price": "$30.000"
+          },
+          {
+            "label": "Voucher",
+            "price": "$50.000"
+          }
+        ],
+        "benefits": [
+          "El 100% de lo que pagás vuelve como voucher para cualquier experiencia o estadía en Pueblo Mágico.",
+          "Voucher válido por 6 meses."
+        ],
+                "stepsTitle": "Cómo obtenerlo",
+        "steps": [
+          "Transferí $30.000 o $50.000 al alias de la campaña.",
+          "Mandanos el comprobante por WhatsApp.",
+          "Te enviamos tu voucher."
+        ],
+        "cta": "Quiero mi voucher",
+        "whatsappMessage": "VOUCHER",
+        "orLabel": "¿Preferís hacer un aporte libre, sin voucher?",
+        "treesEquivalent": "= {trees} árboles nativos"
+      },
       "contribution": {
         "eyebrow": "Aporte directo",
         "title": "Tu aporte se convierte en bosque",
-        "description": "Elegí el medio que te resulte más simple. No hay un aporte mínimo.",
+        "description": "Dos formas de sumar a la misma meta: comprá un voucher solidario o hacé un aporte libre. Todo lo recaudado va a los 10.000 árboles nativos.",
         "cardTitle": "Aporte voluntario",
         "cardDescription": "Tu contribución financia directamente el proyecto de reforestación.",
         "modalTitle": "Hacé tu aporte a la reforestación",
@@ -327,7 +502,7 @@
         "closeModal": "Cerrar opciones de aporte",
         "notes": [
           "Elegís libremente el monto.",
-          "No incluye números, premios, vouchers ni servicios.",
+          "No incluye vouchers ni servicios.",
           "Conservá el comprobante."
         ],
         "activeGoalLabel": "Meta activa",
@@ -376,7 +551,12 @@
         "whatsappMessage": "¡Hola! Quiero hacer un aporte a la campaña de reforestación de árboles nativos. ¿Me comparten los datos vigentes?",
         "confirmationWhatsappMessage": "¡Hola! Ya realicé un aporte a la campaña de reforestación de 10.000 árboles nativos.\n\nNombre: [completar]\nMonto y moneda: [completar]\nMedio utilizado: {method}\nReferencia o hash de la operación: [completar]\n\nAdjunto el comprobante para que puedan conciliar mi aporte. ¡Gracias!",
         "methodPlaceholder": "[Argentina / SEPA / USDC / BTC / ETH]",
-        "legalNote": "Aporte voluntario destinado a la campaña de reforestación. Esta página no comercializa ni promociona participaciones en sorteos. Conservá tu comprobante de transferencia. No envíes fondos a ningún dato marcado como ejemplo."
+        "legalNote": "Aporte voluntario destinado a la campaña de reforestación. El voucher solidario y el aporte libre financian la misma campaña. Conservá tu comprobante de transferencia. No envíes fondos a ningún dato marcado como ejemplo.",
+        "treePrice": "Cada árbol nativo cuesta $1.500.",
+        "amountsTitle": "Elegí un monto",
+        "amounts": [15000,30000,75000],
+        "treesLabel": "{trees} árboles",
+        "otherAmount": "Otro monto"
       },
       "closing": {
         "title": "Lo que plantamos hoy puede cuidar la montaña durante generaciones",
@@ -752,26 +932,6 @@
       "link": "",
       "cards": [
         {
-          "date": "25-27 SEPTIEMBRE",
-          "title": "Killa Raymi · Primavera & Luna Llena",
-          "desc": "Un fin de semana en la montaña para celebrar la llegada de la primavera bajo la luz de la Luna llena. Temazcal, ceremonia de Luna llena, trekking al Macizo Los Gigantes y música en comunidad.",
-          "price": "Desde $96.000",
-          "btn": "Ver más",
-          "image": "/uploads/killa-raymi-hero-mobile.webp",
-          "link": "/killa-raymi",
-          "pdfLink": ""
-        },
-        {
-          "date": "2, 3 y 4 DE OCTUBRE",
-          "title": "Alma de Lobo · Encuentro de Hombres",
-          "desc": "Retiro para hombres en la montaña bajo la luna llena: círculos de palabra, temazcal, fuego y naturaleza para habitar lo masculino desde un lugar consciente y verdadero. Desde $465.000.",
-          "btn": "Ver más",
-          "image": "/uploads/alma-de-lobo.webp",
-          "link": "/alma-de-lobo",
-          "pdfLink": "",
-          "isVolunariado": true
-        },
-        {
           "date": "17-18 OCTUBRE",
           "title": "Retiro Pueblo Mágico · Los Gigantes",
           "desc": "Dos días para bajar el ritmo, respirar aire puro y reconectar con lo esencial: yoga, meditación, caminatas al río, fogón y ceremonia del cacao. Desde $280.000.",
@@ -780,6 +940,17 @@
           "link": "https://wa.me/5493516765820?text=Hola!%20Me%20interesa%20el%20Retiro%20Pueblo%20M%C3%A1gico%20del%2017%20y%2018%20de%20octubre.%20%C2%BFMe%20pueden%20dar%20m%C3%A1s%20info%3F",
           "pdfLink": "",
           "isVolunariado": true
+        },
+        {
+          "date": "31 OCTUBRE 2026",
+          "startDate": "2026-10-31",
+          "endDate": "2026-10-31",
+          "title": "Raíz Sonora 31·10 · Música, naturaleza y encuentro",
+          "desc": "Festival de electrónica orgánica, río, montaña y experiencias para compartir. Cinco formas de participar desde AR$ 35.000. Mationix, Mauri Sayri, Federico Salas y Stefano confirmados.",
+          "btn": "Conocer el festival",
+          "image": "/uploads/sunset-rio-baile.webp",
+          "link": "/festival-atardeser",
+          "pdfLink": ""
         },
         {
           "date": "7-8 NOVIEMBRE 2026",
@@ -1001,7 +1172,10 @@
         "sending": "Enviando...",
         "sent": "¡Enviado!",
         "successMsg": "Gracias por escribirnos. Te responderemos a la brevedad.",
-        "errorMsg": "Hubo un error al enviar. Por favor intenta de nuevo."
+        "errorMsg": "Hubo un error al enviar. Por favor intenta de nuevo.",
+        "invalidEmail": "Revisá tu mail: no parece válido.",
+        "invalidName": "Revisá tu nombre: no parece real.",
+        "invalidPhone": "Revisá tu WhatsApp: incluí el código de área."
       },
       "labels": {
         "email": "Email",
@@ -1938,16 +2112,7 @@
           { "value": "+25.000", "label": "árboles plantados y cuidados" },
           { "value": "+200", "label": "hectáreas cuidadas" },
           { "value": "+25", "label": "años de trayectoria en Los Gigantes" }
-        ],
-        "practices_title": "La regeneración también está en la operación diaria",
-        "practices": [
-          { "title": "Energía solar casi al 100%", "text": "El generador solo se usa en emergencias o en días muy nublados." },
-          { "title": "Baños secos", "text": "No usan ni contaminan agua: cuidamos las nacientes de los arroyos serranos." },
-          { "title": "Compost", "text": "Los residuos orgánicos y de los baños secos vuelven al suelo como abono." }
-        ],
-        "partners_intro": "A lo largo de este camino trabajamos y generamos vínculos con organizaciones ambientales como:",
-        "partners": ["Bosques de Agua", "Acciones Serranas"],
-        "partners_note": "Actualmente estamos desarrollando nuevas articulaciones con Acción Ambiental y otros actores del ecosistema ambiental."
+        ]
       },
       "bienestar": {
         "tag": "Bienestar para equipos",
@@ -2068,7 +2233,8 @@
         ]
       },
       "formatos": {
-        "title": "Distintos formatos según el objetivo",
+        "tag": "Jornadas privadas y exclusivas",
+        "title": "Una experiencia solo para tu organización",
         "items": [
           { "title": "Jornada corporativa", "text": "Una experiencia de un día. Ideal para voluntariado, restauración, integración y primeras experiencias institucionales.",
             "price": "Desde $35.000 por persona" },
@@ -2077,14 +2243,14 @@
           { "title": "Programa de varios días", "text": "Para equipos que buscan profundizar en liderazgo, cultura, coordinación y estrategia.",
             "price": "A consultar" }
         ],
-        "note": "Todos los formatos se diseñan según la necesidad de cada organización.",
+        "note": "Cada jornada es exclusiva para tu equipo y se diseña según los objetivos de tu organización.",
         "more_title": "Otras formas de sumarse",
         "open_days": {
-          "badge": "Sin costo",
-          "title": "Jornadas abiertas de reforestación",
-          "text": "Pueden sumarse empresas de cualquier tamaño, sin mínimo de participantes. La movilidad corre por cuenta de la empresa (podemos ayudarte a coordinarla) y las comidas o el alojamiento se contratan aparte si los necesitan.",
-          "cta": "Sumar a mi equipo",
-          "wa_query": "¡Hola! Quiero sumar a mi equipo a una jornada abierta de reforestación. ¿Qué fechas hay disponibles y cómo nos organizamos?"
+          "badge": "Por postulación",
+          "title": "Jornadas abiertas a organizaciones",
+          "text": "Algunas jornadas de reforestación reúnen a equipos de distintas organizaciones, con cupos limitados. La parte técnica está a cargo de Acción Ambiental, nuestra ONG aliada: árboles, know-how y organización de los equipos en la plantación. Tu empresa puede postularse y evaluamos cada solicitud. Las condiciones de participación, incluidos el traslado y los seguros, se acuerdan con cada organización.",
+          "cta": "Postular a mi organización",
+          "wa_query": "¡Hola! Quiero postular a mi organización para una jornada abierta de reforestación.\n\nEmpresa:\nRubro y cantidad de colaboradores:\nPersonas que participarían:\nÁrea que impulsa la iniciativa (RSE, RRHH, otra):\n¿Evalúan también una jornada privada para el equipo?:"
         },
         "gifts": {
           "badge": "Fin de año",
@@ -2128,7 +2294,7 @@
         ],
         "care": {
           "title": "Los árboles no quedan solos",
-          "text": "Lo que tu equipo planta queda en un territorio que cuidamos hace más de 25 años: protección y cuidado inicial después de cada plantación, y un vivero propio, que estamos construyendo, para criar los próximos ejemplares."
+          "text": "Lo que tu equipo planta queda en un territorio que cuidamos hace más de 25 años: protección y cuidado inicial después de cada plantación, y un vivero propio, próxima etapa de la campaña de reforestación, para criar los próximos ejemplares."
         },
         "ods_title": "Alineado con los Objetivos de Desarrollo Sostenible",
         "ods": [
@@ -2170,11 +2336,8 @@
         "partners": [
           { "name": "Pueblo Mágico", "text": "Territorio, infraestructura, hospitalidad, experiencia, regeneración y operación de las jornadas." },
           { "name": "Fundación para el Desarrollo Sostenible", "text": "Marco institucional y administrativo para programas de voluntariado: planificación, administración de fondos de patrocinadores, facturación y rendición de cuentas." },
-          { "name": "Apoidea", "text": "Vinculación con empresas, reuniones de diagnóstico, desarrollo de propuestas particulares y otros aspectos de asesoría y comercialización." },
-          { "name": "Organizaciones ambientales", "text": "Acción Ambiental, Bosques de Agua y Acción Serrana aportan conocimiento técnico, ejemplares, experiencia territorial y acompañamiento ambiental, según cada intervención." }
+          { "name": "Apoidea", "text": "Vinculación con empresas, reuniones de diagnóstico, desarrollo de propuestas particulares y otros aspectos de asesoría y comercialización." }
         ],
-        "allies_title": "Organizaciones ambientales aliadas",
-      "allies": [{"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Conservación del ambiente: difusión, educación y acción ambiental en la provincia de Córdoba."},{"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restauran el bosque nativo de altura y las cuencas hídricas de las Sierras Grandes."},{"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regeneran los bosques de altura y sus nacientes de agua junto a las comunidades locales."}],
       "benchmark": "La lógica coincide con cómo las empresas más grandes estructuran sus programas de impacto: colaboración con organizaciones, involucramiento de empleados y proyectos ambientales conectados con una estrategia más amplia."
       },
       "faq": {
@@ -2182,11 +2345,11 @@
         "items": [
           {
             "q": "¿Cuántas personas pueden participar?",
-            "a": "Para una acción organizada para tu empresa, desde 5 personas y sin límite máximo: ya recibimos grupos de más de 200 participantes. En los formatos con noche combinamos camas y espacios de campamento. En las jornadas abiertas de reforestación no hay mínimo: pueden sumarse equipos de cualquier tamaño."
+            "a": "Para una acción organizada para tu empresa, desde 5 personas y sin límite máximo: ya recibimos grupos de más de 200 participantes. En los formatos con noche combinamos camas y espacios de campamento. Las jornadas abiertas a organizaciones tienen cupos limitados y se asignan por postulación."
           },
           {
             "q": "¿Cuánto cuesta?",
-            "a": "Jornada de un día: desde $35.000 por persona. Jornada con una noche: desde $75.000 por persona. Programas de varios días: a consultar. Las jornadas abiertas de reforestación no tienen costo."
+            "a": "Jornada de un día: desde $35.000 por persona. Jornada con una noche: desde $75.000 por persona. Programas de varios días: a consultar. Las jornadas abiertas a organizaciones son por postulación: si tu empresa es seleccionada, acordamos juntos las condiciones de participación, incluidos el traslado y los seguros."
           },
           {
             "q": "¿Cómo se llega desde Córdoba? ¿Hay traslado?",
@@ -2499,7 +2662,7 @@
         },
         {
           "label": "Energía solar",
-          "sub": "100% renovable"
+          "sub": "Casi al 100%"
         },
         {
           "label": "Reset Vital",
@@ -2511,9 +2674,12 @@
         }
       ],
       "price_solo_label": "Camping",
-      "price_solo_sub": "Alojamiento + desayuno, precio por persona",
+      "price_solo_sub": "Alojamiento + desayuno · ¿sin comidas? consultanos",
+      "price_refugio_label": "Refugio de Piedra",
+      "price_refugio_sub": "O domo compartido · con desayuno",
       "price_pension_label": "Domo Privado",
-      "price_pension_sub": "Con desayuno · 1 persona sola $100.000",
+      "price_pension_sub": "Con desayuno · desde 2 personas",
+      "price_finde_note": "Precios de domingo a jueves. Viernes y sábado, solo con pensión completa: camping {carpa} · Refugio de Piedra {refugio} · domo privado desde {domo}, por persona/noche.",
       "price_unit": "/ persona / noche",
       "price_pension_unit": "/ persona / noche",
       "cta": "Ver todos los alojamientos"
@@ -2534,19 +2700,19 @@
           "wa": "Hola! Busco un retiro de descanso en Pueblo Mágico. ¿Cuándo tienen disponibilidad?"
         },
         {
-          "title": "La pareja",
-          "desc": "Buscan una escapada romántica diferente. Domo geodésico, cielo estrellado, fogón y cocina de autor en la montaña.",
-          "wa": "Hola! Queremos ir en pareja a Pueblo Mágico. ¿Tienen domos disponibles y cuál es el precio?"
+          "title": "Parejas y familias",
+          "desc": "Una escapada distinta para reconectar: domo privado solo para ustedes, cielo estrellado, fogón y cocina de autor en la montaña. Para parejas, o familias con abuelos, padres e hijos que quieren desconectar de las pantallas juntos.",
+          "wa": "Hola! Queremos ir en pareja o en familia a Pueblo Mágico. ¿Tienen domos disponibles y cuál es el precio?"
         },
         {
-          "title": "El buscador en tránsito",
-          "desc": "Estás en un momento de transformación y buscás comunidad, propósito y un espacio que acompañe el proceso.",
-          "wa": "Hola! Me interesa conocer más sobre los retiros y el co-living en Pueblo Mágico. ¿Podemos hablar?"
+          "title": "Exploradores y aventureros",
+          "desc": "Te mueve la montaña: caminatas al río, trekking al Macizo Los Gigantes y noches de cielo estrellado sin contaminación lumínica. Volvés con las piernas cansadas y la cabeza liviana.",
+          "wa": "Hola! Me interesa ir a Pueblo Mágico a caminar y explorar la montaña. ¿Qué opciones de estadía tienen?"
         },
         {
-          "title": "Grupos y Familias",
-          "desc": "Para tu grupo de amigos y amigas, o grupos familiares que incluyen a tu tío, abuelos, padres e hijos. Buscan desconectar de las pantallas y reconectar en la montaña.",
-          "wa": "Hola! Queremos ir en grupo o familia a Pueblo Mágico. ¿Qué opciones de alojamiento tienen?"
+          "title": "Grupos de amigos",
+          "desc": "Para tu grupo de amigos y amigas: un domo entero o habitaciones del Refugio de Piedra solo para ustedes, fogón, río y montaña para desconectar de las pantallas.",
+          "wa": "Hola! Queremos ir en grupo a Pueblo Mágico. ¿Qué opciones de alojamiento tienen?"
         },
         {
           "title": "El ciudadano del mundo",
@@ -2595,6 +2761,24 @@
     }
   },
   "en": {
+    "aliados": {
+      "title": "Allied environmental organizations",
+      "note": "We've signed a partnership agreement with Acción Ambiental. Bosques de Agua and Acción Serrana bring technical knowledge and local expertise depending on each intervention.",
+      "items": [
+        {"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Environmental conservation: outreach, education and environmental action in the province of Córdoba."},
+        {"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restoring the high-altitude native forest and the watersheds of the Sierras Grandes."},
+        {"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regenerating high-altitude forests and their water sources together with local communities."},
+        {"name":"Consciencia Nativa","text":"Supplies the native trees for the reforestation campaign."}
+      ]
+    },
+    "practicas": {
+      "title": "Regeneration is also part of daily operations",
+      "items": [
+        {"title":"Nearly 100% solar energy","text":"The generator only runs in emergencies or on very cloudy days."},
+        {"title":"Dry toilets","text":"They neither use nor pollute water: we protect the headwaters of the mountain streams."},
+        {"title":"Compost","text":"Organic and dry-toilet waste returns to the soil as fertilizer."}
+      ]
+    },
     "booking": {
       "months": [
         { "label": "October", "short": "Oct" }, { "label": "November", "short": "Nov" }, { "label": "December", "short": "Dec" }, { "label": "January", "short": "Jan" }, { "label": "February", "short": "Feb" }
@@ -2617,11 +2801,11 @@
       "refugioFull": "Stone Refuge (Refugio de Piedra)",
       "carpaFull": "Camping",
       "carpaRegimen": "Accommodation + breakfast",
-      "carpaNote": "Camping — we'll confirm availability and sort everything out over WhatsApp.",
+      "carpaNote": "Camping — we'll confirm availability and sort everything out over WhatsApp. Want to come without meals? Ask us about that option.",
       "roomType": "Room type",
       "sharedRoom": "Shared",
       "privateRoom": "Private",
-      "mealPlan": "Meals", "mealBreakfast": "With breakfast", "mealFullBoard": "Full board", "mealBreakfastNote": "Accommodation + breakfast. Lunch or dinner can be added (+$20,000 each).", "mealFullBoardNote": "Breakfast, lunch and dinner included — fixed total price per person/night.", "privateDomoNote": "Private dome: up to 7 people ($50,000 per person/night with breakfast; solo traveler $100,000)",
+      "mealPlan": "Meals", "mealBreakfast": "With breakfast", "mealFullBoard": "Full board", "mealBreakfastNote": "Accommodation + breakfast. Lunch or dinner can be added (+USD 15 each).", "mealFullBoardNote": "Breakfast, lunch and dinner included — fixed total price per person/night.", "weekendNote": "🌙 Friday and Saturday nights are booked on full board only: those nights include breakfast, lunch and dinner.", "weekendRegimenSuffix": " (Friday and Saturday nights on full board)", "nightsAt": "{nights} at {precio}", "privateDomoNote": "Private dome: 2 to 7 people (USD 35 per person/night with breakfast)",
       "retiroNote": "🗓️ On weekends the domes may host retreats or events — ask us about availability: we'll confirm on WhatsApp before finalizing the booking.",
       "unavailableForDates": "That option has no availability for the dates you picked — try different dates.",
       "capacityExceeded": "The {tipo} has room for up to {max} people — for bigger groups, message us on WhatsApp.",
@@ -2631,14 +2815,14 @@
       },
       "groupTeaser": "👥 Going as 3 or more? Ask about our group rates.",
       "perPersonPerNight": "person/night",
-      "discountApplied": "🎉 Special price: you save ${ahorro} per person per night.",
-      "privacySurcharge": "Privacy: +${extra} per person per night.",
+      "discountApplied": "🎉 Special price: you save {ahorro} per person per night.",
+      "privacySurcharge": "Privacy: +{extra} per person per night.",
       "privacyIncluded": "✓ Privacy included, no extra charge.",
       "monthUrgency": {
         "pocosLugares": "⚡ Limited spots left for {month}",
         "ultimosLugares": "🔥 Last spots left for {month}"
       },
-      "senaNote": "Deposit to lock in the rate: ${monto} ({pct}% of the total) · balance due on arrival",
+      "senaNote": "Deposit to lock in the rate: {monto} ({pct}% of the total) · the other 50% is due on arrival at the latest",
       "clear": "clear",
       "confirmWhatsapp": "Confirm via WhatsApp",
       "checkAvailability": "Check availability",
@@ -2712,12 +2896,18 @@
         "description": "A campaign to keep regenerating the mountains through native forest, field work and a community that cares for what it loves.",
         "primaryCta": "Contribute",
         "secondaryCta": "Discover the project",
-        "imageAlt": "Volunteer group holding native seedlings during a reforestation day in the mountains"
+        "imageAlt": "Volunteer group holding native seedlings during a reforestation day in the mountains",
+        "raisedLabel": "raised for the deposit",
+        "ofGoal": "of",
+        "daysLeft": "{days} days left to complete the deposit",
+        "lastDay": "Today is the last day to complete the deposit!",
+        "donors": "{count} people have already contributed",
+        "voucherBadge": "Solidarity voucher"
       },
       "impact": {
         "eyebrow": "A story already in motion",
         "title": "Roots for the mountain's future",
-        "description": "This new goal continues sustained restoration work alongside Consciencia Nativa and other environmental organizations.",
+        "description": "This new goal continues sustained restoration work alongside environmental organizations in the region. The native trees for this campaign are purchased from Consciencia Nativa.",
         "stats": [
           { "value": "+25,000", "label": "native trees planted", "description": "The accumulated work behind this new stage.", "href": "#maps", "action": "View restored areas" },
           { "value": "+10,000", "label": "new trees", "description": "The planting goal supported by this campaign.", "href": "#maps", "action": "Explore planned areas" },
@@ -2740,7 +2930,7 @@
             "number": "Phase 1",
             "status": "Active goal",
             "title": "Fund the down payment",
-            "goal": "Initial goal: ARS 1,500,000",
+            "goal": "Initial goal: USD 1,000",
             "description": "The first goal is to raise the down payment required to confirm all 10,000 trees and formally begin the project."
           },
           {
@@ -2754,8 +2944,8 @@
             "number": "Phase 3",
             "status": "During implementation",
             "title": "Complete the funding",
-            "goal": "Total amount: ARS 15,000,000",
-            "description": "As implementation progresses, we will raise the remaining amount needed to complete payment for all 10,000 trees, valued at ARS 1,500 each."
+            "goal": "Total amount: USD 10,000",
+            "description": "As implementation progresses, we will raise the remaining amount needed to complete payment for all 10,000 trees, valued at USD 1 each."
           },
           {
             "number": "Phase 4",
@@ -2838,7 +3028,9 @@
             "steps": [],
             "photos": []
           }
-        ]
+        ],
+        "toggleOpen": "See the project log: progress and photos",
+        "toggleClose": "Hide project log"
       },
       "story": {
         "eyebrow": "Living mountains, strong communities",
@@ -2911,10 +3103,159 @@
         "contactCta": "Contact us directly",
         "whatsappMessage": "Hi, I represent a company and would like to learn how we can support the campaign to plant 10,000 native trees. I would like to discuss funding, corporate volunteering or a longer-term impact partnership."
       },
+      "gift": {
+        "eyebrow": "A gift that grows",
+        "title": "Gift native trees",
+        "description": "For a birthday, the holidays or someone who loves the mountains. Each tree costs USD 1 and you choose how many to give.",
+        "certificate": "The recipient gets a certificate with the location where their trees are planted, once planted (2026–2027 season).",
+        "cta": "Gift via WhatsApp",
+        "whatsappMessage": "Hi! I want to gift native trees 🌳\n\nNumber of trees: [fill in]\nFor: [name]\nFrom: [name]\n\nWhat are the next steps?"
+      },
+      "faq": {
+        "eyebrow": "FAQ",
+        "title": "Before you contribute",
+        "items": [
+          {
+            "q": "What is the solidarity voucher?",
+            "a": "You buy a voucher of USD 20 or USD 35: that money funds the campaign’s tabaquillo trees and the same value comes back to you to use at Pueblo Mágico. When you send us your receipt on WhatsApp, we send you your voucher."
+          },
+          {
+            "q": "How do I use the voucher?",
+            "a": "It is valid for any experience or stay at Pueblo Mágico for 6 months. To use it, book via WhatsApp and mention your voucher."
+          },
+          {
+            "q": "Which account do I transfer to?",
+            "a": "Vouchers, free contributions and gifts all use the same account: alias pueblo-magico, account holder Diego Epelman. Everything goes to the same goal."
+          },
+          {
+            "q": "How do I know my contribution goes to the trees?",
+            "a": "The progress bar is updated with confirmed contributions, and the project log shows each milestone with dates and photos. We are also implementing GPS records for every planting."
+          },
+          {
+            "q": "How does gifting trees work?",
+            "a": "Message us on WhatsApp with the number of trees and the recipient’s name. They get a certificate with the location where their trees are planted, once planted."
+          },
+          {
+            "q": "Can I contribute from abroad?",
+            "a": "Yes. You can contribute via international SEPA transfer (in euros) or with cryptocurrency (BTC and ETH). Pick the method under «Choose how to contribute» to see the transfer details."
+          }
+        ]
+      },
+      "share": {
+        "cta": "Share the campaign",
+        "message": "🌱 I’m supporting the campaign to plant 10,000 native trees in the Sierras de Córdoba. With the solidarity voucher, your contribution comes back as a voucher for Pueblo Mágico. Join in: {url}"
+      },
+      "sticky": {
+        "cta": "Contribute"
+      },
+      "transparency": {
+        "eyebrow": "Transparency",
+        "title": "Clear accounts and measurable commitments",
+        "description": "What happens with each contribution, what we are working on and how we will have the impact validated externally.",
+        "tabs": {
+          "accounts": "Accountability",
+          "working": "What we are working on",
+          "next": "Commitments and next steps"
+        },
+        "accounts": {
+          "rows": [
+            {
+              "label": "Total cost of the trees",
+              "value": "USD 10,000",
+              "detail": "10,000 tabaquillo trees × USD 1 each."
+            },
+            {
+              "label": "Community contributions",
+              "value": "{raised}",
+              "detail": "Confirmed solidarity vouchers and free contributions. Updated periodically."
+            },
+            {
+              "label": "Pueblo Mágico",
+              "value": "Own funds",
+              "detail": "Pueblo Mágico is advancing the payment for the trees so the project does not stall. Community contributions co-finance it."
+            }
+          ],
+          "expenses": "When each phase closes, we publish the detailed expenses here: trees, nursery, materials and logistics.",
+          "tax": "For now, contributions are not tax-deductible. Once we channel them through a foundation, we will be able to issue deductible receipts."
+        },
+        "commitmentsTitle": "Our commitments",
+        "commitments": [
+          {
+            "title": "A single species: tabaquillo",
+            "text": "This campaign plants tabaquillo (Polylepis australis), a tree native to the Sierras Grandes of Córdoba that protects the soil and water sources."
+          },
+          {
+            "title": "Public survival rates",
+            "text": "We will publish what percentage of the planted trees is still alive after year 1, year 3 and year 5."
+          }
+        ],
+        "nextTitle": "Validation roadmap",
+        "next": [
+          {
+            "when": "2026",
+            "title": "Accountability per phase",
+            "text": "Income and expenses published when each phase closes."
+          },
+          {
+            "when": "2026–2027",
+            "title": "Contributions through a foundation",
+            "text": "To issue tax-deductible receipts."
+          },
+          {
+            "when": "2027",
+            "title": "International restoration standards",
+            "text": "Align the project with the Society for Ecological Restoration (SER) standards and the principles of the UN Decade on Ecosystem Restoration."
+          },
+          {
+            "when": "2027–2028",
+            "title": "Survival report · year 1",
+            "text": "With measurements validated by universities."
+          },
+          {
+            "when": "2029–2032",
+            "title": "Survival reports · years 3 and 5",
+            "text": "Long-term monitoring of the planted forest."
+          },
+          {
+            "when": "To be assessed",
+            "title": "Community carbon certification",
+            "text": "Plan Vivo or another standard, only once there are enough measurements. Until then we make no CO₂ claims."
+          }
+        ]
+      },
+      "voucher": {
+        "eyebrow": "Solidarity voucher",
+        "title": "Your contribution comes back as a voucher",
+        "description": "Buy a Pueblo Mágico voucher: what you pay funds the campaign’s tabaquillo trees and you use it for an experience or stay.",
+        "priceOptions": [
+          {
+            "label": "Voucher",
+            "price": "USD 20"
+          },
+          {
+            "label": "Voucher",
+            "price": "USD 35"
+          }
+        ],
+        "benefits": [
+          "100% of what you pay comes back as a voucher for any experience or stay at Pueblo Mágico.",
+          "Voucher valid for 6 months."
+        ],
+                "stepsTitle": "How to get it",
+        "steps": [
+          "Transfer USD 20 or USD 35 using the available contribution method.",
+          "Send us the receipt on WhatsApp.",
+          "We send you your voucher."
+        ],
+        "cta": "Get my voucher",
+        "whatsappMessage": "VOUCHER",
+        "orLabel": "Prefer a free contribution, without a voucher?",
+        "treesEquivalent": "= {trees} native trees"
+      },
       "contribution": {
         "eyebrow": "Direct contribution",
         "title": "Your contribution becomes forest",
-        "description": "Choose the method that works best for you. There is no minimum contribution.",
+        "description": "Two ways to support the same goal: buy a solidarity voucher or make a free contribution. Everything raised goes to the 10,000 native trees.",
         "cardTitle": "Voluntary contribution",
         "cardDescription": "Your contribution directly funds the reforestation project.",
         "modalTitle": "Support the reforestation campaign",
@@ -2922,7 +3263,7 @@
         "closeModal": "Close contribution options",
         "notes": [
           "You choose the amount freely.",
-          "It does not include raffle entries, prizes, vouchers or services.",
+          "It does not include vouchers or services.",
           "Keep your transfer receipt."
         ],
         "activeGoalLabel": "Active goal",
@@ -2971,7 +3312,12 @@
         "whatsappMessage": "Hi! I'd like to contribute to the native-tree reforestation campaign. Could you share the current transfer details?",
         "confirmationWhatsappMessage": "Hi! I have made a contribution to the campaign to plant 10,000 native trees.\n\nName: [complete]\nAmount and currency: [complete]\nMethod used: {method}\nTransaction reference or hash: [complete]\n\nI am attaching the receipt so you can reconcile my contribution. Thank you!",
         "methodPlaceholder": "[Argentina / SEPA / USDC / BTC / ETH]",
-        "legalNote": "Voluntary contribution to the reforestation campaign. This page does not sell or promote entries in any prize draw. Keep your transfer receipt. Do not send funds to any detail marked as a sample."
+        "legalNote": "Voluntary contribution to the reforestation campaign. The solidarity voucher and free contributions fund the same campaign. Keep your transfer receipt. Do not send funds to any detail marked as a sample.",
+        "treePrice": "Each native tree costs USD 1.",
+        "amountsTitle": "Choose an amount",
+        "amounts": [10,20,50],
+        "treesLabel": "{trees} trees",
+        "otherAmount": "Other amount"
       },
       "closing": {
         "title": "What we plant today can protect the mountains for generations",
@@ -2992,7 +3338,7 @@
       "badge_accommodation": "Accommodation",
       "personalizeStay": "CUSTOMIZE YOUR STAY",
       "coworkingBadge": "Coworking & Coliving",
-      "card_extra_text": "You can also just book accommodation if you wish — from $20,000/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
+      "card_extra_text": "You can also just book accommodation if you wish — from USD 15/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
       "btn": "Book my spot", 
       "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
       "cards": [
@@ -3347,34 +3693,25 @@
       "link": "",
       "cards": [
         {
-          "date": "SEP 25-27",
-          "title": "Killa Raymi · Spring & Full Moon",
-          "desc": "A weekend in the mountains to welcome spring under the light of the full moon. Temazcal, full moon ceremony, trekking to the Los Gigantes massif and music in community.",
-          "price": "From $96,000",
-          "btn": "See More",
-          "image": "/uploads/killa-raymi-hero-mobile.webp",
-          "link": "/killa-raymi",
-          "pdfLink": ""
-        },
-        {
-          "date": "OCT 2-4",
-          "title": "Alma de Lobo · Men's Gathering",
-          "desc": "A men's mountain retreat under the full moon: talking circles, temazcal, fire and nature to inhabit the masculine from a conscious, true place. From $465,000.",
-          "btn": "See More",
-          "image": "/uploads/alma-de-lobo.webp",
-          "link": "/alma-de-lobo",
-          "pdfLink": "",
-          "isVolunariado": true
-        },
-        {
           "date": "OCT 17-18",
           "title": "Pueblo Mágico Retreat · Los Gigantes",
-          "desc": "Two days to slow down, breathe fresh air and reconnect with what matters: yoga, meditation, walks to the river, bonfire and a cacao ceremony. From $280,000.",
+          "desc": "Two days to slow down, breathe fresh air and reconnect with what matters: yoga, meditation, walks to the river, bonfire and a cacao ceremony. From USD 190.",
           "btn": "Sign me up",
           "image": "/uploads/yoga_salon.webp",
           "link": "https://wa.me/5493516765820?text=Hi!%20I%27m%20interested%20in%20the%20Pueblo%20M%C3%A1gico%20Retreat%20on%20October%2017-18.%20Can%20you%20give%20me%20more%20info%3F",
           "pdfLink": "",
           "isVolunariado": true
+        },
+        {
+          "date": "OCT 31, 2026",
+          "startDate": "2026-10-31",
+          "endDate": "2026-10-31",
+          "title": "Raíz Sonora Oct 31 · Music, nature and connection",
+          "desc": "An organic electronic music festival with river, mountains and shared experiences. Five ways to join from USD 25. Mationix, Mauri Sayri, Federico Salas and Stefano confirmed.",
+          "btn": "Discover the festival",
+          "image": "/uploads/sunset-rio-baile.webp",
+          "link": "/festival-atardeser",
+          "pdfLink": ""
         },
         {
           "date": "NOV 7-8, 2026",
@@ -3451,7 +3788,7 @@
       "stats_years": "+25,000 Trees Planted",
       "stats_trees": "Guests from +20 Countries",
       "stats_land": "+200ha cared for · 25 years",
-      "stats_sus": "From $20,000 / person / night",
+      "stats_sus": "From USD 15 / person / night",
       "stats_google": "5.0★ · 64 Google Reviews",
       "bgImage": "/uploads/img_8475.webp",
       "bgImages": [
@@ -3468,7 +3805,7 @@
       "reservationKicker": "MOUNTAIN ECOLODGE",
       "reservationCta": "Check availability",
       "reservationTitle": "Book your unforgettable mountain experience",
-      "reservationPricing": "From $20,000/person/night (tent, with breakfast) · add meals as you like"
+      "reservationPricing": "From USD 15/person/night (tent, with breakfast) · add meals as you like"
     },
     "video": {
       "title": "Live our mountain <span class='italic text-gold'>experience</span>",
@@ -3596,7 +3933,10 @@
         "sending": "Sending...",
         "sent": "Sent!",
         "successMsg": "Thanks for writing to us. We'll get back to you shortly.",
-        "errorMsg": "There was an error sending your message. Please try again."
+        "errorMsg": "There was an error sending your message. Please try again.",
+        "invalidEmail": "Please check your email: it doesn't look valid.",
+        "invalidName": "Please check your name: it doesn't look real.",
+        "invalidPhone": "Please check your WhatsApp number, including the country/area code."
       },
       "labels": {
         "email": "Email",
@@ -3708,12 +4048,12 @@
         "subtitle": "2 nights · full board · everything included. Each member has their own spot — no family group fees.",
         "badge": "Winter special",
         "adulto_label": "Adults",
-        "adulto_noche": "50,000",
-        "adulto_efectivo": "100,000",
-        "adulto_lista": "120,000",
-        "adulto_cuotas": "3 installments of $40,000",
-        "adulto_ahorro": "Save $20,000 paying cash",
-        "adulto_2n": "2 nights = $100,000 per person",
+        "adulto_noche": "35",
+        "adulto_efectivo": "70",
+        "adulto_lista": "80",
+        "adulto_cuotas": "3 installments totaling USD 80",
+        "adulto_ahorro": "Save USD 10 paying cash",
+        "adulto_2n": "2 nights = USD 70 per person",
         "por_noche": "per night · full board",
         "kids_title": "Children's rates",
         "kids_subtitle": "Little ones are always welcome.",
@@ -4199,8 +4539,8 @@
         "cards": [
           {
             "title": "Eco-Base Camp",
-            "price": "$85,000",
-            "unit": "per student · Argentine pesos",
+            "price": "USD 60",
+            "unit": "per student · US dollars",
             "tag": "Minimum 20 students",
             "badge": null,
             "features": [
@@ -4214,8 +4554,8 @@
           },
           {
             "title": "Educational Immersion",
-            "price": "$125,000",
-            "unit": "per student · Argentine pesos",
+            "price": "USD 85",
+            "unit": "per student · US dollars",
             "tag": "Minimum 20 students",
             "badge": "MOST POPULAR",
             "features": [
@@ -4243,7 +4583,7 @@
             "btn": "Build a proposal"
           }
         ],
-        "note": "Prices are in Argentine pesos (ARS), indicative and adjusted based on group size and chosen modules. Every proposal is tailored — at no cost.",
+        "note": "Prices are fixed in US dollars (USD), indicative and adjusted based on group size and chosen modules. Every proposal is tailored — at no cost.",
         "global_btn": "REQUEST FREE QUOTE"
       },
       "testimonios": {
@@ -4533,16 +4873,7 @@
           { "value": "+25,000", "label": "trees planted and cared for" },
           { "value": "+200", "label": "hectares cared for" },
           { "value": "+25", "label": "years of track record in Los Gigantes" }
-        ],
-        "practices_title": "Regeneration is also part of daily operations",
-        "practices": [
-          { "title": "Nearly 100% solar energy", "text": "The generator only runs in emergencies or on very cloudy days." },
-          { "title": "Dry toilets", "text": "They neither use nor pollute water: we protect the headwaters of the mountain streams." },
-          { "title": "Compost", "text": "Organic and dry-toilet waste returns to the soil as fertilizer." }
-        ],
-        "partners_intro": "Along the way we've worked and built ties with environmental organizations such as:",
-        "partners": ["Bosques de Agua", "Acciones Serranas"],
-        "partners_note": "We're currently building new partnerships with Acción Ambiental and other players in the environmental ecosystem."
+        ]
       },
       "bienestar": {
         "tag": "Team wellbeing",
@@ -4663,23 +4994,24 @@
         ]
       },
       "formatos": {
-        "title": "Different formats depending on the goal",
+        "tag": "Private, exclusive days",
+        "title": "An experience just for your organization",
         "items": [
           { "title": "Corporate day", "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences.",
-            "price": "From ARS 35,000 per person" },
+            "price": "From USD 25 per person" },
           { "title": "Day + overnight", "text": "More immersive: adds shared living, a bonfire, nature and complementary activities.",
-            "price": "From ARS 75,000 per person" },
+            "price": "From USD 50 per person" },
           { "title": "Multi-day program", "text": "For teams looking to go deeper on leadership, culture, coordination and strategy.",
             "price": "On request" }
         ],
-        "note": "All formats are designed around each organization's needs.",
+        "note": "Each day is exclusive to your team and designed around your organization's goals.",
         "more_title": "Other ways to join",
         "open_days": {
-          "badge": "Free",
-          "title": "Open reforestation days",
-          "text": "Companies of any size can join, with no minimum number of participants. Transport is arranged by the company (we can help you coordinate it), and meals or accommodation are booked separately if needed.",
-          "cta": "Add my team",
-          "wa_query": "Hi! I’d like my team to join an open reforestation day. Which dates are available and how do we organize it?"
+          "badge": "By application",
+          "title": "Days open to organizations",
+          "text": "Some reforestation days bring together teams from different organizations, with limited spots. The technical side is led by Acción Ambiental, our partner NGO: trees, know-how and organizing the teams during planting. Your company can apply and we review each request. Participation terms, including transport and insurance, are agreed with each organization.",
+          "cta": "Apply with my organization",
+          "wa_query": "Hi! I’d like to apply with my organization for an open reforestation day.\n\nCompany:\nIndustry and number of employees:\nPeople who would take part:\nTeam driving the initiative (CSR, HR, other):\nAre you also considering a private day for your team?:"
         },
         "gifts": {
           "badge": "Year-end",
@@ -4765,11 +5097,8 @@
         "partners": [
           { "name": "Pueblo Mágico", "text": "Territory, infrastructure, hospitality, experience, regeneration and day-to-day operations." },
           { "name": "Fundación para el Desarrollo Sostenible", "text": "Institutional and administrative framework for volunteering programs: planning, sponsor fund management, invoicing and accountability." },
-          { "name": "Apoidea", "text": "Business outreach, diagnostic meetings, development of tailored proposals and other advisory and sales aspects." },
-          { "name": "Environmental organizations", "text": "Acción Ambiental, Bosques de Agua and Acción Serrana bring technical knowledge, plant stock, local expertise and environmental support, depending on each intervention." }
+          { "name": "Apoidea", "text": "Business outreach, diagnostic meetings, development of tailored proposals and other advisory and sales aspects." }
         ],
-        "allies_title": "Allied environmental organizations",
-      "allies": [{"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Environmental conservation: outreach, education and environmental action in the province of Córdoba."},{"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restoring the high-altitude native forest and the watersheds of the Sierras Grandes."},{"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regenerating high-altitude forests and their water sources together with local communities."}],
       "benchmark": "This mirrors how the largest companies structure their impact programs: collaborating with organizations, engaging employees, and connecting environmental projects to a broader strategy."
       },
       "faq": {
@@ -4777,11 +5106,11 @@
         "items": [
           {
             "q": "How many people can take part?",
-            "a": "For an action organized for your company, from 5 people with no maximum: we have already hosted groups of more than 200 participants. In overnight formats we combine beds and camping areas. Open reforestation days have no minimum: teams of any size can join."
+            "a": "For an action organized for your company, from 5 people with no maximum: we have already hosted groups of more than 200 participants. In overnight formats we combine beds and camping areas. Days open to organizations have limited spots, assigned by application."
           },
           {
             "q": "How much does it cost?",
-            "a": "One-day program: from ARS 35,000 per person. Day + one night: from ARS 75,000 per person. Multi-day programs: on request. Open reforestation days are free."
+            "a": "One-day program: from USD 25 per person. Day + one night: from USD 50 per person. Multi-day programs: on request. Days open to organizations are by application: if your company is selected, we agree on the participation terms together, including transport and insurance."
           },
           {
             "q": "How do we get there from Córdoba? Is transport available?",
@@ -5096,7 +5425,7 @@
         },
         {
           "label": "Solar energy",
-          "sub": "100% renewable"
+          "sub": "Almost 100%"
         },
         {
           "label": "Reset Vital",
@@ -5108,9 +5437,12 @@
         }
       ],
       "price_solo_label": "Camping",
-      "price_solo_sub": "Accommodation + breakfast, price per person",
+      "price_solo_sub": "Accommodation + breakfast · no meals? ask us",
+      "price_refugio_label": "Stone Refuge",
+      "price_refugio_sub": "Or shared dome · with breakfast",
       "price_pension_label": "Private Dome",
-      "price_pension_sub": "With breakfast · solo traveler $100,000",
+      "price_pension_sub": "With breakfast · from 2 people",
+      "price_finde_note": "Sunday to Thursday rates. Friday and Saturday nights are full board only: camping {carpa} · Stone Refuge {refugio} · private dome from {domo}, per person/night.",
       "price_unit": "/ person / night",
       "price_pension_unit": "/ person / night",
       "cta": "View all accommodations"
@@ -5131,19 +5463,19 @@
           "wa": "Hi! I am looking for a rest retreat at Pueblo Mágico. When do you have availability?"
         },
         {
-          "title": "The couple",
-          "desc": "Looking for a different romantic getaway. Geodesic dome, starry sky, firepit and gourmet cooking in the mountains.",
-          "wa": "Hi! We want to go as a couple to Pueblo Mágico. Do you have domes available and what is the price?"
+          "title": "Couples and families",
+          "desc": "A different getaway to reconnect: a private dome just for you, starry skies, firepit and gourmet cooking in the mountains. For couples, or families with grandparents, parents and kids who want to unplug together.",
+          "wa": "Hi! We want to come to Pueblo Mágico as a couple or family. Do you have domes available and what is the price?"
         },
         {
-          "title": "The seeker in transition",
-          "desc": "You are in a moment of transformation and looking for community, purpose and a space that supports the process.",
-          "wa": "Hi! I am interested in learning more about retreats and co-living at Pueblo Mágico. Can we talk?"
+          "title": "Explorers and adventurers",
+          "desc": "The mountains move you: walks to the river, trekking to the Los Gigantes massif and nights under skies with no light pollution. You go home with tired legs and a light head.",
+          "wa": "Hi! I want to come to Pueblo Mágico to hike and explore the mountains. What stay options do you have?"
         },
         {
-          "title": "Groups & Families",
-          "desc": "For your group of friends or extended family (grandparents, parents, children, uncles). Looking to disconnect from screens and reconnect in the mountains.",
-          "wa": "Hi! We want to go as a group or family to Pueblo Mágico. What accommodation options do you have?"
+          "title": "Groups of friends",
+          "desc": "For your group of friends: a whole dome or rooms in the Stone Refuge just for you, firepit, river and mountains to disconnect from screens.",
+          "wa": "Hi! We want to come to Pueblo Mágico as a group. What accommodation options do you have?"
         },
         {
           "title": "The world citizen",

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { ESTADIA_PRICES } from '../src/data/retreats';
+import { formatPrice, getEstadiaPrices } from '../src/data/retreats';
 import {
   House,
   WifiHigh,
@@ -22,11 +22,14 @@ const ICONS = [
 ];
 
 export const SectionInclusiones: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const i = t.inclusiones;
-  const carpaDesde = ESTADIA_PRICES?.carpaDesde;
-  const domoPrivadoDesde = ESTADIA_PRICES?.domoPrivado;
+  const prices = getEstadiaPrices(language);
+  const carpaDesde = prices.carpaDesde;
+  const refugioDesde = prices.ecoRefugioDesde;
+  const domoPrivadoDesde = prices.domoPrivado;
   const hasCarpaPrice = typeof carpaDesde === 'number' && Number.isFinite(carpaDesde);
+  const hasRefugioPrice = typeof refugioDesde === 'number' && Number.isFinite(refugioDesde);
   const hasDomoPrice = typeof domoPrivadoDesde === 'number' && Number.isFinite(domoPrivadoDesde);
 
   return (
@@ -57,26 +60,45 @@ export const SectionInclusiones: React.FC = () => {
             ))}
           </div>
 
-          {(hasCarpaPrice || hasDomoPrice) && (
+          {(hasCarpaPrice || hasRefugioPrice || hasDomoPrice) && (
             <div className="flex flex-col sm:flex-row justify-center gap-4" data-reveal>
               {hasCarpaPrice && (
                 <div className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
                   <p className="text-white/70 font-bold tracking-widest uppercase text-xs mb-1">{i.price_solo_label}</p>
                   <p className="text-white text-2xl font-serif">
-                    ${carpaDesde.toLocaleString('es-AR')} <span className="text-base font-sans font-light">{i.price_unit}</span>
+                    {formatPrice(carpaDesde, language)} <span className="text-base font-sans font-light">{i.price_unit}</span>
                   </p>
                   <p className="text-white/50 text-xs mt-1">{i.price_solo_sub}</p>
+                </div>
+              )}
+              {hasRefugioPrice && (
+                <div className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
+                  <p className="text-white/70 font-bold tracking-widest uppercase text-xs mb-1">{i.price_refugio_label}</p>
+                  <p className="text-white text-2xl font-serif">
+                    {formatPrice(refugioDesde, language)} <span className="text-base font-sans font-light">{i.price_unit}</span>
+                  </p>
+                  <p className="text-white/50 text-xs mt-1">{i.price_refugio_sub}</p>
                 </div>
               )}
               {hasDomoPrice && (
                 <div className="bg-gold/20 border border-gold/40 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
                   <p className="text-gold font-bold tracking-widest uppercase text-xs mb-1">{i.price_pension_label}</p>
                   <p className="text-white text-2xl font-serif">
-                    ${domoPrivadoDesde.toLocaleString('es-AR')} <span className="text-base font-sans font-light">{i.price_pension_unit}</span>
+                    {formatPrice(domoPrivadoDesde, language)} <span className="text-base font-sans font-light">{i.price_pension_unit}</span>
                   </p>
                   <p className="text-white/50 text-xs mt-1">{i.price_pension_sub}</p>
                 </div>
               )}
+            </div>
+          )}
+          {prices.pensionFinde && (
+            <div data-reveal>
+              <p className="text-white/60 text-xs text-center mt-4 max-w-2xl mx-auto leading-relaxed">
+                {i.price_finde_note
+                  .replace('{carpa}', formatPrice(prices.pensionFinde.carpa, language))
+                  .replace('{refugio}', formatPrice(prices.pensionFinde.ecoRefugio, language))
+                  .replace('{domo}', formatPrice(prices.pensionFinde.domoPrivadoDosNoches, language))}
+              </p>
             </div>
           )}
 

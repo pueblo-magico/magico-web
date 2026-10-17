@@ -58,7 +58,7 @@ export async function onRequestPost({ request, env }: any) {
     return json({ error: 'Fechas inválidas: fecha_salida debe ser posterior a fecha_entrada.' }, 400);
   }
 
-  const precio = calcularPrecio(alojamiento_seleccionado, personas, noches);
+  const precio = calcularPrecio(alojamiento_seleccionado, personas, fecha_entrada, fecha_salida);
   if ('error' in precio) {
     return json({ error: precio.error }, 400);
   }
@@ -73,7 +73,8 @@ export async function onRequestPost({ request, env }: any) {
     );
   }
 
-  const senaPorcentaje = precio.subtotal <= 100000 ? 0.5 : 0.3;
+  // Seña del 50%; el otro 50% se abona a más tardar al llegar.
+  const senaPorcentaje = 0.5;
   const montoSena = Math.round(precio.subtotal * senaPorcentaje);
 
   // NOTA: el schema exige cliente_nombre y ManyChat solo nos manda el user_id.

@@ -22,6 +22,8 @@ const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
 const PachamamaFest = lazy(() => import('./src/PachamamaFest'));
 const KillaRaymi = lazy(() => import('./src/KillaRaymi'));
 const AlmaDeLobo = lazy(() => import('./src/AlmaDeLobo'));
+const SunsetRio = lazy(() => import('./src/SunsetRio'));
+const FestivalOctubre = lazy(() => import('./src/FestivalOctubre'));
 const Empresas = lazy(() => import('./src/Empresas'));
 const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
@@ -98,6 +100,9 @@ root.render(
               <Route path="/pachamama-fest" element={<PachamamaFest />} />
               <Route path="/killa-raymi" element={<KillaRaymi />} />
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
+              <Route path="/sunset-y-rio" element={<SunsetRio />} />
+              <Route path="/festival-atardeser" element={<FestivalOctubre />} />
+              <Route path="/festival-31-octubre" element={<Navigate to="/festival-atardeser" replace />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/cordoba-fly-fishing" element={<CordobaFlyFishing />} />
               <Route path="/voluntariado" element={<Voluntariado />} />

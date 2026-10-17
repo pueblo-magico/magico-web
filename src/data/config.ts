@@ -45,6 +45,12 @@ export const REFORESTATION_CONTRIBUTION = {
     isSample: false,
   },
   raisedAmount: Number(import.meta.env.VITE_REFORESTATION_RAISED_AMOUNT ?? 230000),
+  raisedAmountUsd: Number(import.meta.env.VITE_REFORESTATION_RAISED_AMOUNT_USD ?? 150),
+  // Cantidad real de personas que ya aportaron (rifa + aporte libre). Con 0 no se muestra.
+  donorsCount: Number(import.meta.env.VITE_REFORESTATION_DONORS_COUNT ?? 0),
+  // Fecha límite de la seña (Fase 1). Después de esta fecha la cuenta regresiva se oculta.
+  depositDeadline: import.meta.env.VITE_REFORESTATION_DEPOSIT_DEADLINE?.trim() || '2026-10-30',
+  treePrice: 1500,
 };
 
 // Reemplaza los envíos de Netlify Forms (no disponible en Cloudflare Pages).

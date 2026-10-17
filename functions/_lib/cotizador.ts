@@ -2,6 +2,8 @@
 // functions/api/cotizar.ts y functions/api/manychat.ts. El prefijo "_" hace
 // que Cloudflare Pages ignore esta carpeta como ruta (no es un endpoint).
 
+import { preciosPorNoche } from '../../src/data/pricing';
+
 export type TipoAlojamiento = 'domo' | 'refugio';
 
 export type Cotizacion = {
@@ -11,6 +13,9 @@ export type Cotizacion = {
   precio_por_noche: number;
   subtotal: number;
   exclusividad_gratis: boolean;
+  // true si alguna noche es viernes o sábado: esas noches van con pensión completa.
+  incluye_pension_finde: boolean;
+  desglose_noches: { fecha: string; finde: boolean; precio_por_persona: number }[];
 };
 
 export type Disponibilidad = {
@@ -31,33 +36,31 @@ export function mensajePrivacidad(tipo: TipoAlojamiento, personas: number): stri
   return tipo === 'refugio' && (personas === 3 || personas === 4) ? MENSAJE_PRIVACIDAD_REFUGIO : '';
 }
 
-// Reglas de precio — todos los montos son "por noche".
-export function calcularPrecio(tipo: TipoAlojamiento, personas: number, noches: number): Cotizacion | { error: string } {
+// Reglas de precio — misma tabla que el BookingWidget (src/data/pricing.ts).
+// Días de semana: con desayuno. Viernes y sábado: siempre pensión completa.
+// precio_por_noche es el promedio para todo el grupo; el detalle va en desglose_noches.
+export function calcularPrecio(tipo: TipoAlojamiento, personas: number, fechaEntrada: string, fechaSalida: string): Cotizacion | { error: string } {
+  const FECHA = /^\d{4}-\d{2}-\d{2}$/;
+  if (!FECHA.test(fechaEntrada) || !FECHA.test(fechaSalida)) return { error: 'Las fechas deben tener formato AAAA-MM-DD.' };
   if (tipo === 'refugio') {
     if (personas < 1 || personas > 15) return { error: 'El Refugio Compartido admite entre 1 y 15 personas.' };
-    const precioPorNoche = 35000 * personas;
-    return {
-      tipo_alojamiento: tipo,
-      cantidad_personas: personas,
-      noches,
-      precio_por_noche: precioPorNoche,
-      subtotal: precioPorNoche * noches,
-      exclusividad_gratis: personas >= 3 && personas <= 7,
-    };
+  } else if (personas < 2 || personas > 7) {
+    // Domo privado: de 2 a 7 personas (no se ofrece para 1 persona sola).
+    return { error: 'El Domo privado admite entre 2 y 7 personas.' };
   }
 
-  // domo
-  if (personas < 1 || personas > 7) return { error: 'El Domo admite entre 1 y 7 personas.' };
-  // Domo privado: $50.000 por persona/noche con desayuno; 1 persona sola $100.000.
-  const precioPorNoche = personas === 1 ? 100000 : 50000 * personas;
+  const noches = preciosPorNoche(tipo === 'refugio' ? 'compartida' : 'domoPrivado', fechaEntrada, fechaSalida, false);
+  const subtotal = noches.reduce((acc, n) => acc + n.precio, 0) * personas;
 
   return {
     tipo_alojamiento: tipo,
     cantidad_personas: personas,
-    noches,
-    precio_por_noche: precioPorNoche,
-    subtotal: precioPorNoche * noches,
-    exclusividad_gratis: personas >= 6, // domo lleno = exclusivo por definición
+    noches: noches.length,
+    precio_por_noche: Math.round(subtotal / noches.length),
+    subtotal,
+    exclusividad_gratis: tipo === 'refugio' ? personas >= 3 && personas <= 7 : personas >= 6, // domo lleno = exclusivo por definición
+    incluye_pension_finde: noches.some(n => n.finde),
+    desglose_noches: noches.map(n => ({ fecha: n.iso, finde: n.finde, precio_por_persona: n.precio })),
   };
 }
 

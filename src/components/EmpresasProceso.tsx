@@ -69,6 +69,9 @@ const EmpresasProceso: React.FC = () => {
       {/* ====== FORMATOS ====== */}
       <section className="py-16 md:py-24 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
+          {f.tag && (
+            <p data-reveal className="font-bold text-[#9C7F1E] text-xs uppercase tracking-widest mb-4">{f.tag}</p>
+          )}
           <h2 data-reveal className="text-3xl md:text-5xl serif-title brand-green mb-12 md:mb-16 max-w-2xl" style={{ lineHeight: '1.1' }}>
             {f.title}
           </h2>
@@ -93,12 +96,31 @@ const EmpresasProceso: React.FC = () => {
             {f.note}
           </p>
 
-          {/* Otras formas de sumarse: jornadas abiertas, regalos y opción sin viajar */}
+          {/* Otras formas de sumarse: regalos, opción sin viajar y, al final, jornadas abiertas por postulación
+              (las privadas son la oferta principal; las abiertas no compiten con ellas) */}
           {f.more_title && (
             <div data-reveal>
               <div className="mt-12">
                 <p className="font-bold brand-green text-sm uppercase tracking-widest mb-5">{f.more_title}</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <MoreCard
+                    icon={Gift}
+                    badge={f.gifts.badge}
+                    title={f.gifts.title}
+                    text={f.gifts.text}
+                    href={waLink(f.gifts.wa_query)}
+                    external
+                    cta={f.gifts.cta}
+                    ctaIcon={MessageCircle}
+                  />
+                  <MoreCard
+                    icon={Sprout}
+                    title={f.remote.title}
+                    text={f.remote.text}
+                    href={ROUTES.REFORESTACION}
+                    cta={f.remote.cta}
+                    ctaIcon={ArrowRight}
+                  />
                   {openDays.length > 0 && (
                     <MoreCard
                       icon={CalendarDays}
@@ -118,24 +140,6 @@ const EmpresasProceso: React.FC = () => {
                       ctaIcon={MessageCircle}
                     />
                   )}
-                  <MoreCard
-                    icon={Gift}
-                    badge={f.gifts.badge}
-                    title={f.gifts.title}
-                    text={f.gifts.text}
-                    href={waLink(f.gifts.wa_query)}
-                    external
-                    cta={f.gifts.cta}
-                    ctaIcon={MessageCircle}
-                  />
-                  <MoreCard
-                    icon={Sprout}
-                    title={f.remote.title}
-                    text={f.remote.text}
-                    href={ROUTES.REFORESTACION}
-                    cta={f.remote.cta}
-                    ctaIcon={ArrowRight}
-                  />
                 </div>
               </div>
             </div>
