@@ -17,6 +17,10 @@ test('Pages vincula previews a D1 preview y reserva env.production para producci
   assert.match(productionConfig, /database_id = "4431f6d6-052c-4f35-8fd7-4805b2d7a858"/);
 });
 
+test('Pages conserva habilitado Mercado Pago en la configuración declarativa de preview', () => {
+  assert.match(wrangler, /\[env\.preview\.vars\][\s\S]*MP_CHECKOUT_ENABLED = "true"/);
+});
+
 test('los workflows seleccionan de forma explícita el entorno D1 correcto', () => {
   assert.doesNotMatch(previewWorkflow, /d1 (?:migrations apply|execute) DB[^\n]*--env production/);
   assert.doesNotMatch(previewWorkflow, /--env preview/);
