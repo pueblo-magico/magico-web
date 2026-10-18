@@ -261,7 +261,7 @@
 .booking-field > small, .booking-dni-field small { color: var(--booking-muted); font-size: 12px; font-weight: 400; }
 .booking-field--error > span { border-color: #bd4939; background: #fff8f6; box-shadow: 0 0 0 1px rgba(189, 73, 57, .12); }
 .booking-field--error > span svg { color: #a33a2b; }
-.booking-field .booking-field__error { display: flex; align-items: flex-start; gap: 6px; color: #a33a2b; font-weight: 700; line-height: 1.35; }
+.booking-field__error { display: flex; align-items: flex-start; gap: 6px; color: #a33a2b; font-weight: 700; line-height: 1.35; }
 .booking-field__error svg { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 1px; }
 
 .booking-review-cards { display: grid; gap: 12px; }
@@ -293,7 +293,8 @@
 
 .booking-consent { display: flex; gap: 12px; align-items: flex-start; margin-top: 20px; color: #42596a; font-size: 14px; line-height: 1.45; }
 .booking-consent input { width: 21px; height: 21px; flex: 0 0 auto; accent-color: var(--booking-green); }
-.booking-consent > span { display: grid; gap: 7px; }
+.booking-consent__content { display: grid; min-width: 0; gap: 7px; }
+.booking-consent__copy { display: inline; }
 .booking-consent--error { margin-inline: -12px; padding: 12px; border: 1px solid #f0c5bb; border-radius: 12px; color: #71362d; background: #fff8f6; }
 .booking-consent a, .booking-notice a, .booking-result a:not(.booking-button) { color: var(--booking-green); text-decoration: underline; }
 .booking-validation-summary { display: flex; align-items: flex-start; gap: 11px; margin-top: 18px; padding: 14px 16px; border: 1px solid #d8e2df; border-radius: 13px; color: #314959; background: #f7faf8; font-size: 13px; line-height: 1.4; }

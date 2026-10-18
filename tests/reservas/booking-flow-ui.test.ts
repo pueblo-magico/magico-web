@@ -194,6 +194,10 @@ test('explica los datos faltantes y enfoca el primer error antes de crear la res
   assert.doesNotMatch(source, /type="submit" disabled=\{submitting \|\| quoteSeconds <= 0 \|\| !guest/);
   assert.match(styles, /\.booking-field--error > span/);
   assert.match(styles, /\.booking-consent--error/);
+  assert.match(source, /className="booking-consent__copy"/);
+  assert.match(styles, /\.booking-consent__content\s*\{[^}]*display:\s*grid/s);
+  assert.match(styles, /\.booking-consent__copy\s*\{[^}]*display:\s*inline/s);
+  assert.doesNotMatch(styles, /\.booking-consent > span\s*\{[^}]*display:\s*grid/s);
   assert.match(styles, /\.booking-validation-summary--error/);
   assert.match(styles, /\.booking-payment-methods\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(styles, /\.booking-payment-methods \.booking-choice\s*\{[^}]*min-width:\s*0/s);
