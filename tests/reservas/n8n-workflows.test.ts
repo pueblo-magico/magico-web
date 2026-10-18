@@ -66,6 +66,7 @@ test('el workflow autentica y admite arrepentimientos y comunicaciones de reserv
   assert.match(email.parameters.message, /Mensaje del equipo de Pueblo Mágico/);
   assert.match(email.parameters.message, /Ver mi reserva confirmada/);
   assert.match(email.parameters.message, /View my confirmed booking/);
+  assert.doesNotMatch(email.parameters.message, /const (?:ctaLabels|helps)=\{/);
   assert.equal(email.onError, 'continueErrorOutput');
 });
 
