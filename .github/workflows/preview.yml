@@ -116,6 +116,15 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: d1 execute DB --remote --file=scripts/reservas/verificar-ocupacion-operativa.sql
 
+      - name: Activate Mercado Pago checkout in preview
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PROJECT_NAME: pueblo-magico-web
+          CLOUDFLARE_PAGES_ENVIRONMENT: preview
+        run: node scripts/cloudflare/activate-mercado-pago-checkout.mjs
+
       - name: Deploy Cloudflare Pages preview
         id: deploy
         if: github.event.pull_request.head.repo.full_name == github.repository
