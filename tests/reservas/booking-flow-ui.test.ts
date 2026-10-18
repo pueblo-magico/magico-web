@@ -296,6 +296,10 @@ test('integra la reserva dedicada como página full width con una imagen editori
   assert.match(pageStyles, /\.reservation-page__topbar\s*\{[^}]*position:\s*sticky[^}]*top:\s*0[^}]*z-index:\s*40/s);
   assert.doesNotMatch(pageStyles, /\.reservation-page__back-row/);
   assert.match(pageStyles, /\.reservation-page__content\s*\{[^}]*width:\s*100%[^}]*padding:\s*0 0 48px/s);
+  assert.match(widget, /dialogRef\.current\?\.scrollIntoView\(\{ behavior: 'auto', block: 'start' \}\)/);
+  assert.doesNotMatch(widget, /window\.scrollTo\(\{ top: 0, behavior: 'auto' \}\)/);
+  assert.match(pageStyles, /\.reservation-page \.booking-dialog--page\s*\{[^}]*scroll-margin-top:\s*82px/s);
+  assert.match(pageStyles, /@media \(max-width: 720px\)[\s\S]*\.reservation-page \.booking-dialog--page\s*\{[^}]*scroll-margin-top:\s*68px/s);
 });
 
 test('conserva la selección no sensible al recargar y mantiene el paso en la URL', () => {

@@ -36,6 +36,7 @@
 .reservation-page__exit { display: inline-flex; align-items: center; gap: 8px; color: #005333; font-size: 13px; font-weight: 800; text-decoration: none; }
 .reservation-page__exit { min-height: 42px; padding: 9px 16px; border: 1px solid rgba(0, 83, 51, .28); border-radius: 999px; background: #fff; }
 .reservation-page__content { width: 100%; margin: 0; padding: 0 0 48px; }
+.reservation-page .booking-dialog--page { scroll-margin-top: 82px; }
 .reservation-page__legal { width: min(360px, calc(100% - 32px)); margin: 18px auto 0; }
 
 @media (max-width: 720px) {
@@ -43,5 +44,6 @@
   .reservation-page__brand img { height: 46px; }
   .reservation-page__brand span, .reservation-page__trust { display: none; }
   .reservation-page__exit { min-height: 38px; padding: 7px 12px; }
+  .reservation-page .booking-dialog--page { scroll-margin-top: 68px; }
   .reservation-page__content { padding-bottom: 18px; }
 }

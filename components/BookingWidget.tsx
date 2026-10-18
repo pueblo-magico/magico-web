@@ -641,7 +641,7 @@ export const BookingWidget: React.FC<{
 
   useEffect(() => {
     if (!page) return;
-    const frame = window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+    const frame = window.requestAnimationFrame(() => dialogRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }));
     return () => window.cancelAnimationFrame(frame);
   }, [page, step, reservation?.reserva.codigo]);
 
