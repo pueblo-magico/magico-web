@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { BookingWidget } from '../components/BookingWidget';
 import { WithdrawalAccessLink } from '../components/WithdrawalAccessLink';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -7,13 +7,11 @@ import './Reservar.css';
 
 const PAGE_COPY = {
   es: {
-    back: 'Volver a alojamientos',
     exit: 'Salir',
     eyebrow: 'Reserva online',
     trust: 'Disponibilidad y precios verificados antes de reservar',
   },
   en: {
-    back: 'Back to accommodation',
     exit: 'Exit',
     eyebrow: 'Online booking',
     trust: 'Availability and pricing verified before booking',
@@ -36,10 +34,6 @@ const Reservar: React.FC = () => {
           <a className="reservation-page__exit" href="/estadia#alojamientos"><LogOut size={18} aria-hidden="true" /> {copy.exit}</a>
         </div>
       </header>
-
-      <div className="reservation-page__back-row">
-        <a href="/estadia#alojamientos"><ArrowLeft size={18} aria-hidden="true" /> {copy.back}</a>
-      </div>
 
       <div className="reservation-page__content">
         <BookingWidget page />

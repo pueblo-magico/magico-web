@@ -282,6 +282,7 @@ test('combina llegada y salida en un calendario abierto con selección consecuti
 test('integra la reserva dedicada como página full width con una imagen editorial separada', () => {
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const widgetStyles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../../src/Reservar.tsx', import.meta.url), 'utf8');
   const pageStyles = readFileSync(new URL('../../src/Reservar.css', import.meta.url), 'utf8');
 
   assert.match(widget, /booking-dialog--selection/);
@@ -291,6 +292,9 @@ test('integra la reserva dedicada como página full width con una imagen editori
   assert.match(widgetStyles, /\.booking-dialog--selection \.booking-flow__header\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:/s);
   assert.match(widgetStyles, /\.booking-dialog--selection \.booking-flow__hero-media\s*\{[^}]*display:\s*block/s);
   assert.match(widgetStyles, /@media \(max-width: 800px\)[\s\S]*\.booking-dialog--selection \.booking-flow__hero-media\s*\{[^}]*order:\s*-1/s);
+  assert.doesNotMatch(page, /reservation-page__back-row|Volver a alojamientos|Back to accommodation/);
+  assert.match(pageStyles, /\.reservation-page__topbar\s*\{[^}]*position:\s*sticky[^}]*top:\s*0[^}]*z-index:\s*40/s);
+  assert.doesNotMatch(pageStyles, /\.reservation-page__back-row/);
   assert.match(pageStyles, /\.reservation-page__content\s*\{[^}]*width:\s*100%[^}]*padding:\s*0 0 48px/s);
 });
 
