@@ -404,8 +404,8 @@
   .booking-choice-grid { gap: 10px; }
   .booking-utilities { grid-template-columns: 1fr; }
   .booking-conditions__grid { grid-template-columns: 1fr; }
-  .booking-payment-methods { grid-template-columns: 1fr 1fr; }
-  .booking-payment-methods .booking-choice { align-items: flex-start; min-height: 88px; font-size: 14px; }
+  .booking-payment-methods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .booking-payment-methods .booking-choice { min-width: 0; align-items: flex-start; min-height: 88px; font-size: 14px; }
   .booking-actions { flex-direction: column-reverse; }
   .booking-actions .booking-button { width: 100%; }
   .booking-result__hero { grid-template-columns: 1fr; justify-items: center; text-align: center; }

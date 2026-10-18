@@ -184,6 +184,8 @@ test('explica los datos faltantes y enfoca el primer error antes de crear la res
   assert.match(styles, /\.booking-field--error > span/);
   assert.match(styles, /\.booking-consent--error/);
   assert.match(styles, /\.booking-validation-summary--error/);
+  assert.match(styles, /\.booking-payment-methods\s*\{\s*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /\.booking-payment-methods \.booking-choice\s*\{[^}]*min-width:\s*0/s);
 });
 
 test('el widget embebido conserva un lanzador compacto sin duplicar el hero', () => {
