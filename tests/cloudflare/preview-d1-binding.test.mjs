@@ -25,3 +25,11 @@ test('los workflows seleccionan de forma explícita el entorno D1 correcto', () 
   assert.ok(comandosProduccion.length > 0);
   for (const comando of comandosProduccion) assert.match(comando, /--env production/);
 });
+
+test('la preview activa y verifica Mercado Pago en el contrato público desplegado', () => {
+  assert.match(previewWorkflow, /Activate Mercado Pago checkout in preview/);
+  assert.match(previewWorkflow, /activate-mercado-pago-checkout\.mjs/);
+  assert.match(previewWorkflow, /\/api\/v1\/public\/cotizaciones/);
+  assert.match(previewWorkflow, /methods\.includes\('mercado_pago_checkout'\)/);
+  assert.match(previewWorkflow, /surcharge !== 1000/);
+});

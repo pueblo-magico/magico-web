@@ -216,3 +216,25 @@ jobs:
             echo "Waiting for Cloudflare preview alias propagation (attempt $attempt/12; availability=$availability_status, admin=$admin_status, reservations=$reservations_status)."
             sleep 10
           done
+
+          quote_status=$(curl --silent --show-error --max-time 20 \
+            --output /tmp/public-quote.json --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' \
+            --data '{"check_in":"2026-11-10","check_out":"2026-11-11","personas":2,"tipo_alojamiento":"domo","modalidad":"privada","contexto":"general","regimen_alimentacion":"desayuno_incluido"}' \
+            "$PREVIEW_URL/api/v1/public/cotizaciones")
+          if test "$quote_status" != "200"; then
+            echo "Public quote response ($quote_status):"
+            cat /tmp/public-quote.json
+            exit 1
+          fi
+          node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            const payload = JSON.parse(readFileSync('/tmp/public-quote.json', 'utf8'));
+            const methods = payload?.data?.metodos_pago ?? [];
+            const surcharge = payload?.data?.recargos_metodo_pago?.mercado_pago_checkout?.porcentaje_bps;
+            if (!methods.includes('mercado_pago_checkout') || surcharge !== 1000) {
+              console.error('Mercado Pago checkout is not active with its 10% surcharge in the deployed preview.');
+              console.error(JSON.stringify({ methods, surcharge }));
+              process.exit(1);
+            }
+          "
