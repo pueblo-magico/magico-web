@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowRight,
+  BedDouble,
   CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock3,
+  CreditCard,
   Flame,
   Instagram,
   Leaf,
@@ -17,6 +19,10 @@ import {
   Music2,
   Sparkles,
   Sun,
+  Ticket,
+  UserRound,
+  UsersRound,
+  Utensils,
   Waves,
 } from 'lucide-react';
 import { Header } from '../components/Header';
@@ -87,42 +93,52 @@ const weekend = [
 
 const faqs = [
   {
+    Icon: CalendarDays,
     question: '¿Puedo asistir solamente el sábado?',
     answer: 'Sí. El Pase por el Día permite vivir toda la jornada central del sábado 31. También podés sumar una o dos noches, en camping o habitación compartida.',
   },
   {
+    Icon: Ticket,
     question: '¿Qué incluye la entrada general?',
     answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, los cuatro artistas, el fogón y las propuestas abiertas. No incluye comidas, bebidas, estacionamiento, alojamiento ni experiencias con inscripción propia.',
   },
   {
+    Icon: Utensils,
     question: '¿La comida está incluida?',
     answer: 'Los tickets con alojamiento incluyen desayuno. Durante todo el fin de semana habrá un buffet de comida artesanal para distintos momentos del día y gustos, además de barra de bebidas. El resto de las comidas y bebidas se abona por separado.',
   },
   {
+    Icon: BedDouble,
     question: '¿Qué opciones de alojamiento hay?',
     answer: 'Podés elegir camping con tu propia carpa o una cama en habitación compartida con ropa blanca. Hay opciones de una o dos noches y todas incluyen desayuno. Los cupos se confirman al reservar.',
   },
   {
+    Icon: Waves,
     question: '¿Puedo ir sin experiencia previa en yoga o meditación?',
     answer: 'Sí. No necesitás experiencia previa. Podés elegir libremente a qué propuestas sumarte.',
   },
   {
+    Icon: UserRound,
     question: '¿Puedo asistir solo o sola?',
     answer: 'Sí. La propuesta está pensada para encontrarse, compartir y conocer gente, tanto si venís por tu cuenta como en grupo.',
   },
   {
+    Icon: UsersRound,
     question: '¿Puedo venir con niños o niñas?',
     answer: 'Sí. AtardeSer es un encuentro apto para toda la familia: niños y niñas son bienvenidos. Es importante que permanezcan acompañados por una persona adulta responsable.',
   },
   {
+    Icon: Flame,
     question: '¿Cómo funciona el temazcal del domingo?',
     answer: 'El temazcal forma parte de la propuesta del domingo y tiene cupo limitado, inscripción previa y un valor adicional. Consultanos para reservar tu lugar.',
   },
   {
+    Icon: MapPin,
     question: '¿Dónde queda Pueblo Mágico?',
     answer: 'En Los Gigantes, Sierras de Córdoba, Argentina. Consultanos por WhatsApp para recibir la ubicación y la información vigente para llegar.',
   },
   {
+    Icon: CreditCard,
     question: '¿Cómo consulto por las entradas?',
     answer: 'Elegí una modalidad y escribinos por WhatsApp desde su botón. Allí confirmamos cupo, alojamiento cuando corresponda y los pasos para reservar. Podés pagar por transferencia o en 3 cuotas sin interés con tarjeta.',
   },
@@ -756,10 +772,11 @@ const FestivalOctubre: React.FC = () => {
             <div className="space-y-3 md:space-y-4" data-reveal data-delay="1">
               {faqs.map((faq, index) => {
                 const isOpen = openFaq === index;
+                const Icon = faq.Icon;
                 return (
                   <div key={faq.question} className={`overflow-hidden rounded-2xl border bg-white transition ${isOpen ? 'border-[#E7B84B] shadow-sm' : 'border-[#123B2D]/10'}`}>
                     <button type="button" className="flex w-full items-center gap-4 px-6 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D] md:px-8 md:py-6" onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen} aria-controls={`festival-faq-${index}`}>
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${isOpen ? 'bg-[#123B2D] text-[#E7B84B]' : 'bg-[#123B2D]/[0.06] text-[#123B2D]/45'}`}>{String(index + 1).padStart(2, '0')}</span>
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${isOpen ? 'bg-[#123B2D] text-[#E7B84B]' : 'bg-[#123B2D]/[0.06] text-[#123B2D]/65'}`}><Icon size={18} strokeWidth={1.8} aria-hidden="true" /></span>
                       <span className={`flex-1 text-sm font-bold leading-snug md:text-base ${isOpen ? 'text-[#123B2D]' : 'text-[#1F2922]'}`}>{faq.question}</span>
                       <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform ${isOpen ? 'rotate-180 bg-[#123B2D] text-[#E7B84B]' : 'bg-[#123B2D]/[0.06] text-[#123B2D]'}`}><ChevronDown size={16} aria-hidden="true" /></span>
                     </button>
