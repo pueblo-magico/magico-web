@@ -384,6 +384,7 @@ export const BookingWidget: React.FC<{
   const [viewportEligible, setViewportEligible] = useState(activeViewport === 'all');
   const idempotencyKey = useRef(createBookingAttemptKey());
   const flowBodyRef = useRef<HTMLDivElement>(null);
+  const shouldScrollToStepRef = useRef(false);
   const bookingFormRef = useRef<HTMLFormElement>(null);
   const stayDates = useMemo(() => stayNightDates(checkIn, checkOut), [checkIn, checkOut]);
   const stayNights = stayDates.length;
@@ -640,10 +641,11 @@ export const BookingWidget: React.FC<{
   }, [bedPreparationCode, bedPreparationOptions]);
 
   useEffect(() => {
-    if (!page) return;
+    if (!page || !shouldScrollToStepRef.current) return;
+    shouldScrollToStepRef.current = false;
     const frame = window.requestAnimationFrame(() => flowBodyRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }));
     return () => window.cancelAnimationFrame(frame);
-  }, [page, step, reservation?.reserva.codigo]);
+  }, [page, step]);
 
   useEffect(() => {
     if (!quote?.cotizacion.expiresAt) return;
@@ -714,6 +716,7 @@ export const BookingWidget: React.FC<{
   };
 
   function goToStep(nextStep: Step, replace = false) {
+    shouldScrollToStepRef.current = page && nextStep !== step;
     setStep(nextStep);
     setError(null);
     if (!page) return;

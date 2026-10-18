@@ -297,6 +297,8 @@ test('integra la reserva dedicada como página full width con una imagen editori
   assert.doesNotMatch(pageStyles, /\.reservation-page__back-row/);
   assert.match(pageStyles, /\.reservation-page__content\s*\{[^}]*width:\s*100%[^}]*padding:\s*0 0 48px/s);
   assert.match(widget, /ref=\{flowBodyRef\} className="booking-flow__body"/);
+  assert.match(widget, /shouldScrollToStepRef\.current = page && nextStep !== step/);
+  assert.match(widget, /if \(!page \|\| !shouldScrollToStepRef\.current\) return/);
   assert.match(widget, /flowBodyRef\.current\?\.scrollIntoView\(\{ behavior: 'auto', block: 'start' \}\)/);
   assert.doesNotMatch(widget, /window\.scrollTo\(\{ top: 0, behavior: 'auto' \}\)/);
   assert.match(pageStyles, /\.reservation-page \.booking-flow__body\s*\{[^}]*scroll-margin-top:\s*82px/s);
