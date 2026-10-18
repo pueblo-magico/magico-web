@@ -846,7 +846,7 @@ export const BookingWidget: React.FC<{
         : c.heroReviewCopy;
 
   const bookingFlow = (
-    <section ref={dialogRef} className={`booking-dialog booking-dialog--page ${reservation ? 'booking-dialog--result' : ''}`} aria-labelledby="booking-title" tabIndex={-1}>
+    <section ref={dialogRef} className={`booking-dialog booking-dialog--page ${reservation ? 'booking-dialog--result' : 'booking-dialog--selection'}`} aria-labelledby="booking-title" tabIndex={-1}>
       <header className={`booking-flow__header ${reservationConfirmed ? 'booking-flow__header--confirmed' : ''}`}>
         <div className="booking-flow__header-copy">
           <p className="booking-flow__eyebrow">{reservation ? c.reservationCode : c.launcherEyebrow}</p>
@@ -857,6 +857,11 @@ export const BookingWidget: React.FC<{
           </strong>}
           <p className="booking-flow__intro">{headerCopy}</p>
         </div>
+        {page && !reservation && (
+          <div className="booking-flow__hero-media" aria-hidden="true">
+            <img src="/uploads/hero-estadia.webp" alt="" />
+          </div>
+        )}
       </header>
 
       {!reservation && (

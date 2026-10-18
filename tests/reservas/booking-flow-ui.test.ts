@@ -243,6 +243,21 @@ test('combina llegada y salida en un calendario abierto con selección consecuti
   assert.match(styles, /\.booking-calendar td button\[data-selection-start\]/);
 });
 
+test('integra la reserva dedicada como página full width con una imagen editorial separada', () => {
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const widgetStyles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  const pageStyles = readFileSync(new URL('../../src/Reservar.css', import.meta.url), 'utf8');
+
+  assert.match(widget, /booking-dialog--selection/);
+  assert.match(widget, /className="booking-flow__hero-media"/);
+  assert.match(widget, /<img src="\/uploads\/hero-estadia\.webp" alt="" \/>/);
+  assert.match(widgetStyles, /\.booking-dialog--selection\s*\{[^}]*border:\s*0[^}]*box-shadow:\s*none/s);
+  assert.match(widgetStyles, /\.booking-dialog--selection \.booking-flow__header\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:/s);
+  assert.match(widgetStyles, /\.booking-dialog--selection \.booking-flow__hero-media\s*\{[^}]*display:\s*block/s);
+  assert.match(widgetStyles, /@media \(max-width: 800px\)[\s\S]*\.booking-dialog--selection \.booking-flow__hero-media\s*\{[^}]*order:\s*-1/s);
+  assert.match(pageStyles, /\.reservation-page__content\s*\{[^}]*width:\s*100%[^}]*padding:\s*0 0 48px/s);
+});
+
 test('conserva la selección no sensible al recargar y mantiene el paso en la URL', () => {
   const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
   const root = readFileSync(new URL('../../index.tsx', import.meta.url), 'utf8');
