@@ -383,7 +383,7 @@ export const BookingWidget: React.FC<{
   const [copied, setCopied] = useState('');
   const [viewportEligible, setViewportEligible] = useState(activeViewport === 'all');
   const idempotencyKey = useRef(createBookingAttemptKey());
-  const dialogRef = useRef<HTMLElement>(null);
+  const flowBodyRef = useRef<HTMLDivElement>(null);
   const bookingFormRef = useRef<HTMLFormElement>(null);
   const stayDates = useMemo(() => stayNightDates(checkIn, checkOut), [checkIn, checkOut]);
   const stayNights = stayDates.length;
@@ -641,7 +641,7 @@ export const BookingWidget: React.FC<{
 
   useEffect(() => {
     if (!page) return;
-    const frame = window.requestAnimationFrame(() => dialogRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }));
+    const frame = window.requestAnimationFrame(() => flowBodyRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' }));
     return () => window.cancelAnimationFrame(frame);
   }, [page, step, reservation?.reserva.codigo]);
 
@@ -891,7 +891,7 @@ export const BookingWidget: React.FC<{
         : c.heroReviewCopy;
 
   const bookingFlow = (
-    <section ref={dialogRef} className={`booking-dialog booking-dialog--page ${reservation ? 'booking-dialog--result' : 'booking-dialog--selection'}`} aria-labelledby="booking-title" tabIndex={-1}>
+    <section className={`booking-dialog booking-dialog--page ${reservation ? 'booking-dialog--result' : 'booking-dialog--selection'}`} aria-labelledby="booking-title" tabIndex={-1}>
       <header className={`booking-flow__header ${reservationConfirmed ? 'booking-flow__header--confirmed' : ''}`}>
         <div className="booking-flow__header-copy">
           <p className="booking-flow__eyebrow">{reservation ? c.reservationCode : c.launcherEyebrow}</p>
@@ -924,7 +924,7 @@ export const BookingWidget: React.FC<{
         </nav>
       )}
 
-      <div className="booking-flow__body" aria-live="polite">
+      <div ref={flowBodyRef} className="booking-flow__body" aria-live="polite">
         {reservation ? (
           <div className="booking-panel booking-result">
             <div className="booking-result__hero">
