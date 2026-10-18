@@ -19,6 +19,8 @@ test('Pages vincula previews a D1 preview y reserva env.production para producci
 
 test('Pages conserva habilitado Mercado Pago en la configuración declarativa de preview', () => {
   assert.match(wrangler, /\[env\.preview\.vars\][\s\S]*MP_CHECKOUT_ENABLED = "true"/);
+  assert.match(wrangler, /\[\[env\.preview\.d1_databases\]\][\s\S]*database_name = "magico-ensueno-db-preview"/);
+  assert.match(wrangler, /\[\[env\.preview\.d1_databases\]\][\s\S]*database_id = "d893fa4d-96d8-49f2-a9f5-d9feb55ab0d3"/);
 });
 
 test('los workflows seleccionan de forma explícita el entorno D1 correcto', () => {
