@@ -276,6 +276,16 @@ test('n8n crea una reserva idempotente y conserva referencias externas', async (
   assert.equal(bodyCreada.data.cuenta_cobro.estado, 'disabled');
   assert.equal(bodyCreada.meta.integracion, 'n8n');
   assert.equal(bodyCreada.meta.idempotente, false);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT r.monto_total_centavos, rpm.recargo_porcentaje_bps,
+           rpm.recargo_total_centavos
+    FROM reservas r
+    JOIN reserva_metodos_pago rpm ON rpm.reserva_id = r.id
+  `).get() }, {
+    monto_total_centavos: cotizacion.data.precio.subtotal_centavos,
+    recargo_porcentaje_bps: 0,
+    recargo_total_centavos: 0,
+  });
 
   const repetida = await crearReserva({ request: request(), env });
   assert.equal(repetida.status, 200);

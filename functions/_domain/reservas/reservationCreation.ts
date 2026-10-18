@@ -7,6 +7,7 @@ export type SolicitudCrearReservaPublica = {
   clienteTelefono: string | null;
   clienteEmail: string;
   metodoPago?: 'mercado_pago_checkout' | 'transferencia_mp';
+  aplicarRecargoMetodoPago?: boolean;
   pagadorDocumentoHash?: string | null;
   pagadorDocumentoUltimos4?: string | null;
   idioma?: 'es' | 'en';

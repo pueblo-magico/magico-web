@@ -56,6 +56,12 @@ mientras el procesador conserva compatibilidad con referencias numéricas
 legacy. Los redirects nunca confirman el pago: sólo consultan el estado mínimo
 persistido mediante la API pública.
 
+La regla comercial de Checkout Pro suma 10% al total cuando ese medio está
+disponible y es elegido. La misma regla de dominio calcula total, seña y saldo;
+la base persiste los tres importes del ajuste junto al medio de pago, y la API
+de cotización publica el porcentaje para que la vista previa coincida con el
+importe autoritativo que recibe Mercado Pago.
+
 ## Reglas de implementación
 
 - No agregar SQL a `functions/api` ni a `functions/_domain`.

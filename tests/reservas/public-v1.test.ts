@@ -431,7 +431,7 @@ test('rechaza regímenes de alimentación fuera del contrato', async () => {
   sqlite.close();
 });
 
-async function cotizarDomo(db: unknown) {
+async function cotizarDomo(db: unknown, entorno: Record<string, unknown> = {}) {
   const response = await crearCotizacion({
     request: new Request('https://test/api/v1/public/cotizaciones', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -440,7 +440,7 @@ async function cotizarDomo(db: unknown) {
         tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
       }),
     }),
-    env: env(db),
+    env: { ...env(db), ...entorno },
   });
   assert.equal(response.status, 200);
   return response.json() as Promise<any>;
@@ -590,8 +590,6 @@ test('rechaza crear una reserva pública sin email', async () => {
 
 test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII', async () => {
   const { sqlite, db } = baseMigrada();
-  const quote = await cotizarDomo(db);
-  const request = requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001');
   const entornoMp = {
     ...env(db),
     MP_CHECKOUT_ENABLED: 'true',
@@ -602,6 +600,13 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     MP_TRANSFER_ACCOUNT_HOLDER: 'Pueblo Mágico',
     PAYMENT_RECONCILIATION_SECRET: 'qa-secret-mercado-pago-32-caracteres-minimo',
   };
+  const quote = await cotizarDomo(db, entornoMp);
+  assert.deepEqual(quote.data.metodos_pago, ['mercado_pago_checkout', 'transferencia_mp']);
+  assert.deepEqual(quote.data.recargos_metodo_pago, {
+    mercado_pago_checkout: { porcentaje_bps: 1_000 },
+    transferencia_mp: { porcentaje_bps: 0 },
+  });
+  const request = requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001');
   const originalFetch = globalThis.fetch;
   const llamadas: Array<{ url: string; method: string; body?: string }> = [];
   globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
@@ -632,7 +637,21 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     assert.equal(llamadas.length, 2);
     assert.match(llamadas[0].url, new RegExp(`external_reference=${encodeURIComponent(body.data.reserva.codigo)}`));
     assert.equal(JSON.parse(llamadas[1].body || '{}').external_reference, body.data.reserva.codigo);
+    assert.equal(JSON.parse(llamadas[1].body || '{}').items[0].unit_price, 49_500);
     assert.equal(sqlite.prepare('SELECT mp_preference_id FROM reservas').get()?.mp_preference_id, 'pref-publica-1');
+    assert.deepEqual({ ...sqlite.prepare(`
+      SELECT r.monto_total_centavos, r.monto_sena_centavos,
+             rpm.monto_esperado_centavos, rpm.recargo_porcentaje_bps,
+             rpm.recargo_total_centavos, rpm.recargo_sena_centavos
+      FROM reservas r JOIN reserva_metodos_pago rpm ON rpm.reserva_id = r.id
+    `).get() }, {
+      monto_total_centavos: 16_500_000,
+      monto_sena_centavos: 4_950_000,
+      monto_esperado_centavos: 4_950_000,
+      recargo_porcentaje_bps: 1_000,
+      recargo_total_centavos: 1_500_000,
+      recargo_sena_centavos: 450_000,
+    });
     assert.deepEqual({ ...sqlite.prepare(`
       SELECT proveedor, estado, external_preference_id,
              json_extract(metadata_json, '$.estado_checkout') estado_checkout
@@ -661,7 +680,7 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     assert.equal(bodyEstado.data.reserva.codigo, body.data.reserva.codigo);
     assert.equal(bodyEstado.data.reserva.estado, 'pendiente_pago');
     assert.equal(bodyEstado.data.pago.estado, 'pendiente');
-    assert.equal(bodyEstado.data.pago.monto_centavos, 4_500_000);
+    assert.equal(bodyEstado.data.pago.monto_centavos, 4_950_000);
     assert.equal(bodyEstado.data.pago.metodo, 'mercado_pago_checkout');
     assert.equal(bodyEstado.data.pago.checkout_url, 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1');
     assert.doesNotMatch(JSON.stringify(bodyEstado), /cliente_|email|telefono/i);
@@ -735,12 +754,16 @@ test('registra una transferencia por DNI protegido y sólo entonces expone el de
     },
   });
   const metodo = sqlite.prepare(`
-    SELECT metodo, pagador_documento_hash, pagador_documento_ultimos4
+    SELECT metodo, pagador_documento_hash, pagador_documento_ultimos4,
+           recargo_porcentaje_bps, recargo_total_centavos, recargo_sena_centavos
     FROM reserva_metodos_pago
   `).get() as any;
   assert.equal(metodo.metodo, 'transferencia_mp');
   assert.match(String(metodo.pagador_documento_hash), /^[a-f0-9]{64}$/);
   assert.equal(metodo.pagador_documento_ultimos4, '5678');
+  assert.equal(metodo.recargo_porcentaje_bps, 0);
+  assert.equal(metodo.recargo_total_centavos, 0);
+  assert.equal(metodo.recargo_sena_centavos, 0);
   assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM cuentas_cobro_reserva').get()?.cantidad, 0);
   assert.doesNotMatch(
     JSON.stringify(body),

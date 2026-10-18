@@ -8,6 +8,7 @@ import type {
   ResultadoCreacionReservaPublica,
   SolicitudCrearReservaPublica,
 } from '../../_domain/reservas/reservationCreation.ts';
+import { calcularPrecioMetodoPago } from '../../_domain/reservas/paymentMethodPricing.ts';
 
 function error(codigo: ErrorCreacionReserva, mensaje: string): ResultadoCreacionReservaPublica {
   return { ok: false as const, error: { codigo, mensaje } };
@@ -22,6 +23,7 @@ async function hashSolicitud(solicitud: SolicitudCrearReservaPublica): Promise<s
     clienteTelefono: solicitud.clienteTelefono?.trim() || null,
     clienteEmail: solicitud.clienteEmail?.trim().toLowerCase() || null,
     metodoPago,
+    aplicarRecargoMetodoPago: solicitud.aplicarRecargoMetodoPago === true,
     pagadorDocumentoHash: solicitud.pagadorDocumentoHash || null,
     pagadorDocumentoUltimos4: solicitud.pagadorDocumentoUltimos4 || null,
     idioma: solicitud.idioma || 'es',
@@ -101,6 +103,11 @@ export async function crearReservaPublica(
   if (Date.parse(cotizacion.expiresAt) <= ahora().getTime()) {
     return error('COTIZACION_VENCIDA', 'La cotización venció; solicitá una nueva.');
   }
+  const precioMetodoPago = calcularPrecioMetodoPago(
+    cotizacion.totalCentavos,
+    cotizacion.senaCentavos,
+    solicitud.aplicarRecargoMetodoPago === true ? metodoPago : 'transferencia_mp'
+  );
 
   const opcionesPreparacion = await repositorio.listarOpcionesPreparacionAplicables({
     tipoAlojamiento: cotizacion.tipo,
@@ -179,6 +186,7 @@ export async function crearReservaPublica(
       },
       consultaId,
       cotizacion,
+      precioMetodoPago,
       requestHash,
       reservaUid: uuid,
       reservaCodigo: `RES-${uuid}`,

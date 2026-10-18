@@ -108,6 +108,14 @@ sus IDs internos coincidan. Un retry idempotente recupera la preferencia ya
 persistida; ante un resultado externo incierto, primero se busca por esa
 referencia antes de crear otra.
 
+La cotización informa en `recargos_metodo_pago` el porcentaje aplicable a cada
+medio disponible. Al elegir `mercado_pago_checkout`, el servidor suma 10% al
+total y a la seña antes de persistir la reserva y crear la preferencia. El
+frontend muestra ese ajuste antes de confirmar. La reserva conserva el
+porcentaje y los importes del recargo como snapshot auditable; una transferencia
+directa y una reserva creada por una integración sin elección explícita no
+reciben ese recargo.
+
 Una selección explícita de Checkout Pro o transferencia pertenece al adaptador
 de Mercado Pago y no provisiona cuentas Cucuru. Las solicitudes legacy que aún
 omiten `pago.metodo` conservan temporalmente su comportamiento anterior para no

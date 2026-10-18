@@ -129,6 +129,7 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
 
   async crearAtomica(entrada: Parameters<RepositorioCreacionReservaPublica['crearAtomica']>[0]) {
     const { solicitud, cotizacion } = entrada;
+    const { precioMetodoPago } = entrada;
     const alcanceIdempotencia = solicitud.referenciaIntegracion
       ? `crear_reserva_${solicitud.referenciaIntegracion.integracion}`
       : 'crear_reserva_publica';
@@ -155,9 +156,9 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
       `).bind(
         solicitud.clienteNombre, solicitud.clienteTelefono, solicitud.clienteEmail,
         alojamientoLegacyId, cotizacion.fechaCheckin, cotizacion.fechaCheckout,
-        cotizacion.personas, cotizacion.totalCentavos / 100, cotizacion.senaCentavos / 100,
+        cotizacion.personas, precioMetodoPago.totalCentavos / 100, precioMetodoPago.senaCentavos / 100,
         solicitud.canalOrigen || 'Web', entrada.reservaUid, entrada.reservaCodigo, cotizacion.moneda,
-        cotizacion.totalCentavos, cotizacion.senaCentavos, cotizacion.id, entrada.holdExpiresAt,
+        precioMetodoPago.totalCentavos, precioMetodoPago.senaCentavos, cotizacion.id, entrada.holdExpiresAt,
         solicitud.idioma || 'es'
       ),
       this.db.prepare(`
@@ -209,16 +210,20 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
       this.db.prepare(`
         INSERT INTO reserva_metodos_pago (
           reserva_id, metodo, pagador_documento_tipo, pagador_documento_hash,
-          pagador_documento_ultimos4, monto_esperado_centavos, moneda
+          pagador_documento_ultimos4, monto_esperado_centavos, moneda,
+          recargo_porcentaje_bps, recargo_total_centavos, recargo_sena_centavos
         )
-        SELECT id, ?, ?, ?, ?, ?, ? FROM reservas WHERE reserva_uid = ?
+        SELECT id, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM reservas WHERE reserva_uid = ?
       `).bind(
         solicitud.metodoPago,
         solicitud.metodoPago === 'transferencia_mp' ? 'DNI' : null,
         solicitud.pagadorDocumentoHash,
         solicitud.pagadorDocumentoUltimos4,
-        cotizacion.senaCentavos,
+        precioMetodoPago.senaCentavos,
         cotizacion.moneda,
+        precioMetodoPago.porcentajeBps,
+        precioMetodoPago.recargoTotalCentavos,
+        precioMetodoPago.recargoSenaCentavos,
         entrada.reservaUid
       ),
       this.db.prepare(`
@@ -264,7 +269,8 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
                json_object(
                  'cotizacion_codigo', ?, 'espacio_codigo', ?,
                  'integracion', ?, 'contacto_ref', ?, 'conversacion_ref', ?,
-                 'consulta_codigo', ?
+                 'consulta_codigo', ?, 'metodo_pago', ?,
+                 'recargo_porcentaje_bps', ?, 'recargo_total_centavos', ?
                )
         FROM reservas WHERE reserva_uid = ?
       `).bind(
@@ -275,6 +281,9 @@ export class D1RepositorioCreacionReservaPublica implements RepositorioCreacionR
         solicitud.referenciaIntegracion?.contactoRef || null,
         solicitud.referenciaIntegracion?.conversacionRef || null,
         solicitud.referenciaIntegracion?.consultaCodigo || null,
+        solicitud.metodoPago,
+        precioMetodoPago.porcentajeBps,
+        precioMetodoPago.recargoTotalCentavos,
         entrada.reservaUid
       ),
       this.db.prepare(`

@@ -481,6 +481,16 @@ test('envía la clave idempotente y los datos mínimos al crear una reserva', as
   }
 });
 
+test('muestra y calcula el recargo de Mercado Pago desde el contrato público', () => {
+  const api = readFileSync(new URL('../../components/booking/bookingApi.ts', import.meta.url), 'utf8');
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  assert.match(api, /recargos_metodo_pago/);
+  assert.match(widget, /paymentSurchargeHelp/);
+  assert.match(widget, /applyPaymentSurcharge/);
+  assert.match(widget, /booking-price-summary__surcharge/);
+  assert.match(widget, /booking-summary__surcharge/);
+});
+
 test('consulta el estado público por código opaco sin enviar credenciales', async () => {
   const originalFetch = globalThis.fetch;
   let requestedUrl = '';

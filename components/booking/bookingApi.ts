@@ -103,6 +103,7 @@ export interface QuoteResponse {
   opcion: null | { espacio_codigo: string; modalidad: BookingMode; capacidad_disponible: number };
   cotizacion: { id: number; codigo: string; expiresAt: string };
   metodos_pago: PaymentMethod[];
+  recargos_metodo_pago?: Partial<Record<PaymentMethod, { porcentaje_bps: number }>>;
   precio: {
     moneda: string;
     regimen_alimentacion: MealPlan;
@@ -117,6 +118,10 @@ export interface QuoteResponse {
     plan_codigo: string;
     plan_version: number;
   };
+}
+
+export function applyPaymentSurcharge(amountCentavos: number, porcentajeBps: number): number {
+  return amountCentavos + Math.round(amountCentavos * porcentajeBps / 10_000);
 }
 
 export interface ReservationResponse {

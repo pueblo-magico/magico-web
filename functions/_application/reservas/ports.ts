@@ -42,6 +42,7 @@ import type {
 } from '../../_domain/reservas/inquiryCreation.ts';
 import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundPolicies.ts';
 import type { EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
+import type { PrecioMetodoPago } from '../../_domain/reservas/paymentMethodPricing.ts';
 import type {
   ContextoAsignacionInventario,
   PlanAsignacionInventario,
@@ -248,6 +249,7 @@ export interface RepositorioCreacionReservaPublica {
     };
     consultaId: number | null;
     cotizacion: CotizacionAceptada;
+    precioMetodoPago: PrecioMetodoPago;
     requestHash: string;
     reservaUid: string;
     reservaCodigo: string;

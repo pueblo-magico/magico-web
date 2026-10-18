@@ -69,6 +69,7 @@ export async function onRequestPost({ request, env, waitUntil }: any) {
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
     clienteEmail: String(cliente.email || ''),
     metodoPago,
+    aplicarRecargoMetodoPago: metodoPago === 'mercado_pago_checkout' && checkoutConfigurado,
     pagadorDocumentoHash: documentoHash,
     pagadorDocumentoUltimos4: dni ? dni.slice(-4) : null,
     idioma: body.idioma === undefined ? undefined : String(body.idioma) as 'es' | 'en',

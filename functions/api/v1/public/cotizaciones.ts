@@ -3,6 +3,7 @@ import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfac
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
 import { esRegimenAlimentacion } from '../../../_domain/reservas/alimentacion.ts';
 import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../../../_lib/paymentMethods.ts';
+import { porcentajeRecargoMetodoPago } from '../../../_domain/reservas/paymentMethodPricing.ts';
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
@@ -71,6 +72,10 @@ async function procesarCotizacion({ request, env }: any) {
       } : null,
       cotizacion: cotizacion.referencia,
       metodos_pago: metodosPago,
+      recargos_metodo_pago: Object.fromEntries(metodosPago.map(metodo => [
+        metodo,
+        { porcentaje_bps: porcentajeRecargoMetodoPago(metodo) },
+      ])),
       precio: {
         moneda: cotizacion.desglose.moneda,
         regimen_alimentacion: cotizacion.desglose.regimen_alimentacion,

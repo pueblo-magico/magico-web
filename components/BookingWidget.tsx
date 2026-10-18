@@ -9,6 +9,7 @@ import { RESERVATION_START_PATH, WA_MAGICO } from '../src/data/config';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BookingApiError,
+  applyPaymentSurcharge,
   type AccommodationType,
   type BookingMode,
   type MealPlan,
@@ -68,6 +69,7 @@ const COPY = {
     name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email',
     contactIntro: 'Completá tus datos para crear la reserva. No necesitás una cuenta.',
     paymentMethod: 'Forma de pago', checkoutMethod: 'Mercado Pago', transferMethod: 'Transferencia',
+    paymentSurcharge: 'Recargo por Mercado Pago', paymentSurchargeHelp: 'Incluye un 10% adicional sobre el total y la seña.',
     dni: 'DNI del titular de la cuenta', dniHelp: 'Debe coincidir con el DNI informado por la cuenta desde la que hacés la transferencia.',
     total: 'Total de la estadía', fromTotal: 'Total desde', fromNight: 'Desde por noche', perPerson: 'Por persona',
     estimatedPrice: 'Estimado con las tarifas publicadas para tu selección.', startingPriceHelp: 'Elegí tus fechas para calcular el total de la estadía.',
@@ -138,6 +140,7 @@ const COPY = {
     name: 'Full name', phone: 'WhatsApp', email: 'Email',
     contactIntro: 'Enter your details to create the reservation. You do not need an account.',
     paymentMethod: 'Payment method', checkoutMethod: 'Mercado Pago', transferMethod: 'Bank transfer',
+    paymentSurcharge: 'Mercado Pago surcharge', paymentSurchargeHelp: 'Includes an additional 10% on the total and deposit.',
     dni: "Account holder's DNI", dniHelp: 'It must match the DNI reported by the account used for the transfer.',
     total: 'Stay total', fromTotal: 'Total from', fromNight: 'From per night', perPerson: 'Per person',
     estimatedPrice: 'Estimated from the published rates for your selection.', startingPriceHelp: 'Choose your dates to calculate the stay total.',
@@ -406,19 +409,32 @@ export const BookingWidget: React.FC<{
     ? publicStartingRule.importe_centavos * (publicStartingRule.base_calculo === 'persona_noche' ? people : 1)
     : null;
   const displayedQuote = step === 3 ? quote : null;
-  const displayedTotalCentavos = displayedQuote?.precio.subtotal_centavos
-    ?? pricePreview?.totalCentavos
+  const selectedPaymentSurchargeBps = displayedQuote
+    ? displayedQuote.recargos_metodo_pago?.[paymentMethod]?.porcentaje_bps ?? 0
+    : 0;
+  const paymentSurchargeCentavos = displayedQuote
+    ? Math.round(displayedQuote.precio.subtotal_centavos * selectedPaymentSurchargeBps / 10_000)
+    : 0;
+  const displayedTotalCentavos = displayedQuote
+    ? applyPaymentSurcharge(displayedQuote.precio.subtotal_centavos, selectedPaymentSurchargeBps)
+    : pricePreview?.totalCentavos
     ?? (stayDates.length === 0 ? fallbackTotalCentavos : null);
   const displayedCurrency = displayedQuote?.precio.moneda
     ?? pricePreview?.currency
     ?? publicPricing?.plan.moneda
     ?? 'ARS';
   const displayedPerPersonCentavos = displayedQuote
-    ? Math.round(displayedQuote.precio.subtotal_centavos / people)
+    ? Math.round((displayedTotalCentavos ?? displayedQuote.precio.subtotal_centavos) / people)
     : pricePreview?.perPersonCentavos
       ?? (stayDates.length === 0 && fallbackTotalCentavos !== null
         ? Math.round(fallbackTotalCentavos / people)
         : null);
+  const displayedDepositCentavos = displayedQuote
+    ? applyPaymentSurcharge(displayedQuote.precio.sena_centavos, selectedPaymentSurchargeBps)
+    : null;
+  const displayedBalanceCentavos = displayedQuote && displayedTotalCentavos !== null && displayedDepositCentavos !== null
+    ? displayedTotalCentavos - displayedDepositCentavos
+    : null;
   const priceIsExact = Boolean(displayedQuote);
   const priceIsStayEstimate = Boolean(pricePreview);
   const priceLoading = stayDates.length > 0 ? !nightlyPricingLoaded : !publicPricingLoaded;
@@ -441,8 +457,9 @@ export const BookingWidget: React.FC<{
         ? '—'
         : formatMoney(displayedPerPersonCentavos, displayedCurrency, language)}</b></div>
       {displayedQuote && <>
-        <div><span>{c.deposit}</span><b>{formatMoney(displayedQuote.precio.sena_centavos, displayedQuote.precio.moneda, language)}</b></div>
-        <div><span>{c.balance}</span><b>{formatMoney(displayedQuote.precio.saldo_centavos, displayedQuote.precio.moneda, language)}</b></div>
+        {selectedPaymentSurchargeBps > 0 && <div className="booking-price-summary__surcharge"><span>{c.paymentSurcharge} ({selectedPaymentSurchargeBps / 100}%)</span><b>+ {formatMoney(paymentSurchargeCentavos, displayedQuote.precio.moneda, language)}</b></div>}
+        <div><span>{c.deposit}</span><b>{formatMoney(displayedDepositCentavos ?? 0, displayedQuote.precio.moneda, language)}</b></div>
+        <div><span>{c.balance}</span><b>{formatMoney(displayedBalanceCentavos ?? 0, displayedQuote.precio.moneda, language)}</b></div>
       </>}
       {!displayedQuote && <small>{priceLoading ? c.startingAt : priceHelp}</small>}
     </div>
@@ -887,10 +904,11 @@ export const BookingWidget: React.FC<{
                   <small>{mealPlan === 'pension_completa' ? c.fullBoardHelp : c.breakfastHelp}</small>
                   {selectedUtilities.length > 0 && <div className="booking-utilities booking-utilities--summary">{selectedUtilities.map(item => <span key={item.codigo} className={item.disponibilidad === 'no_disponible' ? 'booking-utility--unavailable' : ''}>{item.disponibilidad === 'incluido' ? <CheckCircle2 /> : <X />}<span><strong>{item.nombre}</strong><small>{item.detalle || (item.disponibilidad === 'incluido' ? c.utilityAvailable : c.utilityUnavailable)}</small></span></span>)}</div>}
                 </div>
-                <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
-                <div className="booking-summary__row"><span>{c.perPerson}</span><strong>{formatMoney(Math.round(quote.precio.subtotal_centavos / people), quote.precio.moneda, language)}</strong></div>
-                <div className="booking-summary__row"><span>{c.deposit}</span><strong>{formatMoney(quote.precio.sena_centavos, quote.precio.moneda, language)}</strong></div>
-                <div className="booking-summary__row"><span>{c.balance}</span><strong>{formatMoney(quote.precio.saldo_centavos, quote.precio.moneda, language)}</strong></div>
+                <div className="booking-summary__row booking-summary__total"><span>{c.total}</span><strong>{formatMoney(displayedTotalCentavos ?? quote.precio.subtotal_centavos, quote.precio.moneda, language)}</strong></div>
+                {selectedPaymentSurchargeBps > 0 && <div className="booking-summary__row booking-summary__surcharge"><span>{c.paymentSurcharge} ({selectedPaymentSurchargeBps / 100}%)</span><strong>+ {formatMoney(paymentSurchargeCentavos, quote.precio.moneda, language)}</strong></div>}
+                <div className="booking-summary__row"><span>{c.perPerson}</span><strong>{formatMoney(displayedPerPersonCentavos ?? Math.round(quote.precio.subtotal_centavos / people), quote.precio.moneda, language)}</strong></div>
+                <div className="booking-summary__row"><span>{c.deposit}</span><strong>{formatMoney(displayedDepositCentavos ?? quote.precio.sena_centavos, quote.precio.moneda, language)}</strong></div>
+                <div className="booking-summary__row"><span>{c.balance}</span><strong>{formatMoney(displayedBalanceCentavos ?? quote.precio.saldo_centavos, quote.precio.moneda, language)}</strong></div>
               </div>
             )}
 
@@ -1061,7 +1079,10 @@ export const BookingWidget: React.FC<{
                     <label className="booking-field">{c.email}<span><Mail /><input type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} autoComplete="email" required /></span></label>
                   </div>
                   <p className="booking-section-title">{c.paymentMethod}</p>
-                  <div className="booking-choice-grid booking-payment-methods">{quote.metodos_pago.map(option => <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>{option === 'mercado_pago_checkout' ? <CreditCard size={23} /> : <Landmark size={23} />}<span>{option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>)}</div>
+                  <div className="booking-choice-grid booking-payment-methods">{quote.metodos_pago.map(option => {
+                    const surchargeBps = quote.recargos_metodo_pago?.[option]?.porcentaje_bps ?? 0;
+                    return <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>{option === 'mercado_pago_checkout' ? <CreditCard size={23} /> : <Landmark size={23} />}<span><strong>{option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}</strong>{surchargeBps > 0 && <small>{c.paymentSurchargeHelp}</small>}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>;
+                  })}</div>
                   {paymentMethod === 'transferencia_mp' && <label className="booking-field booking-field--full booking-dni-field">{c.dni}<span><UserRound /><input inputMode="numeric" value={payerDni} onChange={event => setPayerDni(event.target.value)} autoComplete="off" pattern="[0-9. -]{7,12}" required /></span><small>{c.dniHelp}</small></label>}
                   <section className="booking-conditions" aria-labelledby="booking-conditions-title">
                     <header><ShieldCheck size={24} aria-hidden="true" /><span><h4 id="booking-conditions-title">{c.conditionsTitle}</h4><p>{c.conditionsIntro}</p></span></header>

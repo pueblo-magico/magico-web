@@ -220,6 +220,8 @@
 .booking-price-summary > strong { color: var(--booking-green); font-family: Georgia, 'Times New Roman', serif; font-size: 34px; }
 .booking-price-summary > div { display: flex; justify-content: space-between; gap: 10px; color: #526575; font-size: 13px; }
 .booking-price-summary b { color: var(--booking-ink); }
+.booking-price-summary .booking-price-summary__surcharge { color: #9b6a00; }
+.booking-price-summary .booking-price-summary__surcharge b { color: #9b6a00; }
 .booking-price-summary > small { color: var(--booking-muted); font-size: 11px; line-height: 1.4; }
 .booking-price-mobile { display: none; }
 .booking-sidebar__trust { display: flex; align-items: flex-start; gap: 9px; margin-top: 18px; padding: 13px; border-radius: 12px; color: var(--booking-green); background: var(--booking-green-soft); font-size: 12px; line-height: 1.4; }
@@ -241,6 +243,7 @@
 .booking-summary__headline strong { color: var(--booking-green); }
 .booking-summary__row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; color: #536677; }
 .booking-summary__row strong { color: var(--booking-green); text-align: right; }
+.booking-summary__surcharge, .booking-summary__surcharge strong { color: #9b6a00; }
 .booking-summary__total { padding-top: 7px; font-size: 17px; }
 .booking-summary__total strong { font-family: Georgia, 'Times New Roman', serif; font-size: 30px; }
 
