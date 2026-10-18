@@ -228,18 +228,107 @@ const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: nu
   </article>
 );
 
-const FestivalOctubre: React.FC = () => {
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const accessRailRef = useRef<HTMLDivElement>(null);
+type RailControlsProps = {
+  canGoBack: boolean;
+  canGoForward: boolean;
+  inverse?: boolean;
+  label: string;
+  onBack: () => void;
+  onForward: () => void;
+};
 
-  const scrollAccessOptions = (direction: -1 | 1) => {
-    const rail = accessRailRef.current;
-    if (!rail) return;
-    rail.scrollBy({ left: direction * Math.min(rail.clientWidth * 0.86, 720), behavior: 'smooth' });
-  };
+const RailControls: React.FC<RailControlsProps> = ({
+  canGoBack,
+  canGoForward,
+  inverse = false,
+  label,
+  onBack,
+  onForward,
+}) => {
+  const buttonClassName = inverse
+    ? 'border-white/20 bg-white/[0.06] text-white hover:border-white/45 hover:bg-white/15 disabled:border-white/10 disabled:text-white/25'
+    : 'border-[#123B2D]/20 bg-white text-[#123B2D] hover:border-[#123B2D] hover:bg-[#123B2D] hover:text-white disabled:border-[#123B2D]/10 disabled:bg-white/50 disabled:text-[#123B2D]/25';
+
+  return (
+    <div className="flex shrink-0 items-center gap-2" aria-label={label}>
+      <button
+        type="button"
+        onClick={onBack}
+        disabled={!canGoBack}
+        aria-label="Ver tarjeta anterior"
+        className={`flex h-10 w-10 items-center justify-center rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B84B] disabled:cursor-default ${buttonClassName}`}
+      >
+        <ChevronLeft size={18} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={onForward}
+        disabled={!canGoForward}
+        aria-label="Ver tarjeta siguiente"
+        className={`flex h-10 w-10 items-center justify-center rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E7B84B] disabled:cursor-default ${buttonClassName}`}
+      >
+        <ChevronRight size={18} aria-hidden="true" />
+      </button>
+    </div>
+  );
+};
+
+const useHorizontalRail = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [canGoForward, setCanGoForward] = useState(true);
 
   useEffect(() => {
-    const rail = accessRailRef.current;
+    const rail = ref.current;
+    if (!rail) return undefined;
+
+    const updatePosition = () => {
+      const maximumScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      setCanGoBack(rail.scrollLeft > 4);
+      setCanGoForward(rail.scrollLeft < maximumScroll - 4);
+    };
+
+    updatePosition();
+    rail.addEventListener('scroll', updatePosition, { passive: true });
+    const resizeObserver = new ResizeObserver(updatePosition);
+    resizeObserver.observe(rail);
+
+    return () => {
+      rail.removeEventListener('scroll', updatePosition);
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  const scroll = (direction: -1 | 1) => {
+    const rail = ref.current;
+    if (!rail) return;
+
+    const items = Array.from(rail.querySelectorAll<HTMLElement>('[data-rail-item]'));
+    if (!items.length) return;
+
+    const viewportCenter = rail.scrollLeft + rail.clientWidth / 2;
+    const target = direction === 1
+      ? items.find(item => item.offsetLeft + item.clientWidth / 2 > viewportCenter + 8) ?? items.at(-1)
+      : [...items].reverse().find(item => item.offsetLeft + item.clientWidth / 2 < viewportCenter - 8) ?? items[0];
+
+    if (!target) return;
+    rail.scrollTo({
+      left: target.offsetLeft - (rail.clientWidth - target.clientWidth) / 2,
+      behavior: 'smooth',
+    });
+  };
+
+  return { ref, canGoBack, canGoForward, scroll };
+};
+
+const FestivalOctubre: React.FC = () => {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const artistRail = useHorizontalRail();
+  const teamRail = useHorizontalRail();
+  const accessRail = useHorizontalRail();
+
+  useEffect(() => {
+    const rail = accessRail.ref.current;
     if (!rail) return;
 
     const mobileQuery = window.matchMedia('(max-width: 767px)');
@@ -260,7 +349,7 @@ const FestivalOctubre: React.FC = () => {
       window.cancelAnimationFrame(frame);
       mobileQuery.removeEventListener('change', centerFeaturedOption);
     };
-  }, []);
+  }, [accessRail.ref]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -486,10 +575,21 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">La música que nos reúne.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
             </div>
-            <div className="scrollbar-hide -mx-6 snap-x snap-mandatory scroll-px-6 overflow-x-auto overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Artistas confirmados">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <p className="text-xs leading-relaxed text-white/50 md:text-sm">Deslizá o usá las flechas para conocer a cada artista.</p>
+              <RailControls
+                inverse
+                label="Controles de artistas"
+                canGoBack={artistRail.canGoBack}
+                canGoForward={artistRail.canGoForward}
+                onBack={() => artistRail.scroll(-1)}
+                onForward={() => artistRail.scroll(1)}
+              />
+            </div>
+            <div ref={artistRail.ref} className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-proximity scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Artistas confirmados">
               <div className="flex gap-5">
                 {FESTIVAL_OCTUBRE.artists.map((artist, index) => (
-                  <article key={artist.name} className="group w-[calc(100vw-3rem)] max-w-[340px] shrink-0 snap-start snap-always overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
+                  <article key={artist.name} data-rail-item className="group w-[calc(100vw-3rem)] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
                     <div className="relative aspect-[4/5] overflow-hidden">
                       <img src={img(artist.image, 900)} alt={artist.imageAlt} loading="lazy" width="900" height="1125" className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.04]" />
                       <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(17,25,20,0.88),transparent_65%)]" />
@@ -519,10 +619,20 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-3xl leading-tight text-[#123B2D] serif-title md:text-4xl">Facilitadores, anfitriones y dirección musical</h2>
               <p className="mx-auto mt-4 max-w-lg text-base text-[#1F2922]/60">Un equipo y una comunidad de referentes que suman su energía a esta celebración.</p>
             </div>
-            <div className="scrollbar-hide -mx-6 snap-x snap-mandatory scroll-px-6 overflow-x-auto overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Equipo de AtardeSer">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <p className="text-xs leading-relaxed text-[#1F2922]/55 md:text-sm">Deslizá o usá las flechas para conocer al equipo.</p>
+              <RailControls
+                label="Controles del equipo"
+                canGoBack={teamRail.canGoBack}
+                canGoForward={teamRail.canGoForward}
+                onBack={() => teamRail.scroll(-1)}
+                onForward={() => teamRail.scroll(1)}
+              />
+            </div>
+            <div ref={teamRail.ref} className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-proximity scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Equipo de AtardeSer">
               <div className="flex items-stretch gap-5">
                 {FESTIVAL_OCTUBRE.team.map((member, index) => (
-                  <div key={member.fullName} className="w-[calc(100vw-3rem)] max-w-[320px] shrink-0 snap-start snap-always">
+                  <div key={member.fullName} data-rail-item className="w-[calc(100vw-3rem)] max-w-[320px] shrink-0 snap-start">
                     <TeamCard member={member} index={index} />
                   </div>
                 ))}
@@ -573,15 +683,18 @@ const FestivalOctubre: React.FC = () => {
                 <span className="md:hidden">Deslizá para comparar las cinco opciones.</span>
                 <span className="hidden md:inline">Cinco opciones para comparar con calma: pase por el día, camping o habitación compartida.</span>
               </p>
-              <div className="hidden shrink-0 items-center gap-2 md:flex" aria-label="Controles de modalidades">
-                <button type="button" onClick={() => scrollAccessOptions(-1)} aria-label="Ver modalidades anteriores" aria-controls="festival-access-options" className="flex h-11 w-11 items-center justify-center rounded-full border border-[#123B2D]/20 bg-white text-[#123B2D] transition hover:border-[#123B2D] hover:bg-[#123B2D] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D]"><ChevronLeft size={19} aria-hidden="true" /></button>
-                <button type="button" onClick={() => scrollAccessOptions(1)} aria-label="Ver más modalidades" aria-controls="festival-access-options" className="flex h-11 w-11 items-center justify-center rounded-full border border-[#123B2D]/20 bg-white text-[#123B2D] transition hover:border-[#123B2D] hover:bg-[#123B2D] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D]"><ChevronRight size={19} aria-hidden="true" /></button>
-              </div>
+              <RailControls
+                label="Controles de modalidades"
+                canGoBack={accessRail.canGoBack}
+                canGoForward={accessRail.canGoForward}
+                onBack={() => accessRail.scroll(-1)}
+                onForward={() => accessRail.scroll(1)}
+              />
             </div>
-            <div ref={accessRailRef} id="festival-access-options" className="scrollbar-hide -mx-6 snap-x snap-mandatory scroll-px-6 overflow-x-auto overscroll-x-contain px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
+            <div ref={accessRail.ref} id="festival-access-options" className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-proximity scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
               <div className="flex items-stretch gap-5">
                 {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => (
-                  <div key={option.title} data-featured-option={option.featured ? 'true' : undefined} className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-center snap-always md:w-[320px] md:snap-start lg:w-[330px] xl:w-[340px]">
+                  <div key={option.title} data-rail-item data-featured-option={option.featured ? 'true' : undefined} className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-center md:w-[320px] md:snap-start lg:w-[330px] xl:w-[340px]">
                     <AccessCard option={option} index={index} />
                   </div>
                 ))}
