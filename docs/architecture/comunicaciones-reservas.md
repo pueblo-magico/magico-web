@@ -13,6 +13,11 @@ WRESERV-28 separa la decisión de comunicar un cambio de la tecnología usada pa
 
 Los tipos iniciales son: reserva creada, pago pendiente, pago aprobado, retención vencida, reserva modificada y reserva cancelada. Cada uno tiene plantillas publicadas e inmutables en español e inglés.
 
+La intención `pago_aprobado` se proyecta desde `reserva.confirmada`, no desde el
+evento técnico del proveedor de pago. De este modo una confirmación manual y una
+confirmación por webhook de Mercado Pago generan la misma comunicación durable,
+sin duplicarla ni depender del origen de la confirmación.
+
 ## Operación y seguridad
 
 - La clave de deduplicación impide crear dos intenciones para el mismo evento.
@@ -44,3 +49,10 @@ enlace del ambiente actual. El consumidor informa `entregada`, `retry` o
 Para evitar dos correos al crear una reserva pública, el evento
 `reserva.retencion_iniciada` produce un único mensaje combinado de recepción y
 pago pendiente. `reserva.creada_admin` conserva su mensaje independiente.
+
+Al confirmar una reserva, tanto Administración como el webhook de Mercado Pago
+programan en `waitUntil` solamente la intención `pago_aprobado` de esa reserva.
+El botón administrativo **Enviar comunicaciones pendientes** también se limita
+a `comunicacion.intencion_creada`: nunca vacía en bloque las notificaciones de
+arrepentimiento, que se operan desde su sección y conservan su recuperación
+programada independiente.

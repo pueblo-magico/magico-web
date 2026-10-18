@@ -3917,11 +3917,11 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
             className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 disabled:opacity-50 ${FOCUS_RING}`}>
             <RefreshCw size={14} className={cargando ? 'animate-spin' : ''} aria-hidden="true" /> Actualizar
           </button>
-          {esSuperAdmin && <button type="button" onClick={despachar}
+          {esSuperAdmin && categoriaEventosActiva === 'comunicaciones' && <button type="button" onClick={despachar}
             disabled={procesando || !configuracionLista}
             title={!configuracionLista ? 'Primero hay que habilitar y configurar el destino en este ambiente.' : undefined}
             className={`rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 ${FOCUS_RING}`}>
-            {procesando ? 'Procesando…' : 'Procesar pendientes ahora'}
+            {procesando ? 'Enviando…' : 'Enviar comunicaciones pendientes'}
           </button>}
         </div>
       </div>
@@ -3930,7 +3930,7 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
         <p className="font-semibold">{configuracionLista ? 'Entrega configurada en este ambiente' : 'Entrega todavía no habilitada'}</p>
         <p className="mt-0.5 text-xs">
           {configuracionLista
-            ? 'Podés procesar eventos pendientes y verificar su recepción en el sistema conectado.'
+            ? 'Las comunicaciones de reservas se pueden enviar desde su pestaña. Las notificaciones de arrepentimiento se gestionan por separado.'
             : `Despacho: ${meta.despachoHabilitado ? 'habilitado' : 'desactivado'} · destino: ${meta.destinoConfigurado ? 'configurado' : 'sin configurar'}.`}
         </p>
       </div>

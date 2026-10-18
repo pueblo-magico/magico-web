@@ -20,7 +20,7 @@ type DependenciasDespacho = {
 
 export type ObjetivoDespachoOutbox =
   | { eventIds: string[] }
-  | { reservationId: number };
+  | { reservationId: number; communicationIntentTypes?: string[] };
 
 function habilitado(valor: unknown): boolean {
   return typeof valor === 'string' && valor.trim().toLowerCase() === 'true';
@@ -34,12 +34,20 @@ async function resolverEventIdsPorDefecto(
     return [...new Set(objetivo.eventIds.map(id => id.trim()).filter(Boolean))].slice(0, 100);
   }
   if (!Number.isSafeInteger(objetivo.reservationId) || objetivo.reservationId < 1) return [];
+  const intentTypes = [...new Set(
+    (objetivo.communicationIntentTypes || []).map(tipo => tipo.trim()).filter(Boolean)
+  )].slice(0, 20);
+  const filtroIntenciones = intentTypes.length > 0
+    ? `AND event_type = 'comunicacion.intencion_creada'
+       AND json_extract(payload_json, '$.intent_type') IN (${intentTypes.map(() => '?').join(', ')})`
+    : '';
   const resultado = await env.DB.prepare(`
     SELECT event_id FROM integration_outbox
     WHERE estado = 'pending'
       AND CAST(json_extract(payload_json, '$.reservation_id') AS INTEGER) = ?
+      ${filtroIntenciones}
     ORDER BY created_at, id LIMIT 100
-  `).bind(objetivo.reservationId).all();
+  `).bind(objetivo.reservationId, ...intentTypes).all();
   return (resultado.results || []).map((row: Record<string, unknown>) => String(row.event_id));
 }
 

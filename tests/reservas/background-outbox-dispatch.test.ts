@@ -102,3 +102,49 @@ test('no ejecuta un lote global cuando el objetivo no produjo eventos', async ()
   await tarea;
   assert.equal(ejecuciones, 0);
 });
+
+test('resuelve solamente la intención de confirmación de la reserva indicada', async () => {
+  let tarea: Promise<unknown> | undefined;
+  let consulta = '';
+  let valores: unknown[] = [];
+  let entregados: string[] = [];
+  const env = {
+    ...envConfigurado,
+    DB: {
+      prepare(query: string) {
+        consulta = query;
+        return {
+          bind(...bindings: unknown[]) {
+            valores = bindings;
+            return this;
+          },
+          async all() {
+            return { results: [{ event_id: 'comunicacion:confirmacion-42' }] };
+          },
+        };
+      },
+    },
+  };
+
+  const programado = programarDespachoOutbox(
+    env,
+    promesa => { tarea = promesa; },
+    'test.reservation.confirm',
+    { reservationId: 42, communicationIntentTypes: ['pago_aprobado'] },
+    {
+      despachar: async (_env, eventIds) => {
+        entregados = eventIds;
+        return { reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0 };
+      },
+      logger: { info: () => undefined, error: () => undefined },
+    }
+  );
+
+  assert.equal(programado, true);
+  assert.ok(tarea);
+  await tarea;
+  assert.match(consulta, /event_type = 'comunicacion\.intencion_creada'/);
+  assert.match(consulta, /\$\.intent_type/);
+  assert.deepEqual(valores, [42, 'pago_aprobado']);
+  assert.deepEqual(entregados, ['comunicacion:confirmacion-42']);
+});

@@ -261,6 +261,68 @@ test('confirma y cancela sólo transiciones válidas con motivo auditado', async
   sqlite.close();
 });
 
+test('la confirmación administrativa crea y despacha sólo su comunicación de confirmación', async () => {
+  const sqlite = baseCompleta();
+  const reservaId = crearReserva(sqlite, 3);
+  sqlite.exec("INSERT INTO usuarios_admin (email, password_hash, rol) VALUES ('editor-confirm@test', 'x', 'editor')");
+  const secret = 'session-secret-confirmacion-admin-32-caracteres';
+  const csrf = 'csrf-confirmacion-admin';
+  const token = await createSessionToken('editor-confirm@test', secret, csrf);
+  const version = Number(sqlite.prepare('SELECT version FROM reservas WHERE id = ?').get(reservaId)?.version);
+  const env = {
+    DB: d1(sqlite), SESSION_SECRET: secret,
+    INTEGRATION_OUTBOX_ENABLED: 'true',
+    INTEGRATION_EVENTS_WEBHOOK_URL: 'https://n8n.example.test/webhook/reservas',
+    INTEGRATION_EVENTS_WEBHOOK_SECRET: 'webhook-secret-seguro-123456789',
+  };
+  let tarea: Promise<unknown> | undefined;
+  const enviados: Record<string, unknown>[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_input, init) => {
+    enviados.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+    return new Response(null, { status: 204 });
+  };
+
+  try {
+    const response = await cambiarEstadoAdmin({
+      request: new Request(`https://test/api/v1/admin/reservas/${reservaId}/estado`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 'X-CSRF-Token': csrf,
+          Cookie: `pm_admin_session=${encodeURIComponent(token)}; pm_admin_csrf=${csrf}`,
+        },
+        body: JSON.stringify({
+          expected_version: version,
+          accion: 'confirmar',
+          motivo: 'Pago verificado manualmente',
+        }),
+      }),
+      env,
+      params: { id: String(reservaId) },
+      waitUntil(promesa: Promise<unknown>) { tarea = promesa; },
+    });
+    assert.equal(response.status, 200);
+    assert.ok(tarea);
+    await tarea;
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(sqlite.prepare(`
+    SELECT COUNT(*) n FROM comunicacion_intenciones
+    WHERE reserva_id = ? AND tipo = 'pago_aprobado'
+  `).get(reservaId)?.n, 1);
+  assert.equal(enviados.length, 1);
+  assert.equal(enviados[0].event_type, 'comunicacion.intencion_creada');
+  assert.equal(enviados[0].intent_type, 'pago_aprobado');
+  assert.equal(enviados[0].reservation_id, reservaId);
+  assert.equal(sqlite.prepare(`
+    SELECT estado FROM integration_outbox
+    WHERE event_id = ?
+  `).get(enviados[0].event_id as string)?.estado, 'delivered');
+  sqlite.close();
+});
+
 test('el contrato v1 crea, edita y cancela con sesión, CSRF y versión optimista', async () => {
   const sqlite = baseCompleta();
   const database = d1(sqlite);

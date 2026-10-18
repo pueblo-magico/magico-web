@@ -19,13 +19,20 @@ async function despachar(request: Request, env: any): Promise<Response> {
     return json({ error: 'La entrega de eventos está desactivada en este ambiente.' }, 409);
   }
   try {
+    const pendientes = await env.DB.prepare(`
+      SELECT event_id FROM integration_outbox
+      WHERE estado = 'pending' AND next_attempt_at <= strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+        AND event_type = 'comunicacion.intencion_creada'
+      ORDER BY created_at, id LIMIT 25
+    `).all();
+    const eventIds = (pendientes.results || []).map((row: Record<string, unknown>) => String(row.event_id));
     const resultado = await despacharEventosIntegracion(
       new D1RepositorioOutboxIntegracion(env.DB),
       new HttpEntregadorEventosIntegracion({
         url: env.INTEGRATION_EVENTS_WEBHOOK_URL,
         secret: env.INTEGRATION_EVENTS_WEBHOOK_SECRET,
       }),
-      { consumer: 'integration_webhook' }
+      { consumer: 'integration_webhook', eventIds }
     );
     return json({ data: resultado, meta: { version: 'v1' } });
   } catch (error) {

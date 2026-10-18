@@ -283,7 +283,7 @@ test('proyecta eventos de reserva a intenciones versionadas sin copiar PII', () 
   const eventos = [
     ['reserva.creada_admin', 'reserva_creada'],
     ['reserva.retencion_iniciada', 'pago_pendiente'],
-    ['pago.aprobado', 'pago_aprobado'],
+    ['reserva.confirmada', 'pago_aprobado'],
     ['reserva.retencion_vencida', 'reserva_vencida'],
     ['reserva.modificada_admin', 'reserva_modificada'],
     ['reserva.cancelada', 'reserva_cancelada'],
@@ -306,6 +306,11 @@ test('proyecta eventos de reserva a intenciones versionadas sin copiar PII', () 
   assert.equal(envelopes.length, 6);
   assert.doesNotMatch(JSON.stringify(envelopes), /pii-no-copiar|QA Comunicación/);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM comunicacion_plantillas').get()?.n, 24);
+  crearEvento(sqlite, reservaId, 'pago.aprobado', 'payment-source-without-confirmation');
+  assert.equal(sqlite.prepare(`
+    SELECT COUNT(*) n FROM comunicacion_intenciones
+    WHERE source_event_uid = 'payment-source-without-confirmation'
+  `).get()?.n, 0);
   sqlite.prepare("UPDATE reservas SET idioma_comunicacion = 'en' WHERE id = ?").run(reservaId);
   crearEvento(sqlite, reservaId, 'reserva.creada_admin', 'com-source-en');
   assert.deepEqual({ ...sqlite.prepare(`
@@ -393,7 +398,7 @@ test('sin adaptador conserva la intención recuperable y no afecta la reserva', 
 test('reintenta errores seguros, agota en dead letter y permite recuperación', async () => {
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite);
-  crearEvento(sqlite, reservaId, 'pago.aprobado', 'com-retry');
+  crearEvento(sqlite, reservaId, 'reserva.confirmada', 'com-retry');
   const repositorio = new D1RepositorioIntencionesComunicacion(d1(sqlite));
   const canal = {
     codigo: 'email',
@@ -516,7 +521,7 @@ test('una reserva sin email queda visible como sin canal y no se reintenta', asy
   const sqlite = baseCompleta();
   const reservaId = crearReserva(sqlite);
   sqlite.prepare('UPDATE reservas SET cliente_email = NULL WHERE id = ?').run(reservaId);
-  crearEvento(sqlite, reservaId, 'pago.aprobado', 'com-email-missing');
+  crearEvento(sqlite, reservaId, 'reserva.confirmada', 'com-email-missing');
   const env = {
     DB: d1(sqlite),
     N8N_INBOUND_SECRET: 'n8n-secret-seguro-de-al-menos-32-caracteres',

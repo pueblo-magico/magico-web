@@ -840,7 +840,12 @@ test('confirma de punta a punta una transferencia por DNI, importe y moneda', as
     'request-transfer-e2e-1',
   );
 
-  assert.deepEqual(resultado, { estado: 'confirmada' });
+  assert.deepEqual(resultado, {
+    estado: 'confirmada',
+    reservaId: Number(sqlite.prepare('SELECT id FROM reservas WHERE codigo = ?').get(
+      creada.data.reserva.codigo
+    )?.id),
+  });
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT r.estado_flujo, rpm.estado metodo_estado, p.estado pago_estado
     FROM reservas r

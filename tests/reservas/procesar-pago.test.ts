@@ -64,7 +64,7 @@ test('confirma una sola vez ante entregas duplicadas sin invocar un canal', asyn
   });
   assert.deepEqual(
     await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, 'delivery-1'),
-    { estado: 'confirmada' }
+    { estado: 'confirmada', reservaId: 7 }
   );
   assert.deepEqual(
     await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, 'delivery-1'),
@@ -88,7 +88,7 @@ test('resuelve la referencia pública RES sin mezclar ids de preview y producci�
   });
 
   const resultado = await procesarPagoMercadoPago('pay-public', pagos('approved', codigo), repository);
-  assert.deepEqual(resultado, { estado: 'confirmada' });
+  assert.deepEqual(resultado, { estado: 'confirmada', reservaId: 77 });
   assert.equal(confirmada, 77);
 });
 
@@ -118,7 +118,7 @@ test('concilia una transferencia aprobada por DNI, importe y moneda cuando la co
   };
 
   const resultado = await procesarPagoMercadoPago('transfer-81', provider, repository);
-  assert.deepEqual(resultado, { estado: 'confirmada' });
+  assert.deepEqual(resultado, { estado: 'confirmada', reservaId: 81 });
   assert.equal(confirmada, 81);
 });
 
@@ -155,8 +155,8 @@ test('la confirmación no depende de que exista una identidad de mensajería', a
     })
   );
 
-  assert.deepEqual(conUsuario, { estado: 'confirmada' });
-  assert.deepEqual(sinUsuario, { estado: 'confirmada' });
+  assert.deepEqual(conUsuario, { estado: 'confirmada', reservaId: 7 });
+  assert.deepEqual(sinUsuario, { estado: 'confirmada', reservaId: 8 });
 });
 
 test('registra rechazos, cancelaciones, devoluciones y estados intermedios', async () => {

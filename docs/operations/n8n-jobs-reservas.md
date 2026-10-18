@@ -6,11 +6,13 @@ de Reservas.
 
 ## Modelo de ejecución
 
-La creación de reservas y las notificaciones de arrepentimiento intentan despachar
-en segundo plano mediante `waitUntil` únicamente los eventos producidos por esa
-operación. Nunca reclaman el lote histórico general. La respuesta al cliente o al
-administrador no espera a n8n: si la entrega falla, el evento vuelve a `pending`
-con su política de reintentos.
+La creación y confirmación de reservas, junto con las notificaciones de
+arrepentimiento, intentan despachar en segundo plano mediante `waitUntil`
+únicamente los eventos producidos por esa operación. La confirmación manual y la
+confirmación por Mercado Pago seleccionan sólo la intención `pago_aprobado` de
+la reserva. Nunca reclaman el lote histórico general. La respuesta al cliente o
+al administrador no espera a n8n: si la entrega falla, el evento vuelve a
+`pending` con su política de reintentos.
 
 El workflow programado de outbox se mantiene activo como red de recuperación. Su
 función es procesar eventos que no pudieron salir en vivo, quedaron pendientes por
@@ -74,6 +76,12 @@ valor en el workflow exportable.
    en los logs de Cloudflare.
 5. Confirmar en el panel administrativo que no crecen los pendientes ni
    `dead_letter` antes de activar la agenda.
+
+El botón del panel **Enviar comunicaciones pendientes** es deliberadamente más
+estrecho que el job programado: procesa sólo eventos
+`comunicacion.intencion_creada`. No entrega en bloque solicitudes históricas de
+arrepentimiento; esas notificaciones se revisan y reprocesan desde la sección
+Arrepentimientos.
 
 Un `401` indica secreto o ambiente incorrecto. Un `409` del dispatcher indica
 que la feature flag o el destino no están listos. Un `503` es reintentable; si

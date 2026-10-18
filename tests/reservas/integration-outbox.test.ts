@@ -310,6 +310,28 @@ test('el contrato admin permite observar y reserva el reproceso al super admin',
   const exitoso = await reprocesarOutboxAdmin({ request: requestReproceso(tokenAdmin), env });
   assert.equal(exitoso.status, 200);
   assert.equal((await exitoso.json() as any).estado, 'pending');
+  sqlite.prepare(`
+    UPDATE integration_outbox
+    SET event_type = 'comunicacion.intencion_creada',
+      payload_json = json_object(
+        'event_id', event_id,
+        'event_type', 'comunicacion.intencion_creada',
+        'reservation_id', 1,
+        'intent_type', 'pago_aprobado'
+      )
+    WHERE event_id = 'reserva:outbox-admin'
+  `).run();
+  sqlite.prepare(`
+    INSERT INTO integration_outbox (
+      event_id, event_type, schema_version, aggregate_type, aggregate_id,
+      payload_json, occurred_at
+    ) VALUES (
+      'arrepentimiento:pendiente-no-masivo', 'arrepentimiento.notificacion_pendiente',
+      1, 'arrepentimiento', 'ARR-QA',
+      json_object('event_id', 'arrepentimiento:pendiente-no-masivo'),
+      strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    )
+  `).run();
 
   const requestDespacho = (token: string) => new Request(
     'https://test/api/v1/admin/integraciones/outbox/despachar', {
@@ -321,13 +343,22 @@ test('el contrato admin permite observar y reserva el reproceso al super admin',
   });
   assert.equal(despachoProhibido.status, 403);
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response(null, { status: 204 });
+  const enviados: string[] = [];
+  globalThis.fetch = async (_input, init) => {
+    enviados.push(String(JSON.parse(String(init?.body)).event_id));
+    return new Response(null, { status: 204 });
+  };
   try {
     const despacho = await despacharOutboxAdmin({ request: requestDespacho(tokenAdmin), env });
     assert.equal(despacho.status, 200);
     assert.deepEqual((await despacho.json() as any).data, {
       reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0,
     });
+    assert.deepEqual(enviados, ['reserva:outbox-admin']);
+    assert.equal(sqlite.prepare(`
+      SELECT estado FROM integration_outbox
+      WHERE event_id = 'arrepentimiento:pendiente-no-masivo'
+    `).get()?.estado, 'pending');
   } finally {
     globalThis.fetch = originalFetch;
   }
