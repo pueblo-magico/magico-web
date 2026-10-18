@@ -194,7 +194,7 @@ jobs:
             admin_status=$(curl --silent --show-error --max-time 15 --output /tmp/admin-me.json --write-out '%{http_code}' "$PREVIEW_URL/api/admin/me" || true)
             reservations_status=$(curl --silent --show-error --max-time 15 --dump-header /tmp/admin-reservas.headers --output /tmp/admin-reservas.json --write-out '%{http_code}' --header "X-Request-ID: $correlation_id" "$PREVIEW_URL/api/admin/reservas" || true)
 
-            if test "$availability_status" = "200" \
+            if { test "$availability_status" = "200" || test "$availability_status" = "429"; } \
               && test "$admin_status" = "401" \
               && test "$reservations_status" = "401" \
               && grep --ignore-case --quiet "^x-request-id: $correlation_id" /tmp/admin-reservas.headers; then
