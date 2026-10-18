@@ -15,6 +15,11 @@ function nodeByName(document: any, name: string): any {
   return node;
 }
 
+function renderEmailTemplate(message: string, data: Record<string, unknown>): string {
+  const expression = message.replace(/^=\{\{\s*/, '').replace(/\s*\}\}$/, '');
+  return new Function('$json', `return (${expression});`)({ data });
+}
+
 test('el workflow de email transaccional es importable, permanece inactivo y no contiene secretos', () => {
   const document = workflow(emailPath);
   const raw = readFileSync(emailPath, 'utf8');
@@ -59,7 +64,43 @@ test('el workflow autentica y admite arrepentimientos y comunicaciones de reserv
   assert.match(email.parameters.message, /mensaje_humano/);
   assert.match(email.parameters.message, /RECHAZADA/);
   assert.match(email.parameters.message, /Mensaje del equipo de Pueblo Mágico/);
+  assert.match(email.parameters.message, /Ver mi reserva confirmada/);
+  assert.match(email.parameters.message, /View my confirmed booking/);
   assert.equal(email.onError, 'continueErrorOutput');
+});
+
+test('el email de reserva adapta la acción y la ayuda al estado real', () => {
+  const document = workflow(emailPath);
+  const message = nodeByName(document, 'Enviar email').parameters.message;
+
+  const confirmed = renderEmailTemplate(message, {
+    idioma: 'es',
+    cuerpo:
+      'Recibimos la seña y confirmamos tu reserva RES-123.\nFechas: 2026-10-23 al 2026-10-24.\nPersonas: 2.\nSeña recibida: $ 30.000.\nVer tu reserva: https://preview.test/reserva-confirmada?reserva=RES-123',
+  });
+  assert.match(confirmed, /Ver mi reserva confirmada/);
+  assert.match(confirmed, /Tu reserva está confirmada/);
+  assert.doesNotMatch(confirmed, /completar la seña/i);
+  assert.doesNotMatch(confirmed, />Ver tu reserva:<\/span>/);
+  assert.match(confirmed, />2<\/strong>/);
+  assert.match(confirmed, />\$ 30\.000<\/strong>/);
+
+  const pending = renderEmailTemplate(message, {
+    idioma: 'es',
+    cuerpo:
+      'Recibimos tu solicitud de reserva RES-124.\nVer tu reserva: https://preview.test/reserva-pendiente?reserva=RES-124',
+  });
+  assert.match(pending, /Ver mi reserva y completar la seña/);
+  assert.match(pending, /Si ya realizaste el pago, no necesitás hacer nada/);
+
+  const closed = renderEmailTemplate(message, {
+    idioma: 'en',
+    cuerpo:
+      'Your booking RES-125 is no longer pending.\nView your booking: https://preview.test/reserva-fallida?reserva=RES-125',
+  });
+  assert.match(closed, /Your stay in the mountains/);
+  assert.match(closed, /View booking status/);
+  assert.match(closed, /This booking is no longer pending/);
 });
 
 test('un fallo reintenta con 503 y sólo termina en dead letter al agotar intentos', () => {
