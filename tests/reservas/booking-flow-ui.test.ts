@@ -5,12 +5,23 @@ import {
   checkPublicAvailability,
   createBookingAttemptKey,
   createPublicReservation,
+  defaultPaymentMethod,
   formatRemaining,
   getPublicReservationStatus,
   listPublicAccommodations,
   localTodayIso,
   remainingSeconds,
 } from '../../components/booking/bookingApi.ts';
+
+test('selecciona transferencia como forma de pago inicial cuando está disponible', () => {
+  assert.equal(defaultPaymentMethod(['mercado_pago_checkout', 'transferencia_mp']), 'transferencia_mp');
+  assert.equal(defaultPaymentMethod(['mercado_pago_checkout']), 'mercado_pago_checkout');
+  assert.equal(defaultPaymentMethod([]), 'mercado_pago_checkout');
+
+  const widget = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  assert.match(widget, /useState<PaymentMethod>\('transferencia_mp'\)/);
+  assert.match(widget, /setPaymentMethod\(defaultPaymentMethod\(result\.metodos_pago\)\)/);
+});
 
 test('rechaza una respuesta inválida del catálogo público sin romper el widget', async () => {
   const originalFetch = globalThis.fetch;

@@ -3,6 +3,12 @@ export type BookingMode = 'compartida' | 'privada' | 'camping';
 export type MealPlan = 'desayuno_incluido' | 'pension_completa';
 export type PaymentMethod = 'mercado_pago_checkout' | 'transferencia_mp';
 
+export function defaultPaymentMethod(methods: PaymentMethod[]): PaymentMethod {
+  return methods.includes('transferencia_mp')
+    ? 'transferencia_mp'
+    : methods[0] || 'mercado_pago_checkout';
+}
+
 export interface PublicAccommodation {
   codigo: string;
   nombre: string;

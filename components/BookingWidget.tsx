@@ -22,6 +22,7 @@ import {
   createBookingAttemptKey,
   createPublicQuote,
   createPublicReservation,
+  defaultPaymentMethod,
   formatRemaining,
   getPublicReservationStatus,
   listPublicAccommodations,
@@ -370,7 +371,7 @@ export const BookingWidget: React.FC<{
   const [quoteSeconds, setQuoteSeconds] = useState(0);
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [guest, setGuest] = useState({ name: '', phone: '', email: '' });
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mercado_pago_checkout');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transferencia_mp');
   const [payerDni, setPayerDni] = useState('');
   const [consent, setConsent] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -766,7 +767,7 @@ export const BookingWidget: React.FC<{
         return;
       }
       setQuote(result);
-      setPaymentMethod(result.metodos_pago[0] || 'mercado_pago_checkout');
+      setPaymentMethod(defaultPaymentMethod(result.metodos_pago));
       setSubmitAttempted(false);
       setTouchedReviewFields({});
       goToStep(3);
