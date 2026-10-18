@@ -536,6 +536,33 @@ export type EstadoReservaPublica = {
   codigo: string;
   estado: string;
   expiresAt: string | null;
+  createdAt: string;
+  confirmedAt: string | null;
+  idioma: 'es' | 'en';
+  estadia: {
+    fechaCheckin: string;
+    fechaCheckout: string;
+    noches: number;
+    cantidadHuespedes: number;
+    alojamiento: {
+      codigo: string | null;
+      nombre: string;
+      tipo: string;
+    };
+    modalidad: string;
+    regimenAlimentacion: string;
+    preparacion: {
+      codigo: string;
+      nombre: string;
+      descripcion: string;
+    } | null;
+  };
+  precio: {
+    totalCentavos: number;
+    senaCentavos: number;
+    saldoCentavos: number;
+    moneda: string;
+  };
   pagoEstado: string | null;
   metodoPago: 'mercado_pago_checkout' | 'transferencia_mp' | null;
   montoSenaCentavos: number;

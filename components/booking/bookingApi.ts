@@ -147,7 +147,30 @@ export interface ReservationResponse {
 }
 
 export interface PublicReservationStatus {
-  reserva: { codigo: string; estado: string; expires_at: string | null };
+  reserva: {
+    codigo: string;
+    estado: string;
+    expires_at: string | null;
+    created_at: string;
+    confirmed_at: string | null;
+    idioma: 'es' | 'en';
+  };
+  estadia: {
+    check_in: string;
+    check_out: string;
+    noches: number;
+    personas: number;
+    alojamiento: { codigo: string | null; nombre: string; tipo: string };
+    modalidad: string;
+    regimen_alimentacion: string;
+    preparacion: null | { codigo: string; nombre: string; descripcion: string };
+  };
+  precio: {
+    total_centavos: number;
+    sena_centavos: number;
+    saldo_centavos: number;
+    moneda: string;
+  };
   pago: {
     proveedor: 'mercado_pago';
     estado: string;

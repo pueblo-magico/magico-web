@@ -679,6 +679,28 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     assert.equal(estado.status, 200);
     assert.equal(bodyEstado.data.reserva.codigo, body.data.reserva.codigo);
     assert.equal(bodyEstado.data.reserva.estado, 'pendiente_pago');
+    assert.equal(bodyEstado.data.reserva.confirmed_at, null);
+    assert.equal(bodyEstado.data.reserva.idioma, 'es');
+    assert.deepEqual(bodyEstado.data.estadia, {
+      check_in: '2027-08-10',
+      check_out: '2027-08-12',
+      noches: 2,
+      personas: 2,
+      alojamiento: { codigo: 'domo-1', nombre: 'Domo 1', tipo: 'domo' },
+      modalidad: 'privada',
+      regimen_alimentacion: 'desayuno_incluido',
+      preparacion: {
+        codigo: 'cama_doble',
+        nombre: '1 cama doble',
+        descripcion: 'Prepararemos el domo con una cama doble.',
+      },
+    });
+    assert.deepEqual(bodyEstado.data.precio, {
+      total_centavos: 16_500_000,
+      sena_centavos: 4_950_000,
+      saldo_centavos: 11_550_000,
+      moneda: 'ARS',
+    });
     assert.equal(bodyEstado.data.pago.estado, 'pendiente');
     assert.equal(bodyEstado.data.pago.monto_centavos, 4_950_000);
     assert.equal(bodyEstado.data.pago.metodo, 'mercado_pago_checkout');
@@ -1035,13 +1057,23 @@ test('confirmar una reserva convierte la retención y protege estados finales', 
     request: requestReserva(quote.data.cotizacion.codigo, 'qa-confirm-0001'), env: env(db),
   });
   assert.equal(creada.status, 201);
+  const codigo = (await creada.json() as any).data.reserva.codigo;
   sqlite.prepare("UPDATE reservas SET estado = 'confirmada' WHERE codigo = ?")
-    .run((await creada.json() as any).data.reserva.codigo);
+    .run(codigo);
 
   assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas').get()?.estado_flujo, 'confirmada');
   assert.equal(sqlite.prepare('SELECT estado FROM retenciones_reserva').get()?.estado, 'convertida');
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM ocupacion_reserva_noches WHERE estado = 'confirmada'").get()?.n, 2);
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo = 'reserva.confirmada'").get()?.n, 1);
+  const estado = await consultarEstadoReserva({
+    request: new Request(`https://test/api/v1/public/reservas/${codigo}`),
+    env: env(db), params: { codigo },
+  });
+  const bodyEstado = await estado.json() as any;
+  assert.equal(bodyEstado.data.reserva.estado, 'confirmada');
+  assert.match(bodyEstado.data.reserva.confirmed_at, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(bodyEstado.data.precio.total_centavos, quote.data.precio.subtotal_centavos);
+  assert.equal(bodyEstado.data.estadia.preparacion.nombre, '1 cama doble');
   sqlite.prepare("UPDATE reservas SET estado_flujo = 'cancelada'").run();
   assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas').get()?.estado_flujo, 'cancelada');
   assert.throws(

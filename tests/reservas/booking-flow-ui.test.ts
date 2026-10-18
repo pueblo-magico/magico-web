@@ -257,12 +257,21 @@ test('conserva la selección no sensible al recargar y mantiene el paso en la UR
 
 test('los retornos de Mercado Pago consultan el estado persistido y tienen fallback SPA', () => {
   const source = readFileSync(new URL('../../src/EstadoPagoReserva.tsx', import.meta.url), 'utf8');
+  const pdfSource = readFileSync(new URL('../../src/components/pdf/ConfirmacionReservaPdf.tsx', import.meta.url), 'utf8');
   const redirects = readFileSync(new URL('../../public/_redirects', import.meta.url), 'utf8');
   assert.match(source, /getPublicReservationStatus\(code\)/);
   assert.match(source, /status\?\.reserva\.estado === 'confirmada'/);
   assert.match(source, /status\.pago\.checkout_url/);
   assert.match(source, /status\?\.transferencia\.estado === 'ready'/);
   assert.match(source, /activePending && status/);
+  assert.match(source, /status\.estadia\.check_in/);
+  assert.match(source, /status\.precio\.total_centavos/);
+  assert.match(source, /ConfirmacionReservaPdf/);
+  assert.match(source, /confirmacion-\$\{status\.reserva\.codigo\}\.pdf/);
+  assert.match(source, /confirmed && \(/);
+  assert.match(pdfSource, /status\.estadia\.alojamiento\.nombre/);
+  assert.match(pdfSource, /status\.precio\.saldo_centavos/);
+  assert.match(pdfSource, /10% de tu inversión/);
   assert.doesNotMatch(source, /params\.get\(['"]status['"]\)/);
   for (const path of ['/reserva-confirmada', '/reserva-pendiente', '/reserva-fallida']) {
     assert.match(redirects, new RegExp(`${path}\\s+/app-shell/\\s+200`));
