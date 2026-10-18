@@ -34,10 +34,15 @@ async function cambiar(
       correlationId,
       operacionUid,
     }, new D1RepositorioGestionReservasAdmin(env.DB));
-    if (accion === 'confirmar') {
-      programarDespachoOutbox(env, waitUntil, 'admin.reservations.confirm', {
+    const intencionInmediata = accion === 'confirmar'
+      ? { origen: 'admin.reservations.confirm', tipo: 'pago_aprobado' }
+      : accion === 'cancelar'
+        ? { origen: 'admin.reservations.cancel', tipo: 'reserva_cancelada' }
+        : null;
+    if (intencionInmediata) {
+      programarDespachoOutbox(env, waitUntil, intencionInmediata.origen, {
         reservationId: reservaId,
-        communicationIntentTypes: ['pago_aprobado'],
+        communicationIntentTypes: [intencionInmediata.tipo],
       });
     }
     return json({ data: reserva, meta: { version: 'v1' } });
