@@ -239,6 +239,30 @@ const FestivalOctubre: React.FC = () => {
   };
 
   useEffect(() => {
+    const rail = accessRailRef.current;
+    if (!rail) return;
+
+    const mobileQuery = window.matchMedia('(max-width: 767px)');
+    const centerFeaturedOption = () => {
+      if (!mobileQuery.matches) return;
+      const featuredOption = rail.querySelector<HTMLElement>('[data-featured-option="true"]');
+      if (!featuredOption) return;
+      rail.scrollTo({
+        left: featuredOption.offsetLeft - (rail.clientWidth - featuredOption.clientWidth) / 2,
+        behavior: 'auto',
+      });
+    };
+
+    const frame = window.requestAnimationFrame(centerFeaturedOption);
+    mobileQuery.addEventListener('change', centerFeaturedOption);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      mobileQuery.removeEventListener('change', centerFeaturedOption);
+    };
+  }, []);
+
+  useEffect(() => {
     const previousTitle = document.title;
     document.title = `${FESTIVAL_OCTUBRE.name} · 31 de octubre · Pueblo Mágico`;
 
@@ -462,10 +486,10 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">La música que nos reúne.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
             </div>
-            <div className="scrollbar-hide -mx-6 overflow-x-auto px-6 pb-4 md:-mx-10 md:px-10" aria-label="Artistas confirmados">
-              <div className="flex snap-x snap-mandatory gap-5">
+            <div className="scrollbar-hide -mx-6 snap-x snap-mandatory scroll-px-6 overflow-x-auto overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Artistas confirmados">
+              <div className="flex gap-5">
                 {FESTIVAL_OCTUBRE.artists.map((artist, index) => (
-                  <article key={artist.name} className="group w-[calc(100vw-3rem)] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
+                  <article key={artist.name} className="group w-[calc(100vw-3rem)] max-w-[340px] shrink-0 snap-start snap-always overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#173528]" data-reveal data-delay={String(index + 1)}>
                     <div className="relative aspect-[4/5] overflow-hidden">
                       <img src={img(artist.image, 900)} alt={artist.imageAlt} loading="lazy" width="900" height="1125" className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.04]" />
                       <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(17,25,20,0.88),transparent_65%)]" />
@@ -495,10 +519,10 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-3xl leading-tight text-[#123B2D] serif-title md:text-4xl">Facilitadores, anfitriones y dirección musical</h2>
               <p className="mx-auto mt-4 max-w-lg text-base text-[#1F2922]/60">Un equipo y una comunidad de referentes que suman su energía a esta celebración.</p>
             </div>
-            <div className="scrollbar-hide -mx-6 overflow-x-auto px-6 pb-4 md:-mx-10 md:px-10" aria-label="Equipo de AtardeSer">
-              <div className="flex snap-x snap-mandatory items-stretch gap-5">
+            <div className="scrollbar-hide -mx-6 snap-x snap-mandatory scroll-px-6 overflow-x-auto overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Equipo de AtardeSer">
+              <div className="flex items-stretch gap-5">
                 {FESTIVAL_OCTUBRE.team.map((member, index) => (
-                  <div key={member.fullName} className="w-[calc(100vw-3rem)] max-w-[320px] shrink-0 snap-start">
+                  <div key={member.fullName} className="w-[calc(100vw-3rem)] max-w-[320px] shrink-0 snap-start snap-always">
                     <TeamCard member={member} index={index} />
                   </div>
                 ))}
@@ -554,10 +578,10 @@ const FestivalOctubre: React.FC = () => {
                 <button type="button" onClick={() => scrollAccessOptions(1)} aria-label="Ver más modalidades" aria-controls="festival-access-options" className="flex h-11 w-11 items-center justify-center rounded-full border border-[#123B2D]/20 bg-white text-[#123B2D] transition hover:border-[#123B2D] hover:bg-[#123B2D] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#123B2D]"><ChevronRight size={19} aria-hidden="true" /></button>
               </div>
             </div>
-            <div ref={accessRailRef} id="festival-access-options" className="scrollbar-hide -mx-6 scroll-px-6 overflow-x-auto px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
-              <div className="flex snap-x snap-mandatory items-stretch gap-5">
+            <div ref={accessRailRef} id="festival-access-options" className="scrollbar-hide -mx-6 snap-x snap-mandatory scroll-px-6 overflow-x-auto overscroll-x-contain px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
+              <div className="flex items-stretch gap-5">
                 {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => (
-                  <div key={option.title} className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-start md:w-[320px] lg:w-[330px] xl:w-[340px]">
+                  <div key={option.title} data-featured-option={option.featured ? 'true' : undefined} className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-center snap-always md:w-[320px] md:snap-start lg:w-[330px] xl:w-[340px]">
                     <AccessCard option={option} index={index} />
                   </div>
                 ))}
