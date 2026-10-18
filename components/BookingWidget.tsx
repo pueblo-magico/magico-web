@@ -68,6 +68,10 @@ const COPY = {
     contactSupport: 'Consultar por WhatsApp', reviewTitle: 'Contanos quién viene',
     name: 'Nombre y apellido', phone: 'WhatsApp', email: 'Email',
     contactIntro: 'Completá tus datos para crear la reserva. No necesitás una cuenta.',
+    validationTitle: 'Para crear la reserva, falta completar:', validationErrorTitle: 'Revisá estos datos para continuar:',
+    nameRequired: 'Ingresá tu nombre y apellido.', phoneRequired: 'Ingresá un número de WhatsApp.',
+    emailRequired: 'Ingresá tu email.', emailInvalid: 'Revisá el formato del email (por ejemplo, nombre@dominio.com).',
+    dniInvalid: 'Ingresá un DNI válido de 7 u 8 números.', consentRequired: 'Aceptá los términos y la política de privacidad.',
     paymentMethod: 'Forma de pago', checkoutMethod: 'Mercado Pago', transferMethod: 'Transferencia',
     paymentSurcharge: 'Recargo por Mercado Pago', paymentSurchargeHelp: 'Incluye un 10% adicional sobre el total y la seña.',
     dni: 'DNI del titular de la cuenta', dniHelp: 'Debe coincidir con el DNI informado por la cuenta desde la que hacés la transferencia.',
@@ -139,6 +143,10 @@ const COPY = {
     contactSupport: 'Ask on WhatsApp', reviewTitle: 'Tell us who is coming',
     name: 'Full name', phone: 'WhatsApp', email: 'Email',
     contactIntro: 'Enter your details to create the reservation. You do not need an account.',
+    validationTitle: 'To create the booking, complete:', validationErrorTitle: 'Review these details to continue:',
+    nameRequired: 'Enter your full name.', phoneRequired: 'Enter a WhatsApp number.',
+    emailRequired: 'Enter your email.', emailInvalid: 'Check the email format (for example, name@domain.com).',
+    dniInvalid: 'Enter a valid 7 or 8 digit DNI.', consentRequired: 'Accept the terms and privacy policy.',
     paymentMethod: 'Payment method', checkoutMethod: 'Mercado Pago', transferMethod: 'Bank transfer',
     paymentSurcharge: 'Mercado Pago surcharge', paymentSurchargeHelp: 'Includes an additional 10% on the total and deposit.',
     dni: "Account holder's DNI", dniHelp: 'It must match the DNI reported by the account used for the transfer.',
@@ -179,6 +187,8 @@ const COPY = {
 } as const;
 
 type Step = 1 | 2 | 3;
+type ReviewField = 'name' | 'phone' | 'email' | 'dni' | 'consent';
+type ReviewValidationError = { field: ReviewField; message: string };
 
 const ACTIVE_RESERVATION_STORAGE_KEY = 'magico.active-reservation.v1';
 const ACTIVE_RESERVATION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -363,6 +373,8 @@ export const BookingWidget: React.FC<{
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mercado_pago_checkout');
   const [payerDni, setPayerDni] = useState('');
   const [consent, setConsent] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [touchedReviewFields, setTouchedReviewFields] = useState<Partial<Record<ReviewField, boolean>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [reservation, setReservation] = useState<ReservationResponse | null>(null);
   const [reservationSeconds, setReservationSeconds] = useState(0);
@@ -371,6 +383,7 @@ export const BookingWidget: React.FC<{
   const [viewportEligible, setViewportEligible] = useState(activeViewport === 'all');
   const idempotencyKey = useRef(createBookingAttemptKey());
   const dialogRef = useRef<HTMLElement>(null);
+  const bookingFormRef = useRef<HTMLFormElement>(null);
   const stayDates = useMemo(() => stayNightDates(checkIn, checkOut), [checkIn, checkOut]);
   const stayNights = stayDates.length;
   const visibleCalendarDays = useMemo(() => calendarDays(visibleMonth), [visibleMonth]);
@@ -415,6 +428,26 @@ export const BookingWidget: React.FC<{
   const paymentSurchargeCentavos = displayedQuote
     ? Math.round(displayedQuote.precio.subtotal_centavos * selectedPaymentSurchargeBps / 10_000)
     : 0;
+  const emailValue = guest.email.trim();
+  const normalizedDni = payerDni.replace(/\D/g, '');
+  const reviewValidationErrors: ReviewValidationError[] = [
+    ...(!guest.name.trim() ? [{ field: 'name' as const, message: c.nameRequired }] : []),
+    ...(!guest.phone.trim() ? [{ field: 'phone' as const, message: c.phoneRequired }] : []),
+    ...(!emailValue
+      ? [{ field: 'email' as const, message: c.emailRequired }]
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)
+        ? [{ field: 'email' as const, message: c.emailInvalid }]
+        : []),
+    ...(paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(normalizedDni)
+      ? [{ field: 'dni' as const, message: c.dniInvalid }]
+      : []),
+    ...(!consent ? [{ field: 'consent' as const, message: c.consentRequired }] : []),
+  ];
+  const reviewErrorFor = (field: ReviewField) => reviewValidationErrors.find(item => item.field === field);
+  const showReviewError = (field: ReviewField) => submitAttempted || Boolean(touchedReviewFields[field]);
+  const touchReviewField = (field: ReviewField) => {
+    setTouchedReviewFields(current => current[field] ? current : { ...current, [field]: true });
+  };
   const displayedTotalCentavos = displayedQuote
     ? applyPaymentSurcharge(displayedQuote.precio.subtotal_centavos, selectedPaymentSurchargeBps)
     : pricePreview?.totalCentavos
@@ -734,6 +767,8 @@ export const BookingWidget: React.FC<{
       }
       setQuote(result);
       setPaymentMethod(result.metodos_pago[0] || 'mercado_pago_checkout');
+      setSubmitAttempted(false);
+      setTouchedReviewFields({});
       goToStep(3);
     } catch (err) {
       setError({ message: apiErrorMessage(err, c.genericError, language), code: err instanceof BookingApiError ? err.code : undefined });
@@ -744,9 +779,17 @@ export const BookingWidget: React.FC<{
 
   async function submitReservation(event: React.FormEvent) {
     event.preventDefault();
-    const dniValido = /^\d{7,8}$/.test(payerDni.replace(/\D/g, ''));
-    if (!quote?.opcion || !guest.name.trim() || !guest.phone.trim() || !guest.email.trim() || !consent ||
-        (paymentMethod === 'transferencia_mp' && !dniValido)) return;
+    setSubmitAttempted(true);
+    if (reviewValidationErrors.length > 0) {
+      const firstInvalidField = reviewValidationErrors[0].field;
+      window.requestAnimationFrame(() => {
+        bookingFormRef.current
+          ?.querySelector<HTMLElement>(`[data-booking-field="${firstInvalidField}"]`)
+          ?.focus();
+      });
+      return;
+    }
+    if (!quote?.opcion) return;
     if (quoteSeconds <= 0) {
       setError({ message: c.expired, code: 'COTIZACION_VENCIDA' });
       return;
@@ -797,6 +840,7 @@ export const BookingWidget: React.FC<{
 
   function startAgain() {
     goToStep(1, true); setQuote(null); setReservation(null); setError(null); setConsent(false);
+    setSubmitAttempted(false); setTouchedReviewFields({});
     setBedPreparationCode(null);
     clearActiveReservation();
     idempotencyKey.current = createBookingAttemptKey();
@@ -1071,7 +1115,7 @@ export const BookingWidget: React.FC<{
                   <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => goToStep(1)}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="button" disabled={loadingOptions || loadingQuote || availableModes.length === 0 || (requiresBedPreparation && !bedPreparationCode)} onClick={quoteStay}>{loadingQuote ? <><Loader2 className="booking-loading" size={18} /> {c.quote}</> : <>{c.quote}<ArrowRight size={18} /></>}</button></div>
                 </div>
               ) : quote ? (
-                <form className="booking-panel" onSubmit={submitReservation}>
+                <form ref={bookingFormRef} className="booking-panel" onSubmit={submitReservation} noValidate>
                   <div className="booking-panel__heading"><button className="booking-back-link" type="button" onClick={() => goToStep(2)}><ArrowLeft size={17} /> {c.back}</button><h3>{c.reviewTitle}</h3><p>{c.contactIntro}</p></div>
                   <div className="booking-review-cards">
                     <div><CalendarDays /><span><small>{c.datesTitle}</small><strong>{formatBookingDate(checkIn, language)} — {formatBookingDate(checkOut, language)}</strong><em>{stayNights} {c.nights} · {people} {c.people.toLowerCase()}</em></span><button type="button" onClick={() => goToStep(1)}>{c.edit}</button></div>
@@ -1079,16 +1123,28 @@ export const BookingWidget: React.FC<{
                   </div>
                   <div className="booking-notice booking-notice--success"><ShieldCheck size={22} /><span><strong>{c.secureNote}</strong>{quoteSeconds > 0 ? `${c.quoteValid}: ${formatRemaining(quoteSeconds)}` : c.expired}</span></div>
                   <div className="booking-grid">
-                    <label className="booking-field booking-field--full">{c.name}<span><UserRound /><input value={guest.name} onChange={event => setGuest({ ...guest, name: event.target.value })} autoComplete="name" required /></span></label>
-                    <label className="booking-field">{c.phone}<span><Phone /><input type="tel" value={guest.phone} onChange={event => setGuest({ ...guest, phone: event.target.value })} autoComplete="tel" required /></span></label>
-                    <label className="booking-field">{c.email}<span><Mail /><input type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} autoComplete="email" required /></span></label>
+                    <label className={`booking-field booking-field--full ${showReviewError('name') && reviewErrorFor('name') ? 'booking-field--error' : ''}`}>
+                      {c.name}
+                      <span><UserRound /><input id="booking-guest-name" data-booking-field="name" value={guest.name} onChange={event => setGuest({ ...guest, name: event.target.value })} onBlur={() => touchReviewField('name')} autoComplete="name" aria-invalid={showReviewError('name') && Boolean(reviewErrorFor('name'))} aria-describedby={showReviewError('name') && reviewErrorFor('name') ? 'booking-name-error' : undefined} required /></span>
+                      {showReviewError('name') && reviewErrorFor('name') && <small id="booking-name-error" className="booking-field__error"><AlertCircle />{reviewErrorFor('name')?.message}</small>}
+                    </label>
+                    <label className={`booking-field ${showReviewError('phone') && reviewErrorFor('phone') ? 'booking-field--error' : ''}`}>
+                      {c.phone}
+                      <span><Phone /><input id="booking-guest-phone" data-booking-field="phone" type="tel" value={guest.phone} onChange={event => setGuest({ ...guest, phone: event.target.value })} onBlur={() => touchReviewField('phone')} autoComplete="tel" aria-invalid={showReviewError('phone') && Boolean(reviewErrorFor('phone'))} aria-describedby={showReviewError('phone') && reviewErrorFor('phone') ? 'booking-phone-error' : undefined} required /></span>
+                      {showReviewError('phone') && reviewErrorFor('phone') && <small id="booking-phone-error" className="booking-field__error"><AlertCircle />{reviewErrorFor('phone')?.message}</small>}
+                    </label>
+                    <label className={`booking-field ${showReviewError('email') && reviewErrorFor('email') ? 'booking-field--error' : ''}`}>
+                      {c.email}
+                      <span><Mail /><input id="booking-guest-email" data-booking-field="email" type="email" value={guest.email} onChange={event => setGuest({ ...guest, email: event.target.value })} onBlur={() => touchReviewField('email')} autoComplete="email" aria-invalid={showReviewError('email') && Boolean(reviewErrorFor('email'))} aria-describedby={showReviewError('email') && reviewErrorFor('email') ? 'booking-email-error' : undefined} required /></span>
+                      {showReviewError('email') && reviewErrorFor('email') && <small id="booking-email-error" className="booking-field__error"><AlertCircle />{reviewErrorFor('email')?.message}</small>}
+                    </label>
                   </div>
                   <p className="booking-section-title">{c.paymentMethod}</p>
                   <div className="booking-choice-grid booking-payment-methods">{quote.metodos_pago.map(option => {
                     const surchargeBps = quote.recargos_metodo_pago?.[option]?.porcentaje_bps ?? 0;
                     return <button key={option} type="button" className={`booking-choice ${paymentMethod === option ? 'booking-choice--selected' : ''}`} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)}>{option === 'mercado_pago_checkout' ? <CreditCard size={23} /> : <Landmark size={23} />}<span><strong>{option === 'mercado_pago_checkout' ? c.checkoutMethod : c.transferMethod}</strong>{surchargeBps > 0 && <small>{c.paymentSurchargeHelp}</small>}</span><CheckCircle2 className="booking-choice__check" size={21} /></button>;
                   })}</div>
-                  {paymentMethod === 'transferencia_mp' && <label className="booking-field booking-field--full booking-dni-field">{c.dni}<span><UserRound /><input inputMode="numeric" value={payerDni} onChange={event => setPayerDni(event.target.value)} autoComplete="off" pattern="[0-9. -]{7,12}" required /></span><small>{c.dniHelp}</small></label>}
+                  {paymentMethod === 'transferencia_mp' && <label className={`booking-field booking-field--full booking-dni-field ${showReviewError('dni') && reviewErrorFor('dni') ? 'booking-field--error' : ''}`}>{c.dni}<span><UserRound /><input id="booking-payer-dni" data-booking-field="dni" inputMode="numeric" value={payerDni} onChange={event => setPayerDni(event.target.value)} onBlur={() => touchReviewField('dni')} autoComplete="off" pattern="[0-9. -]{7,12}" aria-invalid={showReviewError('dni') && Boolean(reviewErrorFor('dni'))} aria-describedby={`booking-dni-help${showReviewError('dni') && reviewErrorFor('dni') ? ' booking-dni-error' : ''}`} required /></span><small id="booking-dni-help">{c.dniHelp}</small>{showReviewError('dni') && reviewErrorFor('dni') && <small id="booking-dni-error" className="booking-field__error"><AlertCircle />{reviewErrorFor('dni')?.message}</small>}</label>}
                   <section className="booking-conditions" aria-labelledby="booking-conditions-title">
                     <header><ShieldCheck size={24} aria-hidden="true" /><span><h4 id="booking-conditions-title">{c.conditionsTitle}</h4><p>{c.conditionsIntro}</p></span></header>
                     {renderPriceSummary('booking-conditions__price')}
@@ -1101,9 +1157,10 @@ export const BookingWidget: React.FC<{
                     <div className="booking-conditions__detail booking-conditions__detail--gold"><CalendarDays aria-hidden="true" /><span><strong>{c.changesTitle}</strong><small>{c.changesCopy} <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer">{c.fullPolicy}</a>.</small></span></div>
                   </section>
                   <div className="booking-notice"><ShieldCheck size={20} /> {c.privacyNote}</div>
-                  <label className="booking-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer">{c.privacy}</a>.</span></label>
+                  <label className={`booking-consent ${showReviewError('consent') && reviewErrorFor('consent') ? 'booking-consent--error' : ''}`}><input data-booking-field="consent" type="checkbox" checked={consent} onChange={event => { setConsent(event.target.checked); touchReviewField('consent'); }} aria-invalid={showReviewError('consent') && Boolean(reviewErrorFor('consent'))} aria-describedby={showReviewError('consent') && reviewErrorFor('consent') ? 'booking-consent-error' : undefined} required /><span>{c.consentPrefix} <a href="/terminos-y-condiciones" target="_blank" rel="noopener noreferrer">{c.terms}</a> {language === 'es' ? 'y la' : 'and the'} <a href="/politica-de-privacidad" target="_blank" rel="noopener noreferrer">{c.privacy}</a>.{showReviewError('consent') && reviewErrorFor('consent') && <small id="booking-consent-error" className="booking-field__error"><AlertCircle />{reviewErrorFor('consent')?.message}</small>}</span></label>
+                  {reviewValidationErrors.length > 0 && <div className={`booking-validation-summary ${submitAttempted ? 'booking-validation-summary--error' : ''}`} role={submitAttempted ? 'alert' : 'status'} aria-live="polite"><AlertCircle /><span><strong>{submitAttempted ? c.validationErrorTitle : c.validationTitle}</strong><ul>{reviewValidationErrors.map(item => <li key={item.field}>{item.message}</li>)}</ul></span></div>}
                   {error && <div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error.message}</div>}
-                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => goToStep(2)}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0 || !guest.name.trim() || !guest.phone.trim() || !guest.email.trim() || !consent || (paymentMethod === 'transferencia_mp' && !/^\d{7,8}$/.test(payerDni.replace(/\D/g, '')))}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
+                  <div className="booking-actions"><button className="booking-button booking-button--secondary" type="button" onClick={() => goToStep(2)}><ArrowLeft size={17} /> {c.back}</button><button className="booking-button" type="submit" disabled={submitting || quoteSeconds <= 0}>{submitting ? <><Loader2 className="booking-loading" size={18} /> {c.reserving}</> : <>{c.reserve}<ArrowRight size={18} /></>}</button></div>
                 </form>
               ) : (
                 <div className="booking-panel"><div className="booking-notice booking-notice--error"><AlertCircle size={20} /> {error?.message || c.expired}</div><div className="booking-actions"><button className="booking-button" type="button" onClick={() => goToStep(2)}>{c.retry}</button></div></div>

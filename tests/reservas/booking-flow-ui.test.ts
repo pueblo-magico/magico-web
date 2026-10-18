@@ -162,9 +162,28 @@ test('muestra el flujo en una página dedicada y protege los datos de pago', () 
 
 test('exige email para crear una reserva desde el flujo público', () => {
   const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
-  assert.match(source, /autoComplete="email" required/);
-  assert.match(source, /!guest\.email\.trim\(\)/);
+  assert.match(source, /autoComplete="email"[^>]*required/);
+  assert.match(source, /const emailValue = guest\.email\.trim\(\)/);
+  assert.match(source, /!emailValue/);
   assert.doesNotMatch(source, /\{c\.email\}\s*<small>\{c\.optional\}/);
+});
+
+test('explica los datos faltantes y enfoca el primer error antes de crear la reserva', () => {
+  const source = readFileSync(new URL('../../components/BookingWidget.tsx', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('../../components/BookingWidget.css', import.meta.url), 'utf8');
+  assert.match(source, /className="booking-panel" onSubmit=\{submitReservation\} noValidate/);
+  assert.match(source, /reviewValidationErrors: ReviewValidationError\[\]/);
+  assert.match(source, /emailInvalid: 'Revisá el formato del email/);
+  assert.match(source, /data-booking-field="name"/);
+  assert.match(source, /aria-invalid=\{showReviewError\('email'\)/);
+  assert.match(source, /bookingFormRef\.current[\s\S]*querySelector<HTMLElement>[\s\S]*firstInvalidField/);
+  assert.match(source, /booking-validation-summary--error/);
+  assert.match(source, /role=\{submitAttempted \? 'alert' : 'status'\}/);
+  assert.match(source, /type="submit" disabled=\{submitting \|\| quoteSeconds <= 0\}/);
+  assert.doesNotMatch(source, /type="submit" disabled=\{submitting \|\| quoteSeconds <= 0 \|\| !guest/);
+  assert.match(styles, /\.booking-field--error > span/);
+  assert.match(styles, /\.booking-consent--error/);
+  assert.match(styles, /\.booking-validation-summary--error/);
 });
 
 test('el widget embebido conserva un lanzador compacto sin duplicar el hero', () => {
