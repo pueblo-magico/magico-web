@@ -4,6 +4,7 @@ import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import test from 'node:test';
 
 import { onRequestPost as registrarPagoAdmin } from '../../functions/api/v1/admin/reservas/[id]/pagos.ts';
+import { validarRegistroPagoManual } from '../../functions/_domain/reservas/manualPayments.ts';
 import { D1RepositorioHistorialReserva } from '../../functions/_infrastructure/d1/D1RepositorioHistorialReserva.ts';
 import { createSessionToken } from '../../functions/_lib/session.ts';
 
@@ -55,6 +56,49 @@ function crearReservaPendiente(sqlite: DatabaseSync): number {
     ) RETURNING id
   `).get()?.id);
 }
+
+test('valida los datos sensibles antes de registrar un pago manual', () => {
+  const valido = {
+    reservaId: 1,
+    expectedVersion: 1,
+    tipo: 'sena',
+    metodo: 'transferencia_bancaria',
+    montoCentavos: 2500,
+    moneda: ' ars ',
+    referencia: '  transferencia-123  ',
+    pagadoAt: '2026-10-19T12:00:00.000Z',
+    motivo: 'Comprobante verificado por administración',
+    idempotencyKey: 'manual-payment-validation-0001',
+    actorEmail: ' ADMIN@EXAMPLE.COM ',
+    correlationId: 'correlation-payment-validation',
+  } as const;
+
+  const normalizado = validarRegistroPagoManual(valido);
+  assert.equal(normalizado.moneda, 'ARS');
+  assert.equal(normalizado.referencia, 'transferencia-123');
+  assert.equal(normalizado.actorEmail, 'admin@example.com');
+
+  const casosInvalidos = [
+    { reservaId: 0 },
+    { expectedVersion: 0 },
+    { tipo: 'devolucion' },
+    { metodo: 'tarjeta' },
+    { montoCentavos: 0 },
+    { moneda: 'pesos' },
+    { pagadoAt: '' },
+    { pagadoAt: '2999-01-01T00:00:00.000Z' },
+    { idempotencyKey: 'corta' },
+    { actorEmail: '' },
+    { referencia: 123 },
+  ];
+
+  for (const cambio of casosInvalidos) {
+    assert.throws(
+      () => validarRegistroPagoManual({ ...valido, ...cambio } as never),
+      /./
+    );
+  }
+});
 
 test('registra seña manual, confirma la reserva y despacha emails a huésped y equipo', async () => {
   const sqlite = baseCompleta();
