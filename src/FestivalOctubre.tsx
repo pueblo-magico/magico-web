@@ -542,7 +542,7 @@ const FestivalOctubre: React.FC = () => {
           </a>
         </section>
 
-        <section id="propuesta" className="relative overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(184,90,61,0.18),transparent_32%),radial-gradient(circle_at_82%_76%,rgba(231,184,75,0.13),transparent_34%),#0B1B12] px-6 py-20 text-white md:px-10 md:py-28">
+        <section id="propuesta" className="relative overflow-hidden bg-[#0B1B12] px-6 py-20 text-white md:px-10 md:py-28">
           <div className="pointer-events-none absolute -left-20 bottom-10 h-56 w-56 rounded-full border border-[#B85A3D]/25" aria-hidden="true" />
           <div className="pointer-events-none absolute -right-28 top-16 h-72 w-72 rounded-full border border-[#E7B84B]/20" aria-hidden="true" />
           <div className="relative mx-auto max-w-5xl">
