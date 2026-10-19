@@ -350,25 +350,21 @@ const celebrationMoments = [
     src: '/uploads/atardeser/movimiento.jpeg',
     alt: 'Baile libre durante una celebración en Pueblo Mágico',
     label: 'Movimiento libre',
-    className: 'col-span-2 row-span-2 sm:col-span-2',
   },
   {
     src: '/uploads/atardeser/mati-en-magico.jpeg',
     alt: 'Música y encuentro durante una celebración en Pueblo Mágico',
     label: 'Música que reúne',
-    className: 'col-span-2 sm:col-span-2',
   },
   {
     src: '/uploads/atardeser/baile-en-familia.jpeg',
     alt: 'Personas de distintas edades bailando al aire libre',
     label: 'Celebrar juntos',
-    className: 'col-span-1',
   },
   {
     src: '/uploads/atardeser/ninez.jpeg',
     alt: 'Niños y adultos compartiendo una celebración al aire libre',
     label: 'Toda la familia',
-    className: 'col-span-1',
   },
 ] as const;
 
@@ -379,21 +375,21 @@ const CelebrationMosaic = () => (
     <Sparkles className="pointer-events-none absolute left-[8%] top-12 text-white/60" size={30} strokeWidth={1.3} aria-hidden="true" />
     <Sun className="pointer-events-none absolute bottom-12 right-[6%] text-[#123B2D]/25" size={52} strokeWidth={1.1} aria-hidden="true" />
 
-    <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-14">
-      <div className="text-center lg:text-left" data-reveal>
+    <div className="relative mx-auto max-w-7xl">
+      <div className="mx-auto max-w-4xl text-center" data-reveal>
         <p className="mb-5 inline-flex rounded-full bg-[#123B2D] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-white">Esto ya se vive</p>
-        <h2 className="text-4xl leading-[1.02] text-[#123B2D] serif-title md:text-6xl">La celebración<br />se siente en el cuerpo.</h2>
-        <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[#123B2D]/75 lg:mx-0">Imágenes reales de encuentros en Pueblo Mágico: música, baile, familias y naturaleza compartiendo el mismo ritmo.</p>
-        <div className="mt-7 flex flex-wrap justify-center gap-2 lg:justify-start">
+        <h2 className="text-4xl leading-[1.02] text-[#123B2D] serif-title md:text-6xl">La celebración se siente en el cuerpo.</h2>
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#123B2D]/75">Imágenes reales de encuentros en Pueblo Mágico: música, baile, familias y naturaleza compartiendo el mismo ritmo.</p>
+        <div className="mt-7 flex flex-wrap justify-center gap-2">
           {['Música en vivo', 'Baile al aire libre', 'Todas las edades'].map(item => (
             <span key={item} className="rounded-full border border-[#123B2D]/25 bg-white/45 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#123B2D]">{item}</span>
           ))}
         </div>
       </div>
 
-      <div className="grid auto-rows-[135px] grid-cols-2 gap-3 sm:auto-rows-[175px] sm:grid-cols-4" data-reveal data-delay="1">
+      <div className="mt-10 grid grid-cols-2 gap-3 md:mt-12 lg:grid-cols-4" data-reveal data-delay="1">
         {celebrationMoments.map((moment, index) => (
-          <figure key={moment.src} className={`group relative overflow-hidden rounded-[1.5rem] border-2 border-white/55 bg-[#123B2D] shadow-[0_18px_45px_rgba(18,59,45,0.22)] ${moment.className}`}>
+          <figure key={moment.src} className="group relative aspect-[4/5] overflow-hidden rounded-[1.5rem] border-2 border-white/55 bg-[#123B2D] shadow-[0_18px_45px_rgba(18,59,45,0.22)] sm:aspect-[4/3] lg:aspect-[4/5]">
             <img src={img(moment.src, index === 0 ? 1000 : 800)} alt={moment.alt} loading="lazy" width="1000" height="1000" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" />
             <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#111914]/85 to-transparent" />
             <figcaption className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.13em] text-[#123B2D] shadow-sm">{moment.label}</figcaption>
