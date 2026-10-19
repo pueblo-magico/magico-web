@@ -66,6 +66,12 @@ test('muestra el estado financiero y registra pagos manuales sólo para superadm
   assert.match(source, /Confirmar sin registrar pago/);
 });
 
+test('adapta listados sin confundir el índice de map con el historial financiero', () => {
+  assert.match(source, /\.map\(\(item: ReservaAdminV1\) => reservaDesdeV1\(item\)\)/);
+  assert.doesNotMatch(source, /\.map\(reservaDesdeV1\)/);
+  assert.match(source, /const resumenFinanciero = historial\?\.resumenFinanciero/);
+});
+
 test('muestra el identificador y la fecha de creación y permite buscarlos por código', () => {
   assert.match(source, /placeholder="Buscar por nombre o ID…"/);
   assert.match(source, /\{r\.codigo\}/);

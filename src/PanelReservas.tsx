@@ -180,8 +180,9 @@ type HistorialAdminV1 = {
 
 type MetaPaginaReservas = { pagina: number; limite: number; total: number; total_paginas: number };
 
-const reservaDesdeV1 = (item: ReservaAdminV1, historial?: HistorialAdminV1): Reserva => {
+const reservaDesdeV1 = (item: ReservaAdminV1, historial?: HistorialAdminV1 | null): Reserva => {
   const excepcion = item.excepciones?.[0];
+  const resumenFinanciero = historial?.resumenFinanciero;
   return {
     id: item.id,
     codigo: item.codigo,
@@ -202,13 +203,13 @@ const reservaDesdeV1 = (item: ReservaAdminV1, historial?: HistorialAdminV1): Res
     canal_origen: item.canalOrigen,
     manychat_user_id: item.manychatUserId,
     created_at: item.createdAt,
-    finanzas: historial ? {
-      totalCentavos: historial.resumenFinanciero.totalCentavos,
-      pagadoCentavos: historial.resumenFinanciero.netoCentavos,
-      saldoCentavos: historial.resumenFinanciero.saldoPendienteCentavos,
-      estado: historial.resumenFinanciero.estado,
-      moneda: historial.resumenFinanciero.moneda,
-      pagos: historial.pagos,
+    finanzas: resumenFinanciero ? {
+      totalCentavos: resumenFinanciero.totalCentavos,
+      pagadoCentavos: resumenFinanciero.netoCentavos,
+      saldoCentavos: resumenFinanciero.saldoPendienteCentavos,
+      estado: resumenFinanciero.estado,
+      moneda: resumenFinanciero.moneda,
+      pagos: historial?.pagos || [],
     } : undefined,
     preferencias: item.preferencias || [],
     cuenta_cobro: item.cuentaCobro ?? null,
@@ -229,7 +230,7 @@ async function paginaReservasV1(params: URLSearchParams): Promise<{ reservas: Re
   if (res.status === 401) throw new Error('__unauthorized__');
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const body: any = await res.json();
-  return { reservas: (body.data || []).map(reservaDesdeV1), meta: body.meta };
+  return { reservas: (body.data || []).map((item: ReservaAdminV1) => reservaDesdeV1(item)), meta: body.meta };
 }
 
 async function todasLasReservasV1(params: URLSearchParams): Promise<Reserva[]> {
