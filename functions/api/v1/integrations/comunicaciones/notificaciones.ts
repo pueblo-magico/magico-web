@@ -29,6 +29,8 @@ async function procesar(request: Request, env: any): Promise<Response> {
       const entrega = await reclamarNotificacionReserva({
         intencionUid: String(body.intencion_uid || ''),
         publicSiteUrl: env.RESERVAS_PUBLIC_SITE_URL || new URL(request.url).origin,
+        adminSiteUrl: env.RESERVAS_ADMIN_SITE_URL || env.RESERVAS_PUBLIC_SITE_URL || new URL(request.url).origin,
+        teamNotificationEmails: env.RESERVATION_TEAM_NOTIFICATION_EMAILS,
       }, repositorio);
       if (!entrega) {
         return errorIntegracion(
@@ -57,6 +59,7 @@ async function procesar(request: Request, env: any): Promise<Response> {
         asunto: entrega.asunto,
         cuerpo: entrega.cuerpo,
         idioma: entrega.idioma,
+        audiencia: entrega.audiencia,
       });
       response.headers.set('Cache-Control', 'no-store');
       return response;

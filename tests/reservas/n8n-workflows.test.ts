@@ -102,6 +102,17 @@ test('el email de reserva adapta la acción y la ayuda al estado real', () => {
   assert.match(closed, /Your stay in the mountains/);
   assert.match(closed, /View booking status/);
   assert.match(closed, /This booking is no longer pending/);
+
+  const team = renderEmailTemplate(message, {
+    audiencia: 'equipo',
+    idioma: 'es',
+    cuerpo:
+      'Nueva reserva registrada: RES-126.\nHuésped: Equipo QA.\nFechas: 2026-10-23 al 2026-10-24.\nAbrir en Administración: https://preview.test/admin/reservas?buscar=RES-126',
+  });
+  assert.match(team, /Equipo de Reservas/);
+  assert.match(team, /Abrir en Administración/);
+  assert.match(team, /Aviso operativo automático/);
+  assert.doesNotMatch(team, /completar la seña/i);
 });
 
 test('un fallo reintenta con 503 y sólo termina en dead letter al agotar intentos', () => {
@@ -121,6 +132,9 @@ test('los jobs operativos siguen separados del workflow de correo', () => {
   const jobs = workflow(jobsPath);
   assert.ok(nodeByName(jobs, 'Vencer retenciones'));
   assert.ok(nodeByName(jobs, 'Despachar outbox'));
+  const recordatorios = nodeByName(jobs, 'Programar recordatorios de llegada');
+  assert.match(recordatorios.parameters.url, /programar-recordatorios-llegada/);
+  assert.match(JSON.stringify(recordatorios.parameters), /N8N_INBOUND_SECRET/);
   assert.equal(jobs.active, false);
   assert.equal(jobs.nodes.some((node: any) => node.type === 'n8n-nodes-base.gmail'), false);
 });

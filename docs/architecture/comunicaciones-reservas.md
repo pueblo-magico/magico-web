@@ -56,3 +56,25 @@ El botón administrativo **Enviar comunicaciones pendientes** también se limita
 a `comunicacion.intencion_creada`: nunca vacía en bloque las notificaciones de
 arrepentimiento, que se operan desde su sección y conservan su recuperación
 programada independiente.
+
+## Avisos internos al equipo
+
+Los eventos de negocio de una reserva producen una segunda intención con
+`audience=equipo` para creación, confirmación, edición administrativa,
+cancelación o vencimiento. No se proyectan eventos técnicos duplicados como
+`reserva.creada_legacy` ni el inicio de una retención, de modo que una reserva
+pública nueva genera un solo aviso interno.
+
+La intención usa el mismo outbox, lease, reintentos, dead letter y confirmación
+`delivered` que el correo al huésped. El outbox conserva únicamente IDs y
+metadatos operativos; el endpoint de entrega resuelve los destinatarios desde
+`RESERVATION_TEAM_NOTIFICATION_EMAILS` y recién entonces incorpora los datos
+necesarios para el email. Si no hay un email interno válido, sólo esa intención
+queda `sin_canal` con `TEAM_EMAIL_DESTINATION_MISSING`.
+
+El job diario de llegadas llama a
+`POST /api/v1/integrations/reservas/programar-recordatorios-llegada`. Selecciona
+reservas confirmadas para la fecha operativa de Córdoba más la anticipación de
+`RESERVATION_ARRIVAL_REMINDER_DAYS` (un día por defecto). La clave de deduplicación
+incluye reserva, fecha de check-in y anticipación: repetir el job no duplica el
+correo y cambiar la fecha habilita el recordatorio correcto para la nueva llegada.

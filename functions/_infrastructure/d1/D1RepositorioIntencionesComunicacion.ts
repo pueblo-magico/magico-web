@@ -26,6 +26,7 @@ function mapear(row: Record<string, unknown>): IntencionComunicacion {
     intencionUid: String(row.intencion_uid),
     reservaId: Number(row.reserva_id),
     tipo: String(row.tipo) as IntencionComunicacion['tipo'],
+    audiencia: String(row.audiencia || 'huesped') as IntencionComunicacion['audiencia'],
     idioma: String(row.idioma) as IntencionComunicacion['idioma'],
     plantillaCodigo: String(row.plantilla_codigo),
     plantillaVersion: Number(row.plantilla_version),
@@ -50,7 +51,7 @@ export class D1RepositorioIntencionesComunicacion implements
         SELECT estado, COUNT(*) cantidad FROM comunicacion_intenciones GROUP BY estado
       `).all(),
       this.db.prepare(`
-        SELECT intencion_uid, reserva_id, tipo, idioma, estado, attempts, canal,
+        SELECT intencion_uid, reserva_id, tipo, audiencia, idioma, estado, attempts, canal,
           next_attempt_at, last_error_code, created_at, delivered_at,
           MAX(0, CAST((julianday(?) - julianday(created_at)) * 86400 AS INTEGER)) age_seconds
         FROM comunicacion_intenciones
@@ -84,6 +85,7 @@ export class D1RepositorioIntencionesComunicacion implements
         intencionUid: String(row.intencion_uid),
         reservaId: Number(row.reserva_id),
         tipo: String(row.tipo) as IntencionComunicacion['tipo'],
+        audiencia: String(row.audiencia || 'huesped') as IntencionComunicacion['audiencia'],
         idioma: String(row.idioma) as IntencionComunicacion['idioma'],
         estado: String(row.estado) as EstadoIntencionComunicacion,
         attempts: Number(row.attempts),
@@ -112,7 +114,7 @@ export class D1RepositorioIntencionesComunicacion implements
         )
         ORDER BY created_at, id LIMIT ?
       )
-      RETURNING intencion_uid, reserva_id, tipo, idioma, plantilla_codigo,
+      RETURNING intencion_uid, reserva_id, tipo, audiencia, idioma, plantilla_codigo,
         plantilla_version, estado, attempts, created_at
     `).bind(
       entrada.claimUid, entrada.ahora, entrada.claimExpiresAt,
@@ -137,15 +139,22 @@ export class D1RepositorioIntencionesComunicacion implements
       entrada.intencionUid, entrada.ahora, entrada.ahora
     ).run();
     const row = await this.db.prepare(`
-      SELECT i.intencion_uid, i.reserva_id, i.tipo, i.idioma, i.attempts,
-        r.cliente_email, r.codigo, r.estado_flujo, r.fecha_checkin, r.fecha_checkout,
-        r.cantidad_personas,
+      SELECT i.intencion_uid, i.reserva_id, i.tipo, i.audiencia, i.idioma, i.attempts,
+        r.cliente_email, r.cliente_nombre, r.codigo, r.estado_flujo,
+        re.fecha_checkin, re.fecha_checkout, re.cantidad_huespedes cantidad_personas,
         COALESCE(r.monto_sena_centavos, CAST(round(COALESCE(r.monto_sena, 0) * 100) AS INTEGER), 0)
           monto_sena_centavos,
+        COALESCE(r.monto_total_centavos, CAST(round(COALESCE(r.monto_total, 0) * 100) AS INTEGER), 0)
+          monto_total_centavos,
         r.moneda, r.hold_expires_at, p.asunto_template, p.cuerpo_template,
+        COALESCE(e.nombre, a.nombre) alojamiento, re.modalidad,
         json_extract(pg.metadata_json, '$.checkout_url') checkout_url
       FROM comunicacion_intenciones i
       JOIN reservas r ON r.id = i.reserva_id
+      JOIN alojamientos a ON a.id = r.alojamiento_id
+      JOIN reserva_estadias re ON re.reserva_id = r.id AND re.tramo = 1
+      LEFT JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
+      LEFT JOIN espacios e ON e.id = ree.espacio_id
       JOIN comunicacion_plantillas p
         ON p.codigo = i.plantilla_codigo
        AND p.idioma = i.idioma
@@ -163,18 +172,23 @@ export class D1RepositorioIntencionesComunicacion implements
       intencionUid: String(row.intencion_uid),
       reservaId: Number(row.reserva_id),
       tipo: String(row.tipo) as NotificacionReservaReclamada['tipo'],
+      audiencia: String(row.audiencia || 'huesped') as NotificacionReservaReclamada['audiencia'],
       idioma: String(row.idioma) as 'es' | 'en',
       attempts: Number(row.attempts),
       email: row.cliente_email == null || !String(row.cliente_email).trim()
         ? null
         : String(row.cliente_email).trim(),
       codigo: String(row.codigo),
+      clienteNombre: String(row.cliente_nombre),
       estadoFlujo: String(row.estado_flujo),
       fechaCheckin: String(row.fecha_checkin),
       fechaCheckout: String(row.fecha_checkout),
       cantidadPersonas: Number(row.cantidad_personas),
       montoSenaCentavos: Number(row.monto_sena_centavos),
+      montoTotalCentavos: Number(row.monto_total_centavos),
       moneda: String(row.moneda),
+      alojamiento: String(row.alojamiento),
+      modalidad: String(row.modalidad),
       expiresAt: row.hold_expires_at == null ? null : String(row.hold_expires_at),
       checkoutUrl: row.checkout_url == null ? null : String(row.checkout_url),
       asuntoTemplate: String(row.asunto_template),

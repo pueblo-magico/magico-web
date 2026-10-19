@@ -18,7 +18,9 @@ El workflow programado de outbox se mantiene activo como red de recuperación. S
 función es procesar eventos que no pudieron salir en vivo, quedaron pendientes por
 una interrupción del runtime o ya alcanzaron su próximo intento. El vencimiento de
 retenciones continúa siendo un job programado porque depende del paso del tiempo,
-no de una acción nueva del usuario.
+no de una acción nueva del usuario. Los avisos internos de llegada también son
+programados: una ejecución diaria crea una sola intención idempotente por reserva,
+fecha de check-in y anticipación configurada.
 
 Un evento en estado `delivered` no es elegible para el despacho inmediato ni para
 el job de recuperación. La entrega sólo puede repetirse después de un reproceso
@@ -27,12 +29,13 @@ administrativo explícito de un evento en `dead_letter`.
 ## Frecuencia y endpoints
 
 Importar `docs/integrations/n8n-jobs-operativos.workflow.json`. El workflow
-queda inactivo por seguridad y contiene dos ejecuciones independientes:
+queda inactivo por seguridad y contiene tres ejecuciones independientes:
 
 | Frecuencia | Endpoint | Objetivo |
 | --- | --- | --- |
 | cada minuto | `POST /api/v1/integrations/reservas/expirar-retenciones` | vencer retenciones impagas y liberar inventario |
 | cada minuto | `POST /api/v1/integrations/outbox/dispatch` | reclamar y entregar un lote de eventos externos |
+| todos los días, 09:00 | `POST /api/v1/integrations/reservas/programar-recordatorios-llegada` | avisar al equipo sobre las llegadas próximas |
 
 Cada nodo espera hasta 15 segundos y reintenta como máximo tres veces con cinco
 segundos entre intentos. Repetir una llamada es seguro: una retención ya vencida
@@ -59,6 +62,12 @@ En Cloudflare configurar, por ambiente:
   validado;
 - `INTEGRATION_EVENTS_WEBHOOK_URL` y `INTEGRATION_EVENTS_WEBHOOK_SECRET` con el
   destino del mismo ambiente.
+- `RESERVATION_TEAM_NOTIFICATION_EMAILS` con uno o más emails separados por coma;
+  configurarlo como secreto para no exponer direcciones internas;
+- `RESERVATION_ARRIVAL_REMINDER_DAYS` con la anticipación entre 1 y 30 días. Si
+  no se configura, el recordatorio se genera un día antes;
+- `RESERVAS_ADMIN_SITE_URL` con el origen estable del panel, cuando sea distinto
+  de `RESERVAS_PUBLIC_SITE_URL`.
 
 Los secretos no se guardan en el JSON ni se pasan al navegador. Si la instancia
 de n8n bloquea `$env` en expresiones, reemplazar cada cabecera por una credencial
@@ -72,9 +81,12 @@ valor en el workflow exportable.
 2. Repetir el nodo. Debe responder `200`; una repetición no crea nuevos efectos.
 3. Ejecutar `Despachar outbox`. Debe responder `200` con los contadores
    `reclamados`, `entregados`, `reprogramados` y `deadLetter`.
-4. Verificar que cada respuesta incluya `X-Request-ID` y buscar el mismo valor
+4. Ejecutar `Programar recordatorios de llegada`. Debe responder `200` con la
+   fecha objetivo y `programadas: 0` o una cantidad positiva. Repetirlo debe
+   devolver `programadas: 0` para las mismas reservas.
+5. Verificar que cada respuesta incluya `X-Request-ID` y buscar el mismo valor
    en los logs de Cloudflare.
-5. Confirmar en el panel administrativo que no crecen los pendientes ni
+6. Confirmar en el panel administrativo que no crecen los pendientes ni
    `dead_letter` antes de activar la agenda.
 
 El botón del panel **Enviar comunicaciones pendientes** es deliberadamente más
@@ -131,11 +143,17 @@ arrepentimientos usa el contrato existente. Para reservas usa
 acciones `reclamar` y `resultado`, pero identifica la entrega mediante
 `intencion_uid`.
 
-Las comunicaciones de reserva cubren: pago pendiente, pago aprobado, retención
+Las comunicaciones al huésped cubren: pago pendiente, pago aprobado, retención
 vencida, modificación, cancelación y reservas administrativas creadas. La
 creación pública y el inicio de la retención producen un único email combinado
 de pago pendiente. Si la reserva no tiene email, la intención queda en
 `sin_canal`, el workflow responde `200` y no llama a Gmail.
+
+La misma entrega envía al equipo un correo separado por creación, confirmación,
+modificación, cancelación o vencimiento. El destinatario se resuelve desde
+`RESERVATION_TEAM_NOTIFICATION_EMAILS`; nunca se copia al outbox. El recordatorio
+de llegada se crea una sola vez para reservas confirmadas y usa el mismo canal,
+reintentos y estado `delivered` que el resto de las comunicaciones.
 
 El flujo de arrepentimiento funciona así:
 

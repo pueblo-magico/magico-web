@@ -4,16 +4,21 @@ export type NotificacionReservaReclamada = {
   intencionUid: string;
   reservaId: number;
   tipo: TipoIntencionComunicacion;
+  audiencia: 'huesped' | 'equipo';
   idioma: 'es' | 'en';
   attempts: number;
   email: string | null;
   codigo: string;
+  clienteNombre: string;
   estadoFlujo: string;
   fechaCheckin: string;
   fechaCheckout: string;
   cantidadPersonas: number;
   montoSenaCentavos: number;
+  montoTotalCentavos: number;
   moneda: string;
+  alojamiento: string;
+  modalidad: string;
   expiresAt: string | null;
   checkoutUrl: string | null;
   asuntoTemplate: string;
@@ -71,8 +76,25 @@ function renderizar(template: string, variables: Record<string, string>): string
   return template.replace(/\{\{([a-z_]+)\}\}/g, (_match, clave: string) => variables[clave] ?? '');
 }
 
+function normalizarEmailsEquipo(valor: unknown): string | null {
+  if (typeof valor !== 'string') return null;
+  const unicos = new Map<string, string>();
+  for (const candidato of valor.split(/[,;\n]/).map(item => item.trim()).filter(Boolean)) {
+    if (candidato.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidato)) continue;
+    const clave = candidato.toLowerCase();
+    if (!unicos.has(clave)) unicos.set(clave, candidato);
+    if (unicos.size >= 20) break;
+  }
+  return unicos.size > 0 ? [...unicos.values()].join(', ') : null;
+}
+
 export async function reclamarNotificacionReserva(
-  entrada: { intencionUid: string; publicSiteUrl: string },
+  entrada: {
+    intencionUid: string;
+    publicSiteUrl: string;
+    teamNotificationEmails?: string;
+    adminSiteUrl?: string;
+  },
   repositorio: RepositorioNotificacionesReserva,
   ahora: () => Date = () => new Date(),
   crearUuid: () => string = () => crypto.randomUUID()
@@ -102,14 +124,19 @@ export async function reclamarNotificacionReserva(
   if (!reclamada) return null;
 
   const deliveryUid = `entrega:${reclamada.intencionUid}:${reclamada.attempts}`;
-  if (!reclamada.email) {
+  const destinatario = reclamada.audiencia === 'equipo'
+    ? normalizarEmailsEquipo(entrada.teamNotificationEmails)
+    : reclamada.email;
+  if (!destinatario) {
     await repositorio.finalizarEntrega({
       intencionUid: reclamada.intencionUid,
       claimUid,
       deliveryUid,
       canal: 'email',
       resultado: 'sin_canal',
-      errorCode: 'EMAIL_DESTINATION_MISSING',
+      errorCode: reclamada.audiencia === 'equipo'
+        ? 'TEAM_EMAIL_DESTINATION_MISSING'
+        : 'EMAIL_DESTINATION_MISSING',
       completedAt: fecha.toISOString(),
       nextAttemptAt: null,
     });
@@ -124,16 +151,33 @@ export async function reclamarNotificacionReserva(
     rutaEstado(reclamada.tipo, reclamada.estadoFlujo, reclamada.codigo),
     baseUrl
   ).toString();
+  let adminBaseUrl = baseUrl;
+  if (entrada.adminSiteUrl) {
+    try {
+      const candidata = new URL(entrada.adminSiteUrl);
+      if (['http:', 'https:'].includes(candidata.protocol)) adminBaseUrl = candidata;
+    } catch {
+      // La URL publica conserva un enlace seguro aunque la opcion admin sea invalida.
+    }
+  }
+  const adminUrl = new URL('/admin/reservas', adminBaseUrl);
+  adminUrl.searchParams.set('buscar', reclamada.codigo);
   const variables = {
     reserva_codigo: reclamada.codigo,
+    cliente_nombre: reclamada.clienteNombre,
     fecha_checkin: reclamada.fechaCheckin,
     fecha_checkout: reclamada.fechaCheckout,
     cantidad_personas: String(reclamada.cantidadPersonas),
     monto_sena: formatearMonto(reclamada.montoSenaCentavos, reclamada.moneda, reclamada.idioma),
+    monto_total: formatearMonto(reclamada.montoTotalCentavos, reclamada.moneda, reclamada.idioma),
     moneda: reclamada.moneda,
+    alojamiento: reclamada.alojamiento,
+    modalidad: reclamada.modalidad,
+    estado_reserva: reclamada.estadoFlujo,
     expires_at: reclamada.expiresAt || '',
     status_url: statusUrl,
     payment_url: reclamada.checkoutUrl || statusUrl,
+    admin_url: adminUrl.toString(),
   };
   return {
     intencionUid: reclamada.intencionUid,
@@ -143,10 +187,11 @@ export async function reclamarNotificacionReserva(
     maxIntentos: MAX_INTENTOS_EMAIL_RESERVA,
     estado: 'lista' as const,
     canal: 'email' as const,
-    destinatario: reclamada.email,
+    destinatario,
     asunto: renderizar(reclamada.asuntoTemplate, variables),
     cuerpo: renderizar(reclamada.cuerpoTemplate, variables),
     idioma: reclamada.idioma,
+    audiencia: reclamada.audiencia,
   };
 }
 

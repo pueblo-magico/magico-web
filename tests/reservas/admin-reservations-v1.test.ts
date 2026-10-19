@@ -310,16 +310,18 @@ test('la confirmación administrativa crea y despacha sólo su comunicación de 
 
   assert.equal(sqlite.prepare(`
     SELECT COUNT(*) n FROM comunicacion_intenciones
-    WHERE reserva_id = ? AND tipo = 'pago_aprobado'
+    WHERE reserva_id = ? AND tipo = 'pago_aprobado' AND audiencia = 'huesped'
   `).get(reservaId)?.n, 1);
-  assert.equal(enviados.length, 1);
-  assert.equal(enviados[0].event_type, 'comunicacion.intencion_creada');
-  assert.equal(enviados[0].intent_type, 'pago_aprobado');
-  assert.equal(enviados[0].reservation_id, reservaId);
-  assert.equal(sqlite.prepare(`
-    SELECT estado FROM integration_outbox
-    WHERE event_id = ?
-  `).get(enviados[0].event_id as string)?.estado, 'delivered');
+  assert.equal(enviados.length, 2);
+  assert.equal(enviados.every(evento => evento.event_type === 'comunicacion.intencion_creada'), true);
+  assert.equal(enviados.every(evento => evento.intent_type === 'pago_aprobado'), true);
+  assert.equal(enviados.every(evento => evento.reservation_id === reservaId), true);
+  assert.deepEqual(new Set(enviados.map(evento => evento.audience)), new Set(['huesped', 'equipo']));
+  for (const evento of enviados) {
+    assert.equal(sqlite.prepare(`
+      SELECT estado FROM integration_outbox WHERE event_id = ?
+    `).get(evento.event_id as string)?.estado, 'delivered');
+  }
   sqlite.close();
 });
 
@@ -373,16 +375,18 @@ test('la cancelación administrativa crea y despacha sólo su comunicación de c
 
   assert.equal(sqlite.prepare(`
     SELECT COUNT(*) n FROM comunicacion_intenciones
-    WHERE reserva_id = ? AND tipo = 'reserva_cancelada'
+    WHERE reserva_id = ? AND tipo = 'reserva_cancelada' AND audiencia = 'huesped'
   `).get(reservaId)?.n, 1);
-  assert.equal(enviados.length, 1);
-  assert.equal(enviados[0].event_type, 'comunicacion.intencion_creada');
-  assert.equal(enviados[0].intent_type, 'reserva_cancelada');
-  assert.equal(enviados[0].reservation_id, reservaId);
-  assert.equal(sqlite.prepare(`
-    SELECT estado FROM integration_outbox
-    WHERE event_id = ?
-  `).get(enviados[0].event_id as string)?.estado, 'delivered');
+  assert.equal(enviados.length, 2);
+  assert.equal(enviados.every(evento => evento.event_type === 'comunicacion.intencion_creada'), true);
+  assert.equal(enviados.every(evento => evento.intent_type === 'reserva_cancelada'), true);
+  assert.equal(enviados.every(evento => evento.reservation_id === reservaId), true);
+  assert.deepEqual(new Set(enviados.map(evento => evento.audience)), new Set(['huesped', 'equipo']));
+  for (const evento of enviados) {
+    assert.equal(sqlite.prepare(`
+      SELECT estado FROM integration_outbox WHERE event_id = ?
+    `).get(evento.event_id as string)?.estado, 'delivered');
+  }
   assert.equal(Number(sqlite.prepare(`
     SELECT COUNT(*) n FROM integration_outbox
     WHERE estado = 'pending'

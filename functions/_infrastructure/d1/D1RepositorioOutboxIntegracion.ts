@@ -166,7 +166,8 @@ export class D1RepositorioOutboxIntegracion implements RepositorioOutboxIntegrac
       SET estado = 'processing', claim_uid = ?, claimed_at = ?, claim_expires_at = ?,
         attempts = attempts + 1
       WHERE event_id IN (${placeholders})
-        AND estado = 'pending' AND next_attempt_at <= ?
+        AND estado = 'pending'
+        AND julianday(next_attempt_at) <= julianday(?) + (1.0 / 86400.0)
       RETURNING event_id, event_type, schema_version, aggregate_type, aggregate_id,
         payload_json, estado, attempts, occurred_at, created_at
     `).bind(

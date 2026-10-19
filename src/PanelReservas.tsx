@@ -3731,6 +3731,7 @@ type EstadoOperacionesMvpApi = {
     deliveryLast24h: { attempts: number; failures: number; failureRate: number };
     intenciones: Array<{
       intencionUid: string; reservaId: number; tipo: string; idioma: string;
+      audiencia: 'huesped' | 'equipo';
       estado: EstadoComunicacionOperativa; attempts: number; canal: string | null;
       lastErrorCode: string | null; createdAt: string;
     }>;
@@ -4117,6 +4118,11 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
                       intencion.estado === 'sin_canal' ? 'bg-amber-100 text-amber-800' :
                       'bg-blue-100 text-blue-800'
                     }`}>{intencion.estado.replace('_', ' ')}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      intencion.audiencia === 'equipo'
+                        ? 'bg-violet-100 text-violet-800'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}>{intencion.audiencia === 'equipo' ? 'Equipo' : 'Huésped'}</span>
                     <span className="text-sm font-semibold text-gray-800">{intencion.tipo.replaceAll('_', ' ')}</span>
                   </div>
                   <p className="mt-1 text-xs text-gray-500">Reserva {intencion.reservaId} · {intencion.idioma.toUpperCase()} · {intencion.attempts} intento{intencion.attempts === 1 ? '' : 's'}</p>

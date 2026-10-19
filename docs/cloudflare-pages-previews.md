@@ -42,6 +42,10 @@ Configure también valores exclusivos de preview para `SESSION_SECRET` (mínimo
 producción. `RATE_LIMIT_SALT` es recomendable; si falta, el runtime usa
 `SESSION_SECRET` y finalmente un namespace fijo de la aplicación para hashear
 los buckets sin almacenar IPs en claro ni dejar indisponible la API pública.
+Configurar `RESERVATION_TEAM_NOTIFICATION_EMAILS` como secreto de Preview con
+una casilla de prueba, nunca con la distribución productiva. Opcionalmente,
+`RESERVATION_ARRIVAL_REMINDER_DAYS` define entre 1 y 30 días de anticipación;
+sin valor usa un día.
 El workflow hace un smoke test y exige que `/api/admin/me` responda `401` sin
 cookie. Un `503` indica que `SESSION_SECRET` falta o no alcanza la longitud
 mínima; en ese caso la preview no se considera válida.

@@ -329,6 +329,15 @@ export interface RepositorioRetencionesReserva {
   expirarVencidas(ahoraIso: string, limite?: number): Promise<number[]>;
 }
 
+export interface RepositorioRecordatoriosLlegadaEquipo {
+  programar(entrada: {
+    fechaObjetivo: string;
+    diasAnticipacion: number;
+    creadoAt: string;
+    limite: number;
+  }): Promise<string[]>;
+}
+
 export type ResumenPoliticaCancelacion = {
   id: number;
   codigo: string;
