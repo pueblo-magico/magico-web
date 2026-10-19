@@ -160,8 +160,8 @@ export async function reclamarNotificacionReserva(
       // La URL publica conserva un enlace seguro aunque la opcion admin sea invalida.
     }
   }
-  const adminUrl = new URL('/admin/reservas', adminBaseUrl);
-  adminUrl.searchParams.set('buscar', reclamada.codigo);
+  const adminUrl = new URL('/admin/reservas/listado', adminBaseUrl);
+  adminUrl.searchParams.set('reserva', reclamada.codigo);
   const variables = {
     reserva_codigo: reclamada.codigo,
     cliente_nombre: reclamada.clienteNombre,

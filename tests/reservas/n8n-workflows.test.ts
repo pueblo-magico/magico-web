@@ -107,7 +107,7 @@ test('el email de reserva adapta la acción y la ayuda al estado real', () => {
     audiencia: 'equipo',
     idioma: 'es',
     cuerpo:
-      'Nueva reserva registrada: RES-126.\nHuésped: Equipo QA.\nFechas: 2026-10-23 al 2026-10-24.\nAbrir en Administración: https://preview.test/admin/reservas?buscar=RES-126',
+      'Nueva reserva registrada: RES-126.\nHuésped: Equipo QA.\nFechas: 2026-10-23 al 2026-10-24.\nAbrir en Administración: https://preview.test/admin/reservas/listado?reserva=RES-126',
   });
   assert.match(team, /Equipo de Reservas/);
   assert.match(team, /Abrir en Administración/);

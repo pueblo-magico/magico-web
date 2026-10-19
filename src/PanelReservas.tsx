@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, Download, AlertTriangle, LogIn, LogOut, CalendarClock, Plus, Trash2, Link2, Home, CalendarDays, ClipboardList, BarChart3, BadgeDollarSign, Settings, Users, Activity, ShieldAlert, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 import {
@@ -59,6 +59,13 @@ const vistaDesdeRuta = (pathname: string): VistaActiva | null => {
   if (!rutaNormalizada.startsWith(`${ADMIN_RESERVAS_BASE}/`)) return null;
   const segmento = rutaNormalizada.slice(ADMIN_RESERVAS_BASE.length + 1);
   return VISTA_POR_SEGMENTO[segmento] ?? null;
+};
+
+const codigoReservaDesdeConsulta = (search: string): string | null => {
+  const params = new URLSearchParams(search);
+  const candidato = (params.get('reserva') || params.get('buscar') || '').trim();
+  if (!/^RES-[A-Z0-9-]{1,116}$/i.test(candidato)) return null;
+  return candidato.toUpperCase();
 };
 type EstadoReserva = 'pendiente_pago' | 'confirmada' | 'cancelada' | 'vencida' | 'rechazada';
 type OrdenHistorial = 'creada' | 'titular' | 'alojamiento' | 'checkin' | 'estado' | 'origen' | 'total' | 'unidad';
@@ -4238,6 +4245,8 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
 const PanelReservas: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const codigoReservaEnlace = codigoReservaDesdeConsulta(location.search);
+  const enlaceReservaProcesado = useRef<string | null>(null);
   const [auth, setAuth] = useState<{ email: string; rol: Rol } | null | 'cargando'>('cargando');
   const [sesionExpirada, setSesionExpirada] = useState(false);
   const vistaEnRuta = vistaDesdeRuta(location.pathname);
@@ -4255,7 +4264,7 @@ const PanelReservas: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ventanaInicio, setVentanaInicio] = useState(() => fechaOperativaLocal(new Date()));
-  const [busqueda, setBusqueda] = useState('');
+  const [busqueda, setBusqueda] = useState(() => codigoReservaEnlace || '');
 
   const [celdaMultiple, setCeldaMultiple] = useState<{ alojamiento: Alojamiento; fecha: string; reservas: Reserva[] } | null>(null);
   const [modalReserva, setModalReserva] = useState<{ modo: 'crear' | 'editar'; reserva: Reserva | null } | null>(null);
@@ -4429,8 +4438,8 @@ const PanelReservas: React.FC = () => {
     if (reservasHistorial !== null) cargarHistorial(historialPagina, busqueda);
   };
 
-  const abrirPorId = async (id: number) => {
-    let r = reservas.find(x => x.id === id) || (reservasHistorial || []).find(x => x.id === id);
+  const abrirPorId = async (id: number, reservaFallback?: Reserva) => {
+    let r = reservaFallback || reservas.find(x => x.id === id) || (reservasHistorial || []).find(x => x.id === id);
     try {
       const res = await adminFetch(`/api/v1/admin/reservas/${id}`);
       if (res.status === 401) { manejarNoAutenticado(); return; }
@@ -4442,6 +4451,48 @@ const PanelReservas: React.FC = () => {
     }
     if (r) setModalReserva({ modo: 'editar', reserva: r });
   };
+
+  useEffect(() => {
+    if (!codigoReservaEnlace) {
+      enlaceReservaProcesado.current = null;
+      return;
+    }
+    if (auth === 'cargando' || !auth || enlaceReservaProcesado.current === codigoReservaEnlace) return;
+
+    enlaceReservaProcesado.current = codigoReservaEnlace;
+    setBusqueda(codigoReservaEnlace);
+    setError(null);
+    if (vistaActiva !== 'historial') {
+      navigate(`${RUTA_POR_VISTA.historial}?reserva=${encodeURIComponent(codigoReservaEnlace)}`, { replace: true });
+    }
+
+    let activo = true;
+    const params = new URLSearchParams({
+      pagina: '1', limite: '25', titular: codigoReservaEnlace,
+      orden: 'creada', direccion: 'desc',
+    });
+    paginaReservasV1(params)
+      .then(({ reservas: encontradas }) => {
+        if (!activo) return;
+        const encontrada = encontradas.find(
+          reserva => reserva.codigo.toUpperCase() === codigoReservaEnlace
+        );
+        if (!encontrada) {
+          setError(`No se encontró la reserva ${codigoReservaEnlace}.`);
+          return;
+        }
+        void abrirPorId(encontrada.id, encontrada);
+      })
+      .catch(err => {
+        if (!activo) return;
+        if (err.message === '__unauthorized__') manejarNoAutenticado();
+        else setError(err.message || `No se pudo abrir la reserva ${codigoReservaEnlace}.`);
+      });
+
+    return () => { activo = false; };
+    // La URL es la fuente de verdad del enlace; las funciones usan el estado vigente al resolverlo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth, codigoReservaEnlace]);
 
   const dias = useMemo(
     () => Array.from({ length: VENTANA_DIAS }, (_, i) => addDays(ventanaInicio, i)),

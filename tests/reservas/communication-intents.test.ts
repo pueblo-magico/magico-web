@@ -579,7 +579,7 @@ test('entrega al equipo una notificación separada sin copiar destinatarios al o
   assert.equal(entrega.destinatario, 'reservas@example.test, operaciones@example.test');
   assert.match(entrega.asunto, /Nueva reserva RES-COM-1/);
   assert.match(entrega.cuerpo, /Huésped: QA Comunicación/);
-  assert.match(entrega.cuerpo, /https:\/\/admin\.pueblomagico\.test\/admin\/reservas\?buscar=RES-COM-1/);
+  assert.match(entrega.cuerpo, /https:\/\/admin\.pueblomagico\.test\/admin\/reservas\/listado\?reserva=RES-COM-1/);
   const envelope = String(sqlite.prepare(`
     SELECT payload_json FROM integration_outbox
     WHERE event_id = 'comunicacion:equipo:com-equipo-created'

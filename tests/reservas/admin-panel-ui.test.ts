@@ -62,6 +62,14 @@ test('muestra el identificador y la fecha de creación y permite buscarlos por c
   assert.match(source, /codigo: item\.codigo/);
 });
 
+test('abre directamente la reserva enlazada desde un email del equipo', () => {
+  assert.match(source, /params\.get\('reserva'\) \|\| params\.get\('buscar'\)/);
+  assert.match(source, /navigate\(`\$\{RUTA_POR_VISTA\.historial\}\?reserva=/);
+  assert.match(source, /titular: codigoReservaEnlace/);
+  assert.match(source, /reserva\.codigo\.toUpperCase\(\) === codigoReservaEnlace/);
+  assert.match(source, /abrirPorId\(encontrada\.id, encontrada\)/);
+});
+
 test('ordena el historial completo desde las cabeceras y conserva el orden entre páginas', () => {
   assert.match(source, /const CabeceraHistorialOrdenable/);
   assert.match(source, /aria-sort=\{activa/);
