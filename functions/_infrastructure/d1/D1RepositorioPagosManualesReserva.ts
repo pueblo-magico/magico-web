@@ -173,13 +173,12 @@ export class D1RepositorioPagosManualesReserva implements RepositorioPagosManual
         INSERT INTO auditoria_admin (
           email, accion, detalle, actor_tipo, entidad_tipo, entidad_id,
           motivo, correlation_id, metadata_json
-        ) SELECT ?, 'registrar_pago_reserva', ?, 'usuario', 'reserva', ?, ?, ?, ?
+        ) SELECT ?, 'registrar_pago_reserva', NULL, 'usuario', 'reserva', ?, ?, ?, ?
         WHERE EXISTS (
           SELECT 1 FROM pagos WHERE proveedor = 'manual' AND idempotency_key = ?
         )
       `).bind(
         entrada.actorEmail,
-        `Pago manual ${entrada.tipo} por ${entrada.montoCentavos} ${entrada.moneda}`,
         String(entrada.reservaId), entrada.motivo, entrada.correlationId,
         JSON.stringify({
           tipo: entrada.tipo, metodo: entrada.metodo, monto_centavos: entrada.montoCentavos,

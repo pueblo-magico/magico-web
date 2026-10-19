@@ -27,13 +27,13 @@ test('mantiene cada sección en una URL recargable y compatible con navegación 
   assert.match(source, /onClick=\{\(\) => navigate\(RUTA_POR_VISTA\[key\]\)\}/);
   assert.match(source, /vistaDesdeRuta\(location\.pathname\)/);
   assert.match(prerender, /ADMIN_RESERVAS_SECTIONS/);
-  for (const section of ['listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos', 'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad']) {
+  for (const section of ['listado', 'bloqueos', 'reportes', 'consultas', 'interesados', 'formularios', 'arrepentimientos', 'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad']) {
     assert.match(prerender, new RegExp(`['"]${section}['"]`));
   }
 });
 
 test('mantiene accesibles todas las vistas existentes y sus permisos', () => {
-  for (const view of ['operativa', 'ocupacion', 'metricas', 'historial', 'consultas', 'arrepentimientos', 'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad']) {
+  for (const view of ['operativa', 'ocupacion', 'metricas', 'historial', 'consultas', 'interesados', 'formularios', 'arrepentimientos', 'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad']) {
     assert.match(source, new RegExp(`key: '${view}'`));
   }
   assert.match(source, /puedeEditar \? \[\{ key: 'ocupacion'/);
@@ -49,6 +49,8 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /onPress=\{actualizar\}/);
   assert.match(source, /onClick=\{cerrarSesion\}/);
   assert.match(source, /<SeccionOcupacionOperativa \/>/);
+  assert.match(source, /<SeccionInteresados \/>/);
+  assert.match(source, /<SeccionFormularios \/>/);
   assert.match(source, /<SeccionArrepentimientos puedeGestionar=\{puedeEditar\} \/>/);
   assert.match(source, /<SeccionIntegraciones esSuperAdmin=\{esSuperAdmin\} \/>/);
   assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} modo="base" \/>/);

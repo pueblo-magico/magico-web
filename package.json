@@ -16,7 +16,8 @@
     "test:reservas:coverage": "node --experimental-test-coverage --test-coverage-exclude=\"tests/**\" --test-coverage-lines=85 --test-coverage-branches=75 --test-coverage-functions=90 --test tests/reservas/*.test.ts",
     "test:reservas:recovery": "node scripts/reservas/recovery-drill.mjs",
     "test:reservas:cutover": "node --test tests/cloudflare/production-deploy-gate.test.mjs tests/cloudflare/cutover-controls.test.mjs",
-    "test:cloudflare-cleanup": "node --test tests/cloudflare/*.test.mjs"
+    "test:cloudflare-cleanup": "node --test tests/cloudflare/*.test.mjs",
+    "test:pricing-localization": "node --test tests/pricing-localization.test.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

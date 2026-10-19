@@ -125,6 +125,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/alma-de-lobo',
   },
   {
+    path: '/sunset-y-rio',
+    title: 'Sunset y Río — en la montaña · 30 oct al 1 nov · Los Gigantes | Pueblo Mágico',
+    description: 'Un sábado de río, el sol cayendo con música y un fogón con guitarreada a la noche. A 90 km de Córdoba. Vení con tus amigos o venite solo o sola.',
+    image: 'https://experienciamagico.com/uploads/sunset-rio-og.jpg',
+    canonical: 'https://experienciamagico.com/sunset-y-rio',
+  },
+  {
     path: '/empresas',
     title: 'Empresas — Voluntariado Corporativo & RSE en las Sierras · Los Gigantes, Córdoba | Pueblo Mágico',
     description: 'Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +25.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria.',
@@ -236,7 +243,7 @@ writeFileSync(join(DIST, 'admin', 'reservas', 'index.html'), shellReservas);
 console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
 
 const ADMIN_RESERVAS_SECTIONS = [
-  'listado', 'bloqueos', 'reportes', 'consultas', 'arrepentimientos',
+  'listado', 'bloqueos', 'reportes', 'consultas', 'interesados', 'formularios', 'arrepentimientos',
   'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad',
 ];
 for (const section of ADMIN_RESERVAS_SECTIONS) {

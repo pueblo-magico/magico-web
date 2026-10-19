@@ -161,6 +161,8 @@ test('registra seña manual, confirma la reserva y despacha emails a huésped y 
     assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas WHERE id = ?').get(reservaId)?.estado_flujo, 'confirmada');
     assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM auditoria_admin
       WHERE entidad_tipo = 'reserva' AND entidad_id = ? AND accion = 'registrar_pago_reserva'`).get(String(reservaId))?.n, 1);
+    assert.equal(sqlite.prepare(`SELECT COUNT(*) n FROM auditoria_admin
+      WHERE entidad_tipo = 'reserva' AND entidad_id = ? AND detalle IS NOT NULL`).get(String(reservaId))?.n, 0);
     assert.equal(enviados.length, 2);
     assert.deepEqual(new Set(enviados.map(evento => evento.audience)), new Set(['huesped', 'equipo']));
     assert.equal(enviados.every(evento => evento.intent_type === 'pago_aprobado'), true);

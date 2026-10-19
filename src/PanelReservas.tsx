@@ -33,7 +33,7 @@ import './PanelReservas.css';
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio' | 'camping';
-type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'arrepentimientos' | 'configuracion' | 'precios' | 'integraciones' | 'usuarios' | 'actividad';
+type VistaActiva = 'operativa' | 'ocupacion' | 'metricas' | 'historial' | 'consultas' | 'interesados' | 'formularios' | 'arrepentimientos' | 'configuracion' | 'precios' | 'integraciones' | 'usuarios' | 'actividad';
 
 const ADMIN_RESERVAS_BASE = '/admin/reservas';
 const RUTA_POR_VISTA: Record<VistaActiva, string> = {
@@ -42,6 +42,8 @@ const RUTA_POR_VISTA: Record<VistaActiva, string> = {
   ocupacion: `${ADMIN_RESERVAS_BASE}/bloqueos`,
   metricas: `${ADMIN_RESERVAS_BASE}/reportes`,
   consultas: `${ADMIN_RESERVAS_BASE}/consultas`,
+  interesados: `${ADMIN_RESERVAS_BASE}/interesados`,
+  formularios: `${ADMIN_RESERVAS_BASE}/formularios`,
   arrepentimientos: `${ADMIN_RESERVAS_BASE}/arrepentimientos`,
   configuracion: `${ADMIN_RESERVAS_BASE}/configuracion`,
   precios: `${ADMIN_RESERVAS_BASE}/precios`,
@@ -390,7 +392,8 @@ const fmtFechaHora = (iso: string) => {
   const normalizado = iso.includes('T') ? iso : iso.replace(' ', 'T');
   const instante = /(?:Z|[+-]\d{2}:?\d{2})$/.test(normalizado) ? normalizado : `${normalizado}Z`;
   return new Date(instante).toLocaleString('es-AR', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Argentina/Cordoba',
   });
 };
 const diasDesde = (iso: string) => {
@@ -4442,6 +4445,197 @@ const SeccionIntegraciones: React.FC<{ esSuperAdmin: boolean }> = ({ esSuperAdmi
   );
 };
 
+type EnvioFormulario = {
+  id: number;
+  created_at: string;
+  formulario: string;
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  mensaje: string | null;
+  extra: string | null;
+};
+
+const FORMULARIO_LABEL: Record<string, string> = {
+  contacto: 'Contacto',
+  'guia-coliving': 'Guía Coliving',
+  'dossier-aula-verde': 'Dossier Aula Verde',
+  'recetario-familion': 'Recetario Familion',
+};
+
+const SeccionFormularios: React.FC = () => {
+  const [envios, setEnvios] = useState<EnvioFormulario[] | null>(null);
+  const [filtro, setFiltro] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminFetch('/api/admin/formularios')
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => setEnvios(data.formularios || []))
+      .catch(err => setError(err.message || 'Error al cargar los formularios'));
+  }, []);
+
+  const lista = (envios || []).filter(envio => !filtro || envio.formulario === filtro);
+  const extraTexto = (extra: string | null) => {
+    if (!extra) return '';
+    try {
+      return Object.entries(JSON.parse(extra)).map(([clave, valor]) => `${clave}: ${valor}`).join(' · ');
+    } catch {
+      return extra;
+    }
+  };
+
+  return (
+    <section aria-labelledby="formularios-title">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="formularios-title" className="text-sm font-bold uppercase tracking-wider text-gray-500">Formularios del sitio</h2>
+          <p className="mt-1 text-xs text-gray-400">Contacto y descargas de guías. {lista.length} envíos.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            className="min-w-52"
+            label="Formulario"
+            options={[
+              { value: '', label: 'Todos' },
+              ...Object.entries(FORMULARIO_LABEL).map(([value, label]) => ({ value, label })),
+            ]}
+            placeholder="Todos"
+            value={filtro}
+            onChange={value => setFiltro(value || '')}
+          />
+          <a
+            href={`/api/admin/formularios?formato=csv${filtro ? `&formulario=${encodeURIComponent(filtro)}` : ''}`}
+            className={`inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-green px-3.5 py-2 text-sm font-semibold text-white hover:opacity-90 ${FOCUS_RING}`}
+          >
+            <Download size={14} aria-hidden="true" /> Descargar CSV
+          </a>
+        </div>
+      </div>
+      {error && <p className="mb-3 text-xs text-red-600" role="alert">{error}</p>}
+      {envios === null && !error ? <LoadingState label="Cargando formularios" /> : (
+        <Card className="divide-y divide-gray-100 overflow-hidden">
+          {lista.map(envio => (
+            <article key={envio.id} className="px-4 py-3.5 sm:px-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-sm text-gray-800">
+                  <span className="font-semibold">{envio.nombre}</span>{' '}
+                  <Badge>{FORMULARIO_LABEL[envio.formulario] || envio.formulario}</Badge>
+                </p>
+                <time className="text-[11px] tabular-nums text-gray-400">{fmtFechaHora(envio.created_at)}</time>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                <a href={`mailto:${envio.email}`} className={`font-semibold text-brand hover:underline ${FOCUS_RING}`}>{envio.email}</a>
+                {envio.telefono && (
+                  <a href={waLink(envio.telefono)} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}>
+                    <MessageCircle size={11} aria-hidden="true" /> {envio.telefono}
+                  </a>
+                )}
+              </div>
+              {envio.mensaje && <p className="mt-2 whitespace-pre-line text-sm text-gray-700">{envio.mensaje}</p>}
+              {envio.extra && <p className="mt-1 text-[11px] text-gray-400">{extraTexto(envio.extra)}</p>}
+            </article>
+          ))}
+          {lista.length === 0 && <EmptyState title="Todavía no hay envíos" />}
+        </Card>
+      )}
+    </section>
+  );
+};
+
+type Interesado = {
+  id: number;
+  created_at: string;
+  nombre: string;
+  telefono: string;
+  email: string;
+  edad: number;
+  genero: string;
+  fuente: string;
+  modalidad: 'solo' | 'grupo';
+  cantidad: number | null;
+  codigo: string;
+  email_confirmado_at: string | null;
+};
+
+const GENERO_LABEL: Record<string, string> = {
+  mujer: 'Mujer',
+  hombre: 'Hombre',
+  no_binario: 'No binario',
+  prefiero_no_decir: 'Prefiere no decir',
+};
+
+const SeccionInteresados: React.FC = () => {
+  const [interesados, setInteresados] = useState<Interesado[] | null>(null);
+  const [clics, setClics] = useState<Array<{ valor: string; total: number }>>([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminFetch('/api/admin/interesados?evento=sunset-y-rio')
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        setInteresados(data.interesados || []);
+        setClics(data.clics || []);
+      })
+      .catch(err => setError(err.message || 'Error al cargar los interesados'));
+  }, []);
+
+  const lista = interesados || [];
+  const personas = lista.reduce((total, interesado) => total + (interesado.cantidad || 1), 0);
+  const totalClics = clics.reduce((total, clic) => total + clic.total, 0);
+  const confirmados = lista.filter(interesado => interesado.email_confirmado_at).length;
+
+  return (
+    <section aria-labelledby="interesados-title">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="interesados-title" className="text-sm font-bold uppercase tracking-wider text-gray-500">Interesados · Sunset y Río</h2>
+          <p className="mt-1 text-xs text-gray-400">{lista.length} formularios · {personas} personas · {confirmados} emails confirmados · {totalClics} clics</p>
+        </div>
+        <a
+          href="/api/admin/interesados?evento=sunset-y-rio&formato=csv"
+          className={`inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-green px-3.5 py-2 text-sm font-semibold text-white hover:opacity-90 ${FOCUS_RING}`}
+        >
+          <Download size={14} aria-hidden="true" /> Descargar CSV
+        </a>
+      </div>
+      {error && <p className="mb-3 text-xs text-red-600" role="alert">{error}</p>}
+      {interesados === null && !error ? <LoadingState label="Cargando interesados" /> : (
+        <TableContainer label="Interesados en Sunset y Río">
+          <Table>
+            <TableHeader>
+              <TableRow>{['Nombre', 'Contacto', 'Edad', 'Género', 'Cómo se enteró', 'Viene', 'Registro'].map(label => <TableHead key={label}>{label}</TableHead>)}</TableRow>
+            </TableHeader>
+            <TableBody>
+              {lista.map(interesado => (
+                <TableRow key={interesado.id}>
+                  <TableCell><p className="font-semibold">{interesado.nombre}</p><p className="text-[11px] text-gray-400">{interesado.codigo}</p></TableCell>
+                  <TableCell>
+                    <a href={waLink(interesado.telefono)} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1 font-semibold text-brand hover:underline ${FOCUS_RING}`}><MessageCircle size={11} aria-hidden="true" /> {interesado.telefono}</a>
+                    <p>{interesado.email} {interesado.email_confirmado_at ? <Badge variant="success">Confirmado</Badge> : <span className="text-gray-400">· sin confirmar</span>}</p>
+                  </TableCell>
+                  <TableCell>{interesado.edad}</TableCell>
+                  <TableCell>{GENERO_LABEL[interesado.genero] || interesado.genero}</TableCell>
+                  <TableCell>{interesado.fuente}</TableCell>
+                  <TableCell>{interesado.modalidad === 'grupo' ? `Grupo (${interesado.cantidad})` : 'Solo/a'}</TableCell>
+                  <TableCell>{fmtFechaHora(interesado.created_at)}</TableCell>
+                </TableRow>
+              ))}
+              {lista.length === 0 && <TableRow><TableCell colSpan={7}><EmptyState title="Todavía no hay interesados" /></TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </section>
+  );
+};
+
 const PanelReservas: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -4753,6 +4947,8 @@ const PanelReservas: React.FC = () => {
     metricas: { titulo: 'Reportes', descripcion: 'Indicadores operativos y financieros calculados con datos reales de reservas.' },
     historial: { titulo: 'Reservas', descripcion: 'Buscá, revisá y gestioná cada estadía desde un solo lugar.' },
     consultas: { titulo: 'Consultas', descripcion: 'Revisá las consultas que todavía no se convirtieron en reservas.' },
+    interesados: { titulo: 'Interesados', descripcion: 'Seguimiento de personas registradas en campañas y eventos.' },
+    formularios: { titulo: 'Formularios', descripcion: 'Consultas y descargas solicitadas desde el sitio público.' },
     arrepentimientos: { titulo: 'Arrepentimientos', descripcion: 'Gestioná solicitudes y su seguimiento con acceso según tu rol.' },
     configuracion: { titulo: 'Configuración', descripcion: 'Parámetros comerciales y operativos del sistema de reservas.' },
     precios: { titulo: 'Políticas de precios', descripcion: 'Ofertas, temporadas, alimentación, ajustes y reglas de seña.' },
@@ -4769,6 +4965,8 @@ const PanelReservas: React.FC = () => {
   ];
   const navOperaciones: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
     { key: 'consultas', label: 'Consultas', icon: <MessageCircle aria-hidden="true" /> },
+    { key: 'interesados', label: 'Interesados', icon: <Users aria-hidden="true" /> },
+    { key: 'formularios', label: 'Formularios', icon: <ClipboardList aria-hidden="true" /> },
     { key: 'arrepentimientos', label: 'Arrepentimientos', icon: <ShieldAlert aria-hidden="true" /> },
   ];
   const navSistema: Array<{ key: VistaActiva; label: string; icon: React.ReactNode }> = [
@@ -5114,6 +5312,8 @@ const PanelReservas: React.FC = () => {
           </>
         )}
 
+        {vistaActiva === 'interesados' && <SeccionInteresados />}
+        {vistaActiva === 'formularios' && <SeccionFormularios />}
         {vistaActiva === 'arrepentimientos' && <SeccionArrepentimientos puedeGestionar={puedeEditar} />}
 
         {vistaActiva === 'configuracion' && <SeccionConfiguracionBase esSuperAdmin={esSuperAdmin} modo="base" />}
