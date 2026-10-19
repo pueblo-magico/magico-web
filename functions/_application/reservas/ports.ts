@@ -44,6 +44,10 @@ import type { BorradorPoliticaCancelacion } from '../../_domain/reservas/refundP
 import type { EstadoPagoReserva } from '../../_domain/reservas/paymentLifecycle.ts';
 import type { PrecioMetodoPago } from '../../_domain/reservas/paymentMethodPricing.ts';
 import type {
+  RegistroPagoManual,
+  ResumenPagoManual,
+} from '../../_domain/reservas/manualPayments.ts';
+import type {
   ContextoAsignacionInventario,
   PlanAsignacionInventario,
 } from '../../_domain/reservas/inventoryAssignment.ts';
@@ -654,6 +658,10 @@ export type PagoTimelineReserva = {
   montoCentavos: number;
   moneda: string;
   externalPaymentId: string | null;
+  metodoRegistro: string | null;
+  referenciaManual: string | null;
+  pagadoAt: string | null;
+  registradoPor: string | null;
   correlationId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -677,9 +685,12 @@ export type HistorialReserva = {
   resumenFinanciero: {
     moneda: string;
     intentos: number;
+    totalCentavos: number;
     aprobadoCentavos: number;
     devueltoCentavos: number;
     netoCentavos: number;
+    saldoPendienteCentavos: number;
+    estado: 'sin_pagos' | 'pago_parcial' | 'sena_pagada' | 'pagado_total';
   };
   pagos: PagoTimelineReserva[];
   eventos: EventoTimelineReserva[];
@@ -687,6 +698,10 @@ export type HistorialReserva = {
 
 export interface RepositorioHistorialReserva {
   obtener(reservaId: number): Promise<HistorialReserva | null>;
+}
+
+export interface RepositorioPagosManualesReserva {
+  registrar(entrada: RegistroPagoManual): Promise<ResumenPagoManual | null>;
 }
 
 export interface NotificadorReservaConfirmada {

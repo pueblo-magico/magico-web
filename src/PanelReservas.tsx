@@ -98,6 +98,25 @@ type Reserva = {
   canal_origen: string | null;
   manychat_user_id: string | null;
   created_at: string;
+  finanzas?: {
+    totalCentavos: number;
+    pagadoCentavos: number;
+    saldoCentavos: number;
+    estado: 'sin_pagos' | 'pago_parcial' | 'sena_pagada' | 'pagado_total';
+    moneda: string;
+    pagos: Array<{
+      id: number;
+      proveedor: string;
+      tipo: string;
+      estado: string;
+      montoCentavos: number;
+      metodoRegistro: string | null;
+      referenciaManual: string | null;
+      pagadoAt: string | null;
+      registradoPor: string | null;
+      createdAt: string;
+    }>;
+  };
   preferencias?: Array<{ categoria: 'preparacion_cama'; codigo: string; nombre: string; descripcion: string }>;
   cuenta_cobro?: {
     proveedor: 'cucuru' | 'cucuru_mock';
@@ -148,9 +167,20 @@ type ReservaAdminV1 = {
   metodoPago?: Reserva['metodo_pago'];
 };
 
+type HistorialAdminV1 = {
+  resumenFinanciero: {
+    moneda: string;
+    totalCentavos: number;
+    netoCentavos: number;
+    saldoPendienteCentavos: number;
+    estado: NonNullable<Reserva['finanzas']>['estado'];
+  };
+  pagos: NonNullable<Reserva['finanzas']>['pagos'];
+};
+
 type MetaPaginaReservas = { pagina: number; limite: number; total: number; total_paginas: number };
 
-const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
+const reservaDesdeV1 = (item: ReservaAdminV1, historial?: HistorialAdminV1): Reserva => {
   const excepcion = item.excepciones?.[0];
   return {
     id: item.id,
@@ -172,6 +202,14 @@ const reservaDesdeV1 = (item: ReservaAdminV1): Reserva => {
     canal_origen: item.canalOrigen,
     manychat_user_id: item.manychatUserId,
     created_at: item.createdAt,
+    finanzas: historial ? {
+      totalCentavos: historial.resumenFinanciero.totalCentavos,
+      pagadoCentavos: historial.resumenFinanciero.netoCentavos,
+      saldoCentavos: historial.resumenFinanciero.saldoPendienteCentavos,
+      estado: historial.resumenFinanciero.estado,
+      moneda: historial.resumenFinanciero.moneda,
+      pagos: historial.pagos,
+    } : undefined,
     preferencias: item.preferencias || [],
     cuenta_cobro: item.cuentaCobro ?? null,
     metodo_pago: item.metodoPago ?? null,
@@ -496,6 +534,32 @@ const ETIQUETAS_ESTADO_CUENTA = {
   unknown_outcome: 'Resultado desconocido',
 } as const;
 
+const ETIQUETAS_ESTADO_COBRO = {
+  sin_pagos: 'Sin pagos registrados',
+  pago_parcial: 'Pago parcial',
+  sena_pagada: 'Seña pagada',
+  pagado_total: 'Pagado en su totalidad',
+} as const;
+
+const OPCIONES_TIPO_PAGO = [
+  { value: 'sena', label: 'Seña' },
+  { value: 'saldo', label: 'Saldo' },
+  { value: 'total', label: 'Pago total' },
+] as const;
+
+const OPCIONES_METODO_PAGO = [
+  { value: 'transferencia_mp', label: 'Transferencia a Mercado Pago' },
+  { value: 'transferencia_bancaria', label: 'Transferencia bancaria' },
+  { value: 'mercado_pago', label: 'Mercado Pago verificado manualmente' },
+  { value: 'efectivo', label: 'Efectivo' },
+  { value: 'otro', label: 'Otro' },
+] as const;
+
+const fechaHoraLocalInput = (fecha = new Date()) => {
+  const local = new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+};
+
 const ModalReserva: React.FC<{
   modo: 'crear' | 'editar';
   reserva: Reserva | null;
@@ -527,6 +591,25 @@ const ModalReserva: React.FC<{
   const [motivoCancelacion, setMotivoCancelacion] = useState('');
   const [confirmandoReserva, setConfirmandoReserva] = useState(false);
   const [motivoConfirmacion, setMotivoConfirmacion] = useState('');
+  const [mostrandoPagoManual, setMostrandoPagoManual] = useState(false);
+  const [registrandoPago, setRegistrandoPago] = useState(false);
+  const senaPendiente = reserva?.finanzas
+    ? Math.max(0, Math.round((reserva.monto_sena || 0) * 100) - reserva.finanzas.pagadoCentavos)
+    : 0;
+  const [tipoPagoManual, setTipoPagoManual] = useState<'sena' | 'saldo' | 'total'>(
+    senaPendiente > 0 ? 'sena' : 'saldo'
+  );
+  const [metodoPagoManual, setMetodoPagoManual] = useState('transferencia_mp');
+  const pagoSugerido = reserva?.finanzas
+    ? (senaPendiente > 0
+      ? Math.min(reserva.finanzas.saldoCentavos, senaPendiente)
+      : reserva.finanzas.saldoCentavos)
+    : 0;
+  const [montoPagoManual, setMontoPagoManual] = useState(pagoSugerido / 100);
+  const [referenciaPagoManual, setReferenciaPagoManual] = useState('');
+  const [fechaPagoManual, setFechaPagoManual] = useState(fechaHoraLocalInput());
+  const [motivoPagoManual, setMotivoPagoManual] = useState('');
+  const [idempotenciaPagoManual, setIdempotenciaPagoManual] = useState(() => crypto.randomUUID());
   const [excepcion, setExcepcion] = useState(reserva?.excepcion_capacidad || null);
   const [capacidadExcepcional, setCapacidadExcepcional] = useState('8');
   const [motivoExcepcion, setMotivoExcepcion] = useState('');
@@ -655,6 +738,52 @@ const ModalReserva: React.FC<{
     } catch (e: any) {
       setConfirmandoReserva(false);
       setError(e.message || 'No se pudo confirmar. Probá de nuevo.');
+    }
+  };
+
+  const registrarPagoManual = async () => {
+    if (!reserva?.finanzas) return;
+    const montoCentavos = Math.round(montoPagoManual * 100);
+    if (!Number.isSafeInteger(montoCentavos) || montoCentavos <= 0) {
+      setError('Ingresá un importe de pago mayor que cero.');
+      return;
+    }
+    if (montoCentavos > reserva.finanzas.saldoCentavos) {
+      setError('El importe no puede superar el saldo pendiente.');
+      return;
+    }
+    if (motivoPagoManual.trim().length < 5) {
+      setError('Indicá un motivo de al menos 5 caracteres para registrar el pago.');
+      return;
+    }
+    setRegistrandoPago(true);
+    setError('');
+    try {
+      const res = await adminFetch(`/api/v1/admin/reservas/${reserva.id}/pagos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expected_version: reserva.version,
+          tipo: tipoPagoManual,
+          metodo: metodoPagoManual,
+          monto_centavos: montoCentavos,
+          moneda: reserva.finanzas.moneda,
+          referencia: referenciaPagoManual.trim() || null,
+          pagado_at: new Date(fechaPagoManual).toISOString(),
+          motivo: motivoPagoManual.trim(),
+          idempotency_key: idempotenciaPagoManual,
+        }),
+      });
+      const data: any = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo registrar el pago.');
+      setGuardado(true);
+      setIdempotenciaPagoManual(crypto.randomUUID());
+      onGuardado();
+      setTimeout(onClose, 900);
+    } catch (e: any) {
+      setError(e.message || 'No se pudo registrar el pago. Probá de nuevo.');
+    } finally {
+      setRegistrandoPago(false);
     }
   };
 
@@ -810,6 +939,75 @@ const ModalReserva: React.FC<{
         )}
       </fieldset>
 
+      {modo === 'editar' && reserva?.finanzas && (
+        <section className="mb-4 rounded-lg border border-gray-200 bg-white p-3" aria-label="Estado de pagos">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">Pagos</p>
+              <p className="mt-1 text-sm font-semibold text-gray-800">
+                {ETIQUETAS_ESTADO_COBRO[reserva.finanzas.estado]}
+              </p>
+            </div>
+            {rol === 'super_admin' && reserva.finanzas.saldoCentavos > 0 &&
+             !['cancelada', 'vencida', 'rechazada'].includes(reserva.estado) && (
+              <Button size="sm" variant="secondary" onPress={() => setMostrandoPagoManual(valor => !valor)}>
+                {mostrandoPagoManual ? 'Cerrar registro' : 'Registrar pago'}
+              </Button>
+            )}
+          </div>
+
+          <dl className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-gray-50 p-2.5 text-xs">
+            <div><dt className="text-gray-500">Total</dt><dd className="mt-0.5 font-semibold tabular-nums">{fmtCentavos(reserva.finanzas.totalCentavos, reserva.finanzas.moneda)}</dd></div>
+            <div><dt className="text-gray-500">Registrado</dt><dd className="mt-0.5 font-semibold tabular-nums text-emerald-700">{fmtCentavos(reserva.finanzas.pagadoCentavos, reserva.finanzas.moneda)}</dd></div>
+            <div><dt className="text-gray-500">Saldo</dt><dd className="mt-0.5 font-semibold tabular-nums text-amber-700">{fmtCentavos(reserva.finanzas.saldoCentavos, reserva.finanzas.moneda)}</dd></div>
+          </dl>
+
+          {reserva.finanzas.pagos.filter(pago => pago.estado === 'aprobado').length > 0 && (
+            <div className="mt-3 space-y-1.5" aria-label="Pagos registrados">
+              {reserva.finanzas.pagos.filter(pago => pago.estado === 'aprobado').slice(-3).reverse().map(pago => (
+                <div key={pago.id} className="flex items-start justify-between gap-3 rounded-md border border-gray-100 px-2.5 py-2 text-xs">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-700">{pago.tipo === 'sena' ? 'Seña' : pago.tipo === 'saldo' ? 'Saldo' : 'Pago total'} · {pago.metodoRegistro
+                      ? OPCIONES_METODO_PAGO.find(item => item.value === pago.metodoRegistro)?.label || pago.metodoRegistro
+                      : pago.proveedor}</p>
+                    <p className="mt-0.5 text-gray-500">{fmtFechaHora(pago.pagadoAt || pago.createdAt)}{pago.referenciaManual ? ` · Ref. ${pago.referenciaManual}` : ''}</p>
+                  </div>
+                  <strong className="shrink-0 tabular-nums text-emerald-700">{fmtCentavos(pago.montoCentavos, reserva.finanzas.moneda)}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mostrandoPagoManual && rol === 'super_admin' && (
+            <div className="mt-3 grid gap-3 border-t border-gray-200 pt-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Select label="Concepto" placeholder="Elegí el concepto" value={tipoPagoManual}
+                  options={OPCIONES_TIPO_PAGO} onChange={value => value && setTipoPagoManual(value as 'sena' | 'saldo' | 'total')} />
+                <Select label="Método" placeholder="Elegí el método" value={metodoPagoManual}
+                  options={OPCIONES_METODO_PAGO} onChange={value => value && setMetodoPagoManual(value)} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <MoneyField currency={reserva.finanzas.moneda} decrementLabel="Reducir importe" incrementLabel="Aumentar importe"
+                  label="Importe" minValue={0.01} maxValue={reserva.finanzas.saldoCentavos / 100} showStepper={false}
+                  value={montoPagoManual} onChange={setMontoPagoManual} />
+                <Input type="datetime-local" label="Fecha del pago" value={fechaPagoManual} onChange={setFechaPagoManual} />
+              </div>
+              <Input label="Referencia (opcional)" value={referenciaPagoManual} maxLength={160}
+                description="Número de operación, comprobante o referencia interna."
+                onChange={setReferenciaPagoManual} />
+              <Textarea label="Motivo de registro *" rows={2} maxLength={500} value={motivoPagoManual}
+                description="Quedará en la auditoría administrativa."
+                onChange={setMotivoPagoManual} />
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-gray-500">Registrar una seña suficiente confirma automáticamente una reserva pendiente y envía sus emails.</p>
+                <Button size="sm" isLoading={registrandoPago} isDisabled={registrandoPago || montoPagoManual <= 0 || motivoPagoManual.trim().length < 5}
+                  onPress={registrarPagoManual}>Confirmar pago</Button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {modo === 'editar' && (
         <section className="mb-4 rounded-lg border border-gray-200 bg-white p-3" aria-label="Forma de pago">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-600">Forma de pago</p>
@@ -962,25 +1160,26 @@ const ModalReserva: React.FC<{
       </div>
 
       {!soloLectura && modo === 'editar' && reserva?.estado === 'pendiente_pago' && (
-        <div className="mt-5 pt-4 border-t border-gray-100 grid gap-2 rounded-lg bg-emerald-50 px-3 py-2.5">
-          <p className="text-xs font-semibold text-emerald-800">Confirmar reserva pendiente</p>
-          <label className="text-xs text-emerald-800" htmlFor="f_motivo_confirmacion">Motivo de confirmación *</label>
+        <div className="mt-5 pt-4 border-t border-gray-100 grid gap-2 rounded-lg bg-amber-50 px-3 py-2.5">
+          <p className="text-xs font-semibold text-amber-900">Confirmación administrativa sin pago</p>
+          <p className="text-xs text-amber-800">Usá esta excepción sólo cuando corresponda confirmar la reserva sin registrar un cobro.</p>
+          <label className="text-xs text-amber-800" htmlFor="f_motivo_confirmacion">Motivo de la excepción *</label>
           <textarea
             id="f_motivo_confirmacion"
             rows={2}
             maxLength={500}
             value={motivoConfirmacion}
             onChange={e => setMotivoConfirmacion(e.target.value)}
-            placeholder="Ej. Pago verificado manualmente"
-            className={`${inputCls} border-emerald-200`}
+            placeholder="Ej. Invitación autorizada sin cargo"
+            className={`${inputCls} border-amber-200`}
           />
           <button
             type="button"
             onClick={confirmarReserva}
             disabled={confirmandoReserva}
-            className={`justify-self-end text-xs font-semibold text-white bg-emerald-700 rounded-lg px-3 py-2 disabled:opacity-60 ${FOCUS_RING}`}
+            className={`justify-self-end text-xs font-semibold text-white bg-amber-800 rounded-lg px-3 py-2 disabled:opacity-60 ${FOCUS_RING}`}
           >
-            {confirmandoReserva ? 'Confirmando…' : 'Confirmar reserva'}
+            {confirmandoReserva ? 'Confirmando…' : 'Confirmar sin registrar pago'}
           </button>
         </div>
       )}
@@ -4445,7 +4644,7 @@ const PanelReservas: React.FC = () => {
       if (res.status === 401) { manejarNoAutenticado(); return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const body: any = await res.json();
-      r = reservaDesdeV1(body.data.reserva);
+      r = reservaDesdeV1(body.data.reserva, body.data.historial);
     } catch (e: any) {
       if (!r) setError(e.message || 'No se pudo cargar la reserva.');
     }

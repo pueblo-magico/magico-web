@@ -55,6 +55,17 @@ test('conserva las acciones existentes de reservas y exportación', () => {
   assert.match(source, /<SeccionConfiguracionBase esSuperAdmin=\{esSuperAdmin\} modo="precios" \/>/);
 });
 
+test('muestra el estado financiero y registra pagos manuales sólo para superadmin', () => {
+  assert.match(source, /aria-label="Estado de pagos"/);
+  assert.match(source, /ETIQUETAS_ESTADO_COBRO/);
+  assert.match(source, /rol === 'super_admin' && reserva\.finanzas\.saldoCentavos > 0/);
+  assert.match(source, /\/api\/v1\/admin\/reservas\/\$\{reserva\.id\}\/pagos/);
+  assert.match(source, /<MoneyField currency=\{reserva\.finanzas\.moneda\}/);
+  assert.match(source, /Registrar una seña suficiente confirma automáticamente una reserva pendiente y envía sus emails/);
+  assert.match(source, /Confirmación administrativa sin pago/);
+  assert.match(source, /Confirmar sin registrar pago/);
+});
+
 test('muestra el identificador y la fecha de creación y permite buscarlos por código', () => {
   assert.match(source, /placeholder="Buscar por nombre o ID…"/);
   assert.match(source, /\{r\.codigo\}/);
