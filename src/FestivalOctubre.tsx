@@ -219,8 +219,16 @@ const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number
   </article>
 );
 
+const accessCardTones = [
+  'border-[#B85A3D]/25 bg-[#F1DDD4]',
+  'border-[#49634A]/25 bg-[#DFE7D5]',
+  'border-[#D39B22]/30 bg-[#F5E6AA]',
+  'border-[#005333]/20 bg-[#D6E8DF]',
+] as const;
+
 const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: number }) => (
-  <article className={`relative flex h-full min-w-0 flex-col overflow-hidden rounded-[1.75rem] border p-6 md:p-7 ${option.featured ? 'border-[#123B2D] bg-[#123B2D] text-white shadow-xl' : 'border-[#123B2D]/15 bg-[#F5F0E5]'}`} data-reveal data-delay={String((index % 3) + 1)}>
+  <article className={`relative flex h-full min-w-0 flex-col overflow-hidden rounded-[1.75rem] border p-6 md:p-7 ${option.featured ? 'border-[#123B2D] bg-[#123B2D] text-white shadow-xl' : accessCardTones[index % accessCardTones.length]}`} data-reveal data-delay={String((index % 3) + 1)}>
+    <div className={`absolute inset-x-0 top-0 h-1.5 ${option.featured ? 'bg-[#E7B84B]' : index % 2 === 0 ? 'bg-[#B85A3D]' : 'bg-[#49634A]'}`} aria-hidden="true" />
     <div className="mb-4 flex h-7 items-center justify-center">
       {option.featured && <span className="rounded-full bg-[#E7B84B] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#123B2D]">Equilibrio ideal</span>}
     </div>
@@ -337,6 +345,65 @@ const useHorizontalRail = () => {
   return { ref, canGoBack, canGoForward, scroll };
 };
 
+const celebrationMoments = [
+  {
+    src: '/uploads/atardeser/movimiento.jpeg',
+    alt: 'Baile libre durante una celebración en Pueblo Mágico',
+    label: 'Movimiento libre',
+    className: 'col-span-2 row-span-2 sm:col-span-2',
+  },
+  {
+    src: '/uploads/atardeser/mati-en-magico.jpeg',
+    alt: 'Música y encuentro durante una celebración en Pueblo Mágico',
+    label: 'Música que reúne',
+    className: 'col-span-2 sm:col-span-2',
+  },
+  {
+    src: '/uploads/atardeser/baile-en-familia.jpeg',
+    alt: 'Personas de distintas edades bailando al aire libre',
+    label: 'Celebrar juntos',
+    className: 'col-span-1',
+  },
+  {
+    src: '/uploads/atardeser/ninez.jpeg',
+    alt: 'Niños y adultos compartiendo una celebración al aire libre',
+    label: 'Toda la familia',
+    className: 'col-span-1',
+  },
+] as const;
+
+const CelebrationMosaic = () => (
+  <section aria-label="Momentos de celebraciones en Pueblo Mágico" className="relative overflow-hidden bg-[#E7B84B] px-6 py-14 md:px-10 md:py-20">
+    <div className="pointer-events-none absolute -left-24 -top-20 h-72 w-72 rounded-full bg-[#B85A3D]/45 blur-3xl" aria-hidden="true" />
+    <div className="pointer-events-none absolute -bottom-28 right-[-3rem] h-80 w-80 rounded-full bg-[#123B2D]/30 blur-3xl" aria-hidden="true" />
+    <Sparkles className="pointer-events-none absolute left-[8%] top-12 text-white/60" size={30} strokeWidth={1.3} aria-hidden="true" />
+    <Sun className="pointer-events-none absolute bottom-12 right-[6%] text-[#123B2D]/25" size={52} strokeWidth={1.1} aria-hidden="true" />
+
+    <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-14">
+      <div className="text-center lg:text-left" data-reveal>
+        <p className="mb-5 inline-flex rounded-full bg-[#123B2D] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-white">Esto ya se vive</p>
+        <h2 className="text-4xl leading-[1.02] text-[#123B2D] serif-title md:text-6xl">La celebración<br />se siente en el cuerpo.</h2>
+        <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[#123B2D]/75 lg:mx-0">Imágenes reales de encuentros en Pueblo Mágico: música, baile, familias y naturaleza compartiendo el mismo ritmo.</p>
+        <div className="mt-7 flex flex-wrap justify-center gap-2 lg:justify-start">
+          {['Música en vivo', 'Baile al aire libre', 'Todas las edades'].map(item => (
+            <span key={item} className="rounded-full border border-[#123B2D]/25 bg-white/45 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#123B2D]">{item}</span>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid auto-rows-[135px] grid-cols-2 gap-3 sm:auto-rows-[175px] sm:grid-cols-4" data-reveal data-delay="1">
+        {celebrationMoments.map((moment, index) => (
+          <figure key={moment.src} className={`group relative overflow-hidden rounded-[1.5rem] border-2 border-white/55 bg-[#123B2D] shadow-[0_18px_45px_rgba(18,59,45,0.22)] ${moment.className}`}>
+            <img src={img(moment.src, index === 0 ? 1000 : 800)} alt={moment.alt} loading="lazy" width="1000" height="1000" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#111914]/85 to-transparent" />
+            <figcaption className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.13em] text-[#123B2D] shadow-sm">{moment.label}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
 const FestivalOctubre: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const artistRail = useHorizontalRail();
@@ -447,6 +514,10 @@ const FestivalOctubre: React.FC = () => {
           </picture>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(10,20,14,0.56)_0%,rgba(10,20,14,0.82)_62%,rgba(10,20,14,0.94)_100%)] max-md:bg-[linear-gradient(to_top,rgba(10,20,14,0.97)_0%,rgba(10,20,14,0.78)_58%,rgba(10,20,14,0.5)_100%)]" />
           <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(to_bottom,rgba(10,20,14,0.7),transparent)]" />
+          <div className="pointer-events-none absolute -left-20 top-[28%] h-72 w-72 rounded-full bg-[#B85A3D]/18 blur-[90px]" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-16 bottom-[12%] h-80 w-80 rounded-full bg-[#E7B84B]/16 blur-[100px]" aria-hidden="true" />
+          <Sparkles className="pointer-events-none absolute left-[10%] top-[30%] hidden text-[#E7B84B]/60 md:block" size={30} strokeWidth={1.3} aria-hidden="true" />
+          <Music2 className="pointer-events-none absolute bottom-[25%] right-[12%] hidden rotate-12 text-white/35 md:block" size={28} strokeWidth={1.3} aria-hidden="true" />
 
           <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-16 pt-20 text-center md:px-10 md:pb-20 md:pt-20">
               <div className="mx-auto max-w-4xl">
@@ -475,8 +546,10 @@ const FestivalOctubre: React.FC = () => {
           </a>
         </section>
 
-        <section id="propuesta" className="bg-[#0B1B12] px-6 py-20 text-white md:px-10 md:py-28">
-          <div className="mx-auto max-w-5xl">
+        <section id="propuesta" className="relative overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(184,90,61,0.18),transparent_32%),radial-gradient(circle_at_82%_76%,rgba(231,184,75,0.13),transparent_34%),#0B1B12] px-6 py-20 text-white md:px-10 md:py-28">
+          <div className="pointer-events-none absolute -left-20 bottom-10 h-56 w-56 rounded-full border border-[#B85A3D]/25" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-28 top-16 h-72 w-72 rounded-full border border-[#E7B84B]/20" aria-hidden="true" />
+          <div className="relative mx-auto max-w-5xl">
             <div className="text-center" data-reveal>
               <div className="mb-7 flex items-center justify-center gap-3">
                 {[{ Icon: Music2, color: '#B85A3D' }, { Icon: Flame, color: '#E7B84B' }, { Icon: Sun, color: '#D6B52C' }].map(({ Icon, color }, index) => (
@@ -497,12 +570,12 @@ const FestivalOctubre: React.FC = () => {
 
             <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
               {[
-                { Icon: Music2, title: 'Música que mueve', text: 'Cuatro artistas acompañan un viaje sonoro desde el movimiento del día hasta el fuego de la noche.' },
-                { Icon: Leaf, title: 'Naturaleza viva', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.' },
-                { Icon: Flame, title: 'Encuentro real', text: 'Fogón, comida artesanal y espacios para celebrar, conversar y conocer gente nueva.' },
-              ].map(({ Icon, title, text }) => (
-                <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.035] px-7 py-8 text-center">
-                  <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#E7B84B]/10 text-[#E7B84B]">
+                { Icon: Music2, title: 'Música que mueve', text: 'Cuatro artistas acompañan un viaje sonoro desde el movimiento del día hasta el fuego de la noche.', shell: 'border-[#B85A3D]/40 bg-[#B85A3D]/12', icon: 'bg-[#B85A3D]/25 text-[#F2A183]' },
+                { Icon: Leaf, title: 'Naturaleza viva', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#86A576]/35 bg-[#86A576]/10', icon: 'bg-[#86A576]/20 text-[#B7D5A8]' },
+                { Icon: Flame, title: 'Encuentro real', text: 'Fogón, comida artesanal y espacios para celebrar, conversar y conocer gente nueva.', shell: 'border-[#E7B84B]/35 bg-[#E7B84B]/10', icon: 'bg-[#E7B84B]/20 text-[#E7B84B]' },
+              ].map(({ Icon, title, text, shell, icon }) => (
+                <article key={title} className={`rounded-2xl border px-7 py-8 text-center backdrop-blur-sm ${shell}`}>
+                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${icon}`}>
                     <Icon size={18} aria-hidden="true" />
                   </span>
                   <h3 className="mt-5 text-sm font-bold text-white">{title}</h3>
@@ -519,8 +592,12 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="para-quien" className="bg-white px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-5xl">
+        <CelebrationMosaic />
+
+        <section id="para-quien" className="relative overflow-hidden bg-[linear-gradient(145deg,#FCFAF5_0%,#F7EADF_52%,#F3E7B8_150%)] px-6 py-20 md:px-10 md:py-28">
+          <div className="pointer-events-none absolute -left-16 top-24 h-52 w-52 rounded-full bg-[#B85A3D]/10 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-16 bottom-16 h-64 w-64 rounded-full bg-[#E7B84B]/20 blur-3xl" aria-hidden="true" />
+          <div className="relative mx-auto max-w-5xl">
             <div className="mb-14 text-center" data-reveal>
               <p className="mb-5 inline-block rounded-full bg-[#123B2D] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">¿Para quién es?</p>
               <h2 className="text-4xl leading-tight text-[#123B2D] serif-title md:text-5xl">Para quienes quieren celebrar distinto.<br />Y encontrarse de verdad.</h2>
@@ -543,7 +620,8 @@ const FestivalOctubre: React.FC = () => {
                   tone: 'gold',
                 },
               ].map(({ Icon, title, text, items, tone }) => (
-                <article key={title} className={`rounded-2xl border p-8 text-left ${tone === 'green' ? 'border-[#123B2D]/15 bg-[#123B2D]/[0.03]' : 'border-[#E7B84B]/35 bg-[#E7B84B]/[0.06]'}`}>
+                <article key={title} className={`relative overflow-hidden rounded-[1.75rem] border p-8 text-left shadow-[0_16px_45px_rgba(31,41,34,0.07)] ${tone === 'green' ? 'border-[#123B2D]/20 bg-[#DCE9E2]' : 'border-[#D39B22]/30 bg-[#F6E6AE]'}`}>
+                  <div className={`absolute inset-x-0 top-0 h-1.5 ${tone === 'green' ? 'bg-[#123B2D]' : 'bg-[#B85A3D]'}`} aria-hidden="true" />
                   <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${tone === 'green' ? 'bg-[#123B2D]/10 text-[#123B2D]' : 'bg-[#E7B84B]/20 text-[#8B6A00]'}`}><Icon size={19} aria-hidden="true" /></span>
                   <h3 className="mt-5 text-center text-xl font-bold text-[#123B2D]">{title}</h3>
                   <p className="mx-auto mt-3 max-w-md text-center text-sm leading-relaxed text-[#1F2922]/60">{text}</p>
@@ -556,7 +634,9 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="experiencias" className="bg-[#F7F5F0] px-6 py-20 md:px-10 md:py-28">
+        <section id="experiencias" className="relative overflow-hidden bg-[#F7F5F0] px-6 py-20 md:px-10 md:py-28">
+          <div className="pointer-events-none absolute left-[-6rem] top-[-5rem] h-72 w-72 rounded-full bg-[#49634A]/10 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute bottom-[-7rem] right-[-5rem] h-80 w-80 rounded-full bg-[#E7B84B]/20 blur-3xl" aria-hidden="true" />
           <div className="mx-auto max-w-5xl">
             <div className="mb-14 text-center" data-reveal>
               <Eyebrow>Qué vas a encontrar</Eyebrow>
@@ -565,14 +645,15 @@ const FestivalOctubre: React.FC = () => {
             </div>
             <div className="grid gap-5 md:grid-cols-2" data-reveal data-delay="1">
               {[
-                { Icon: Music2, color: '#005333', bg: 'bg-[#005333]/[0.05]', border: 'border-[#005333]/15', title: 'Música & movimiento', items: ['Cuatro DJs y live sets confirmados', 'Baile libre y movimiento', 'Música en vivo junto al paisaje', 'Un viaje sonoro del día al fuego de la noche'] },
-                { Icon: Leaf, color: '#49634A', bg: 'bg-[#49634A]/[0.06]', border: 'border-[#49634A]/20', title: 'Naturaleza & exploración', items: ['Río y senderos de montaña', 'Caminatas y espacios de descanso', 'Yoga y conexión con el cuerpo', 'Tiempo libre para habitar el lugar'] },
-                { Icon: Flame, color: '#B85A3D', bg: 'bg-[#B85A3D]/[0.07]', border: 'border-[#B85A3D]/20', title: 'Ritual & integración', items: ['Fogón y círculos para compartir', 'Conversaciones significativas y auténticas', 'Temazcal opcional el domingo', 'Espacios para bajar el ritmo e integrar'] },
-                { Icon: Sun, color: '#8B6A00', bg: 'bg-[#E7B84B]/[0.08]', border: 'border-[#E7B84B]/35', title: 'Gastronomía & comunidad', items: ['Buffet de comida artesanal todo el fin de semana', 'Barra de bebidas', 'Encuentro abierto a toda la familia', 'Opciones para venir por el día o quedarse'] },
-              ].map(({ Icon, color, bg, border, title, items }) => (
-                <article key={title} className={`rounded-2xl border p-7 text-left ${bg} ${border}`}>
+                { Icon: Music2, color: '#005333', bg: 'bg-[#D6E8DF]', border: 'border-[#005333]/20', bar: 'bg-[#005333]', title: 'Música & movimiento', items: ['Cuatro DJs y live sets confirmados', 'Baile libre y movimiento', 'Música en vivo junto al paisaje', 'Un viaje sonoro del día al fuego de la noche'] },
+                { Icon: Leaf, color: '#49634A', bg: 'bg-[#DFE7D5]', border: 'border-[#49634A]/25', bar: 'bg-[#739067]', title: 'Naturaleza & exploración', items: ['Río y senderos de montaña', 'Caminatas y espacios de descanso', 'Yoga y conexión con el cuerpo', 'Tiempo libre para habitar el lugar'] },
+                { Icon: Flame, color: '#9B432D', bg: 'bg-[#F1D9CF]', border: 'border-[#B85A3D]/25', bar: 'bg-[#B85A3D]', title: 'Ritual & integración', items: ['Fogón y círculos para compartir', 'Conversaciones significativas y auténticas', 'Temazcal opcional el domingo', 'Espacios para bajar el ritmo e integrar'] },
+                { Icon: Sun, color: '#745800', bg: 'bg-[#F5E6AA]', border: 'border-[#D39B22]/35', bar: 'bg-[#E7B84B]', title: 'Gastronomía & comunidad', items: ['Buffet de comida artesanal todo el fin de semana', 'Barra de bebidas', 'Encuentro abierto a toda la familia', 'Opciones para venir por el día o quedarse'] },
+              ].map(({ Icon, color, bg, border, bar, title, items }) => (
+                <article key={title} className={`relative overflow-hidden rounded-[1.75rem] border p-7 text-left shadow-[0_14px_35px_rgba(31,41,34,0.06)] ${bg} ${border}`}>
+                  <span className={`absolute inset-x-0 top-0 h-1.5 ${bar}`} aria-hidden="true" />
                   <div className="mb-5 flex items-center justify-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/60" style={{ color }}><Icon size={18} aria-hidden="true" /></span>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/75 shadow-sm" style={{ color }}><Icon size={18} aria-hidden="true" /></span>
                     <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color }}>{title}</h3>
                   </div>
                   <ul className="mx-auto max-w-md space-y-3">
@@ -665,8 +746,10 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="fin-de-semana" className="px-6 py-20 md:px-10 md:py-28" style={{ backgroundColor: C.cream }}>
-          <div className="mx-auto max-w-7xl">
+        <section id="fin-de-semana" className="relative overflow-hidden bg-[linear-gradient(145deg,#F5F0E5_0%,#F8E8D8_52%,#F3E4A9_145%)] px-6 py-20 md:px-10 md:py-28">
+          <div className="pointer-events-none absolute -left-20 top-24 h-64 w-64 rounded-full bg-[#B85A3D]/10 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-16 bottom-8 h-72 w-72 rounded-full bg-[#E7B84B]/25 blur-3xl" aria-hidden="true" />
+          <div className="relative mx-auto max-w-7xl">
             <div className="mx-auto mb-14 max-w-3xl text-center" data-reveal>
               <Eyebrow>Elegí tu propio ritmo</Eyebrow>
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">Un día de festival. Un fin de semana para quedarse.</h2>
@@ -675,7 +758,8 @@ const FestivalOctubre: React.FC = () => {
             <div className="relative grid gap-5 lg:grid-cols-3">
               <div className="absolute left-[16.6%] right-[16.6%] top-12 hidden h-px bg-[#123B2D]/15 lg:block" />
               {weekend.map(({ day, date, title, description, Icon, featured }, index) => (
-                <article key={date} className={`relative rounded-[1.75rem] border p-7 md:p-8 ${featured ? 'border-[#B85A3D] bg-[#B85A3D] text-white shadow-xl' : 'border-[#123B2D]/10 bg-[#FCFAF5]'}`} data-reveal data-delay={String(index + 1)}>
+                <article key={date} className={`relative overflow-hidden rounded-[1.75rem] border p-7 md:p-8 ${featured ? 'border-[#B85A3D] bg-[#B85A3D] text-white shadow-xl' : index === 0 ? 'border-[#49634A]/25 bg-[#DFE7D5]' : 'border-[#D39B22]/30 bg-[#F5E6AA]'}`} data-reveal data-delay={String(index + 1)}>
+                  <div className={`absolute inset-x-0 top-0 h-1.5 ${featured ? 'bg-[#E7B84B]' : index === 0 ? 'bg-[#49634A]' : 'bg-[#D39B22]'}`} aria-hidden="true" />
                   <div className={`relative z-10 mb-10 flex h-12 w-12 items-center justify-center rounded-full ${featured ? 'bg-[#E7B84B] text-[#123B2D]' : 'bg-[#123B2D] text-white'}`}><Icon size={21} aria-hidden="true" /></div>
                   <p className={`text-[10px] font-bold uppercase tracking-[0.22em] ${featured ? 'text-white/65' : 'text-[#B85A3D]'}`}>{day} · {date}</p>
                   <h3 className="mt-3 text-3xl serif-title">{title}</h3>
@@ -686,8 +770,10 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="entradas" className="overflow-hidden bg-[#FCFAF5] px-6 py-20 md:px-10 md:py-28">
-          <div className="mx-auto max-w-7xl">
+        <section id="entradas" className="relative overflow-hidden bg-[radial-gradient(circle_at_16%_16%,rgba(184,90,61,0.1),transparent_28%),radial-gradient(circle_at_84%_82%,rgba(231,184,75,0.18),transparent_32%),#FCFAF5] px-6 py-20 md:px-10 md:py-28">
+          <Sparkles className="pointer-events-none absolute left-[7%] top-20 text-[#B85A3D]/30" size={38} strokeWidth={1.2} aria-hidden="true" />
+          <Sun className="pointer-events-none absolute bottom-24 right-[5%] text-[#D39B22]/25" size={56} strokeWidth={1.1} aria-hidden="true" />
+          <div className="relative mx-auto max-w-7xl">
             <div className="mx-auto mb-10 max-w-3xl text-center md:mb-12" data-reveal>
               <Eyebrow>Modalidades de acceso</Eyebrow>
               <h2 className="text-4xl serif-title md:text-6xl">Elegí cómo sumarte.</h2>
@@ -793,8 +879,12 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section className="bg-[#B85A3D] px-6 py-20 text-white md:px-10 md:py-28">
-          <div className="mx-auto max-w-5xl text-center" data-reveal>
+        <section className="relative overflow-hidden bg-[#B85A3D] px-6 py-20 text-white md:px-10 md:py-28">
+          <img src={img('/uploads/atardeser/comunidad.jpeg', 1900)} alt="" loading="lazy" width="1900" height="1100" className="absolute inset-0 h-full w-full object-cover object-center" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(18,59,45,0.96)_0%,rgba(18,59,45,0.84)_48%,rgba(184,90,61,0.82)_100%)]" />
+          <div className="pointer-events-none absolute -left-16 bottom-[-4rem] h-64 w-64 rounded-full bg-[#E7B84B]/35 blur-3xl" aria-hidden="true" />
+          <Sparkles className="pointer-events-none absolute right-[10%] top-16 text-[#E7B84B]/65" size={42} strokeWidth={1.2} aria-hidden="true" />
+          <div className="relative mx-auto max-w-5xl text-center" data-reveal>
             <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[#E7B84B] text-[#123B2D]"><Waves size={24} aria-hidden="true" /></div>
             <h2 className="text-4xl leading-tight serif-title md:text-7xl">AtardeSer.<br />Celebrá en la montaña.</h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/75">Música, naturaleza y buena compañía. Vení por el día, quedate a vivir el finde y elegí tu propia manera de ser parte.</p>
