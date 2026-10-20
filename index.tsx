@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { StrictMode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { injectContentsquareScript } from '@contentsquare/tag-sdk';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -37,6 +38,8 @@ const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
+
+injectContentsquareScript({ clientId: '91718b26f9ef8' });
 
 const ScrollToTop: React.FC = () => {
   const { pathname, hash } = useLocation();

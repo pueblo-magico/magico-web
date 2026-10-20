@@ -9,6 +9,7 @@ node_modules
 # Cloudflare Wrangler local dev state (local D1 sqlite, logs)
 .wrangler
 .dev.vars
+.cs-wizard/
 
 # Vite cache metadata (can change when running dev)
 node_modules/.vite/deps/_metadata.json
