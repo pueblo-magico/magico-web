@@ -18,8 +18,8 @@ export const FESTIVAL_OCTUBRE = {
   images: {
     heroDesktop: '/uploads/atardeser/atardeser-hero-desktop.webp',
     heroMobile: '/uploads/atardeser/atardeser-hero-mobile.webp',
-    heroVideoPosterDesktop: '/uploads/atardeser/atardeser-hero-video-poster-desktop.webp',
-    heroVideoPosterMobile: '/uploads/atardeser/atardeser-hero-video-poster-mobile.webp',
+    heroVideoPosterDesktop: '/uploads/atardeser/atardeser-hero-video-poster-desktop-v2.webp',
+    heroVideoPosterMobile: '/uploads/atardeser/atardeser-hero-video-poster-mobile-v2.webp',
     pulse: '/uploads/atardeser/atardeser-dusk-wave-banner.webp',
     overlay: '/uploads/atardeser/atardeser-sun-wave-overlay-transparent.webp',
     concept: '/uploads/atardeser/movimiento.jpeg',
@@ -33,12 +33,12 @@ export const FESTIVAL_OCTUBRE = {
   },
   heroVideo: {
     desktop: {
-      webm: '/uploads/atardeser/atardeser-hero-desktop.webm',
-      mp4: '/uploads/atardeser/atardeser-hero-desktop.mp4',
+      webm: '/uploads/atardeser/atardeser-hero-video-desktop-v1.webm',
+      mp4: '/uploads/atardeser/atardeser-hero-video-desktop-v1.mp4',
     },
     mobile: {
-      webm: '/uploads/atardeser/atardeser-hero-mobile.webm',
-      mp4: '/uploads/atardeser/atardeser-hero-mobile.mp4',
+      webm: '/uploads/atardeser/atardeser-hero-video-mobile-v1.webm',
+      mp4: '/uploads/atardeser/atardeser-hero-video-mobile-v1.mp4',
     },
   },
   contact: {
