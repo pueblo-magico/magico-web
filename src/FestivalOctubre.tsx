@@ -275,7 +275,7 @@ const ArtistCard = ({ artist, index }: { artist: FestivalArtist; index: number }
 
   return (
     <article
-      className="group h-full min-w-0 overflow-hidden rounded-[1.75rem] border shadow-[0_28px_70px_rgba(0,0,0,0.34)]"
+      className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[1.75rem] border shadow-[0_28px_70px_rgba(0,0,0,0.34)]"
       style={{ backgroundColor: surface, borderColor: `${accent}66` }}
       data-reveal
       data-delay={String(index + 1)}
@@ -314,11 +314,11 @@ const ArtistCard = ({ artist, index }: { artist: FestivalArtist; index: number }
           <p className="mt-3 text-[9px] uppercase tracking-[0.32em]" style={{ color: `${ink}B8` }}>Pueblo Mágico</p>
         </div>
       </div>
-      <div className="border-t p-6" style={{ borderColor: `${accent}3D`, background: `linear-gradient(145deg, ${surface}, ${glow}38)` }}>
+      <div className="flex flex-1 flex-col border-t p-6" style={{ borderColor: `${accent}3D`, background: `linear-gradient(145deg, ${surface}, ${glow}38)` }}>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>{artist.style}</p>
         {'credit' in artist && artist.credit && <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: `${ink}8F` }}>{artist.credit}</p>}
         <p className="mt-4 text-sm leading-relaxed" style={{ color: `${ink}B8` }}>{artist.bio}</p>
-        <div className="mt-5 flex items-center justify-between gap-4 border-t pt-4" style={{ borderColor: `${accent}2E` }}>
+        <div className="mt-auto flex items-center justify-between gap-4 border-t pt-4" style={{ borderColor: `${accent}2E` }}>
           <p className="text-[9px] uppercase tracking-[0.13em]" style={{ color: `${ink}80` }}>{artist.imageNote}</p>
           {'sourceUrl' in artist && artist.sourceUrl && (
             <a href={artist.sourceUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[9px] font-bold uppercase tracking-[0.14em] underline underline-offset-4" style={{ color: accent }}>Conocé más</a>
