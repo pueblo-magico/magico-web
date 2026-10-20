@@ -532,9 +532,6 @@ const CelebrationMosaic = () => (
 
 const FestivalOctubre: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
-  const [heroVideoReady, setHeroVideoReady] = useState(false);
-  const heroVideoRef = useRef<HTMLVideoElement>(null);
   const artistRail = useHorizontalRail();
   const teamRail = useHorizontalRail();
   const accessRail = useHorizontalRail();
@@ -601,84 +598,19 @@ const FestivalOctubre: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-    let activationTimer: number | undefined;
-
-    const updatePlaybackPreference = () => {
-      window.clearTimeout(activationTimer);
-      setHeroVideoReady(false);
-
-      if (reducedMotion.matches || connection?.saveData) {
-        setHeroVideoEnabled(false);
-        return;
-      }
-
-      activationTimer = window.setTimeout(() => setHeroVideoEnabled(true), 450);
-    };
-
-    updatePlaybackPreference();
-    reducedMotion.addEventListener('change', updatePlaybackPreference);
-
-    return () => {
-      window.clearTimeout(activationTimer);
-      reducedMotion.removeEventListener('change', updatePlaybackPreference);
-    };
-  }, []);
-
-  useEffect(() => {
-    const video = heroVideoRef.current;
-    if (!video || !heroVideoEnabled) return;
-
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        void video.play().catch(() => undefined);
-      } else {
-        video.pause();
-      }
-    }, { threshold: 0.05 });
-
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, [heroVideoEnabled]);
-
   return (
     <div className="overflow-x-hidden bg-[#FFFDF5] text-[#16423D]">
       <Header subNavigation={<PageSectionNav navigation={navigation} minimumSections={5} />} />
 
       <main>
         <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-[#003A34]">
-          <picture className="absolute inset-0">
-            <source media="(max-width: 640px)" srcSet={FESTIVAL_OCTUBRE.images.heroVideoPosterMobile} />
-            <img
-              src={FESTIVAL_OCTUBRE.images.heroVideoPosterDesktop}
-              alt="Personas de distintas edades bailando en la montaña de Pueblo Mágico"
-              width="1600"
-              height="900"
-              className="h-full w-full object-cover object-center"
-            />
-          </picture>
-          {heroVideoEnabled && (
-            <video
-              ref={heroVideoRef}
-              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 ${heroVideoReady ? 'opacity-100' : 'opacity-0'}`}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              poster={FESTIVAL_OCTUBRE.images.heroVideoPosterDesktop}
-              aria-hidden="true"
-              tabIndex={-1}
-              onCanPlay={() => setHeroVideoReady(true)}
-            >
-              <source media="(max-width: 640px)" src={FESTIVAL_OCTUBRE.heroVideo.mobile.webm} type="video/webm" />
-              <source media="(max-width: 640px)" src={FESTIVAL_OCTUBRE.heroVideo.mobile.mp4} type="video/mp4" />
-              <source src={FESTIVAL_OCTUBRE.heroVideo.desktop.webm} type="video/webm" />
-              <source src={FESTIVAL_OCTUBRE.heroVideo.desktop.mp4} type="video/mp4" />
-            </video>
-          )}
+          <img
+            src={FESTIVAL_OCTUBRE.images.hero}
+            alt="Paisaje de montaña de Pueblo Mágico inspirado en la gráfica de Raíz Sonora"
+            width="1672"
+            height="941"
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
           <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 38%, rgba(255,179,0,0.05) 0%, rgba(0,58,52,0.48) 44%, rgba(0,40,36,0.82) 100%)' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,58,52,0.62) 0%, rgba(0,58,52,0.24) 36%, rgba(0,44,39,0.92) 100%)' }} />
           <div className="absolute inset-0 mix-blend-color" style={{ background: 'linear-gradient(115deg, rgba(255,90,31,0.30), transparent 40%, rgba(228,0,103,0.24))' }} />
@@ -696,8 +628,7 @@ const FestivalOctubre: React.FC = () => {
           <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-14 pt-16 text-center md:px-10 md:pb-16 md:pt-16">
             <div className="mx-auto max-w-4xl">
               <div className="mb-6 flex flex-wrap justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/80">
-                <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/45 px-4 py-2 backdrop-blur-sm">Pueblo Mágico presenta</span>
-                <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/35 px-4 py-2 backdrop-blur-sm">Sábado 31 de octubre de 2026</span>
+                <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/35 px-4 py-2 backdrop-blur-sm">Sábado 31/10/2026</span>
                 <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/35 px-4 py-2 backdrop-blur-sm">Los Gigantes · Córdoba</span>
               </div>
               <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#FFD166] md:text-xs">Música electrónica · House · Trance · Tambores</p>

@@ -16,10 +16,7 @@ export const FESTIVAL_OCTUBRE = {
   description:
     'Raíz Sonora es un festival de música electrónica, house, trance, tambores, movimiento y naturaleza en Pueblo Mágico, Los Gigantes.',
   images: {
-    heroDesktop: '/uploads/atardeser/atardeser-hero-desktop.webp',
-    heroMobile: '/uploads/atardeser/atardeser-hero-mobile.webp',
-    heroVideoPosterDesktop: '/uploads/atardeser/atardeser-hero-video-poster-desktop-v2.webp',
-    heroVideoPosterMobile: '/uploads/atardeser/atardeser-hero-video-poster-mobile-v2.webp',
+    hero: '/uploads/atardeser/raiz-sonora-hero-v1.webp',
     pulse: '/uploads/atardeser/atardeser-dusk-wave-banner.webp',
     overlay: '/uploads/atardeser/atardeser-sun-wave-overlay-transparent.webp',
     concept: '/uploads/atardeser/movimiento.jpeg',
@@ -30,16 +27,6 @@ export const FESTIVAL_OCTUBRE = {
       { src: '/uploads/atardeser/mationix.jpg', alt: 'Mationix, artista de progressive tribal organic house' },
       { src: '/uploads/atardeser/baile-en-familia.jpeg', alt: 'Personas de distintas edades bailando al aire libre' },
     ],
-  },
-  heroVideo: {
-    desktop: {
-      webm: '/uploads/atardeser/atardeser-hero-video-desktop-v1.webm',
-      mp4: '/uploads/atardeser/atardeser-hero-video-desktop-v1.mp4',
-    },
-    mobile: {
-      webm: '/uploads/atardeser/atardeser-hero-video-mobile-v1.webm',
-      mp4: '/uploads/atardeser/atardeser-hero-video-mobile-v1.mp4',
-    },
   },
   contact: {
     general: whatsapp('¡Hola! Quiero recibir información sobre Raíz Sonora, la celebración del 31 de octubre de 2026 en Pueblo Mágico.'),
