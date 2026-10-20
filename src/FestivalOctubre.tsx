@@ -102,13 +102,13 @@ const navigation: PageNavigation = {
   pageEyebrow: '31 · 10 · 2026',
   pageTitle: 'Raíz Sonora · Pueblo Mágico',
   sections: [
-    { id: 'propuesta', label: 'La propuesta' },
-    { id: 'para-quien', label: 'Para quién es' },
-    { id: 'experiencias', label: 'Experiencias' },
     { id: 'lugar', label: 'El lugar' },
     { id: 'artistas', label: 'Artistas' },
     { id: 'temazcal', label: 'Temazcal' },
     { id: 'entradas', label: 'Entradas' },
+    { id: 'propuesta', label: 'La propuesta' },
+    { id: 'para-quien', label: 'Para quién es' },
+    { id: 'experiencias', label: 'Experiencias' },
     { id: 'equipo', label: 'Equipo' },
     { id: 'fin-de-semana', label: 'Fin de semana' },
     { id: 'preguntas', label: 'Preguntas' },
@@ -657,126 +657,9 @@ const FestivalOctubre: React.FC = () => {
               </div>
             </div>
           </div>
-          <a href="#propuesta" aria-label="Ir a la propuesta" className="absolute bottom-8 right-6 z-10 hidden h-12 w-12 items-center justify-center rounded-full border border-white/25 text-white/70 transition hover:bg-white/10 md:flex">
+          <a href="#lugar" aria-label="Ir al lugar" className="absolute bottom-8 right-6 z-10 hidden h-12 w-12 items-center justify-center rounded-full border border-white/25 text-white/70 transition hover:bg-white/10 md:flex">
             <ArrowDown size={18} aria-hidden="true" />
           </a>
-        </section>
-
-        <section id="propuesta" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 text-[#003630] md:px-10 md:py-28">
-          <TopographicLines className="pointer-events-none absolute -left-28 top-4 h-80 w-[38rem] text-[#E40067]/16" />
-          <SunRings className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] text-[#FF5A1F]/16" />
-          <div className="relative mx-auto max-w-5xl">
-            <div className="text-center" data-reveal>
-              <div className="mb-7 flex items-center justify-center gap-3">
-                {[{ Icon: Music2, color: '#FF5A1F' }, { Icon: Sun, color: '#FF9F1C' }, { Icon: UsersRound, color: '#E40067' }].map(({ Icon, color }, index) => (
-                  <span key={index} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#004B43]/10 bg-white/70 shadow-sm">
-                    <Icon size={17} color={color} aria-hidden="true" />
-                  </span>
-                ))}
-              </div>
-              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.34em] text-[#FF5A1F]">El festival</p>
-              <h2 className="mx-auto max-w-3xl text-4xl leading-[1.04] text-[#003630] serif-title md:text-6xl">Un pulso que nace en la montaña</h2>
-              <p className="mx-auto mt-7 max-w-2xl text-sm leading-relaxed text-[#003630]/65 md:text-base">
-                Raíz Sonora reúne música electrónica, house, trance y tambores con movimiento, naturaleza y comunidad. Un festival abierto para venir por el día o quedarse a vivir el fin de semana completo.
-              </p>
-            </div>
-
-            <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
-              {[
-                { Icon: Music2, title: 'Pulso electrónico', text: 'Cuatro artistas y ocho horas de house, trance, música electrónica y tambores.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
-                { Icon: Leaf, title: 'Naturaleza viva', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86] text-white' },
-                { Icon: UsersRound, title: 'Movimiento y conexión', text: 'Jam de AcroYoga, fogón y espacios para celebrar, jugar y conocer gente nueva.', shell: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067] text-white' },
-              ].map(({ Icon, title, text, shell, icon }) => (
-                <article key={title} className={`rounded-[1.75rem] border px-7 py-8 text-center shadow-[0_16px_40px_rgba(72,42,60,0.07)] ${shell}`}>
-                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${icon}`}>
-                    <Icon size={18} aria-hidden="true" />
-                  </span>
-                  <h3 className="mt-5 text-xl text-[#003630] serif-title">{title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[#003630]/60">{text}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-9 flex flex-wrap justify-center gap-2.5" data-reveal data-delay="2">
-              {['Abierto a toda la familia', 'Vení por el día', 'Quedate el finde', 'Buffet y barra disponibles'].map(item => (
-                <span key={item} className="rounded-full border border-[#004B43]/15 bg-white/65 px-4 py-2 text-[10px] font-semibold tracking-wide text-[#004B43]">{item}</span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <CelebrationMosaic />
-
-        <section id="para-quien" className="relative overflow-hidden px-6 py-20 md:px-10 md:py-28" style={{ background: 'linear-gradient(145deg, #FFFDF5 0%, #FFE8D6 52%, #FFD38E 150%)' }}>
-          <div className="pointer-events-none absolute -left-16 top-24 h-52 w-52 rounded-full bg-[#FF6A00]/12 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-16 bottom-16 h-64 w-64 rounded-full bg-[#E40067]/14 blur-3xl" aria-hidden="true" />
-          <TopographicLines className="pointer-events-none absolute -right-24 top-0 h-72 w-[34rem] text-[#FF5A1F]/12" />
-          <div className="relative mx-auto max-w-5xl">
-            <div className="mb-14 text-center" data-reveal>
-              <p className="mb-5 inline-block rounded-full bg-[#004B43] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">¿Para quién es?</p>
-              <h2 className="text-4xl leading-tight text-[#003630] serif-title md:text-5xl">Para quienes quieren celebrar distinto.<br /><span className="text-[#FF5A1F]">Y encontrarse de verdad.</span></h2>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#003630]/60">No necesitás experiencia previa ni venir con un grupo. Raíz Sonora está pensado para disfrutar la música, la naturaleza y el encuentro a tu propio ritmo.</p>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2" data-reveal data-delay="1">
-              {[
-                {
-                  Icon: Sparkles,
-                  title: 'Para venir como sos',
-                  text: 'Si querés salir de la rutina, bailar al aire libre, bajar un cambio o compartir un día diferente en la montaña, este encuentro es para vos.',
-                  items: ['Personas que vienen solas, en pareja o con amigos', 'Quienes buscan música y naturaleza sin formato rígido', 'Familias: niños y niñas son bienvenidos', 'Sin experiencia previa en las actividades'],
-                  tone: 'green',
-                },
-                {
-                  Icon: Leaf,
-                  title: 'Para elegir tu propio ritmo',
-                  text: 'Podés venir solamente el sábado o transformar la celebración en un fin de semana completo, con camping o habitación compartida.',
-                  items: ['Pase por el día para vivir la jornada central', 'Una o dos noches para quedarse en Pueblo Mágico', 'Actividades abiertas para elegir libremente', 'Temazcal opcional con inscripción y cupo propios'],
-                  tone: 'gold',
-                },
-              ].map(({ Icon, title, text, items, tone }) => (
-                <article key={title} className={`relative overflow-hidden rounded-[1.75rem] border p-8 text-left shadow-[0_16px_45px_rgba(72,42,60,0.08)] ${tone === 'green' ? 'border-[#008C86]/25 bg-[#E2F5EE]' : 'border-[#E40067]/25 bg-[#FFE3EF]'}`}>
-                  <div className={`absolute inset-x-0 top-0 h-1.5 ${tone === 'green' ? 'bg-[#008C86]' : 'bg-[#FF5A1F]'}`} aria-hidden="true" />
-                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${tone === 'green' ? 'bg-[#008C86] text-white' : 'bg-[#FF5A1F] text-white'}`}><Icon size={19} aria-hidden="true" /></span>
-                  <h3 className="mt-5 text-center text-xl font-bold text-[#003630]">{title}</h3>
-                  <p className="mx-auto mt-3 max-w-md text-center text-sm leading-relaxed text-[#003630]/60">{text}</p>
-                  <ul className="mx-auto mt-6 max-w-md space-y-2.5">
-                    {items.map(item => <li key={item} className="flex items-start gap-2.5 text-sm text-[#003630]/65"><span className="mt-1 shrink-0 text-[#FF5A1F]">◆</span>{item}</li>)}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="experiencias" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
-          <div className="pointer-events-none absolute left-[-6rem] top-[-5rem] h-72 w-72 rounded-full bg-[#E40067]/10 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute bottom-[-7rem] right-[-5rem] h-80 w-80 rounded-full bg-[#FF6A00]/12 blur-3xl" aria-hidden="true" />
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-14 text-center" data-reveal>
-              <Eyebrow>Qué vas a encontrar</Eyebrow>
-              <h2 className="text-4xl leading-tight serif-title md:text-5xl">Cada propuesta es una puerta.<br /><span className="text-[#FF5A1F]">Vos elegís cómo transitarla.</span></h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#003630]/60 md:text-base">Nada es obligatorio: son invitaciones abiertas para armar tu propia experiencia, en el momento y con la intensidad que quieras.</p>
-            </div>
-            <div className="grid gap-5 md:grid-cols-2" data-reveal data-delay="1">
-              {[
-                { Icon: Music2, color: '#C83C00', bg: 'bg-[#FFF0D5]', border: 'border-[#FF5A1F]/25', bar: 'bg-[#FF5A1F]', title: 'Música & movimiento', items: ['Cuatro artistas confirmados', 'Ocho horas de música electrónica', 'House, trance y tambores', 'Jam de AcroYoga abierto'] },
-                { Icon: Leaf, color: '#555945', bg: 'bg-[#E2F5EE]', border: 'border-[#008C86]/25', bar: 'bg-[#008C86]', title: 'Naturaleza & exploración', items: ['Río y senderos de montaña', 'Caminatas y espacios de descanso', 'Yoga y conexión con el cuerpo', 'Tiempo libre para habitar el lugar'] },
-                { Icon: Flame, color: '#773D57', bg: 'bg-[#FFE3EF]', border: 'border-[#E40067]/25', bar: 'bg-[#E40067]', title: 'Ritual & integración', items: ['Fogón y círculos para compartir', 'Conversaciones significativas y auténticas', 'Temazcal opcional el domingo', 'Espacios para bajar el ritmo e integrar'] },
-                { Icon: Sun, color: '#8B5A23', bg: 'bg-[#FFF1C7]', border: 'border-[#FF9F1C]/30', bar: 'bg-[#FF9F1C]', title: 'Gastronomía & comunidad', items: ['Buffet de comida artesanal todo el fin de semana', 'Barra de bebidas', 'Encuentro abierto a toda la familia', 'Opciones para venir por el día o quedarse'] },
-              ].map(({ Icon, color, bg, border, bar, title, items }) => (
-                <article key={title} className={`relative overflow-hidden rounded-[1.75rem] border p-7 text-left shadow-[0_14px_35px_rgba(31,41,34,0.06)] ${bg} ${border}`}>
-                  <span className={`absolute inset-x-0 top-0 h-1.5 ${bar}`} aria-hidden="true" />
-                  <div className="mb-5 flex items-center justify-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/75 shadow-sm" style={{ color }}><Icon size={18} aria-hidden="true" /></span>
-                    <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color }}>{title}</h3>
-                  </div>
-                  <ul className="mx-auto max-w-md space-y-3">
-                    {items.map(item => <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-[#16423D]/65"><span className="mt-1 shrink-0" style={{ color }}>◆</span>{item}</li>)}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section id="lugar" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 md:px-10 md:py-28">
@@ -894,6 +777,123 @@ const FestivalOctubre: React.FC = () => {
               </div>
             </div>
             <div className="mt-5 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm leading-relaxed text-[#16423D]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
+          </div>
+        </section>
+
+        <section id="propuesta" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 text-[#003630] md:px-10 md:py-28">
+          <TopographicLines className="pointer-events-none absolute -left-28 top-4 h-80 w-[38rem] text-[#E40067]/16" />
+          <SunRings className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] text-[#FF5A1F]/16" />
+          <div className="relative mx-auto max-w-5xl">
+            <div className="text-center" data-reveal>
+              <div className="mb-7 flex items-center justify-center gap-3">
+                {[{ Icon: Music2, color: '#FF5A1F' }, { Icon: Sun, color: '#FF9F1C' }, { Icon: UsersRound, color: '#E40067' }].map(({ Icon, color }, index) => (
+                  <span key={index} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#004B43]/10 bg-white/70 shadow-sm">
+                    <Icon size={17} color={color} aria-hidden="true" />
+                  </span>
+                ))}
+              </div>
+              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.34em] text-[#FF5A1F]">El festival</p>
+              <h2 className="mx-auto max-w-3xl text-4xl leading-[1.04] text-[#003630] serif-title md:text-6xl">Un pulso que nace en la montaña</h2>
+              <p className="mx-auto mt-7 max-w-2xl text-sm leading-relaxed text-[#003630]/65 md:text-base">
+                Raíz Sonora reúne música electrónica, house, trance y tambores con movimiento, naturaleza y comunidad. Un festival abierto para venir por el día o quedarse a vivir el fin de semana completo.
+              </p>
+            </div>
+
+            <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
+              {[
+                { Icon: Music2, title: 'Pulso electrónico', text: 'Cuatro artistas y ocho horas de house, trance, música electrónica y tambores.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
+                { Icon: Leaf, title: 'Naturaleza viva', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86] text-white' },
+                { Icon: UsersRound, title: 'Movimiento y conexión', text: 'Jam de AcroYoga, fogón y espacios para celebrar, jugar y conocer gente nueva.', shell: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067] text-white' },
+              ].map(({ Icon, title, text, shell, icon }) => (
+                <article key={title} className={`rounded-[1.75rem] border px-7 py-8 text-center shadow-[0_16px_40px_rgba(72,42,60,0.07)] ${shell}`}>
+                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${icon}`}>
+                    <Icon size={18} aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-5 text-xl text-[#003630] serif-title">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[#003630]/60">{text}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-9 flex flex-wrap justify-center gap-2.5" data-reveal data-delay="2">
+              {['Abierto a toda la familia', 'Vení por el día', 'Quedate el finde', 'Buffet y barra disponibles'].map(item => (
+                <span key={item} className="rounded-full border border-[#004B43]/15 bg-white/65 px-4 py-2 text-[10px] font-semibold tracking-wide text-[#004B43]">{item}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <CelebrationMosaic />
+
+        <section id="para-quien" className="relative overflow-hidden px-6 py-20 md:px-10 md:py-28" style={{ background: 'linear-gradient(145deg, #FFFDF5 0%, #FFE8D6 52%, #FFD38E 150%)' }}>
+          <div className="pointer-events-none absolute -left-16 top-24 h-52 w-52 rounded-full bg-[#FF6A00]/12 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-16 bottom-16 h-64 w-64 rounded-full bg-[#E40067]/14 blur-3xl" aria-hidden="true" />
+          <TopographicLines className="pointer-events-none absolute -right-24 top-0 h-72 w-[34rem] text-[#FF5A1F]/12" />
+          <div className="relative mx-auto max-w-5xl">
+            <div className="mb-14 text-center" data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#004B43] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">¿Para quién es?</p>
+              <h2 className="text-4xl leading-tight text-[#003630] serif-title md:text-5xl">Para quienes quieren celebrar distinto.<br /><span className="text-[#FF5A1F]">Y encontrarse de verdad.</span></h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#003630]/60">No necesitás experiencia previa ni venir con un grupo. Raíz Sonora está pensado para disfrutar la música, la naturaleza y el encuentro a tu propio ritmo.</p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2" data-reveal data-delay="1">
+              {[
+                {
+                  Icon: Sparkles,
+                  title: 'Para venir como sos',
+                  text: 'Si querés salir de la rutina, bailar al aire libre, bajar un cambio o compartir un día diferente en la montaña, este encuentro es para vos.',
+                  items: ['Personas que vienen solas, en pareja o con amigos', 'Quienes buscan música y naturaleza sin formato rígido', 'Familias: niños y niñas son bienvenidos', 'Sin experiencia previa en las actividades'],
+                  tone: 'green',
+                },
+                {
+                  Icon: Leaf,
+                  title: 'Para elegir tu propio ritmo',
+                  text: 'Podés venir solamente el sábado o transformar la celebración en un fin de semana completo, con camping o habitación compartida.',
+                  items: ['Pase por el día para vivir la jornada central', 'Una o dos noches para quedarse en Pueblo Mágico', 'Actividades abiertas para elegir libremente', 'Temazcal opcional con inscripción y cupo propios'],
+                  tone: 'gold',
+                },
+              ].map(({ Icon, title, text, items, tone }) => (
+                <article key={title} className={`relative overflow-hidden rounded-[1.75rem] border p-8 text-left shadow-[0_16px_45px_rgba(72,42,60,0.08)] ${tone === 'green' ? 'border-[#008C86]/25 bg-[#E2F5EE]' : 'border-[#E40067]/25 bg-[#FFE3EF]'}`}>
+                  <div className={`absolute inset-x-0 top-0 h-1.5 ${tone === 'green' ? 'bg-[#008C86]' : 'bg-[#FF5A1F]'}`} aria-hidden="true" />
+                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${tone === 'green' ? 'bg-[#008C86] text-white' : 'bg-[#FF5A1F] text-white'}`}><Icon size={19} aria-hidden="true" /></span>
+                  <h3 className="mt-5 text-center text-xl font-bold text-[#003630]">{title}</h3>
+                  <p className="mx-auto mt-3 max-w-md text-center text-sm leading-relaxed text-[#003630]/60">{text}</p>
+                  <ul className="mx-auto mt-6 max-w-md space-y-2.5">
+                    {items.map(item => <li key={item} className="flex items-start gap-2.5 text-sm text-[#003630]/65"><span className="mt-1 shrink-0 text-[#FF5A1F]">◆</span>{item}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="experiencias" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
+          <div className="pointer-events-none absolute left-[-6rem] top-[-5rem] h-72 w-72 rounded-full bg-[#E40067]/10 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute bottom-[-7rem] right-[-5rem] h-80 w-80 rounded-full bg-[#FF6A00]/12 blur-3xl" aria-hidden="true" />
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-14 text-center" data-reveal>
+              <Eyebrow>Qué vas a encontrar</Eyebrow>
+              <h2 className="text-4xl leading-tight serif-title md:text-5xl">Cada propuesta es una puerta.<br /><span className="text-[#FF5A1F]">Vos elegís cómo transitarla.</span></h2>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#003630]/60 md:text-base">Nada es obligatorio: son invitaciones abiertas para armar tu propia experiencia, en el momento y con la intensidad que quieras.</p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2" data-reveal data-delay="1">
+              {[
+                { Icon: Music2, color: '#C83C00', bg: 'bg-[#FFF0D5]', border: 'border-[#FF5A1F]/25', bar: 'bg-[#FF5A1F]', title: 'Música & movimiento', items: ['Cuatro artistas confirmados', 'Ocho horas de música electrónica', 'House, trance y tambores', 'Jam de AcroYoga abierto'] },
+                { Icon: Leaf, color: '#555945', bg: 'bg-[#E2F5EE]', border: 'border-[#008C86]/25', bar: 'bg-[#008C86]', title: 'Naturaleza & exploración', items: ['Río y senderos de montaña', 'Caminatas y espacios de descanso', 'Yoga y conexión con el cuerpo', 'Tiempo libre para habitar el lugar'] },
+                { Icon: Flame, color: '#773D57', bg: 'bg-[#FFE3EF]', border: 'border-[#E40067]/25', bar: 'bg-[#E40067]', title: 'Ritual & integración', items: ['Fogón y círculos para compartir', 'Conversaciones significativas y auténticas', 'Temazcal opcional el domingo', 'Espacios para bajar el ritmo e integrar'] },
+                { Icon: Sun, color: '#8B5A23', bg: 'bg-[#FFF1C7]', border: 'border-[#FF9F1C]/30', bar: 'bg-[#FF9F1C]', title: 'Gastronomía & comunidad', items: ['Buffet de comida artesanal todo el fin de semana', 'Barra de bebidas', 'Encuentro abierto a toda la familia', 'Opciones para venir por el día o quedarse'] },
+              ].map(({ Icon, color, bg, border, bar, title, items }) => (
+                <article key={title} className={`relative overflow-hidden rounded-[1.75rem] border p-7 text-left shadow-[0_14px_35px_rgba(31,41,34,0.06)] ${bg} ${border}`}>
+                  <span className={`absolute inset-x-0 top-0 h-1.5 ${bar}`} aria-hidden="true" />
+                  <div className="mb-5 flex items-center justify-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/75 shadow-sm" style={{ color }}><Icon size={18} aria-hidden="true" /></span>
+                    <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color }}>{title}</h3>
+                  </div>
+                  <ul className="mx-auto max-w-md space-y-3">
+                    {items.map(item => <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-[#16423D]/65"><span className="mt-1 shrink-0" style={{ color }}>◆</span>{item}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
