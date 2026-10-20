@@ -18,6 +18,8 @@ export const FESTIVAL_OCTUBRE = {
   images: {
     heroDesktop: '/uploads/atardeser/atardeser-hero-desktop.webp',
     heroMobile: '/uploads/atardeser/atardeser-hero-mobile.webp',
+    heroVideoPosterDesktop: '/uploads/atardeser/atardeser-hero-video-poster-desktop.webp',
+    heroVideoPosterMobile: '/uploads/atardeser/atardeser-hero-video-poster-mobile.webp',
     pulse: '/uploads/atardeser/atardeser-dusk-wave-banner.webp',
     overlay: '/uploads/atardeser/atardeser-sun-wave-overlay-transparent.webp',
     concept: '/uploads/atardeser/movimiento.jpeg',
@@ -28,6 +30,16 @@ export const FESTIVAL_OCTUBRE = {
       { src: '/uploads/atardeser/mationix.jpg', alt: 'Mationix, artista de progressive tribal organic house' },
       { src: '/uploads/atardeser/baile-en-familia.jpeg', alt: 'Personas de distintas edades bailando al aire libre' },
     ],
+  },
+  heroVideo: {
+    desktop: {
+      webm: '/uploads/atardeser/atardeser-hero-desktop.webm',
+      mp4: '/uploads/atardeser/atardeser-hero-desktop.mp4',
+    },
+    mobile: {
+      webm: '/uploads/atardeser/atardeser-hero-mobile.webm',
+      mp4: '/uploads/atardeser/atardeser-hero-mobile.mp4',
+    },
   },
   contact: {
     general: whatsapp('¡Hola! Quiero recibir información sobre AtardeSer, la celebración del 31 de octubre de 2026 en Pueblo Mágico.'),

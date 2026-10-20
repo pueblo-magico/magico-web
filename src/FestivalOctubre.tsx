@@ -496,6 +496,9 @@ const CelebrationMosaic = () => (
 
 const FestivalOctubre: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
+  const [heroVideoReady, setHeroVideoReady] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
   const artistRail = useHorizontalRail();
   const teamRail = useHorizontalRail();
   const accessRail = useHorizontalRail();
@@ -562,6 +565,48 @@ const FestivalOctubre: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    let activationTimer: number | undefined;
+
+    const updatePlaybackPreference = () => {
+      window.clearTimeout(activationTimer);
+      setHeroVideoReady(false);
+
+      if (reducedMotion.matches || connection?.saveData) {
+        setHeroVideoEnabled(false);
+        return;
+      }
+
+      activationTimer = window.setTimeout(() => setHeroVideoEnabled(true), 450);
+    };
+
+    updatePlaybackPreference();
+    reducedMotion.addEventListener('change', updatePlaybackPreference);
+
+    return () => {
+      window.clearTimeout(activationTimer);
+      reducedMotion.removeEventListener('change', updatePlaybackPreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video || !heroVideoEnabled) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        void video.play().catch(() => undefined);
+      } else {
+        video.pause();
+      }
+    }, { threshold: 0.05 });
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [heroVideoEnabled]);
+
   return (
     <div className="overflow-x-hidden bg-[#FCFAF5] text-[#1F2922]">
       <Header subNavigation={<PageSectionNav navigation={navigation} minimumSections={5} />} />
@@ -569,16 +614,37 @@ const FestivalOctubre: React.FC = () => {
       <main>
         <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-[#1B1520]">
           <picture className="absolute inset-0">
-            <source media="(max-width: 640px)" srcSet={img(FESTIVAL_OCTUBRE.images.heroMobile, 1000)} />
+            <source media="(max-width: 640px)" srcSet={FESTIVAL_OCTUBRE.images.heroVideoPosterMobile} />
             <img
-              src={img(FESTIVAL_OCTUBRE.images.heroDesktop, 1900)}
-              alt="Atardecer compartido en las sierras de Pueblo Mágico"
-              width="1900"
-              height="1200"
-              className="h-full w-full object-cover object-center saturate-[1.14] max-sm:object-[57%_center]"
+              src={FESTIVAL_OCTUBRE.images.heroVideoPosterDesktop}
+              alt="Personas de distintas edades bailando en la montaña de Pueblo Mágico"
+              width="1600"
+              height="900"
+              className="h-full w-full object-cover object-center"
             />
           </picture>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(27,21,32,0.38) 0%, rgba(72,42,60,0.5) 42%, rgba(27,21,32,0.94) 100%)' }} />
+          {heroVideoEnabled && (
+            <video
+              ref={heroVideoRef}
+              className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 ${heroVideoReady ? 'opacity-100' : 'opacity-0'}`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={FESTIVAL_OCTUBRE.images.heroVideoPosterDesktop}
+              aria-hidden="true"
+              tabIndex={-1}
+              onCanPlay={() => setHeroVideoReady(true)}
+            >
+              <source media="(max-width: 640px)" src={FESTIVAL_OCTUBRE.heroVideo.mobile.webm} type="video/webm" />
+              <source media="(max-width: 640px)" src={FESTIVAL_OCTUBRE.heroVideo.mobile.mp4} type="video/mp4" />
+              <source src={FESTIVAL_OCTUBRE.heroVideo.desktop.webm} type="video/webm" />
+              <source src={FESTIVAL_OCTUBRE.heroVideo.desktop.mp4} type="video/mp4" />
+            </video>
+          )}
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 46%, rgba(11,27,18,0.56) 0%, rgba(11,27,18,0.64) 42%, rgba(11,27,18,0.78) 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(11,27,18,0.72) 0%, rgba(27,21,32,0.22) 38%, rgba(27,21,32,0.9) 100%)' }} />
           <div className="absolute inset-0 mix-blend-color" style={{ background: 'linear-gradient(115deg, rgba(195,93,60,0.28), transparent 42%, rgba(239,90,47,0.24))' }} />
           <div className="absolute inset-x-0 top-0 h-40" style={{ background: 'linear-gradient(to bottom, rgba(27,21,32,0.74), transparent)' }} />
           <div className="pointer-events-none absolute -left-20 top-[28%] h-72 w-72 rounded-full bg-[#EF5A2F]/25 blur-[90px]" aria-hidden="true" />
