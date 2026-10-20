@@ -118,11 +118,11 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/sunset-y-rio',
   },
   {
-    path: '/festival-atardeser',
+    path: '/festival-RAÍZ-SONORA',
     title: 'Raíz Sonora · 31 de octubre | Pueblo Mágico',
     description: 'Cuatro artistas y ocho horas de música electrónica, house, trance y tambores, con Jam de AcroYoga, naturaleza y encuentro en Los Gigantes.',
     image: 'https://experienciamagico.com/uploads/atardeser/raiz-sonora-flyer.webp',
-    canonical: 'https://experienciamagico.com/festival-atardeser',
+    canonical: 'https://experienciamagico.com/festival-RAÍZ-SONORA',
   },
   {
     path: '/empresas',
