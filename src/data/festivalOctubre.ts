@@ -6,7 +6,7 @@ const whatsapp = (message: string) =>
 export const FESTIVAL_OCTUBRE = {
   name: 'AtardeSer',
   nameStatus: 'Celebración de música y naturaleza',
-  tagline: 'Un encuentro para celebrar en el corazón de la montaña',
+  tagline: 'Donde el día se transforma en ritual',
   dateLabel: 'Del viernes 30 de octubre al domingo 1 de noviembre de 2026',
   startDate: '2026-10-30',
   endDate: '2026-11-01',
@@ -16,11 +16,13 @@ export const FESTIVAL_OCTUBRE = {
   description:
     'AtardeSer es una celebración de música en vivo, DJs, naturaleza y experiencias para compartir en familia en las Sierras de Córdoba.',
   images: {
-    heroDesktop: '/uploads/atardeser/celebracion-grupal.jpeg',
-    heroMobile: '/uploads/atardeser/baile-en-familia.jpeg',
+    heroDesktop: '/uploads/atardeser/atardeser-hero-desktop.webp',
+    heroMobile: '/uploads/atardeser/atardeser-hero-mobile.webp',
+    pulse: '/uploads/atardeser/atardeser-dusk-wave-banner.webp',
+    overlay: '/uploads/atardeser/atardeser-sun-wave-overlay-transparent.webp',
     concept: '/uploads/atardeser/movimiento.jpeg',
     place: '/uploads/dji_0074.webp',
-    og: '/uploads/atardeser/celebracion-grupal.jpeg',
+    og: '/uploads/atardeser/atardeser-og.jpg',
     gallery: [
       { src: '/uploads/atardeser/celebracion-grupal.jpeg', alt: 'Celebración con música y baile en Pueblo Mágico' },
       { src: '/uploads/atardeser/mationix.jpg', alt: 'Mationix, artista de progressive tribal organic house' },
