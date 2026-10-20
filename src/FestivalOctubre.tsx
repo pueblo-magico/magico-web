@@ -430,6 +430,17 @@ const CelebrationMosaic = () => (
 
 const FestivalOctubre: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [showDesktopHeroEffects, setShowDesktopHeroEffects] = useState(() => (
+    typeof window === 'undefined' || window.matchMedia('(min-width: 768px)').matches
+  ));
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const handleChange = (event: MediaQueryListEvent) => setShowDesktopHeroEffects(event.matches);
+    setShowDesktopHeroEffects(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -494,7 +505,7 @@ const FestivalOctubre: React.FC = () => {
   }, []);
 
   return (
-    <div className="overflow-x-hidden bg-[#FFFDF5] text-[#16423D]">
+    <div className="festival-page overflow-x-hidden bg-[#FFFDF5] text-[#16423D]">
       <Header subNavigation={<PageSectionNav navigation={navigation} minimumSections={5} />} />
 
       <main>
@@ -508,17 +519,21 @@ const FestivalOctubre: React.FC = () => {
           />
           <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 38%, rgba(255,179,0,0.05) 0%, rgba(0,58,52,0.48) 44%, rgba(0,40,36,0.82) 100%)' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,58,52,0.62) 0%, rgba(0,58,52,0.24) 36%, rgba(0,44,39,0.92) 100%)' }} />
-          <div className="absolute inset-0 mix-blend-color" style={{ background: 'linear-gradient(115deg, rgba(255,90,31,0.30), transparent 40%, rgba(228,0,103,0.24))' }} />
+          <div className={`absolute inset-0 ${showDesktopHeroEffects ? 'mix-blend-color' : ''}`} style={{ background: 'linear-gradient(115deg, rgba(255,90,31,0.30), transparent 40%, rgba(228,0,103,0.24))' }} />
           <div className="absolute inset-x-0 top-0 h-40" style={{ background: 'linear-gradient(to bottom, rgba(0,44,39,0.82), transparent)' }} />
-          <div className="pointer-events-none absolute -left-20 top-[28%] h-72 w-72 rounded-full bg-[#FF6A00]/25 blur-[90px]" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-16 bottom-[12%] h-80 w-80 rounded-full bg-[#FFB300]/22 blur-[100px]" aria-hidden="true" />
-          <img
-            src={FESTIVAL_OCTUBRE.images.overlay}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 mix-blend-screen"
-          />
-          <FestivalBurst className="pointer-events-none absolute left-1/2 top-[9%] w-[42rem] max-w-[120vw] -translate-x-1/2 opacity-55 mix-blend-screen md:top-[5%] md:w-[54rem]" />
+          {showDesktopHeroEffects && (
+            <>
+              <div className="pointer-events-none absolute -left-20 top-[28%] h-72 w-72 rounded-full bg-[#FF6A00]/25 blur-[90px]" aria-hidden="true" />
+              <div className="pointer-events-none absolute -right-16 bottom-[12%] h-80 w-80 rounded-full bg-[#FFB300]/22 blur-[100px]" aria-hidden="true" />
+              <img
+                src={FESTIVAL_OCTUBRE.images.overlay}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20 mix-blend-screen"
+              />
+            </>
+          )}
+          <FestivalBurst className={`pointer-events-none absolute left-1/2 top-[9%] w-[42rem] max-w-[120vw] -translate-x-1/2 opacity-55 md:top-[5%] md:w-[54rem] ${showDesktopHeroEffects ? 'mix-blend-screen' : ''}`} />
 
           <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-14 pt-16 text-center md:px-10 md:pb-16 md:pt-16">
             <div className="mx-auto max-w-4xl">
