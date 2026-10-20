@@ -83,12 +83,12 @@ const navigation: PageNavigation = {
     { id: 'propuesta', label: 'La propuesta' },
     { id: 'para-quien', label: 'Para quién es' },
     { id: 'experiencias', label: 'Experiencias' },
+    { id: 'lugar', label: 'El lugar' },
     { id: 'artistas', label: 'Artistas' },
+    { id: 'temazcal', label: 'Temazcal' },
+    { id: 'entradas', label: 'Entradas' },
     { id: 'equipo', label: 'Equipo' },
     { id: 'fin-de-semana', label: 'Fin de semana' },
-    { id: 'entradas', label: 'Entradas' },
-    { id: 'lugar', label: 'El lugar' },
-    { id: 'temazcal', label: 'Temazcal' },
     { id: 'preguntas', label: 'Preguntas' },
   ],
 };
@@ -323,6 +323,16 @@ const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: nu
     </div>
     <p className={`text-center text-[10px] font-bold uppercase tracking-[0.2em] ${option.featured ? 'text-[#F4C48B]' : 'text-[#C35D3C]'}`}>{option.eyebrow}</p>
     <h3 className="mt-3 text-center text-3xl leading-[1.05] serif-title md:min-h-[5rem]">{option.title}</h3>
+    {'image' in option && option.image && (
+      <img
+        src={img(option.image, 760)}
+        alt={option.imageAlt}
+        loading="lazy"
+        width="760"
+        height="430"
+        className="mt-5 aspect-[16/9] w-full rounded-2xl object-cover shadow-[0_14px_28px_rgba(31,41,34,0.12)]"
+      />
+    )}
     <p className={`mt-4 text-center text-sm leading-relaxed md:min-h-[5rem] ${option.featured ? 'text-white/70' : 'text-[#1F2922]/65'}`}>{option.description}</p>
     <div className={`my-6 border-y py-6 text-center ${option.featured ? 'border-white/10' : 'border-[#123B2D]/10'}`}>
       <p className={`mx-auto mb-4 inline-flex rounded-full px-3 py-1.5 text-[10px] font-bold whitespace-nowrap ${option.featured ? 'bg-white/10 text-[#F4C48B]' : 'bg-white/65 text-[#482A3C]'}`}>💳 {option.installments}</p>
@@ -423,14 +433,18 @@ const useHorizontalRail = () => {
     const items = Array.from(rail.querySelectorAll<HTMLElement>('[data-rail-item]'));
     if (!items.length) return;
 
-    const viewportCenter = rail.scrollLeft + rail.clientWidth / 2;
-    const target = direction === 1
-      ? items.find(item => item.offsetLeft + item.clientWidth / 2 > viewportCenter + 8) ?? items.at(-1)
-      : [...items].reverse().find(item => item.offsetLeft + item.clientWidth / 2 < viewportCenter - 8) ?? items[0];
+    const maximumScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    const firstOffset = items[0].offsetLeft;
+    const snapPositions = items.map(item => Math.min(maximumScroll, Math.max(0, item.offsetLeft - firstOffset)));
+    const currentIndex = snapPositions.reduce((closestIndex, position, index) => (
+      Math.abs(position - rail.scrollLeft) < Math.abs(snapPositions[closestIndex] - rail.scrollLeft)
+        ? index
+        : closestIndex
+    ), 0);
+    const targetIndex = Math.min(items.length - 1, Math.max(0, currentIndex + direction));
 
-    if (!target) return;
     rail.scrollTo({
-      left: target.offsetLeft - (rail.clientWidth - target.clientWidth) / 2,
+      left: snapPositions[targetIndex],
       behavior: 'smooth',
     });
   };
@@ -801,6 +815,32 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
+        <section id="lugar" className="relative overflow-hidden bg-[#F5F0E6] px-6 py-20 md:px-10 md:py-28">
+          <TopographicLines className="pointer-events-none absolute -left-20 bottom-0 h-72 w-[36rem] text-[#656853]/14" />
+          <div className="mx-auto max-w-6xl text-center">
+            <div className="mx-auto max-w-3xl" data-reveal>
+              <Eyebrow>El lugar</Eyebrow>
+              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico,<br />Los Gigantes.</h2>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1F2922]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone AtardeSer: naturaleza, comunidad y presencia.</p>
+              <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left text-sm text-[#1F2922]/65 sm:grid-cols-2">
+                {['A 90 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón'].map(item => (
+                  <li key={item} className="flex items-start gap-3"><Check size={16} className="mt-0.5 shrink-0 text-[#B85A3D]" aria-hidden="true" />{item}</li>
+                ))}
+              </ul>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
+              </div>
+              <div className="mt-8"><FestivalButton href="/">Conocer Pueblo Mágico</FestivalButton></div>
+            </div>
+            <div className="mt-12 grid grid-cols-2 gap-3" data-reveal data-delay="1">
+              <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
+              <img src={img('/uploads/atardeser/familias.jpeg', 700)} alt="Familias compartiendo en Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+              <img src={img('/uploads/atardeser/ninez.jpeg', 700)} alt="Niños y adultos celebrando al aire libre" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+            </div>
+          </div>
+        </section>
+
         <section id="artistas" className="relative overflow-hidden bg-[#1B1520] px-6 py-20 text-white md:px-10 md:py-28">
           <img
             src={FESTIVAL_OCTUBRE.images.pulse}
@@ -836,6 +876,60 @@ const FestivalOctubre: React.FC = () => {
               </div>
             </div>
             <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 text-center text-sm text-white/55">La programación horaria completa se publicará en las redes de Pueblo Mágico.</div>
+          </div>
+        </section>
+
+        <section id="temazcal" className="relative overflow-hidden bg-[#1B1520] px-6 py-20 text-white md:px-10 md:py-28">
+          <SunRings className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] text-[#EF5A2F]/18" />
+          <div className="mx-auto max-w-5xl text-center">
+            <div data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#C35D3C] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">Ceremonia del domingo · Cupo limitado</p>
+              <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-5xl">¿Qué es el Temazcal?</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/65 md:text-lg">Una ceremonia ancestral de calor, vapor y encuentro que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
+            </div>
+            <div className="mt-12 overflow-hidden rounded-[2rem] border border-[#F4C48B]/20 bg-[#2A1D2A]" data-reveal data-delay="1">
+              <img src={img('/uploads/temazcal.webp', 1400)} alt="Ceremonia de Temazcal en Pueblo Mágico" loading="lazy" width="1400" height="900" className="aspect-[16/8] w-full object-cover" />
+              <div className="mx-auto max-w-3xl px-6 py-8 md:px-10">
+                <p className="text-sm leading-relaxed text-white/65">La participación es opcional, requiere inscripción previa y tiene un valor adicional. Si estás embarazada o tenés una condición cardíaca, respiratoria o de presión, consultanos antes para evaluar si esta experiencia es adecuada para vos.</p>
+                <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#F4C48B]/35 px-5 py-2.5 text-sm font-semibold text-[#F4C48B] transition hover:bg-[#EF5A2F] hover:text-white"><MessageCircle size={16} aria-hidden="true" />Consultar por WhatsApp</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="entradas" className="relative overflow-hidden bg-[#FCF8EF] px-6 py-20 md:px-10 md:py-28">
+          <SunRings className="pointer-events-none absolute -left-40 -top-36 h-[32rem] w-[32rem] text-[#EF5A2F]/11" />
+          <TopographicLines className="pointer-events-none absolute -bottom-12 -right-20 h-72 w-[36rem] text-[#7C596E]/12" />
+          <div className="relative mx-auto max-w-7xl">
+            <div className="mx-auto mb-10 max-w-3xl text-center md:mb-12" data-reveal>
+              <Eyebrow>Modalidades de acceso</Eyebrow>
+              <h2 className="text-4xl serif-title md:text-6xl">Elegí cómo sumarte.</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60">Vení por el día o elegí una o dos noches en camping o habitación compartida. Todos los tickets con alojamiento incluyen desayuno.</p>
+              <p className="mt-4 text-sm font-bold text-[#C35D3C]">✨ pagá en 3 cuotas sin interés</p>
+            </div>
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <p className="max-w-lg text-xs leading-relaxed text-[#1F2922]/55 md:text-sm">
+                <span className="font-semibold md:hidden">Empezá por Pase por el Día y usá las flechas para comparar.</span>
+                <span className="hidden md:inline">Cinco opciones para comparar con calma: pase por el día, camping o habitación compartida.</span>
+              </p>
+              <RailControls
+                label="Controles de modalidades"
+                canGoBack={accessRail.canGoBack}
+                canGoForward={accessRail.canGoForward}
+                onBack={() => accessRail.scroll(-1)}
+                onForward={() => accessRail.scroll(1)}
+              />
+            </div>
+            <div ref={accessRail.ref} id="festival-access-options" className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-mandatory scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
+              <div className="flex items-stretch gap-5">
+                {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => (
+                  <div key={option.title} data-rail-item className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-center md:w-[320px] md:snap-start lg:w-[330px] xl:w-[340px]">
+                    <AccessCard option={option} index={index} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-5 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm leading-relaxed text-[#1F2922]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
           </div>
         </section>
 
@@ -899,86 +993,6 @@ const FestivalOctubre: React.FC = () => {
                   <p className={`mt-4 text-sm leading-relaxed ${featured ? 'text-white/75' : 'text-[#1F2922]/60'}`}>{description}</p>
                 </article>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="entradas" className="relative overflow-hidden bg-[#FCF8EF] px-6 py-20 md:px-10 md:py-28">
-          <SunRings className="pointer-events-none absolute -left-40 -top-36 h-[32rem] w-[32rem] text-[#EF5A2F]/11" />
-          <TopographicLines className="pointer-events-none absolute -bottom-12 -right-20 h-72 w-[36rem] text-[#7C596E]/12" />
-          <div className="relative mx-auto max-w-7xl">
-            <div className="mx-auto mb-10 max-w-3xl text-center md:mb-12" data-reveal>
-              <Eyebrow>Modalidades de acceso</Eyebrow>
-              <h2 className="text-4xl serif-title md:text-6xl">Elegí cómo sumarte.</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#1F2922]/60">Vení por el día o elegí una o dos noches en camping o habitación compartida. Todos los tickets con alojamiento incluyen desayuno.</p>
-              <p className="mt-4 text-sm font-bold text-[#C35D3C]">✨ pagá en 3 cuotas sin interés</p>
-            </div>
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <p className="max-w-lg text-xs leading-relaxed text-[#1F2922]/55 md:text-sm">
-                <span className="font-semibold md:hidden">Empezá por Pase por el Día y usá las flechas para comparar.</span>
-                <span className="hidden md:inline">Cinco opciones para comparar con calma: pase por el día, camping o habitación compartida.</span>
-              </p>
-              <RailControls
-                label="Controles de modalidades"
-                canGoBack={accessRail.canGoBack}
-                canGoForward={accessRail.canGoForward}
-                onBack={() => accessRail.scroll(-1)}
-                onForward={() => accessRail.scroll(1)}
-              />
-            </div>
-            <div ref={accessRail.ref} id="festival-access-options" className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-mandatory scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
-              <div className="flex items-stretch gap-5">
-                {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => (
-                  <div key={option.title} data-rail-item className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-center md:w-[320px] md:snap-start lg:w-[330px] xl:w-[340px]">
-                    <AccessCard option={option} index={index} />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="mt-5 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm leading-relaxed text-[#1F2922]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
-          </div>
-        </section>
-
-        <section id="lugar" className="relative overflow-hidden bg-[#F5F0E6] px-6 py-20 md:px-10 md:py-28">
-          <TopographicLines className="pointer-events-none absolute -left-20 bottom-0 h-72 w-[36rem] text-[#656853]/14" />
-          <div className="mx-auto max-w-6xl text-center">
-            <div className="mx-auto max-w-3xl" data-reveal>
-              <Eyebrow>El lugar</Eyebrow>
-              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico,<br />Los Gigantes.</h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1F2922]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone AtardeSer: naturaleza, comunidad y presencia.</p>
-              <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left text-sm text-[#1F2922]/65 sm:grid-cols-2">
-                {['A 90 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón'].map(item => (
-                  <li key={item} className="flex items-start gap-3"><Check size={16} className="mt-0.5 shrink-0 text-[#B85A3D]" aria-hidden="true" />{item}</li>
-                ))}
-              </ul>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
-              </div>
-              <div className="mt-8"><FestivalButton href="/">Conocer Pueblo Mágico</FestivalButton></div>
-            </div>
-            <div className="mt-12 grid grid-cols-2 gap-3" data-reveal data-delay="1">
-              <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
-              <img src={img('/uploads/atardeser/familias.jpeg', 700)} alt="Familias compartiendo en Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
-              <img src={img('/uploads/atardeser/ninez.jpeg', 700)} alt="Niños y adultos celebrando al aire libre" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
-            </div>
-          </div>
-        </section>
-
-        <section id="temazcal" className="relative overflow-hidden bg-[#1B1520] px-6 py-20 text-white md:px-10 md:py-28">
-          <SunRings className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] text-[#EF5A2F]/18" />
-          <div className="mx-auto max-w-5xl text-center">
-            <div data-reveal>
-              <p className="mb-5 inline-block rounded-full bg-[#C35D3C] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">Ceremonia del domingo · Cupo limitado</p>
-              <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-5xl">¿Qué es el Temazcal?</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/65 md:text-lg">Una ceremonia ancestral de calor, vapor y encuentro que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
-            </div>
-            <div className="mt-12 overflow-hidden rounded-[2rem] border border-[#F4C48B]/20 bg-[#2A1D2A]" data-reveal data-delay="1">
-              <img src={img('/uploads/temazcal.webp', 1400)} alt="Ceremonia de Temazcal en Pueblo Mágico" loading="lazy" width="1400" height="900" className="aspect-[16/8] w-full object-cover" />
-              <div className="mx-auto max-w-3xl px-6 py-8 md:px-10">
-                <p className="text-sm leading-relaxed text-white/65">La participación es opcional, requiere inscripción previa y tiene un valor adicional. Si estás embarazada o tenés una condición cardíaca, respiratoria o de presión, consultanos antes para evaluar si esta experiencia es adecuada para vos.</p>
-                <a href={FESTIVAL_OCTUBRE.contact.general} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#F4C48B]/35 px-5 py-2.5 text-sm font-semibold text-[#F4C48B] transition hover:bg-[#EF5A2F] hover:text-white"><MessageCircle size={16} aria-hidden="true" />Consultar por WhatsApp</a>
-              </div>
             </div>
           </div>
         </section>
