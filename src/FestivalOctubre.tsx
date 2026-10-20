@@ -476,24 +476,24 @@ const useHorizontalRail = () => {
 
 const celebrationMoments = [
   {
-    src: '/uploads/atardeser/movimiento.jpeg',
-    alt: 'Baile libre durante una celebración en Pueblo Mágico',
-    label: 'Movimiento libre',
+    src: '/uploads/atardeser/celebracion-grupal.jpeg',
+    alt: 'Grupo de personas bailando y celebrando al aire libre en Pueblo Mágico',
+    label: 'Comunidad en movimiento',
   },
   {
-    src: '/uploads/atardeser/mati-en-magico.jpeg',
-    alt: 'Música y encuentro durante una celebración en Pueblo Mágico',
-    label: 'Música que reúne',
+    src: '/uploads/atardeser/festival-dancing-sunset-philipp.webp',
+    alt: 'Grupo diverso bailando al aire libre durante el atardecer',
+    label: 'Bailar al aire libre',
   },
   {
-    src: '/uploads/atardeser/baile-en-familia.jpeg',
-    alt: 'Personas de distintas edades bailando al aire libre',
-    label: 'Celebrar juntos',
+    src: '/uploads/reforestacion/jornada-comunidad.jpeg',
+    alt: 'Grupo de personas compartiendo una jornada en la naturaleza de Los Gigantes',
+    label: 'Naturaleza compartida',
   },
   {
-    src: '/uploads/atardeser/ninez.jpeg',
-    alt: 'Niños y adultos compartiendo una celebración al aire libre',
-    label: 'Toda la familia',
+    src: '/uploads/pachamama-fogon-grupo-cielo.webp',
+    alt: 'Grupo reunido alrededor del fogón bajo el cielo estrellado',
+    label: 'Fogón bajo las estrellas',
   },
 ] as const;
 
@@ -635,7 +635,7 @@ const FestivalOctubre: React.FC = () => {
               <h1 className="text-[4.25rem] leading-[0.76] tracking-[-0.065em] text-[#FFF8EA] [text-shadow:0_8px_35px_rgba(0,30,27,.55)] serif-title sm:text-8xl md:text-9xl lg:text-[9.5rem]"><span className="block">RAÍZ</span><span className="block">SONORA</span></h1>
               <p className="mx-auto mt-6 text-xl leading-tight text-[#FFD166] serif-title md:text-3xl">Movimiento · conexión · naturaleza · montaña</p>
               <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/80 md:text-lg">
-                Cuatro artistas y ocho horas de música para bailar en el corazón de la montaña. Sumate al Jam de AcroYoga, compartí el fogón y elegí vivir el día o quedarte durante todo el fin de semana.
+                Una tribu de artistas y un día entero de música para bailar en el corazón de la montaña. Sumate al Jam de AcroYoga, compartí el fogón y elegí vivir el día o quedarte durante todo el fin de semana.
               </p>
               <div className="mx-auto mt-5 flex max-w-3xl flex-wrap justify-center gap-2 text-[9px] font-bold uppercase tracking-[0.16em]">
                 {[
@@ -682,8 +682,8 @@ const FestivalOctubre: React.FC = () => {
             </div>
             <div className="mt-12 grid grid-cols-2 gap-3" data-reveal data-delay="1">
               <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
-              <img src={img('/uploads/atardeser/familias.jpeg', 700)} alt="Familias compartiendo en Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
-              <img src={img('/uploads/atardeser/ninez.jpeg', 700)} alt="Niños y adultos celebrando al aire libre" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+              <img src={img('/uploads/domos_2.jpg', 700)} alt="Domos geodésicos entre las piedras y la vegetación de Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+              <img src={img('/uploads/flyfishing-refugio-exterior.jpg', 700)} alt="Frente del Refugio de Piedra integrado al paisaje de montaña" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
             </div>
           </div>
         </section>
