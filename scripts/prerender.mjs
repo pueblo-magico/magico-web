@@ -119,9 +119,9 @@ export const ROUTES = [
   },
   {
     path: '/festival-atardeser',
-    title: 'Música, naturaleza y encuentro · 31 de octubre | Pueblo Mágico',
-    description: 'Un día para cambiar de ritmo: electrónica orgánica, música en vivo, naturaleza y experiencias para compartir en las Sierras de Córdoba.',
-    image: 'https://experienciamagico.com/uploads/sunset-rio-og.jpg',
+    title: 'Raíz Sonora · 31 de octubre | Pueblo Mágico',
+    description: 'Cuatro artistas y ocho horas de música electrónica, house, trance y tambores, con Jam de AcroYoga, naturaleza y encuentro en Los Gigantes.',
+    image: 'https://experienciamagico.com/uploads/atardeser/raiz-sonora-flyer.webp',
     canonical: 'https://experienciamagico.com/festival-atardeser',
   },
   {
