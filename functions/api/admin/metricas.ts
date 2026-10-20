@@ -11,12 +11,12 @@
 // rol autenticado puede verlo (son datos agregados, no reservas
 // individuales), igual que el resto de la pestaña Métricas.
 
-import { requireAuth } from '../../_lib/authGuard';
+import { requirePermission } from '../../_lib/authGuard';
 
 const FECHA_DESDE = '2026-08-06';
 
 export async function onRequestGet({ request, env }: any) {
-  const auth = await requireAuth(request, env);
+  const auth = await requirePermission(request, env, 'metricas.leer');
   if (auth instanceof Response) return auth;
 
   const { results } = await env.DB

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { WA_CICLO_VITAL_FEMENINO } from '../data/config';
+import { RESERVATION_START_PATH } from '../data/config';
 import { RETREATS_DATA } from '../data/retreats';
 
 const CicloVitalFemeninoHero: React.FC = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const MSG = encodeURIComponent(RETREATS_DATA.cicloVitalFemenino.message);
 
   useEffect(() => {
     const timer = setTimeout(() => setVideoLoaded(true), 100);
@@ -76,9 +75,7 @@ const CicloVitalFemeninoHero: React.FC = () => {
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-5 justify-center items-center w-full" data-reveal data-delay="3">
           <a
-            href={`https://wa.me/${WA_CICLO_VITAL_FEMENINO}?text=${MSG}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={RESERVATION_START_PATH}
             className="btn-gold min-w-[220px] shadow-2xl shadow-gold/20"
           >
             Reservar mi lugar

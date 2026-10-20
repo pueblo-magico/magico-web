@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { CheckIcon, AirplaneTiltIcon, WhatsappLogoIcon, ChatsIcon, CurrencyDollarIcon, SealCheckIcon } from '@phosphor-icons/react';
-import { WA_VUELO_CONDOR } from '../data/config';
+import { RESERVATION_START_PATH } from '../data/config';
 import { RETREATS_DATA } from '../data/retreats';
 
 const STEPS = [
@@ -14,8 +14,6 @@ const STEPS = [
 const VueloDelCondorInversion: React.FC = () => {
   const { t } = useLanguage();
   const inv = t.vuelo_condor.inversion;
-  const MSG_VUELO = encodeURIComponent(RETREATS_DATA.vueloDelCondor.message);
-  const WA_HREF = `https://wa.me/${WA_VUELO_CONDOR}?text=${MSG_VUELO}`;
 
   return (
     <section
@@ -102,12 +100,10 @@ const VueloDelCondorInversion: React.FC = () => {
                 />
 
                 <a
-                  href={WA_HREF}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={RESERVATION_START_PATH}
                   className="btn-gold w-full flex items-center justify-center gap-2 py-4 text-sm"
                 >
-                  <WhatsappLogoIcon weight="fill" className="w-4 h-4" />
+                  <SealCheckIcon weight="fill" className="w-4 h-4" />
                   {inv.btn}
                 </a>
 

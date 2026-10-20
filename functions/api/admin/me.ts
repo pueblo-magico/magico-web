@@ -2,14 +2,17 @@
 // frontend lo llama al montar para decidir si muestra el login o el
 // dashboard, sin disparar una carga completa de datos primero.
 
-import { requireAuth } from '../../_lib/authGuard';
+import { requireAuth } from '../../_lib/authGuard.ts';
+import { observarSolicitud } from '../../_interfaces/http/observability.ts';
 
 export async function onRequestGet({ request, env }: any) {
-  const auth = await requireAuth(request, env);
-  if (auth instanceof Response) return auth;
+  return observarSolicitud(request, 'admin.session.read', async () => {
+    const auth = await requireAuth(request, env);
+    if (auth instanceof Response) return auth;
 
-  return new Response(JSON.stringify({ email: auth.email, rol: auth.rol }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({ email: auth.email, rol: auth.rol }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   });
 }

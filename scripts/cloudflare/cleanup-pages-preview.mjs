@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url';
 
 const API_BASE_URL = 'https://api.cloudflare.com/client/v4';
-const PAGE_SIZE = 100;
+const MAX_PAGES = 1000;
 
 function requireValue(value, name) {
   if (!value) {
@@ -42,6 +42,28 @@ function deploymentPath(accountId, projectName) {
   ].join('/');
 }
 
+function positiveInteger(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
+function nextPage(resultInfo, requestedPage, resultCount) {
+  const currentPage = positiveInteger(resultInfo?.page) ?? requestedPage;
+  const totalPages = positiveInteger(resultInfo?.total_pages);
+  if (totalPages !== null) return currentPage < totalPages ? currentPage + 1 : null;
+
+  const perPage = positiveInteger(resultInfo?.per_page);
+  const totalCount = positiveInteger(resultInfo?.total_count);
+  if (perPage !== null && totalCount !== null) {
+    return currentPage * perPage < totalCount ? currentPage + 1 : null;
+  }
+
+  // Without trustworthy pagination metadata, a short or empty page is the
+  // only safe indication that the listing is complete. Cloudflare normally
+  // returns result_info, so this is a defensive compatibility fallback.
+  return perPage !== null && resultCount >= perPage ? currentPage + 1 : null;
+}
+
 export async function listPreviewDeployments({
   accountId,
   apiToken,
@@ -49,34 +71,38 @@ export async function listPreviewDeployments({
   branch,
   fetchImpl = fetch,
 }) {
-  const matches = [];
+  const matches = new Map();
   let page = 1;
-  let totalPages = 1;
 
-  do {
+  while (page !== null) {
+    if (page > MAX_PAGES) {
+      throw new Error(`Cloudflare pagination exceeded the safety limit of ${MAX_PAGES} pages.`);
+    }
     const url = new URL(`${API_BASE_URL}/${deploymentPath(accountId, projectName)}`);
-    url.search = new URLSearchParams({
-      env: 'preview',
-      page: String(page),
-      per_page: String(PAGE_SIZE),
-    });
+    url.searchParams.set('env', 'preview');
+    // The Pages API has rejected explicit page=1/per_page combinations in
+    // production despite documenting them. Let Cloudflare choose its first
+    // page size and only request a page number when metadata says one exists.
+    if (page > 1) url.searchParams.set('page', String(page));
 
     const response = await fetchImpl(url, {
       headers: { Authorization: `Bearer ${apiToken}` },
     });
     const payload = await readResponse(response, `Listing Cloudflare deployments (page ${page})`);
+    if (!Array.isArray(payload.result)) {
+      throw new Error(`Listing Cloudflare deployments (page ${page}) returned an invalid result.`);
+    }
 
-    matches.push(
-      ...payload.result.filter(
-        deployment => deployment.deployment_trigger?.metadata?.branch === branch
-      )
-    );
+    for (const deployment of payload.result) {
+      if (deployment.deployment_trigger?.metadata?.branch === branch && deployment.id) {
+        matches.set(deployment.id, deployment);
+      }
+    }
 
-    totalPages = payload.result_info?.total_pages ?? page;
-    page += 1;
-  } while (page <= totalPages);
+    page = nextPage(payload.result_info, page, payload.result.length);
+  }
 
-  return matches;
+  return [...matches.values()];
 }
 
 export async function deletePreviewDeployment({

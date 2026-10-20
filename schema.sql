@@ -11,10 +11,17 @@ CREATE TABLE IF NOT EXISTS alojamientos (
   capacidad_total  INTEGER NOT NULL CHECK (capacidad_total > 0)
 );
 
-INSERT INTO alojamientos (nombre, tipo, capacidad_total) VALUES
-  ('Domo 1',        'domo',    7),
-  ('Domo 2',        'domo',    7),
-  ('Refugio',        'refugio', 15);
+INSERT INTO alojamientos (id, nombre, tipo, capacidad_total)
+SELECT 1, 'Domo 1', 'domo', 7
+WHERE NOT EXISTS (SELECT 1 FROM alojamientos WHERE id = 1);
+
+INSERT INTO alojamientos (id, nombre, tipo, capacidad_total)
+SELECT 2, 'Domo 2', 'domo', 7
+WHERE NOT EXISTS (SELECT 1 FROM alojamientos WHERE id = 2);
+
+INSERT INTO alojamientos (id, nombre, tipo, capacidad_total)
+SELECT 3, 'Refugio', 'refugio', 15
+WHERE NOT EXISTS (SELECT 1 FROM alojamientos WHERE id = 3);
 
 -- ─── reservas ───────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS reservas (

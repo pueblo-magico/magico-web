@@ -1,9 +1,12 @@
 import React from 'react';
 import { Check, Warning, CalendarCheck, Gift } from '@phosphor-icons/react';
 import { WA_MAGICO } from '../data/config';
-import { RETREATS_DATA } from '../data/retreats';
+import { formatPrice, RETREATS_DATA } from '../data/retreats';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const AchalaVivaPrecios: React.FC = () => {
+  const { language } = useLanguage();
+  const price = language === 'en' ? RETREATS_DATA.achalaViva.priceUsd : RETREATS_DATA.achalaViva.price;
   const waLinkMain = "https://wa.me/" + WA_MAGICO + "?text=" +
     encodeURIComponent(RETREATS_DATA.achalaViva.message);
 
@@ -27,7 +30,7 @@ const AchalaVivaPrecios: React.FC = () => {
           <div className="w-full flex justify-center px-4 mb-12">
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden relative w-full max-w-2xl p-8 md:p-14 text-center flex flex-col items-center hover:shadow-yellow-500/20 transition-shadow duration-500">
               <p className="font-bold text-base md:text-xl mb-4 md:mb-6 uppercase tracking-widest" style={{ color: '#005333' }}>Valor total de la experiencia</p>
-              <div className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-wide mb-6 md:mb-8 font-serif" style={{ color: '#005333' }}>${RETREATS_DATA.achalaViva.price.toLocaleString('es-AR')} {RETREATS_DATA.achalaViva.currency}</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl font-medium tracking-wide mb-6 md:mb-8 font-serif" style={{ color: '#005333' }}>{formatPrice(price, language)}</div>
               <p className="text-sm md:text-base opacity-80 font-medium tracking-wide" style={{ color: '#005333' }}>Financiación disponible · Seña del 50%</p>
             </div>
           </div>

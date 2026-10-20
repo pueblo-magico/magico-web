@@ -4,7 +4,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { img } from './lib/img';
-import { SITE_URL, WA_CICLO_VITAL_FEMENINO } from './data/config';
+import { RESERVATION_START_PATH, SITE_URL, WA_CICLO_VITAL_FEMENINO } from './data/config';
 import { ROUTES } from './routes';
 import { RETREATS_DATA } from './data/retreats';
 
@@ -70,8 +70,6 @@ const CicloVitalFemeninoContent: React.FC = () => {
   const [momentosIndex, setMomentosIndex] = useState(0);
   const [showFloatingCta, setShowFloatingCta] = useState(false);
 
-  const MSG = encodeURIComponent(RETREATS_DATA.cicloVitalFemenino.message);
-  const WA_HREF = `https://wa.me/${WA_CICLO_VITAL_FEMENINO}?text=${MSG}`;
   const WA_CONSULTA_HREF = `https://wa.me/${WA_CICLO_VITAL_FEMENINO}?text=${encodeURIComponent(RETREATS_DATA.cicloVitalFemenino.messageConsulta)}`;
 
   // SEO — title, meta, OG, canonical y JSON-LD
@@ -424,7 +422,7 @@ const CicloVitalFemeninoContent: React.FC = () => {
               <p className="text-white/55 text-base leading-relaxed mb-10 mx-auto" style={{ maxWidth: '44ch' }}>
                 Si sentís el llamado a regalarte este tiempo para vos, será una alegría recibirte.
               </p>
-              <a href={WA_HREF} target="_blank" rel="noopener noreferrer" className="btn-gold inline-block">
+              <a href={RESERVATION_START_PATH} className="btn-gold inline-block">
                 Reservar mi lugar
               </a>
             </div>

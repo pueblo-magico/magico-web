@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Tree, UsersThree, Mountains } from '@phosphor-icons/react';
 import { BookingWidget, G } from './BookingWidget';
+import { WithdrawalAccessLink } from './WithdrawalAccessLink';
+import { usePublicPricingSummary } from './booking/usePublicPricingSummary';
 
 const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { t } = useLanguage();
@@ -19,10 +21,23 @@ const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }
 };
 
 export const HeroNuevo: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { data: pricing, loaded: pricingLoaded } = usePublicPricingSummary();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [compactBookingOpen, setCompactBookingOpen] = useState(false);
+  const [desktopBookingOpen, setDesktopBookingOpen] = useState(false);
   const images   = (t.hero as any).bgImages || [t.hero.bgImage];
   const colivingBadge = (t.hero as any).colivingBadge;
+  const personRates = pricing?.opciones.flatMap(option => option.tarifas)
+    .filter(rule => rule.base_calculo === 'persona_noche') || [];
+  const startingRate = personRates.length > 0
+    ? personRates.reduce((lowest, rule) => rule.importe_centavos < lowest.importe_centavos ? rule : lowest)
+    : null;
+  const reservationPricing = startingRate
+    ? `${language === 'es' ? 'Desde' : 'From'} ${new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', { style: 'currency', currency: pricing?.plan.moneda || 'ARS', maximumFractionDigits: 0 }).format(startingRate.importe_centavos / 100)}/${language === 'es' ? 'persona/noche' : 'person/night'} · ${language === 'es' ? 'precio publicado' : 'published rate'}`
+    : pricingLoaded
+      ? (language === 'es' ? 'Consultá disponibilidad y precio real antes de reservar' : 'Check availability and the current price before booking')
+      : (language === 'es' ? 'Cargando tarifa vigente…' : 'Loading current rate…');
 
   useEffect(() => {
     if (images.length <= 1) return;
@@ -80,7 +95,7 @@ export const HeroNuevo: React.FC = () => {
 
         {/* Widget compacto */}
         <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.45)' }}>
-          <div style={{ background: G.green, padding: '11px 16px 9px' }}>
+          {!compactBookingOpen && <div style={{ background: G.green, padding: '11px 16px 9px' }}>
             <p style={{ fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase', fontWeight: 700, color: 'rgba(212,175,55,0.85)', marginBottom: 3 }}>
               {(t.hero as any).reservationKicker}
             </p>
@@ -88,13 +103,14 @@ export const HeroNuevo: React.FC = () => {
               {(t.hero as any).reservationCta}
             </p>
             <p style={{ fontSize: 11, color: 'rgba(212,175,55,0.9)', fontWeight: 600, margin: '4px 0 0' }}>
-              {(t.hero as any).reservationPricing}
+              {reservationPricing}
             </p>
-          </div>
+          </div>}
           <div style={{ background: 'rgba(255,255,255,0.97)' }}>
-            <BookingWidget compact />
+            <BookingWidget compact activeViewport="mobile" onOpenChange={setCompactBookingOpen} />
           </div>
         </div>
+        <WithdrawalAccessLink embedded inverse />
 
         {/* Prueba social + links */}
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 16px', marginTop: 14 }}>
@@ -191,18 +207,19 @@ export const HeroNuevo: React.FC = () => {
         {/* Tarjeta flotante de reserva */}
         <div style={{ width: 370, flexShrink: 0, paddingTop: '5rem', paddingBottom: '5rem', paddingLeft: '1.5rem' }}>
           <div style={{ width: '100%', borderRadius: 22, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.32), 0 4px 16px rgba(0,0,0,0.18)' }}>
-            <div style={{ background: G.green, padding: '18px 20px 16px' }}>
+            {!desktopBookingOpen && <div style={{ background: G.green, padding: '18px 20px 16px' }}>
               <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 21, fontWeight: 400, color: 'white', lineHeight: 1.25, margin: 0 }}>
                 {(t.hero as any).reservationTitle}
               </h2>
               <p style={{ fontSize: 12, color: 'rgba(212,175,55,0.9)', fontWeight: 600, margin: '6px 0 0' }}>
-                {(t.hero as any).reservationPricing}
+                {reservationPricing}
               </p>
-            </div>
+            </div>}
             <div style={{ background: 'rgba(255,255,255,0.96)' }}>
-              <BookingWidget />
+              <BookingWidget compact activeViewport="desktop" onOpenChange={setDesktopBookingOpen} />
             </div>
           </div>
+          <WithdrawalAccessLink embedded inverse />
         </div>
 
       </div>

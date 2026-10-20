@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Moon, Flame, Mountain, Users, ChevronDown, Instagram, Mail, MessageCircle, Wind, Eye, Sparkles } from 'lucide-react';
 import { img } from './lib/img';
-import { WA_MAGICO } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO } from './data/config';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
 
 const WA_INFO    = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Me interesa Alma de Lobo del 2, 3 y 4 de octubre. ¿Me pueden dar más info?')}`;
-const WA_RESERVA = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Siento el llamado de Alma de Lobo. Quiero reservar mi lugar.')}`;
 
 const C = {
   ember: '#6B3A1F',
@@ -153,7 +152,7 @@ const AlmaDeLobo: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-            <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer" className="btn-gold text-sm py-4 px-8 inline-block">
+            <a href={RESERVATION_START_PATH} className="btn-gold text-sm py-4 px-8 inline-block">
               Siento el llamado
             </a>
             <div>
@@ -305,7 +304,7 @@ const AlmaDeLobo: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer"
+                <a href={RESERVATION_START_PATH}
                   className="block text-center py-3.5 px-4 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90"
                   style={{ backgroundColor: C.fire }}>
                   Reservar mi lugar
@@ -365,7 +364,7 @@ const AlmaDeLobo: React.FC = () => {
             ¡Si sentís el llamado, contactanos!
           </h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-            <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer" className="btn-gold text-sm py-5 px-10 inline-block">
+            <a href={RESERVATION_START_PATH} className="btn-gold text-sm py-5 px-10 inline-block">
               Reservar mi lugar
             </a>
             <a href={WA_INFO} target="_blank" rel="noopener noreferrer"
@@ -400,7 +399,7 @@ const AlmaDeLobo: React.FC = () => {
           backdropFilter: 'blur(8px)',
         }}
       >
-        <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer" className="btn-gold text-sm py-3 w-full text-center block">
+        <a href={RESERVATION_START_PATH} className="btn-gold text-sm py-3 w-full text-center block">
           Reservar mi lugar
         </a>
       </div>

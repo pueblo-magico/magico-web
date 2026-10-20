@@ -7,7 +7,7 @@ import { ROUTES } from '../src/routes';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const location = useLocation();
   const isHomePage = location.pathname === ROUTES.HOME;
 
@@ -171,6 +171,12 @@ export const Footer: React.FC = () => {
               <a href={ROUTES.TERMINOS} className="hover:text-brand-gold transition-colors">{t.footer.links.terms}</a>
               <a href={ROUTES.PRIVACIDAD} className="hover:text-brand-gold transition-colors">{t.footer.links.privacy}</a>
             </div>
+            <a
+              href={ROUTES.ARREPENTIMIENTO}
+              className="rounded-full border-2 border-brand-green px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-green transition-colors hover:bg-brand-green hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
+            >
+              {language === 'es' ? 'Botón de arrepentimiento' : 'Withdrawal button'}
+            </a>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500 italic">{t.footer.madeBy}</span>

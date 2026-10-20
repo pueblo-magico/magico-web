@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Download, X } from 'lucide-react';
 import { canInstall, onInstallReady, promptInstall } from '../src/lib/pwa';
+import { FloatingUiPortal } from './FloatingUiContext';
 
 export const PWAInstallBanner: React.FC = () => {
   const { pathname } = useLocation();
@@ -34,10 +35,8 @@ export const PWAInstallBanner: React.FC = () => {
   };
 
   return (
-    <div
-      className="fixed bottom-20 left-4 right-4 z-50 md:left-auto md:right-6 md:max-w-sm"
-      style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.18))' }}
-    >
+    <FloatingUiPortal surface="pwa">
+      <div style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.18))' }}>
       <div
         className="flex items-center gap-3 rounded-2xl px-4 py-3"
         style={{ backgroundColor: '#005333', border: '1px solid rgba(212,175,55,0.3)' }}
@@ -67,6 +66,7 @@ export const PWAInstallBanner: React.FC = () => {
           <X size={16} />
         </button>
       </div>
-    </div>
+      </div>
+    </FloatingUiPortal>
   );
 };

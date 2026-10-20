@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Moon, Flame, Mountain, Sprout, Music, ChevronDown, Instagram, Linkedin, ShieldCheck, Home, Handshake, Utensils } from 'lucide-react';
 import { img } from './lib/img';
-import { WA_MAGICO } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO } from './data/config';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 const WA_INFO    = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Me interesa Primavera en la Montaña (Killa Raymi) del 25 al 27 de septiembre. ¿Me pueden dar más info?')}`;
-const WA_COMPLETA = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Quiero reservar la Experiencia Completa (2 noches) de Primavera en la Montaña, del 25 al 27 de septiembre. ¿Cómo sigo?')}`;
-const WA_1NOCHE   = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Quiero reservar la Experiencia de 1 noche de Primavera en la Montaña. ¿Cómo sigo?')}`;
-const WA_DIA      = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Quiero el pase por el día para Primavera en la Montaña. ¿Cómo sigo?')}`;
 const WA_PROMO    = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Quiero la promo 2x1 de la Experiencia Completa de Primavera en la Montaña ($118.000 por persona, viniendo con alguien más). ¿Cómo sigo?')}`;
 
 const C = {
@@ -111,7 +108,7 @@ const MODALIDADES = [
     cuotaValor: 98000,
     items: ['Alojamiento', 'Temazcal, Luna llena y Trekking'],
     cta: 'Reservar experiencia completa',
-    wa: WA_COMPLETA,
+    wa: RESERVATION_START_PATH,
     nota: 'La recomendamos si querés vivir el finde completo, sin apuro.',
   },
   {
@@ -128,7 +125,7 @@ const MODALIDADES = [
     cuotaValor: 72000,
     items: ['Alojamiento'],
     cta: 'Reservar 1 noche',
-    wa: WA_1NOCHE,
+    wa: RESERVATION_START_PATH,
     nota: 'Una forma de entrar en la experiencia sin quedarte todo el fin de semana.',
   },
   {
@@ -145,7 +142,7 @@ const MODALIDADES = [
     cuotaValor: 40000,
     items: ['Sin alojamiento'],
     cta: 'Quiero el pase diario',
-    wa: WA_DIA,
+    wa: RESERVATION_START_PATH,
     nota: 'Ideal si querés venir a conocer, sin comprometerte a todo el finde.',
   },
 ] as const;
@@ -791,7 +788,7 @@ const KillaRaymi: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-                <a href={m.wa} target="_blank" rel="noopener noreferrer"
+                <a href={m.wa}
                   className="block text-center py-3.5 px-4 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90"
                   style={{ backgroundColor: m.color }}>
                   {m.cta}
@@ -841,7 +838,7 @@ const KillaRaymi: React.FC = () => {
             Nos vemos en la montaña: caminatas, música en vivo, fogones y buena comida bajo la luna llena de septiembre. Escribinos y contanos qué modalidad te queda mejor.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href={WA_COMPLETA} target="_blank" rel="noopener noreferrer" className="btn-gold text-sm py-5 px-10 inline-block">
+            <a href={RESERVATION_START_PATH} className="btn-gold text-sm py-5 px-10 inline-block">
               Quiero participar
             </a>
             <a href={WA_INFO} target="_blank" rel="noopener noreferrer"
@@ -865,7 +862,7 @@ const KillaRaymi: React.FC = () => {
           backdropFilter: 'blur(8px)',
         }}
       >
-        <a href={WA_COMPLETA} target="_blank" rel="noopener noreferrer" className="btn-gold text-sm py-3 w-full text-center block">
+        <a href={RESERVATION_START_PATH} className="btn-gold text-sm py-3 w-full text-center block">
           Reservar mi lugar
         </a>
       </div>

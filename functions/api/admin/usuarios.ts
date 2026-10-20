@@ -7,9 +7,10 @@
 // Roles: 'super_admin' (todo, incluida esta pantalla), 'editor' (todo menos
 // esta pantalla y Actividad), 'viewer' (solo ver Operativa/Métricas/Historial).
 
-import { requireRole } from '../../_lib/authGuard';
+import { requirePermission } from '../../_lib/authGuard';
 import { hashPassword } from '../../_lib/passwords';
 import { registrarAuditoria } from '../../_lib/auditoria';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../../_interfaces/http/requestSecurity.ts';
 
 const ROLES_VALIDOS = ['super_admin', 'editor', 'viewer'];
 
@@ -18,7 +19,7 @@ function json(body: unknown, status = 200) {
 }
 
 export async function onRequestGet({ request, env }: any) {
-  const auth = await requireRole(request, env, ['super_admin']);
+  const auth = await requirePermission(request, env, 'usuarios.gestionar');
   if (auth instanceof Response) return auth;
 
   const { results } = await env.DB
@@ -28,14 +29,14 @@ export async function onRequestGet({ request, env }: any) {
 }
 
 export async function onRequestPost({ request, env }: any) {
-  const auth = await requireRole(request, env, ['super_admin']);
+  const auth = await requirePermission(request, env, 'usuarios.gestionar');
   if (auth instanceof Response) return auth;
 
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request, 16 * 1024);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const db = env.DB;
@@ -46,7 +47,7 @@ export async function onRequestPost({ request, env }: any) {
     const password = String(body?.password || '');
     const rol = String(body?.rol || 'editor');
     if (!email || !email.includes('@')) return json({ error: 'Email inválido.' }, 400);
-    if (password.length < 8) return json({ error: 'La contraseña debe tener al menos 8 caracteres.' }, 400);
+    if (password.length < 12) return json({ error: 'La contraseña debe tener al menos 12 caracteres.' }, 400);
     if (!ROLES_VALIDOS.includes(rol)) return json({ error: `rol debe ser uno de: ${ROLES_VALIDOS.join(', ')}.` }, 400);
 
     const hash = await hashPassword(password);
@@ -55,11 +56,11 @@ export async function onRequestPost({ request, env }: any) {
         .prepare(`INSERT INTO usuarios_admin (email, password_hash, rol) VALUES (?, ?, ?) RETURNING id, email, rol, activo, created_at`)
         .bind(email, hash, rol)
         .first();
-      await registrarAuditoria(db, auth.email, 'crear_usuario', `${email} (${rol})`);
+      await registrarAuditoria(db, { email: auth.email, accion: 'crear_usuario', entidadTipo: 'usuario_admin', entidadId: inserted.id, metadata: { rol } });
       return json({ ok: true, usuario: inserted });
     } catch (e: any) {
       const yaExiste = String(e.message || '').includes('UNIQUE');
-      return json({ error: yaExiste ? 'Ya existe un usuario con ese email.' : `No se pudo crear: ${e.message}` }, 400);
+      return json({ error: yaExiste ? 'Ya existe un usuario con ese email.' : 'No se pudo crear el usuario.' }, 400);
     }
   }
 
@@ -68,14 +69,14 @@ export async function onRequestPost({ request, env }: any) {
 
   if (accion === 'resetear_password') {
     const password = String(body?.password || '');
-    if (password.length < 8) return json({ error: 'La contraseña debe tener al menos 8 caracteres.' }, 400);
+    if (password.length < 12) return json({ error: 'La contraseña debe tener al menos 12 caracteres.' }, 400);
     const hash = await hashPassword(password);
     const row: any = await db
       .prepare(`UPDATE usuarios_admin SET password_hash = ?, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ? RETURNING id, email`)
       .bind(hash, id)
       .first();
     if (!row) return json({ error: 'No existe ese usuario.' }, 404);
-    await registrarAuditoria(db, auth.email, 'resetear_password', row.email);
+    await registrarAuditoria(db, { email: auth.email, accion: 'resetear_password', entidadTipo: 'usuario_admin', entidadId: row.id });
     return json({ ok: true });
   }
 
@@ -90,7 +91,7 @@ export async function onRequestPost({ request, env }: any) {
     }
 
     await db.prepare(`UPDATE usuarios_admin SET rol = ? WHERE id = ?`).bind(rol, id).run();
-    await registrarAuditoria(db, auth.email, 'cambiar_rol', `${objetivo.email} → ${rol}`);
+    await registrarAuditoria(db, { email: auth.email, accion: 'cambiar_rol', entidadTipo: 'usuario_admin', entidadId: id, metadata: { rol } });
     return json({ ok: true });
   }
 
@@ -107,7 +108,7 @@ export async function onRequestPost({ request, env }: any) {
       .bind(accion === 'reactivar' ? 1 : 0, id)
       .first();
     if (!row) return json({ error: 'No existe ese usuario.' }, 404);
-    await registrarAuditoria(db, auth.email, accion === 'reactivar' ? 'reactivar_usuario' : 'desactivar_usuario', row.email);
+    await registrarAuditoria(db, { email: auth.email, accion: accion === 'reactivar' ? 'reactivar_usuario' : 'desactivar_usuario', entidadTipo: 'usuario_admin', entidadId: row.id });
     return json({ ok: true });
   }
 

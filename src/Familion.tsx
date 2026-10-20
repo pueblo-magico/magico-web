@@ -10,7 +10,7 @@ import FamilionMagico from './components/FamilionMagico';
 import FamilionPrecios from './components/FamilionPrecios';
 import FamilionFAQ from './components/FamilionFAQ';
 import FamilionRecetario from './components/FamilionRecetario';
-import { WA_MAGICO, SITE_URL } from './data/config';
+import { RESERVATION_START_PATH, SITE_URL } from './data/config';
 import { ROUTES } from './routes';
 
 const FamilionContent: React.FC = () => {
@@ -347,7 +347,7 @@ const FamilionContent: React.FC = () => {
           <p data-reveal data-delay="1" className="text-gray-500 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto font-light">
             {t.familion.cta_final.subtitle}
           </p>
-          <a data-reveal data-delay="2" href={"https://wa.me/" + WA_MAGICO + "?text=Hola!%20Vengo%20de%20Familion%20y%20quiero%20consultar%20la%20experiencia."} className="btn-gold inline-block">
+          <a data-reveal data-delay="2" href={RESERVATION_START_PATH} className="btn-gold inline-block">
             {t.familion.cta_final.btn}
           </a>
         </div>

@@ -16,10 +16,10 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-/*.js
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.css
+# Solo el runtime de workbox (nombre con hash) es inmutable. NO usar /*.js:
+# esa regla también matchea /sw.js y le pegaba max-age de 1 año, así los
+# navegadores seguían con el service worker viejo después de cada deploy.
+/workbox-*.js
   Cache-Control: public, max-age=31536000, immutable
 
 /sw.js

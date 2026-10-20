@@ -26,7 +26,8 @@
 // asume cancelada en Airbnb y se marca estado='cancelada' acá también.
 
 import { parseIcs } from '../../_lib/ical';
-import { requireRole } from '../../_lib/authGuard';
+import { requirePermission } from '../../_lib/authGuard';
+import { fechaOperativaCordoba } from '../../_domain/reservas/operationalDate.ts';
 import { registrarAuditoria } from '../../_lib/auditoria';
 
 function json(body: unknown, status = 200) {
@@ -48,13 +49,13 @@ function nombreDesdeSummary(summary: string): string {
 }
 
 export async function onRequestPost({ request, env }: any) {
-  const auth = await requireRole(request, env, ['super_admin', 'editor']);
+  const auth = await requirePermission(request, env, 'integraciones.airbnb.sincronizar');
   if (auth instanceof Response) return auth;
 
   const db = env.DB;
   const { results: alojamientos } = await db.prepare('SELECT id, nombre FROM alojamientos ORDER BY id ASC').all();
 
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = fechaOperativaCordoba();
   const resumen: Record<string, any> = {};
 
   for (const aloj of alojamientos || []) {
@@ -132,7 +133,13 @@ export async function onRequestPost({ request, env }: any) {
   const detalle = Object.entries(resumen)
     .map(([nombre, r]: [string, any]) => ('error' in r ? `${nombre}: error` : `${nombre}: +${r.nuevas}/~${r.actualizadas}/-${r.canceladas}`))
     .join(' · ');
-  await registrarAuditoria(db, auth.email, 'sync_airbnb', detalle);
+  await registrarAuditoria(db, {
+    email: auth.email,
+    accion: 'sync_airbnb',
+    entidadTipo: 'integracion',
+    entidadId: 'airbnb',
+    metadata: { alojamientos: Object.keys(resumen).length, resumen: detalle },
+  });
 
   return json({ ok: true, resumen });
 }

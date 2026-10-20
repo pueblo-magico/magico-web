@@ -1,9 +1,9 @@
 # Redirect ruta vieja de Reset Vital (usuarios con PWA instalada antes del cambio)
 /reset-vital-5-d    /reset-vital    301
 
-# /reservas se eliminó (el sistema de reservas ya vive en Home y /estadia) —
+# /reservas se eliminó (el sistema de reservas vive en /reservar) —
 # redirect por si hay links viejos (ManyChat, WhatsApp compartido, etc.)
-/reservas    /estadia    301
+/reservas    /reservar?paso=fechas    301
 
 # Campañas de invierno 2026 (Winter Camp / Winter Redirection) terminadas — se
 # eliminaron las páginas; los links viejos van a la estadía actual.
@@ -30,3 +30,6 @@
 /reset-vital    /app-shell/   200
 /despertar    /app-shell/   200
 /propuesta/nico-grupe    /app-shell/   200
+/reserva-confirmada    /app-shell/   200
+/reserva-pendiente    /app-shell/   200
+/reserva-fallida    /app-shell/   200

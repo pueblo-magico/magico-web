@@ -4,13 +4,12 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { CheckCircle, WhatsappLogo } from '@phosphor-icons/react';
 import { img } from './lib/img';
-import { WA_MAGICO, SITE_URL } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO, SITE_URL } from './data/config';
 import { ROUTES } from './routes';
 
 const WA = (msg: string) => `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(msg)}`;
 const WA_INFO = WA("Hi! I'm interested in the Córdoba Fly Fishing Adventure. Could you tell me more?");
 const WA_STAY = WA("Hi! I'd like to extend my Córdoba trip with 2 nights in the geodesic domes + guided fly fishing. Could you tell me more?");
-const WA_DAY  = WA("Hi! I'd like to book a full-day guided fly fishing adventure in the Sierras de Córdoba. Could you tell me more?");
 
 const SPECIES = [
   {
@@ -247,7 +246,7 @@ const CordobaFlyFishing: React.FC = () => {
                   </p>
                   <a href={WA_STAY} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 bg-brand text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gold transition-colors">
-                    <WhatsappLogo className="w-4 h-4" weight="fill" />
+                    <CheckCircle className="w-4 h-4" weight="bold" />
                     Ask about the domes
                   </a>
                 </div>
@@ -260,7 +259,7 @@ const CordobaFlyFishing: React.FC = () => {
                   <p className="text-gray-600 text-base md:text-lg leading-relaxed font-light mb-6">
                     Looking for a day on the water? Join our guides for a full-day fly fishing adventure in the Sierras de Córdoba. Explore beautiful mountain streams, target wild trout, and enjoy a completely different side of Córdoba.
                   </p>
-                  <a href={WA_DAY} target="_blank" rel="noopener noreferrer"
+                  <a href={RESERVATION_START_PATH}
                     className="inline-flex items-center justify-center gap-2 bg-brand text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gold transition-colors">
                     <WhatsappLogo className="w-4 h-4" weight="fill" />
                     Book a full day

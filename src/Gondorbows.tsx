@@ -4,9 +4,8 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { Target, House, ForkKnife, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { img } from './lib/img';
-import { SITE_URL, WA_GONDOR } from './data/config';
+import { RESERVATION_START_PATH, SITE_URL } from './data/config';
 import { ROUTES } from './routes';
-import { RETREATS_DATA } from './data/retreats';
 
 import GondorbowsHero from './components/GondorbowsHero';
 import GondorbowsMagico from './components/GondorbowsMagico';
@@ -446,7 +445,7 @@ const Gondorbows: React.FC = () => {
             La pausa que tu rutina necesita. La inmersión total que estás esperando.
           </p>
           <a
-            href={"https://wa.me/" + WA_GONDOR + "?text=" + encodeURIComponent(RETREATS_DATA.gondorbows.message)}
+            href={RESERVATION_START_PATH}
             className="btn-gold inline-block"
           >
             Asegurar mi lugar

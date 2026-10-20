@@ -28,8 +28,8 @@ if (!emailArg || !passwordArg) {
   console.error('Uso: node scripts/crear-usuario-admin.mjs correo@ejemplo.com "contraseña" [super_admin|editor|viewer]');
   process.exit(1);
 }
-if (passwordArg.length < 8) {
-  console.error('La contraseña debe tener al menos 8 caracteres.');
+if (passwordArg.length < 12) {
+  console.error('La contraseña debe tener al menos 12 caracteres.');
   process.exit(1);
 }
 if (!ROLES_VALIDOS.includes(rol)) {

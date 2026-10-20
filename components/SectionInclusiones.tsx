@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { ESTADIA_PRICES } from '../src/data/retreats';
+import { usePublicPricingSummary } from './booking/usePublicPricingSummary';
 import {
   House,
   WifiHigh,
@@ -22,12 +22,23 @@ const ICONS = [
 ];
 
 export const SectionInclusiones: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const i = t.inclusiones;
-  const carpaDesde = ESTADIA_PRICES?.carpaDesde;
-  const domoPrivadoDesde = ESTADIA_PRICES?.domoPrivado;
-  const hasCarpaPrice = typeof carpaDesde === 'number' && Number.isFinite(carpaDesde);
-  const hasDomoPrice = typeof domoPrivadoDesde === 'number' && Number.isFinite(domoPrivadoDesde);
+  const { data: pricing, loaded } = usePublicPricingSummary();
+  const formatMoney = (centavos: number) => new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
+    style: 'currency', currency: pricing?.plan.moneda || 'ARS', maximumFractionDigits: 0,
+  }).format(centavos / 100);
+  const startingRate = (tipo: 'camping' | 'domo') => {
+    const rules = pricing?.opciones.find(option => option.tipo_alojamiento === tipo)?.tarifas || [];
+    const personRules = rules.filter(rule => rule.base_calculo === 'persona_noche');
+    const candidates = personRules.length > 0 ? personRules : rules;
+    if (candidates.length === 0) return null;
+    return candidates.reduce((lowest, rule) => rule.importe_centavos < lowest.importe_centavos ? rule : lowest);
+  };
+  const rates = [
+    { tipo: 'camping' as const, label: language === 'es' ? 'Camping' : 'Camping' },
+    { tipo: 'domo' as const, label: language === 'es' ? 'Domo geodésico' : 'Geodesic dome' },
+  ].map(item => ({ ...item, rule: startingRate(item.tipo) })).filter(item => item.rule !== null);
 
   return (
     <>
@@ -57,26 +68,17 @@ export const SectionInclusiones: React.FC = () => {
             ))}
           </div>
 
-          {(hasCarpaPrice || hasDomoPrice) && (
+          {loaded && rates.length > 0 && (
             <div className="flex flex-col sm:flex-row justify-center gap-4" data-reveal>
-              {hasCarpaPrice && (
-                <div className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
-                  <p className="text-white/70 font-bold tracking-widest uppercase text-xs mb-1">{i.price_solo_label}</p>
+              {rates.map(({ tipo, label, rule }) => rule && (
+                <div key={tipo} className={`${tipo === 'domo' ? 'bg-gold/20 border-gold/40' : 'bg-white/10 border-white/20'} border rounded-xl px-6 py-4 text-center backdrop-blur-sm`}>
+                  <p className={`${tipo === 'domo' ? 'text-gold' : 'text-white/70'} font-bold tracking-widest uppercase text-xs mb-1`}>{label}</p>
                   <p className="text-white text-2xl font-serif">
-                    ${carpaDesde.toLocaleString('es-AR')} <span className="text-base font-sans font-light">{i.price_unit}</span>
+                    {formatMoney(rule.importe_centavos)} <span className="text-base font-sans font-light">/ {rule.base_calculo === 'persona_noche' ? (language === 'es' ? 'persona / noche' : 'person / night') : (language === 'es' ? 'unidad / noche' : 'unit / night')}</span>
                   </p>
-                  <p className="text-white/50 text-xs mt-1">{i.price_solo_sub}</p>
+                  <p className="text-white/50 text-xs mt-1">{language === 'es' ? 'Alojamiento + desayuno · tarifa publicada' : 'Accommodation + breakfast · published rate'}</p>
                 </div>
-              )}
-              {hasDomoPrice && (
-                <div className="bg-gold/20 border border-gold/40 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
-                  <p className="text-gold font-bold tracking-widest uppercase text-xs mb-1">{i.price_pension_label}</p>
-                  <p className="text-white text-2xl font-serif">
-                    ${domoPrivadoDesde.toLocaleString('es-AR')} <span className="text-base font-sans font-light">{i.price_pension_unit}</span>
-                  </p>
-                  <p className="text-white/50 text-xs mt-1">{i.price_pension_sub}</p>
-                </div>
-              )}
+              ))}
             </div>
           )}
 

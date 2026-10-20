@@ -8,7 +8,9 @@
 // bloquean ese email por 15 minutos (columnas intentos_fallidos/bloqueado_hasta).
 
 import { verifyPassword } from '../../_lib/passwords';
-import { createSessionToken, sessionCookieHeader } from '../../_lib/session';
+import { createSessionToken, csrfCookieHeader, sessionCookieHeader } from '../../_lib/session';
+import { leerJsonSeguro, respuestaJsonInvalido } from '../../_interfaces/http/requestSecurity.ts';
+import { consumirLimite, respuestaLimite } from '../../_interfaces/http/rateLimit.ts';
 
 const MAX_INTENTOS = 5;
 const BLOQUEO_MINUTOS = 15;
@@ -21,11 +23,14 @@ function json(body: unknown, status = 200, extraHeaders: Record<string, string> 
 }
 
 export async function onRequestPost({ request, env }: any) {
+  const limitada = respuestaLimite(await consumirLimite(request, env, 'admin.login', 10, 15 * 60));
+  if (limitada) return limitada;
+
   let body: any;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Body inválido — se espera JSON.' }, 400);
+    body = await leerJsonSeguro(request, 8 * 1024);
+  } catch (error) {
+    return respuestaJsonInvalido(error);
   }
 
   const email = String(body?.email || '').trim().toLowerCase();
@@ -65,6 +70,13 @@ export async function onRequestPost({ request, env }: any) {
     .bind(usuario.id)
     .run();
 
-  const token = await createSessionToken(usuario.email, env.SESSION_SECRET);
-  return json({ ok: true, email: usuario.email, rol: usuario.rol }, 200, { 'Set-Cookie': sessionCookieHeader(token) });
+  if (typeof env.SESSION_SECRET !== 'string' || env.SESSION_SECRET.length < 32) {
+    return json({ error: 'Autenticación no disponible.' }, 503);
+  }
+  const csrf = crypto.randomUUID();
+  const token = await createSessionToken(usuario.email, env.SESSION_SECRET, csrf);
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  headers.append('Set-Cookie', sessionCookieHeader(token));
+  headers.append('Set-Cookie', csrfCookieHeader(csrf));
+  return new Response(JSON.stringify({ ok: true, email: usuario.email, rol: usuario.rol }), { status: 200, headers });
 }

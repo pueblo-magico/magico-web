@@ -5,9 +5,12 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { UpdateBanner } from './components/UpdateBanner';
+import { WithdrawalAccessLink } from './components/WithdrawalAccessLink';
+import { FloatingUiProvider } from './components/FloatingUiContext';
 import './src/i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Main from './Main';
+import '@pueblo-magico/react-ui/styles.css';
 import './index.css';
 import Familion from './src/Familion';
 import Gondorbows from './src/Gondorbows';
@@ -22,6 +25,7 @@ const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
 const PachamamaFest = lazy(() => import('./src/PachamamaFest'));
 const KillaRaymi = lazy(() => import('./src/KillaRaymi'));
 const AlmaDeLobo = lazy(() => import('./src/AlmaDeLobo'));
+const SunsetRio = lazy(() => import('./src/SunsetRio'));
 const Empresas = lazy(() => import('./src/Empresas'));
 const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
@@ -30,11 +34,14 @@ const Despertar = lazy(() => import('./src/Despertar'));
 const PropuestaNicoGrupe = lazy(() => import('./src/PropuestaNicoGrupe'));
 const ResetVitalApp = lazy(() => import('./ResetVital.jsx'));
 const Estadia = lazy(() => import('./src/Estadia'));
+const Reservar = lazy(() => import('./src/Reservar'));
 const Coliving = lazy(() => import('./src/Coliving'));
 const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
+const BotonArrepentimiento = lazy(() => import('./src/BotonArrepentimiento'));
+const EstadoPagoReserva = lazy(() => import('./src/EstadoPagoReserva'));
 
 const ScrollToTop: React.FC = () => {
   const { pathname, hash } = useLocation();
@@ -61,6 +68,14 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
+const EstadiaRoute: React.FC = () => {
+  const location = useLocation();
+  if (new URLSearchParams(location.search).get('reservar') === '1') {
+    return <Navigate to="/reservar?paso=fechas" replace />;
+  }
+  return <Estadia />;
+};
+
 const PageLoader = () => (
   <div id="loader-container" style={{ minHeight: '100vh', background: '#FDFBF7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     <div style={{ width: 48, height: 48, border: '3px solid #e5e7eb', borderTopColor: '#A8971C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -79,11 +94,13 @@ root.render(
     <ErrorBoundary>
       <LanguageProvider>
         <BrowserRouter>
-          <ScrollToTop />
-          <UpdateBanner />
-          <PWAInstallBanner />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+          <FloatingUiProvider>
+            <ScrollToTop />
+            <UpdateBanner />
+            <PWAInstallBanner />
+            <WithdrawalAccessLink />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/reset-vital" element={<ResetVitalApp />} />
               <Route path="/familion" element={<Familion />} />
@@ -98,6 +115,7 @@ root.render(
               <Route path="/pachamama-fest" element={<PachamamaFest />} />
               <Route path="/killa-raymi" element={<KillaRaymi />} />
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
+              <Route path="/sunset-y-rio" element={<SunsetRio />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/cordoba-fly-fishing" element={<CordobaFlyFishing />} />
               <Route path="/voluntariado" element={<Voluntariado />} />
@@ -107,14 +125,20 @@ root.render(
               <Route path="/winter-camp" element={<Navigate to="/estadia" replace />} />
               <Route path="/winter-redirection" element={<Navigate to="/estadia" replace />} />
               <Route path="/propuesta/nico-grupe" element={<PropuestaNicoGrupe />} />
-              <Route path="/estadia" element={<Estadia />} />
+              <Route path="/estadia" element={<EstadiaRoute />} />
+              <Route path="/reservar" element={<Reservar />} />
               <Route path="/coliving" element={<Coliving />} />
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
               <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
-              <Route path="/admin/reservas" element={<PanelReservas />} />
+              <Route path="/boton-de-arrepentimiento" element={<BotonArrepentimiento />} />
+              <Route path="/admin/reservas/*" element={<PanelReservas />} />
+              <Route path="/reserva-confirmada" element={<EstadoPagoReserva returnState="success" />} />
+              <Route path="/reserva-pendiente" element={<EstadoPagoReserva returnState="pending" />} />
+              <Route path="/reserva-fallida" element={<EstadoPagoReserva returnState="failure" />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </FloatingUiProvider>
         </BrowserRouter>
       </LanguageProvider>
     </ErrorBoundary>
