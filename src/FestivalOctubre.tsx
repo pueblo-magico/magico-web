@@ -109,37 +109,9 @@ const navigation: PageNavigation = {
     { id: 'para-quien', label: 'Para quién es' },
     { id: 'experiencias', label: 'Experiencias' },
     { id: 'equipo', label: 'Equipo' },
-    { id: 'fin-de-semana', label: 'Fin de semana' },
     { id: 'preguntas', label: 'Preguntas' },
   ],
 };
-
-const weekend = [
-  {
-    day: 'Viernes',
-    date: '30 OCT',
-    title: 'Llegada y bienvenida',
-    description: 'Llegada para quienes elijan dos noches, instalación y un primer encuentro para empezar a compartir.',
-    Icon: Moon,
-    featured: false,
-  },
-  {
-    day: 'Sábado',
-    date: '31 OCT',
-    title: 'Jornada central',
-    description: 'Cuatro artistas, ocho horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.',
-    Icon: Sun,
-    featured: true,
-  },
-  {
-    day: 'Domingo',
-    date: '01 NOV',
-    title: 'Naturaleza e integración',
-    description: 'Temazcal, yoga, caminatas y conexión con ríos y montañas para quienes extiendan su estadía.',
-    Icon: Leaf,
-    featured: false,
-  },
-] as const;
 
 const faqs = [
   {
@@ -588,6 +560,14 @@ const FestivalOctubre: React.FC = () => {
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
               </div>
+              <article className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-[#008C86]/25 bg-[#E2F5EE] p-6 text-left shadow-[0_14px_35px_rgba(31,41,34,0.06)] md:flex md:items-center md:gap-6 md:p-7">
+                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#004B43] text-[#FFD166] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A1F]">Viernes 30 de octubre de 2026</p>
+                  <h3 className="mt-2 text-2xl text-[#003630] serif-title md:text-3xl">Llegada y bienvenida</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[#16423D]/65">Llegada para quienes elijan dos noches, instalación y un primer encuentro para empezar a compartir.</p>
+                </div>
+              </article>
               <div className="mt-8"><FestivalButton href="/">Conocer Pueblo Mágico</FestivalButton></div>
             </div>
             <div className="mt-12 grid grid-cols-2 gap-3" data-reveal data-delay="1">
@@ -611,6 +591,14 @@ const FestivalOctubre: React.FC = () => {
               <Eyebrow light>Artistas confirmados</Eyebrow>
               <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-6xl">El pulso de Raíz Sonora.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
+              <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
+                <div className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FFB300] text-[#004B43] md:mb-0"><Sun size={21} aria-hidden="true" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Sábado 31 de octubre de 2026</p>
+                  <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Jornada central</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/65">Cuatro artistas, ocho horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.</p>
+                </div>
+              </article>
             </div>
             <p className="mb-5 text-center text-xs font-semibold leading-relaxed text-white/65 md:text-sm">Deslizá o usá las flechas para conocer a cada artista.</p>
             <HorizontalCardRail
@@ -635,9 +623,17 @@ const FestivalOctubre: React.FC = () => {
           <SunRings className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] text-[#FF6A00]/18" />
           <div className="mx-auto max-w-5xl text-center">
             <div data-reveal>
-              <p className="mb-5 inline-block rounded-full bg-[#FF5A1F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-white">Ceremonia del domingo · Cupo limitado</p>
+              <p className="mb-5 inline-block rounded-full bg-[#FF5A1F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-white">Domingo 1 de noviembre de 2026 · Cupo limitado</p>
               <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-5xl">¿Qué es el Temazcal?</h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/65 md:text-lg">Una ceremonia ancestral de calor, vapor y encuentro que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
+              <article className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-[#FFD166]/20 bg-white/[0.06] p-6 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-7">
+                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#008C86] text-white md:mb-0"><Leaf size={21} aria-hidden="true" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Programa del domingo</p>
+                  <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Naturaleza e integración</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/65">Temazcal, yoga, caminatas y conexión con ríos y montañas para quienes extiendan su estadía.</p>
+                </div>
+              </article>
             </div>
             <div className="mt-12 overflow-hidden rounded-[2rem] border border-[#FFD166]/20 bg-[#2A1D2A]" data-reveal data-delay="1">
               <img src={img('/uploads/temazcal.webp', 1400)} alt="Ceremonia de Temazcal en Pueblo Mágico" loading="lazy" width="1400" height="900" className="aspect-[16/8] w-full object-cover" />
@@ -827,31 +823,6 @@ const FestivalOctubre: React.FC = () => {
               <h3 className="mt-3 text-3xl serif-title md:text-4xl">Kintu × Pueblo Mágico</h3>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65">Dos equipos que se encuentran para cuidar la producción, la hospitalidad y el sentido de una celebración creada en conexión con el lugar.</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="fin-de-semana" className="relative overflow-hidden px-6 py-20 md:px-10 md:py-28" style={{ background: 'linear-gradient(145deg, #FFF6E3 0%, #F7DED2 52%, #E8C28E 145%)' }}>
-          <div className="pointer-events-none absolute -left-20 top-24 h-64 w-64 rounded-full bg-[#FF6A00]/12 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-16 bottom-8 h-72 w-72 rounded-full bg-[#E40067]/16 blur-3xl" aria-hidden="true" />
-          <SunRings className="pointer-events-none absolute -right-32 top-10 h-[28rem] w-[28rem] text-[#FF5A1F]/12" />
-          <div className="relative mx-auto max-w-7xl">
-            <div className="mx-auto mb-14 max-w-3xl text-center" data-reveal>
-              <Eyebrow>Elegí tu propio ritmo</Eyebrow>
-              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Un día de festival. Un fin de semana para quedarse.</h2>
-              <p className="mt-5 text-sm leading-relaxed text-[#16423D]/60 md:text-base">Podés venir solo por la jornada central o hacer del encuentro un fin de semana completo.</p>
-            </div>
-            <div className="relative grid gap-5 lg:grid-cols-3">
-              <div className="absolute left-[16.6%] right-[16.6%] top-12 hidden h-px bg-[#123B2D]/15 lg:block" />
-              {weekend.map(({ day, date, title, description, Icon, featured }, index) => (
-                <article key={date} className={`relative overflow-hidden rounded-[1.75rem] border p-7 md:p-8 ${featured ? 'border-[#FF6A00] bg-[#004B43] text-white shadow-xl' : index === 0 ? 'border-[#008C86]/25 bg-[#E2F5EE]' : 'border-[#FF9F1C]/30 bg-[#FFF1C7]'}`} data-reveal data-delay={String(index + 1)}>
-                  <div className={`absolute inset-x-0 top-0 h-1.5 ${featured ? 'bg-[linear-gradient(90deg,#FF6A00,#FFB300)]' : index === 0 ? 'bg-[#008C86]' : 'bg-[#FF9F1C]'}`} aria-hidden="true" />
-                  <div className={`relative z-10 mb-10 flex h-12 w-12 items-center justify-center rounded-full ${featured ? 'bg-[#FFB300] text-[#004B43]' : 'bg-[#004B43] text-white'}`}><Icon size={21} aria-hidden="true" /></div>
-                  <p className={`text-[10px] font-bold uppercase tracking-[0.22em] ${featured ? 'text-[#FFD166]' : 'text-[#FF5A1F]'}`}>{day} · {date}</p>
-                  <h3 className="mt-3 text-3xl serif-title">{title}</h3>
-                  <p className={`mt-4 text-sm leading-relaxed ${featured ? 'text-white/75' : 'text-[#16423D]/60'}`}>{description}</p>
-                </article>
-              ))}
             </div>
           </div>
         </section>
