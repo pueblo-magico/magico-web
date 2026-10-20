@@ -11,6 +11,7 @@ concurrency:
 permissions:
   contents: read
   deployments: write
+  packages: read
   pull-requests: write
 
 jobs:
@@ -30,6 +31,8 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Validate TypeScript
         run: npm run typecheck
@@ -113,6 +116,15 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: d1 execute DB --remote --file=scripts/reservas/verificar-ocupacion-operativa.sql
 
+      - name: Activate Mercado Pago checkout in preview
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PROJECT_NAME: pueblo-magico-web
+          CLOUDFLARE_PAGES_ENVIRONMENT: preview
+        run: node scripts/cloudflare/activate-mercado-pago-checkout.mjs
+
       - name: Deploy Cloudflare Pages preview
         id: deploy
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -182,7 +194,7 @@ jobs:
             admin_status=$(curl --silent --show-error --max-time 15 --output /tmp/admin-me.json --write-out '%{http_code}' "$PREVIEW_URL/api/admin/me" || true)
             reservations_status=$(curl --silent --show-error --max-time 15 --dump-header /tmp/admin-reservas.headers --output /tmp/admin-reservas.json --write-out '%{http_code}' --header "X-Request-ID: $correlation_id" "$PREVIEW_URL/api/admin/reservas" || true)
 
-            if test "$availability_status" = "200" \
+            if { test "$availability_status" = "200" || test "$availability_status" = "429"; } \
               && test "$admin_status" = "401" \
               && test "$reservations_status" = "401" \
               && grep --ignore-case --quiet "^x-request-id: $correlation_id" /tmp/admin-reservas.headers; then
@@ -204,3 +216,25 @@ jobs:
             echo "Waiting for Cloudflare preview alias propagation (attempt $attempt/12; availability=$availability_status, admin=$admin_status, reservations=$reservations_status)."
             sleep 10
           done
+
+          quote_status=$(curl --silent --show-error --max-time 20 \
+            --output /tmp/public-quote.json --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' \
+            --data '{"check_in":"2026-11-10","check_out":"2026-11-11","personas":2,"tipo_alojamiento":"domo","modalidad":"privada","contexto":"general","regimen_alimentacion":"desayuno_incluido"}' \
+            "$PREVIEW_URL/api/v1/public/cotizaciones")
+          if test "$quote_status" != "200"; then
+            echo "Public quote response ($quote_status):"
+            cat /tmp/public-quote.json
+            exit 1
+          fi
+          node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            const payload = JSON.parse(readFileSync('/tmp/public-quote.json', 'utf8'));
+            const methods = payload?.data?.metodos_pago ?? [];
+            const surcharge = payload?.data?.recargos_metodo_pago?.mercado_pago_checkout?.porcentaje_bps;
+            if (!methods.includes('mercado_pago_checkout') || surcharge !== 1000) {
+              console.error('Mercado Pago checkout is not active with its 10% surcharge in the deployed preview.');
+              console.error(JSON.stringify({ methods, surcharge }));
+              process.exit(1);
+            }
+          "

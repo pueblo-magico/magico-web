@@ -1,11 +1,9 @@
 import React from 'react';
 import { CheckCircle, XCircle, Star } from '@phosphor-icons/react';
+import { RESERVATION_START_PATH } from '../data/config';
 import { RETREATS_DATA } from '../data/retreats';
-import { WA_VUELO_CONDOR } from '../data/config';
 
 const VueloDelCondorPrecios: React.FC = () => {
-  const waLink = `https://wa.me/${WA_VUELO_CONDOR}?text=${encodeURIComponent(RETREATS_DATA.vueloDelCondor.message)}`;
-
   return (
     <section id="reservar" className="py-16 md:py-24 px-6 bg-slate-50 mt-16 md:mt-24">
       <div className="max-w-5xl mx-auto">
@@ -95,9 +93,7 @@ const VueloDelCondorPrecios: React.FC = () => {
 
             <div className="mt-8 pt-6 border-t border-gray-100 text-center">
               <a 
-                href={waLink}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={RESERVATION_START_PATH}
                 className="btn-gold w-full text-center inline-block py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Quiero reservar mi lugar

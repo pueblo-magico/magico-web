@@ -1,8 +1,30 @@
 import {
+  validarCambioModalidadComercial,
+  validarCambioServicioAlojamiento,
+  validarCambioEspacioComercial,
+  validarCambioHorariosComidas,
   validarCambioParametroOperativo,
+  validarCambioTarifaAlimentacion,
+  validarNuevaModalidadComercial,
+  validarNuevoServicioAlojamiento,
+  validarCambioOpcionPreparacionEstadia,
+  type CambioModalidadComercial,
+  type CambioOpcionPreparacionEstadia,
+  type CambioServicioAlojamiento,
+  type CambioEspacioComercial,
+  type CambioHorariosComidas,
   type CambioParametroOperativo,
+  type CambioTarifaAlimentacion,
   type ConfiguracionBaseReservas,
+  type EspacioComercialActualizado,
+  type HorariosComidas,
+  type ModalidadComercialActualizada,
+  type OpcionPreparacionEstadia,
+  type NuevaModalidadComercial,
+  type NuevoServicioAlojamiento,
   type ParametroOperativoReserva,
+  type ServicioAlojamiento,
+  type TarifaAlimentacionActualizada,
 } from '../../_domain/reservas/baseConfiguration.ts';
 import { ErrorReserva } from '../../_domain/reservas/errors.ts';
 import type { RepositorioConfiguracionBaseReservas } from './ports.ts';
@@ -27,6 +49,138 @@ export async function actualizarParametroConfiguracion(
   });
   if (!actualizada) {
     throw new ErrorReserva('CONFLICTO_RESERVA', 'La configuración cambió; actualizá la vista antes de reintentar.');
+  }
+  return actualizada;
+}
+
+export async function actualizarModalidadConfiguracion(
+  entrada: CambioModalidadComercial & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<ModalidadComercialActualizada> {
+  const validada = validarCambioModalidadComercial(entrada);
+  const actualizada = await repositorio.actualizarModalidad({
+    ...validada,
+    actorEmail: entrada.actorEmail,
+    correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!actualizada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'La modalidad cambió; actualizá la vista antes de reintentar.');
+  }
+  return actualizada;
+}
+
+export async function crearModalidadConfiguracion(
+  entrada: NuevaModalidadComercial & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<ModalidadComercialActualizada> {
+  const validada = validarNuevaModalidadComercial(entrada);
+  const creada = await repositorio.crearModalidad({
+    ...validada, actorEmail: entrada.actorEmail, correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!creada) throw new ErrorReserva('CONFLICTO_RESERVA', 'La modalidad ya existe o el alojamiento no está disponible.');
+  return creada;
+}
+
+export async function actualizarServicioAlojamientoConfiguracion(
+  entrada: CambioServicioAlojamiento & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<ServicioAlojamiento> {
+  const validada = validarCambioServicioAlojamiento(entrada);
+  const actualizada = await repositorio.actualizarServicio({
+    ...validada, actorEmail: entrada.actorEmail, correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!actualizada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'El servicio cambió; actualizá la vista antes de reintentar.');
+  }
+  return actualizada;
+}
+
+export async function crearServicioAlojamientoConfiguracion(
+  entrada: NuevoServicioAlojamiento & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<ServicioAlojamiento> {
+  const validada = validarNuevoServicioAlojamiento(entrada);
+  const creada = await repositorio.crearServicio({
+    ...validada, actorEmail: entrada.actorEmail, correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!creada) throw new ErrorReserva('CONFLICTO_RESERVA', 'El servicio ya existe para este alojamiento.');
+  return creada;
+}
+
+export async function actualizarOpcionPreparacionConfiguracion(
+  entrada: CambioOpcionPreparacionEstadia & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<OpcionPreparacionEstadia> {
+  const validada = validarCambioOpcionPreparacionEstadia(entrada);
+  const actualizada = await repositorio.actualizarOpcionPreparacion({
+    ...validada, actorEmail: entrada.actorEmail, correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!actualizada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'La opción cambió; actualizá la vista antes de reintentar.');
+  }
+  return actualizada;
+}
+
+export async function actualizarEspacioConfiguracion(
+  entrada: CambioEspacioComercial & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<EspacioComercialActualizado> {
+  const validada = validarCambioEspacioComercial(entrada);
+  const actualizada = await repositorio.actualizarEspacio({
+    ...validada,
+    actorEmail: entrada.actorEmail,
+    correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!actualizada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'El alojamiento cambió; actualizá la vista antes de reintentar.');
+  }
+  return actualizada;
+}
+
+export async function publicarTarifaAlimentacionConfiguracion(
+  entrada: CambioTarifaAlimentacion & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<TarifaAlimentacionActualizada> {
+  const validada = validarCambioTarifaAlimentacion(entrada);
+  const publicada = await repositorio.publicarTarifaAlimentacion({
+    ...validada,
+    actorEmail: entrada.actorEmail,
+    correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!publicada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'La tarifa cambió; actualizá la vista antes de reintentar.');
+  }
+  return publicada;
+}
+
+export async function actualizarHorariosComidasConfiguracion(
+  entrada: CambioHorariosComidas & { actorEmail: string; correlationId: string },
+  repositorio: RepositorioConfiguracionBaseReservas,
+  crearUuid: () => string = () => crypto.randomUUID()
+): Promise<HorariosComidas> {
+  const validada = validarCambioHorariosComidas(entrada);
+  const actualizada = await repositorio.actualizarHorariosComidas({
+    ...validada,
+    actorEmail: entrada.actorEmail,
+    correlationId: entrada.correlationId,
+    operacionUid: crearUuid(),
+  });
+  if (!actualizada) {
+    throw new ErrorReserva('CONFLICTO_RESERVA', 'Los horarios cambiaron; actualizá la vista antes de reintentar.');
   }
   return actualizada;
 }

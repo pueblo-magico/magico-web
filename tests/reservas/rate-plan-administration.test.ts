@@ -50,6 +50,7 @@ const borrador: PlanTarifaBorrador = {
   codigo: 'alojamiento-base', nombre: 'Tarifa 2027', moneda: 'ARS',
   temporadas: [{
     codigo: 'base-2027', nombre: 'Base 2027', fechaDesde: '2027-01-01', fechaHasta: '2027-12-31', prioridad: 0,
+    diasSemana: [1, 2, 3, 4, 5, 6, 7],
     reglas: [
       { tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 2,
         baseCalculo: 'unidad_noche', importeCentavos: 9_000_000 },
@@ -65,16 +66,21 @@ test('crea, publica y audita una nueva versión retirando la anterior atómicame
   const repositorio = new D1RepositorioAdministracionTarifas(db);
   const auditoria = new D1RegistroAuditoriaReservas(db);
 
-  const creado = await crearBorradorTarifa(borrador, 'admin@test', repositorio, auditoria);
+  const motivo = 'Actualización anual aprobada';
+  const creado = await crearBorradorTarifa(borrador, 'admin@test', repositorio, auditoria, motivo);
   assert.equal(creado.version, 2);
   assert.equal(creado.estado, 'borrador');
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reglas_precio WHERE temporada_id IN (SELECT id FROM temporadas WHERE plan_tarifa_id = ?)').get(creado.id)?.n, 2);
 
-  const publicado = await publicarPlanTarifa(creado.id, 'admin@test', repositorio, auditoria);
+  const publicado = await publicarPlanTarifa(creado.id, 'admin@test', repositorio, auditoria, motivo);
   assert.equal(publicado.estado, 'publicado');
   assert.deepEqual(
     sqlite.prepare("SELECT version, estado FROM planes_tarifa WHERE codigo = 'alojamiento-base' ORDER BY version").all().map(row => ({ ...row })),
     [{ version: 1, estado: 'retirado' }, { version: 2, estado: 'publicado' }]
+  );
+  assert.deepEqual(
+    sqlite.prepare("SELECT motivo FROM auditoria_admin WHERE entidad_tipo = 'plan_tarifa' ORDER BY id").all().map(row => row.motivo),
+    [motivo, motivo]
   );
   assert.deepEqual(
     sqlite.prepare("SELECT accion FROM auditoria_admin WHERE entidad_tipo = 'plan_tarifa' ORDER BY id").all().map(row => row.accion),
@@ -109,6 +115,38 @@ test('rechaza reglas ambiguas antes de escribir y no publica dos veces', async (
     }],
   };
   await assert.rejects(() => crearBorradorTarifa(temporadasAmbiguas, 'admin@test', repositorio, auditoria), /temporadas ambiguas/);
+  sqlite.close();
+});
+
+test('permite precios distintos en días disjuntos y rechaza períodos que comparten días', async () => {
+  const { sqlite, db } = database();
+  const repositorio = new D1RepositorioAdministracionTarifas(db);
+  const auditoria = new D1RegistroAuditoriaReservas(db);
+  const entreSemana = {
+    ...borrador.temporadas[0],
+    codigo: 'base-semana',
+    diasSemana: [1, 2, 3, 4, 5],
+  };
+  const finSemana = {
+    ...borrador.temporadas[0],
+    codigo: 'base-fin-semana',
+    diasSemana: [6, 7],
+    reglas: borrador.temporadas[0].reglas.map(regla => ({ ...regla, importeCentavos: regla.importeCentavos + 1_000_000 })),
+  };
+  const creado = await crearBorradorTarifa({
+    ...borrador, codigo: 'dias-semana', temporadas: [entreSemana, finSemana],
+  }, 'admin@test', repositorio, auditoria, 'Precios diferenciados por día');
+  assert.equal(creado.estado, 'borrador');
+  assert.deepEqual(
+    sqlite.prepare('SELECT codigo, dias_semana_mask FROM temporadas WHERE plan_tarifa_id = ? ORDER BY codigo').all(creado.id).map(row => ({ ...row })),
+    [{ codigo: 'base-fin-semana', dias_semana_mask: 96 }, { codigo: 'base-semana', dias_semana_mask: 31 }],
+  );
+
+  await assert.rejects(() => crearBorradorTarifa({
+    ...borrador,
+    codigo: 'dias-solapados',
+    temporadas: [entreSemana, { ...finSemana, diasSemana: [5, 6, 7] }],
+  }, 'admin@test', repositorio, auditoria, 'Prueba de solapamiento'), /temporadas ambiguas/);
   sqlite.close();
 });
 
@@ -149,6 +187,7 @@ test('el contrato administrativo exige sesión, CSRF y permiso para crear borrad
     method: 'POST', headers,
     body: JSON.stringify({
       accion: 'crear_borrador',
+      motivo: 'Nueva tarifa aprobada en QA',
       plan: {
         codigo: borrador.codigo, nombre: borrador.nombre, moneda: borrador.moneda,
         temporadas: borrador.temporadas.map(temporada => ({

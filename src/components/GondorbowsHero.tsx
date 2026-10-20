@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { RESERVATION_START_PATH } from '../data/config';
 import { RETREATS_DATA } from '../data/retreats';
-import { WA_GONDOR } from '../data/config';
 
 const GondorbowsHero: React.FC = () => {
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const MSG = encodeURIComponent(RETREATS_DATA.gondorbows.message);
 
   useEffect(() => {
     const timer = setTimeout(() => setVideoLoaded(true), 100);
@@ -79,7 +78,7 @@ const GondorbowsHero: React.FC = () => {
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-5 justify-center items-center w-full" data-reveal data-delay="3">
           <a
-            href={`https://wa.me/${WA_GONDOR}?text=${MSG}`}
+            href={RESERVATION_START_PATH}
             className="btn-gold min-w-[220px] shadow-2xl shadow-gold/20"
           >
             Quiero reservar mi lugar

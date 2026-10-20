@@ -3,17 +3,35 @@ import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfac
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
 import { esRegimenAlimentacion } from '../../../_domain/reservas/alimentacion.ts';
 import { checkoutMercadoPagoHabilitado, configuracionTransferenciaMp } from '../../../_lib/paymentMethods.ts';
+import { porcentajeRecargoMetodoPago } from '../../../_domain/reservas/paymentMethodPricing.ts';
 
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, 'POST');
 
-export async function onRequestPost({ request, env }: any) {
+export async function onRequestPost(context: any) {
+  try {
+    return await procesarCotizacion(context);
+  } catch (error) {
+    console.error(JSON.stringify({
+      evento: 'cotizacion_publica_error',
+      mensaje: error instanceof Error ? error.message : 'Error desconocido',
+    }));
+    return jsonPublico(context.request, 'POST', {
+      error: {
+        codigo: 'ERROR_INTERNO',
+        mensaje: 'No pudimos calcular la cotización. Intentá nuevamente en unos minutos.',
+      },
+    }, 500);
+  }
+}
+
+async function procesarCotizacion({ request, env }: any) {
   const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.v1.cotizaciones', 60, 60));
   if (limitada) return limitada;
   const lectura = await leerJsonPublico(request, 'POST');
   if (!lectura.ok) return lectura.response;
   const body: any = lectura.body;
   const tipo = body.tipo_alojamiento;
-  const modalidad = body.modalidad || (tipo === 'domo' ? 'privada' : 'compartida');
+  const modalidad = body.modalidad || (tipo === 'domo' ? 'privada' : tipo === 'camping' ? 'camping' : 'compartida');
   const contexto = body.contexto || 'general';
   const personas = Number(body.personas);
   const regimenAlimentacion = body.regimen_alimentacion ?? 'desayuno_incluido';
@@ -25,8 +43,8 @@ export async function onRequestPost({ request, env }: any) {
       },
     }, 400);
   }
-  if ((tipo !== 'domo' && tipo !== 'refugio') || !Number.isInteger(personas) || personas < 1 ||
-      !['privada', 'compartida'].includes(modalidad) || !['general', 'retiro'].includes(contexto)) {
+  if (!['domo', 'refugio', 'camping'].includes(tipo) || !Number.isInteger(personas) || personas < 1 ||
+      !['privada', 'compartida', 'camping'].includes(modalidad) || !['general', 'retiro'].includes(contexto)) {
     return jsonPublico(request, 'POST', { error: { codigo: 'SOLICITUD_INVALIDA', mensaje: 'La solicitud es inválida.' } }, 400);
   }
 
@@ -54,6 +72,10 @@ export async function onRequestPost({ request, env }: any) {
       } : null,
       cotizacion: cotizacion.referencia,
       metodos_pago: metodosPago,
+      recargos_metodo_pago: Object.fromEntries(metodosPago.map(metodo => [
+        metodo,
+        { porcentaje_bps: porcentajeRecargoMetodoPago(metodo) },
+      ])),
       precio: {
         moneda: cotizacion.desglose.moneda,
         regimen_alimentacion: cotizacion.desglose.regimen_alimentacion,
@@ -63,6 +85,9 @@ export async function onRequestPost({ request, env }: any) {
         precio_comida_centavos: cotizacion.desglose.precio_comida_centavos,
         comidas_adicionales_por_persona_noche:
           cotizacion.desglose.comidas_adicionales_por_persona_noche,
+        ajustes_precio: cotizacion.desglose.ajustes_precio,
+        subtotal_antes_ajustes_centavos: cotizacion.desglose.subtotal_antes_ajustes_centavos,
+        ajuste_total_centavos: cotizacion.desglose.ajuste_total_centavos,
         subtotal_centavos: cotizacion.desglose.subtotal_centavos,
         sena_centavos: cotizacion.sena.monto_centavos,
         saldo_centavos: cotizacion.desglose.subtotal_centavos - cotizacion.sena.monto_centavos,

@@ -9,6 +9,11 @@ type Statement = {
 
 type Database = { prepare(query: string): Statement };
 
+function diasDesdeMascara(valor: unknown): number[] {
+  const mascara = Number(valor ?? 127);
+  return [1, 2, 3, 4, 5, 6, 7].filter(dia => (mascara & (1 << (dia - 1))) !== 0);
+}
+
 export class D1RepositorioTarifas implements RepositorioTarifas {
   private readonly db: Database;
 
@@ -19,15 +24,16 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
   async obtenerPublicada(): Promise<ConfiguracionTarifa | null> {
     const plan = await this.db.prepare(`
       SELECT id, codigo, version, moneda
-      FROM planes_tarifa WHERE codigo = 'alojamiento-base' AND estado = 'publicado'
-      LIMIT 1
+      FROM planes_tarifa WHERE estado = 'publicado'
+      ORDER BY publicado_at DESC, id DESC LIMIT 1
     `).first();
     if (!plan) return null;
     const planId = Number(plan.id);
 
-    const [precios, senas] = await Promise.all([
+    const [precios, senas, ajustes] = await Promise.all([
       this.db.prepare(`
         SELECT t.codigo temporada_codigo, t.fecha_desde, t.fecha_hasta, t.prioridad,
+               t.dias_semana_mask,
                r.tipo_alojamiento, r.modalidad, r.ocupacion_min, r.ocupacion_max,
                r.base_calculo, r.importe_centavos, r.exclusividad_desde, r.exclusividad_hasta
         FROM reglas_precio r JOIN temporadas t ON t.id = r.temporada_id
@@ -36,6 +42,11 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
       this.db.prepare(`
         SELECT subtotal_desde_centavos, subtotal_hasta_centavos, tipo, valor
         FROM reglas_sena WHERE plan_tarifa_id = ? ORDER BY subtotal_desde_centavos
+      `).bind(planId).all(),
+      this.db.prepare(`
+        SELECT codigo, nombre, anticipacion_desde_dias, anticipacion_hasta_dias,
+               direccion, tipo, valor
+        FROM reglas_ajuste_precio WHERE plan_tarifa_id = ? ORDER BY id
       `).bind(planId).all(),
     ]);
 
@@ -48,6 +59,7 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
         temporadaCodigo: String(row.temporada_codigo),
         fechaDesde: String(row.fecha_desde), fechaHasta: String(row.fecha_hasta),
         prioridad: Number(row.prioridad),
+        diasSemana: diasDesdeMascara(row.dias_semana_mask),
         tipoAlojamiento: row.tipo_alojamiento as any, modalidad: row.modalidad as any,
         ocupacionMin: Number(row.ocupacion_min), ocupacionMax: Number(row.ocupacion_max),
         baseCalculo: row.base_calculo as any, importeCentavos: Number(row.importe_centavos),
@@ -59,6 +71,13 @@ export class D1RepositorioTarifas implements RepositorioTarifas {
         subtotalHastaCentavos: row.subtotal_hasta_centavos === null ? null : Number(row.subtotal_hasta_centavos),
         tipo: row.tipo as any,
         valor: Number(row.valor),
+      })),
+      reglasAjuste: (ajustes.results || []).map(row => ({
+        codigo: String(row.codigo), nombre: String(row.nombre),
+        anticipacionDesdeDias: Number(row.anticipacion_desde_dias),
+        anticipacionHastaDias: row.anticipacion_hasta_dias === null ? null : Number(row.anticipacion_hasta_dias),
+        direccion: row.direccion as 'descuento' | 'recargo',
+        tipo: row.tipo as 'porcentaje_bps' | 'importe_fijo', valor: Number(row.valor),
       })),
     };
   }

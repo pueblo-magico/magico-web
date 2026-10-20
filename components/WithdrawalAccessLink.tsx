@@ -10,7 +10,7 @@ export const WithdrawalAccessLink: React.FC<{ embedded?: boolean; inverse?: bool
   const { language } = useLanguage();
   const location = useLocation();
   if (location.pathname.startsWith('/admin') || location.pathname === ROUTES.ARREPENTIMIENTO) return null;
-  if (!embedded && (location.pathname === '/' || location.pathname === ROUTES.ESTADIA)) return null;
+  if (!embedded && (location.pathname === '/' || location.pathname === ROUTES.ESTADIA || location.pathname === ROUTES.RESERVAR)) return null;
 
   const className = embedded
     ? `mt-3 flex w-full items-center justify-center rounded-full border bg-transparent px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.12em] shadow-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 ${

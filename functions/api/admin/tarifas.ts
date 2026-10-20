@@ -15,6 +15,9 @@ function mapearPlan(body: any): PlanTarifaBorrador {
       codigo: String(temporada?.codigo || ''), nombre: String(temporada?.nombre || ''),
       fechaDesde: String(temporada?.fecha_desde || ''), fechaHasta: String(temporada?.fecha_hasta || ''),
       prioridad: Number(temporada?.prioridad),
+      diasSemana: Array.isArray(temporada?.dias_semana)
+        ? temporada.dias_semana.map(Number)
+        : [1, 2, 3, 4, 5, 6, 7],
       reglas: Array.isArray(temporada?.reglas) ? temporada.reglas.map((regla: any) => ({
         tipoAlojamiento: regla?.tipo_alojamiento,
         modalidad: regla?.modalidad ?? 'cualquiera',
@@ -28,6 +31,12 @@ function mapearPlan(body: any): PlanTarifaBorrador {
       subtotalDesdeCentavos: Number(regla?.subtotal_desde_centavos),
       subtotalHastaCentavos: regla?.subtotal_hasta_centavos == null ? null : Number(regla.subtotal_hasta_centavos),
       tipo: regla?.tipo, valor: Number(regla?.valor),
+    })) : [],
+    ajustes: Array.isArray(body?.ajustes) ? body.ajustes.map((regla: any) => ({
+      codigo: String(regla?.codigo || ''), nombre: String(regla?.nombre || ''),
+      anticipacionDesdeDias: Number(regla?.anticipacion_desde_dias),
+      anticipacionHastaDias: regla?.anticipacion_hasta_dias == null ? null : Number(regla.anticipacion_hasta_dias),
+      direccion: regla?.direccion, tipo: regla?.tipo, valor: Number(regla?.valor),
     })) : [],
   };
 }
@@ -52,14 +61,18 @@ export async function onRequestPost({ request, env }: any) {
   const repositorio = new D1RepositorioAdministracionTarifas(env.DB);
   const auditoria = new D1RegistroAuditoriaReservas(env.DB);
   try {
+    const motivo = String(body.motivo || '').trim();
+    if (['crear_borrador', 'publicar'].includes(body.accion) && (motivo.length < 5 || motivo.length > 500)) {
+      return json({ error: 'El motivo debe tener entre 5 y 500 caracteres.' }, 400);
+    }
     if (body.accion === 'crear_borrador') {
-      const plan = await crearBorradorTarifa(mapearPlan(body.plan), auth.email, repositorio, auditoria);
+      const plan = await crearBorradorTarifa(mapearPlan(body.plan), auth.email, repositorio, auditoria, motivo);
       return json({ ok: true, plan }, 201);
     }
     if (body.accion === 'publicar') {
       const planId = Number(body.plan_id);
       if (!Number.isSafeInteger(planId) || planId < 1) return json({ error: 'plan_id inválido.' }, 400);
-      const plan = await publicarPlanTarifa(planId, auth.email, repositorio, auditoria);
+      const plan = await publicarPlanTarifa(planId, auth.email, repositorio, auditoria, motivo);
       return json({ ok: true, plan });
     }
     return json({ error: 'accion debe ser crear_borrador o publicar.' }, 400);

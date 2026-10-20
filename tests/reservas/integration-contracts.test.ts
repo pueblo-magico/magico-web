@@ -196,6 +196,7 @@ test('n8n registra una consulta idempotente sin bloquear inventario y la vincula
       body: JSON.stringify({
         cotizacion_codigo: cotizacion.data.cotizacion.codigo,
         espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        preferencias: { preparacion_cama: 'cama_doble' },
         consulta_codigo: bodyCreada.data.consulta.codigo,
         contacto_id: 'otro-contacto',
         conversacion_id: consultaPayload.conversacion_id,
@@ -214,6 +215,7 @@ test('n8n registra una consulta idempotente sin bloquear inventario y la vincula
       body: JSON.stringify({
         cotizacion_codigo: cotizacion.data.cotizacion.codigo,
         espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        preferencias: { preparacion_cama: 'cama_doble' },
         consulta_codigo: bodyCreada.data.consulta.codigo,
         contacto_id: consultaPayload.contacto_id,
         conversacion_id: consultaPayload.conversacion_id,
@@ -253,6 +255,7 @@ test('n8n crea una reserva idempotente y conserva referencias externas', async (
   const payload = {
     cotizacion_codigo: cotizacion.data.cotizacion.codigo,
     espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+    preferencias: { preparacion_cama: 'cama_doble' },
     contacto_id: 'contacto-n8n-42',
     conversacion_id: 'conversacion-n8n-99',
     cliente: { nombre: 'Huésped desde n8n', telefono: '+5493515550000', email: 'N8N@Example.Test' },
@@ -273,6 +276,16 @@ test('n8n crea una reserva idempotente y conserva referencias externas', async (
   assert.equal(bodyCreada.data.cuenta_cobro.estado, 'disabled');
   assert.equal(bodyCreada.meta.integracion, 'n8n');
   assert.equal(bodyCreada.meta.idempotente, false);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT r.monto_total_centavos, rpm.recargo_porcentaje_bps,
+           rpm.recargo_total_centavos
+    FROM reservas r
+    JOIN reserva_metodos_pago rpm ON rpm.reserva_id = r.id
+  `).get() }, {
+    monto_total_centavos: cotizacion.data.precio.subtotal_centavos,
+    recargo_porcentaje_bps: 0,
+    recargo_total_centavos: 0,
+  });
 
   const repetida = await crearReserva({ request: request(), env });
   assert.equal(repetida.status, 200);
@@ -318,8 +331,9 @@ test('n8n no puede reutilizar una clave con otra referencia de contacto', async 
       body: JSON.stringify({
         cotizacion_codigo: cotizacion.data.cotizacion.codigo,
         espacio_codigo: cotizacion.data.opcion.espacio_codigo,
+        preferencias: { preparacion_cama: 'cama_doble' },
         contacto_id: contactoId,
-        cliente: { nombre: 'Titular n8n' },
+        cliente: { nombre: 'Titular n8n', email: 'titular-n8n@example.test' },
       }),
     }), env,
   });

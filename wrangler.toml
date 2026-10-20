@@ -8,9 +8,19 @@ database_name = "magico-ensueno-db-preview"
 database_id = "d893fa4d-96d8-49f2-a9f5-d9feb55ab0d3"
 migrations_dir = "migrations"
 
-# Cloudflare Pages applies the top-level binding to preview deployments and
-# uses env.production only for production. Keep this shape aligned with the
-# Pages project configuration downloaded by Wrangler.
+[env.preview.vars]
+# Pages uses this Wrangler file as the source of truth for direct-upload
+# previews. The access token remains a secret configured in Cloudflare.
+MP_CHECKOUT_ENABLED = "true"
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "magico-ensueno-db-preview"
+database_id = "d893fa4d-96d8-49f2-a9f5-d9feb55ab0d3"
+migrations_dir = "migrations"
+
+# Keep production isolated from the shared preview D1 database. Once preview
+# has environment-specific vars, its D1 binding must also be explicit.
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "magico-ensueno-db"

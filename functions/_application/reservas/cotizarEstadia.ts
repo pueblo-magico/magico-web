@@ -29,7 +29,9 @@ export async function cotizarEstadia(
   }
   const solicitudNormalizada: SolicitudCotizacion = {
     ...solicitud,
-    modalidad: solicitud.modalidad ?? (solicitud.tipo === 'domo' ? 'privada' : 'compartida'),
+    modalidad: solicitud.modalidad ?? (solicitud.tipo === 'domo'
+      ? 'privada'
+      : solicitud.tipo === 'camping' ? 'camping' : 'compartida'),
     contexto: solicitud.contexto ?? 'general',
     regimenAlimentacion,
   };
@@ -44,7 +46,9 @@ export async function cotizarEstadia(
     };
   }
 
-  const capacidadMaxima = solicitudNormalizada.tipo === 'domo'
+  const capacidadMaxima = solicitudNormalizada.tipo === 'camping'
+    ? Number.MAX_SAFE_INTEGER
+    : solicitudNormalizada.tipo === 'domo'
     ? 7
     : solicitudNormalizada.modalidad === 'privada' ? 4 : 15;
   if (solicitudNormalizada.personas < 1 || solicitudNormalizada.personas > capacidadMaxima) {
@@ -52,7 +56,9 @@ export async function cotizarEstadia(
       ok: false,
       error: {
         codigo: 'OCUPACION_INVALIDA',
-        mensaje: solicitudNormalizada.tipo === 'domo'
+        mensaje: solicitudNormalizada.tipo === 'camping'
+          ? 'La cantidad de personas debe ser mayor a cero.'
+          : solicitudNormalizada.tipo === 'domo'
           ? 'El Domo admite entre 1 y 7 personas.'
           : solicitudNormalizada.modalidad === 'privada'
             ? 'La habitación privada del Refugio admite entre 1 y 4 personas.'
@@ -108,12 +114,19 @@ export async function cotizarEstadia(
     noches,
     precio_por_noche: precioUniforme ? importesNocturnos[0] / 100 : null,
     subtotal,
-    alojamiento_centavos: calculada.subtotalCentavos - alimentacion.totalCentavos,
+    alojamiento_centavos: calculada.subtotalAntesAjustesCentavos - alimentacion.totalCentavos,
     alimentacion_centavos: alimentacion.totalCentavos,
     regimen_alimentacion: alimentacion.regimen,
     tarifa_alimentacion_version: alimentacion.version,
     precio_comida_centavos: alimentacion.precioComidaCentavos,
     comidas_adicionales_por_persona_noche: alimentacion.comidasAdicionalesPorPersonaNoche,
+    precio_desayuno_centavos: alimentacion.precioDesayunoCentavos,
+    precio_almuerzo_centavos: alimentacion.precioAlmuerzoCentavos,
+    precio_cena_centavos: alimentacion.precioCenaCentavos,
+    ajuste_paquete_centavos: alimentacion.ajustePaqueteCentavos,
+    ajustes_precio: calculada.ajustes,
+    subtotal_antes_ajustes_centavos: calculada.subtotalAntesAjustesCentavos,
+    ajuste_total_centavos: calculada.ajusteTotalCentavos,
     exclusividad_gratis: calculada.exclusividadGratis,
     moneda: calculada.moneda,
     subtotal_centavos: calculada.subtotalCentavos,

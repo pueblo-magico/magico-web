@@ -35,7 +35,9 @@ No-Go.
    seguir apuntando exclusivamente a `magico-ensueno-db-preview`.
 6. Verificar sin copiar valores que Producción tenga `SESSION_SECRET`, el token
    y secreto de webhook de Mercado Pago, `DNI_HMAC_SECRET` y el usuario súper
-   admin inicial. Cucuru debe permanecer desactivado para este lanzamiento.
+   admin inicial. Configurar `RESERVATION_TEAM_NOTIFICATION_EMAILS` con la
+   distribución operativa aprobada y validar `RESERVATION_ARRIVAL_REMINDER_DAYS`
+   (un día por defecto). Cucuru debe permanecer desactivado para este lanzamiento.
 
 El environment es una segunda barrera. El workflow también requiere inicio
 manual y un motivo de release visible en la ejecución.

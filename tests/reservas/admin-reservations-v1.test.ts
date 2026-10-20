@@ -81,6 +81,10 @@ function crearReserva(sqlite: DatabaseSync, indice: number): number {
 test('lista reservas con paginación estable y filtros combinables', async () => {
   const sqlite = baseCompleta();
   for (let indice = 1; indice <= 12; indice++) crearReserva(sqlite, indice);
+  sqlite.prepare('UPDATE reservas SET monto_total_centavos = ? WHERE cliente_nombre = ?')
+    .run(250_000, 'Titular 1');
+  sqlite.prepare('UPDATE reservas SET monto_total_centavos = ? WHERE cliente_nombre = ?')
+    .run(75_000, 'Titular 2');
   const repositorio = new D1RepositorioGestionReservasAdmin(d1(sqlite));
 
   const pagina = await listarReservasAdmin({ pagina: 2, limite: 5 }, repositorio);
@@ -95,6 +99,28 @@ test('lista reservas con paginación estable y filtros combinables', async () =>
   }, repositorio);
   assert.equal(filtrada.total, 6);
   assert.ok(filtrada.items.every(item => item.canalOrigen === 'Web' && item.espacioCodigo === 'domo-1'));
+  const porCodigo = await listarReservasAdmin({
+    pagina: 1, limite: 20, titular: filtrada.items[0].codigo.toLowerCase(),
+  }, repositorio);
+  assert.equal(porCodigo.total, 1);
+  assert.equal(porCodigo.items[0].codigo, filtrada.items[0].codigo);
+  assert.ok(porCodigo.items[0].createdAt);
+
+  const porTitular = await listarReservasAdmin({
+    pagina: 1, limite: 20, orden: 'titular', direccion: 'asc',
+  }, repositorio);
+  assert.deepEqual(
+    porTitular.items.map(item => item.titular),
+    [...porTitular.items.map(item => item.titular)].sort((a, b) => a.localeCompare(b))
+  );
+
+  const porTotalDesc = await listarReservasAdmin({
+    pagina: 1, limite: 20, orden: 'total', direccion: 'desc',
+  }, repositorio);
+  assert.deepEqual(
+    porTotalDesc.items.map(item => item.montoTotalCentavos),
+    [...porTotalDesc.items.map(item => item.montoTotalCentavos)].sort((a, b) => b - a)
+  );
   sqlite.close();
 });
 
@@ -147,6 +173,16 @@ test('rechaza filtros inválidos antes de consultar el repositorio', () => {
     /paginación es inválida/
   );
   assert.equal(consultado, false);
+  assert.throws(
+    () => listarReservasAdmin({ pagina: 1, limite: 25, orden: 'DROP TABLE reservas' as any }, {
+      async listar() { consultado = true; throw new Error('no'); },
+      async obtenerDetalle() { return null; },
+      async crear() { throw new Error('no'); },
+      async editar() { return null; },
+      async cambiarEstado() { return null; },
+    }),
+    /criterio de orden es inválido/
+  );
 });
 
 test('el listado v1 exige sesión administrativa', async () => {
@@ -222,6 +258,140 @@ test('confirma y cancela sólo transiciones válidas con motivo auditado', async
     reservaId, expectedVersion: cancelada.version, accion: 'vencer', motivo: 'Intento inválido',
     actorEmail: 'qa-admin@example.com', correlationId: 'req-vencer',
   }, repositorio), /transición no es válida/);
+  sqlite.close();
+});
+
+test('la confirmación administrativa crea y despacha sólo su comunicación de confirmación', async () => {
+  const sqlite = baseCompleta();
+  const reservaId = crearReserva(sqlite, 3);
+  sqlite.exec("INSERT INTO usuarios_admin (email, password_hash, rol) VALUES ('editor-confirm@test', 'x', 'editor')");
+  const secret = 'session-secret-confirmacion-admin-32-caracteres';
+  const csrf = 'csrf-confirmacion-admin';
+  const token = await createSessionToken('editor-confirm@test', secret, csrf);
+  const version = Number(sqlite.prepare('SELECT version FROM reservas WHERE id = ?').get(reservaId)?.version);
+  const env = {
+    DB: d1(sqlite), SESSION_SECRET: secret,
+    INTEGRATION_OUTBOX_ENABLED: 'true',
+    INTEGRATION_EVENTS_WEBHOOK_URL: 'https://n8n.example.test/webhook/reservas',
+    INTEGRATION_EVENTS_WEBHOOK_SECRET: 'webhook-secret-seguro-123456789',
+  };
+  let tarea: Promise<unknown> | undefined;
+  const enviados: Record<string, unknown>[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_input, init) => {
+    enviados.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+    return new Response(null, { status: 204 });
+  };
+
+  try {
+    const response = await cambiarEstadoAdmin({
+      request: new Request(`https://test/api/v1/admin/reservas/${reservaId}/estado`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 'X-CSRF-Token': csrf,
+          Cookie: `pm_admin_session=${encodeURIComponent(token)}; pm_admin_csrf=${csrf}`,
+        },
+        body: JSON.stringify({
+          expected_version: version,
+          accion: 'confirmar',
+          motivo: 'Pago verificado manualmente',
+        }),
+      }),
+      env,
+      params: { id: String(reservaId) },
+      waitUntil(promesa: Promise<unknown>) { tarea = promesa; },
+    });
+    assert.equal(response.status, 200);
+    assert.ok(tarea);
+    await tarea;
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(sqlite.prepare(`
+    SELECT COUNT(*) n FROM comunicacion_intenciones
+    WHERE reserva_id = ? AND tipo = 'pago_aprobado' AND audiencia = 'huesped'
+  `).get(reservaId)?.n, 1);
+  assert.equal(enviados.length, 2);
+  assert.equal(enviados.every(evento => evento.event_type === 'comunicacion.intencion_creada'), true);
+  assert.equal(enviados.every(evento => evento.intent_type === 'pago_aprobado'), true);
+  assert.equal(enviados.every(evento => evento.reservation_id === reservaId), true);
+  assert.deepEqual(new Set(enviados.map(evento => evento.audience)), new Set(['huesped', 'equipo']));
+  for (const evento of enviados) {
+    assert.equal(sqlite.prepare(`
+      SELECT estado FROM integration_outbox WHERE event_id = ?
+    `).get(evento.event_id as string)?.estado, 'delivered');
+  }
+  sqlite.close();
+});
+
+test('la cancelación administrativa crea y despacha sólo su comunicación de cancelación', async () => {
+  const sqlite = baseCompleta();
+  const reservaId = crearReserva(sqlite, 1);
+  const otraReservaId = crearReserva(sqlite, 2);
+  sqlite.exec("INSERT INTO usuarios_admin (email, password_hash, rol) VALUES ('editor-cancel@test', 'x', 'editor')");
+  const secret = 'session-secret-cancelacion-admin-32-caracteres';
+  const csrf = 'csrf-cancelacion-admin';
+  const token = await createSessionToken('editor-cancel@test', secret, csrf);
+  const version = Number(sqlite.prepare('SELECT version FROM reservas WHERE id = ?').get(reservaId)?.version);
+  const env = {
+    DB: d1(sqlite), SESSION_SECRET: secret,
+    INTEGRATION_OUTBOX_ENABLED: 'true',
+    INTEGRATION_EVENTS_WEBHOOK_URL: 'https://n8n.example.test/webhook/reservas',
+    INTEGRATION_EVENTS_WEBHOOK_SECRET: 'webhook-secret-seguro-123456789',
+  };
+  let tarea: Promise<unknown> | undefined;
+  const enviados: Record<string, unknown>[] = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_input, init) => {
+    enviados.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+    return new Response(null, { status: 204 });
+  };
+
+  try {
+    const response = await cambiarEstadoAdmin({
+      request: new Request(`https://test/api/v1/admin/reservas/${reservaId}/estado`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 'X-CSRF-Token': csrf,
+          Cookie: `pm_admin_session=${encodeURIComponent(token)}; pm_admin_csrf=${csrf}`,
+        },
+        body: JSON.stringify({
+          expected_version: version,
+          accion: 'cancelar',
+          motivo: 'Solicitud expresa del huésped',
+        }),
+      }),
+      env,
+      params: { id: String(reservaId) },
+      waitUntil(promesa: Promise<unknown>) { tarea = promesa; },
+    });
+    assert.equal(response.status, 200);
+    assert.ok(tarea);
+    await tarea;
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  assert.equal(sqlite.prepare(`
+    SELECT COUNT(*) n FROM comunicacion_intenciones
+    WHERE reserva_id = ? AND tipo = 'reserva_cancelada' AND audiencia = 'huesped'
+  `).get(reservaId)?.n, 1);
+  assert.equal(enviados.length, 2);
+  assert.equal(enviados.every(evento => evento.event_type === 'comunicacion.intencion_creada'), true);
+  assert.equal(enviados.every(evento => evento.intent_type === 'reserva_cancelada'), true);
+  assert.equal(enviados.every(evento => evento.reservation_id === reservaId), true);
+  assert.deepEqual(new Set(enviados.map(evento => evento.audience)), new Set(['huesped', 'equipo']));
+  for (const evento of enviados) {
+    assert.equal(sqlite.prepare(`
+      SELECT estado FROM integration_outbox WHERE event_id = ?
+    `).get(evento.event_id as string)?.estado, 'delivered');
+  }
+  assert.equal(Number(sqlite.prepare(`
+    SELECT COUNT(*) n FROM integration_outbox
+    WHERE estado = 'pending'
+      AND CAST(json_extract(payload_json, '$.reservation_id') AS INTEGER) = ?
+  `).get(otraReservaId)?.n || 0) > 0, true);
   sqlite.close();
 });
 

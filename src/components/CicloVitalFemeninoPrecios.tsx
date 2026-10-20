@@ -1,6 +1,7 @@
 import React from 'react';
 import { WA_CICLO_VITAL_FEMENINO } from '../data/config';
-import { RETREATS_DATA } from '../data/retreats';
+import { formatPrice, RETREATS_DATA } from '../data/retreats';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const INCLUYE = [
   'Todas las comidas',
@@ -10,9 +11,13 @@ const INCLUYE = [
 ];
 
 const CicloVitalFemeninoPrecios: React.FC = () => {
+  const { language } = useLanguage();
   const {
     dates, valorReferenciaARS, messageConsulta, cupos, fechaLimiteInscripcion,
   } = RETREATS_DATA.cicloVitalFemenino;
+  const valorReferencia = language === 'en'
+    ? RETREATS_DATA.cicloVitalFemenino.pricesUsd.valorReferencia
+    : valorReferenciaARS;
   const waConsulta = 'https://wa.me/' + WA_CICLO_VITAL_FEMENINO + '?text=' + encodeURIComponent(messageConsulta);
   const waFechas = 'https://wa.me/' + WA_CICLO_VITAL_FEMENINO + '?text=' +
     encodeURIComponent('¡Hola! Me encantó la propuesta de Ciclo Vital Femenino pero no puedo en esta fecha. ¿Me avisás cuando lancen la próxima edición? 🌙');
@@ -68,7 +73,7 @@ const CicloVitalFemeninoPrecios: React.FC = () => {
               ¿Cuánto creés que vale una experiencia así?
             </p>
             <p className="text-white/45 text-sm mb-8" style={{ maxWidth: '40ch' }}>
-              Retiros con este nivel de acompañamiento personalizado, alojamiento y proceso de transformación suelen rondar los ${valorReferenciaARS.toLocaleString('es-AR')} en el mercado — lo hacemos mucho más accesible para que puedas vivir este tipo de experiencias. Contanos y lo vemos juntas.
+              Retiros con este nivel de acompañamiento personalizado, alojamiento y proceso de transformación suelen rondar los {formatPrice(valorReferencia, language)} en el mercado — lo hacemos mucho más accesible para que puedas vivir este tipo de experiencias. Contanos y lo vemos juntas.
             </p>
 
             <p className="text-[#E894C0] text-xs uppercase tracking-widest font-bold mb-8">

@@ -1,7 +1,16 @@
 import { autenticarServicio, type AlcanceServicio } from './serviceAuth.ts';
 import { jsonReserva } from './reservasHttp.ts';
+import { registrarUsoAplicacionApi } from '../../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 
 export type IdentidadIntegracionReservas = 'n8n';
+
+export function registrarUsoIntegracionReservas(
+  request: Request,
+  env: Record<string, any>,
+  identidad: IdentidadIntegracionReservas
+): Promise<boolean> {
+  return registrarUsoAplicacionApi(env.DB, identidad, request.method, new URL(request.url).pathname);
+}
 
 export function autenticarIntegracionReservas(
   request: Request,

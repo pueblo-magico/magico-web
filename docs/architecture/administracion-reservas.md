@@ -70,6 +70,25 @@ editables. Inventario, modalidades, tarifa, reglas de seña, política y
 alimentación se leen de sus tablas normalizadas; no se copian a una tabla
 genérica. Sólo `super_admin` puede escribir.
 
+Cada modalidad de un espacio admite un nombre comercial y una descripción
+comercial opcional de hasta 300 caracteres. Esta descripción se administra
+desde Configuración y se publica en el proceso de reserva para aclarar qué
+incluye o exige la opción elegida (por ejemplo, carpa propia o ropa blanca).
+Modificarla no cambia por sí solo capacidad, disponibilidad ni precio y queda
+sujeto al mismo motivo obligatorio, confirmación y auditoría que el resto de
+los cambios comerciales.
+
+La sección **Servicios y limitaciones** permite al `super_admin` crear y editar
+la información que verá el huésped para cada tipo de alojamiento. Cada registro
+define un nombre, un detalle opcional, orden, visibilidad y un estado explícito
+`incluido` o `no_disponible`. Esto permite mostrar tanto lo que existe —Wi-Fi,
+agua caliente o electricidad solar— como restricciones relevantes —sin baño
+privado o sin electricidad— sin depender de texto libre disperso.
+
+Publicar o editar un servicio requiere resumen de cambios, motivo y auditoría.
+No modifica `instalaciones`, capacidad, modalidades, disponibilidad ni precio;
+esas decisiones conservan sus contratos específicos.
+
 `payment_hold_minutes` es el primer parámetro operativo escalar. Vive en
 `parametros_operativos_reservas`, comienza en 15 minutos y admite valores de 5
 a 120. Cada actualización usa control optimista, incrementa la versión y deja

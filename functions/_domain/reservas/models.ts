@@ -1,6 +1,6 @@
 import type { RegimenAlimentacion } from './alimentacion.ts';
 
-export type TipoAlojamiento = 'domo' | 'refugio';
+export type TipoAlojamiento = 'domo' | 'refugio' | 'camping';
 
 export type Cotizacion = {
   tipo_alojamiento: TipoAlojamiento;
@@ -16,6 +16,13 @@ export type Cotizacion = {
   tarifa_alimentacion_version: number;
   precio_comida_centavos: number;
   comidas_adicionales_por_persona_noche: number;
+  precio_desayuno_centavos?: number;
+  precio_almuerzo_centavos?: number;
+  precio_cena_centavos?: number;
+  ajuste_paquete_centavos?: number;
+  ajustes_precio?: Array<{ codigo: string; nombre: string; importeCentavos: number }>;
+  subtotal_antes_ajustes_centavos?: number;
+  ajuste_total_centavos?: number;
   exclusividad_gratis: boolean;
   moneda: string;
   subtotal_centavos: number;

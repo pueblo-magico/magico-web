@@ -91,7 +91,8 @@
     // acá se reenvía la decisión guardada en visitas posteriores.
     (function() {
       var clarityId = 'uycou5x3v2';
-      if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; // no medir en dev
+      var isPagesPreview = location.hostname.endsWith('.pueblo-magico-web.pages.dev');
+      if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || isPagesPreview) return;
       // Cola de Clarity disponible desde ya (el script real llega después y la procesa)
       window.clarity = window.clarity || function(){(window.clarity.q=window.clarity.q||[]).push(arguments)};
       try {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LanguageProvider } from '../contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from '../contexts/LanguageContext';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
@@ -10,10 +10,13 @@ import {
   Mountains, Bank, DownloadSimple, FilePdf, CircleNotch, InstagramLogo,
   CaretLeft, CaretRight, ForkKnifeIcon, PawPrintIcon, WheelchairIcon,
 } from '@phosphor-icons/react';
-import { WA_MAGICO, SITE_URL } from './data/config';
-import { COLIVING_PRICES } from './data/retreats';
+import { RESERVATION_START_PATH, WA_MAGICO, SITE_URL } from './data/config';
+import { COLIVING_PRICES, formatPrice, getColivingPrices } from './data/retreats';
 import { ROUTES } from './routes';
 import { submitForm } from './lib/submitForm';
+import { usePublicPricingSummary } from '../components/booking/usePublicPricingSummary';
+import { useAntiBot } from './lib/useAntiBot';
+import { validarEmail } from './lib/validarContacto';
 
 const WA = (msg: string) =>
   `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(msg)}`;
@@ -468,7 +471,11 @@ const LaExperiencia: React.FC = () => (
 );
 
 // ── Formatos de estadía ───────────────────────────────────────────────────────
-const Formatos: React.FC = () => (
+const Formatos: React.FC = () => {
+  const { language } = useLanguage();
+  const prices = getColivingPrices(language);
+  const money = (amount: number) => formatPrice(amount, language);
+  return (
   <section id="formatos" className="py-20 bg-white">
     <div className="max-w-6xl mx-auto px-6 lg:px-12">
       <div data-reveal className="text-center mb-10">
@@ -477,27 +484,27 @@ const Formatos: React.FC = () => (
         <div className="inline-flex items-center gap-2 bg-bone border border-brand/10 rounded-full px-5 py-2.5">
           <Sun className="w-4 h-4 text-gold flex-shrink-0" weight="duotone" />
           <p className="text-brand text-sm">
-            <strong className="font-bold">${fmt(COLIVING_PRICES.precioPorNocheInvierno)}</strong> la noche — precio de temporada de invierno, a la carta
+            <strong className="font-bold">{money(prices.precioPorNocheInvierno)}</strong> la noche — precio de temporada de invierno, a la carta
           </p>
         </div>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch max-w-4xl mx-auto">
-        {COLIVING_PRICES.formatos.map((f, i) => {
+        {prices.formatos.map((f, i) => {
           const p = pago(f.precio);
           return (
             <div key={f.noches} data-reveal data-delay={`${i + 1}` as any}
               className="bg-bone rounded-2xl p-6 border border-brand/5 shadow-sm flex flex-col">
               <p className="text-gold font-bold text-[10px] uppercase tracking-widest mb-2">{f.label}</p>
               <p className="text-brand text-3xl font-serif mb-0.5">
-                ${fmt(p.efectivo)}
+                {money(p.efectivo)}
               </p>
               <p className="text-dark/40 text-[11px] mb-3">Efectivo o transferencia</p>
               <div className="bg-white rounded-lg px-3 py-2 mb-4 border border-brand/5">
                 <p className="text-dark/50 text-[11px] leading-snug">
-                  O 3 cuotas de <strong className="text-dark/70">${fmt(p.cuota)}</strong> con tarjeta de crédito
+                  O 3 cuotas de <strong className="text-dark/70">{money(p.cuota)}</strong> con tarjeta de crédito
                 </p>
-                <p className="text-gold text-[10px] font-semibold mt-0.5">Ahorrás ${fmt(p.ahorro)} pagando en efectivo o transferencia</p>
+                <p className="text-gold text-[10px] font-semibold mt-0.5">Ahorrás {money(p.ahorro)} pagando en efectivo o transferencia</p>
               </div>
               <p className="text-dark/60 text-sm leading-relaxed flex-grow mb-5">{f.desc}</p>
               <a href={WA(`Hola! Vengo de la web y quiero consultar el formato de ${f.label} en Coliving Mágico ✨`)}
@@ -511,24 +518,24 @@ const Formatos: React.FC = () => (
 
         {/* Pase libre mensual — destacado */}
         {(() => {
-          const p = pago(COLIVING_PRICES.paseMensual.precio);
+          const p = pago(prices.paseMensual.precio);
           return (
             <div data-reveal data-delay="2" className="bg-brand text-white rounded-2xl p-6 border border-gold/30 shadow-lg flex flex-col relative">
               <span className="absolute -top-3 left-6 bg-gold text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
                 Más completo
               </span>
-              <p className="text-gold font-bold text-[10px] uppercase tracking-widest mb-2 mt-2">{COLIVING_PRICES.paseMensual.label}</p>
+              <p className="text-gold font-bold text-[10px] uppercase tracking-widest mb-2 mt-2">{prices.paseMensual.label}</p>
               <p className="text-white text-3xl font-serif mb-0.5">
-                ${fmt(p.efectivo)}
+                {money(p.efectivo)}
               </p>
               <p className="text-white/50 text-[11px] mb-3">Efectivo o transferencia</p>
               <div className="bg-white/10 rounded-lg px-3 py-2 mb-4 border border-white/10">
                 <p className="text-white/70 text-[11px] leading-snug">
-                  O 3 cuotas de <strong className="text-white">${fmt(p.cuota)}</strong> con tarjeta de crédito
+                  O 3 cuotas de <strong className="text-white">{money(p.cuota)}</strong> con tarjeta de crédito
                 </p>
-                <p className="text-gold text-[10px] font-semibold mt-0.5">Ahorrás ${fmt(p.ahorro)} pagando en efectivo o transferencia</p>
+                <p className="text-gold text-[10px] font-semibold mt-0.5">Ahorrás {money(p.ahorro)} pagando en efectivo o transferencia</p>
               </div>
-              <p className="text-white/70 text-sm leading-relaxed mb-3">{COLIVING_PRICES.paseMensual.desc}</p>
+              <p className="text-white/70 text-sm leading-relaxed mb-3">{prices.paseMensual.desc}</p>
               <ul className="space-y-1.5 mb-5 flex-grow">
                 {['Acceso durante todo el mes', 'Estadía con flexibilidad de organización', 'Tiempo real para integrar hábitos y rutinas'].map((d, j) => (
                   <li key={j} className="flex items-start gap-1.5 text-xs text-white/70">
@@ -559,7 +566,8 @@ const Formatos: React.FC = () => (
       </p>
     </div>
   </section>
-);
+  );
+};
 
 // ── Prueba social ──────────────────────────────────────────────────────────────
 const TESTIMONIOS = [
@@ -623,6 +631,9 @@ const PDF_FILENAME = 'Guia-Foco-en-la-Montana-Pueblo-Magico.pdf';
 const GuiaFoco: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const { trampa, esBot } = useAntiBot();
+  const [errorEmail, setErrorEmail] = useState(false);
+  const errorEmailMsg = 'Revisá tu mail: no parece válido.';
 
   const triggerDownload = () => {
     const link = document.createElement('a');
@@ -637,8 +648,12 @@ const GuiaFoco: React.FC = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.target as HTMLFormElement);
+    if (validarEmail(String(data.get('email') || ''))) { setErrorEmail(true); return; }
+    setErrorEmail(false);
+    // Bot (campo trampa o envío instantáneo): se entrega igual sin mandar nada.
+    if (esBot()) { triggerDownload(); setSubmitted(true); return; }
     setSending(true);
-    submitForm('Guía de Foco — Coliving', data).finally(() => {
+    submitForm('guia-coliving', data).finally(() => {
       triggerDownload();
       setSending(false);
       setSubmitted(true);
@@ -675,6 +690,7 @@ const GuiaFoco: React.FC = () => {
             <div className="bg-white rounded-2xl p-6 shadow-xl">
               {!submitted ? (
                 <form onSubmit={handleSubmit} className="space-y-3">
+                  {trampa}
                   <div>
                     <label className="block text-[11px] font-bold text-dark/50 mb-1 uppercase tracking-wider" htmlFor="cg-nombre">Nombre</label>
                     <input required type="text" id="cg-nombre" name="nombre" placeholder="Tu nombre"
@@ -692,6 +708,9 @@ const GuiaFoco: React.FC = () => {
                     <input type="tel" id="cg-wa" name="whatsapp" placeholder="+54 9 ..."
                       className="w-full px-4 py-2.5 bg-bone border border-brand/10 rounded-xl text-dark text-sm focus:ring-2 focus:ring-brand focus:border-brand transition-colors" />
                   </div>
+                  {errorEmail && (
+                    <p role="alert" className="text-sm font-semibold text-red-600">{errorEmailMsg}</p>
+                  )}
                   <button type="submit" disabled={sending}
                     className="w-full bg-gold hover:bg-brand text-white font-bold uppercase tracking-widest text-xs py-3.5 rounded-xl shadow-lg transition-colors mt-1 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait">
                     {sending ? (
@@ -779,12 +798,21 @@ const FAQS = [
   { Icon: CalendarIcon, q: '¿Puedo combinar días de trabajo remoto con la rutina de bienestar?', a: 'Sí, es justamente la idea. No hay horarios obligatorios: tenés espacios cómodos y conexión para trabajar, y podés sumarte a las prácticas de bienestar cuando quieras.' },
   { Icon: CaretDownIcon, q: '¿Cómo reservo mi lugar?', a: 'Los cupos son limitados para cuidar la experiencia. Escribinos por WhatsApp contándonos qué formato te interesa y te confirmamos disponibilidad.' },
   { Icon: ForkKnifeIcon, q: '¿Tienen opciones para dietas o alergias?', a: 'Sí, tenemos opciones de comida para todo tipo de dietas y restricciones alimentarias, incluidas opciones sin gluten. Lo que no podemos garantizar es un ambiente 100% libre de contaminación cruzada: cocinamos en una cocina y mesada compartida, sin productos envasados al vacío ni un proceso aislado. Para celiaquía severa o intolerancia alta al gluten no podemos asegurar inocuidad total, pero sí podemos garantizar platos que no llevan gluten entre sus ingredientes. Contanos tu caso al reservar.' },
-  { Icon: ClockIcon, q: '¿Cuáles son los horarios de las comidas?', a: 'Desayuno de 09:00 a 10:00 hs, almuerzo de 14:00 a 15:00 hs y cena de 20:00 a 21:00 hs. Fuera de esos horarios no hay servicio de cocina, así que si vas a llegar tarde avisanos — llegando desde las 19:00 hs ya llegás a tiempo para la cena.' },
+  { Icon: ClockIcon, q: '¿Cuáles son los horarios de las comidas?', a: '' },
   { Icon: PawPrintIcon, q: '¿Puedo llevar a mi mascota?', a: 'No, por el momento no aceptamos mascotas: en el campo hay animales de granja cerca y no contamos con instalaciones adecuadas para recibirlas.' },
   { Icon: WheelchairIcon, q: '¿Tienen accesibilidad para sillas de ruedas?', a: 'Por el momento no contamos con rampas ni espacios especialmente preparados para sillas de ruedas. Si tenés dudas puntuales sobre accesibilidad, escribinos por WhatsApp y lo vemos juntos.' },
 ];
 
-const FAQ: React.FC = () => (
+const FAQ: React.FC = () => {
+  const { data: precios } = usePublicPricingSummary();
+  const horarios = precios?.horarios_comidas;
+  const respuestaHorarios = horarios
+    ? `Desayuno de ${horarios.desayuno.desde} a ${horarios.desayuno.hasta} hs, almuerzo de ${horarios.almuerzo.desde} a ${horarios.almuerzo.hasta} hs y cena de ${horarios.cena.desde} a ${horarios.cena.hasta} hs. Fuera de esos horarios no hay servicio de cocina; si vas a llegar tarde, avisanos.`
+    : 'Los horarios vigentes se muestran en la reserva online antes de confirmar. Fuera de esos horarios no hay servicio de cocina; si vas a llegar tarde, avisanos.';
+  const preguntas = FAQS.map(faq => faq.q === '¿Cuáles son los horarios de las comidas?'
+    ? { ...faq, a: respuestaHorarios }
+    : faq);
+  return (
   <section id="faq" className="py-20 bg-white">
     <div className="max-w-3xl mx-auto px-6">
       <div data-reveal className="text-center mb-10">
@@ -792,7 +820,7 @@ const FAQ: React.FC = () => (
         <h2 className="text-3xl md:text-4xl font-serif text-brand">Antes de escribirnos</h2>
       </div>
       <div className="space-y-3">
-        {FAQS.map((faq, i) => {
+        {preguntas.map((faq, i) => {
           const Icon = faq.Icon;
           return (
             <div key={i} data-reveal className="bg-bone rounded-2xl border border-brand/5 px-6 py-5">
@@ -807,7 +835,8 @@ const FAQ: React.FC = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 // ── Permiso para descansar ──────────────────────────────────────────────────────
 const PermisoDescanso: React.FC = () => (
@@ -840,12 +869,10 @@ const CTAFinal: React.FC = () => (
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a
-            href={WA_COLIVING}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={RESERVATION_START_PATH}
             className="inline-flex items-center justify-center gap-3 bg-brand text-white px-10 py-4 rounded-full text-sm font-bold uppercase tracking-widest hover:bg-gold transition-colors duration-300 shadow-lg"
           >
-            <WhatsappLogo className="w-5 h-5 flex-shrink-0" weight="fill" />
+            <CalendarIcon className="w-5 h-5 flex-shrink-0" weight="bold" />
             Reservar mi lugar
           </a>
           <a

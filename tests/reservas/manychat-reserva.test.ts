@@ -37,6 +37,7 @@ function disponibilidad(alojamientoId: number | null): RepositorioDisponibilidad
 const plan: ConfiguracionTarifa = {
   planId: 1, codigo: 'base', version: 1, moneda: 'ARS',
   reglasPrecio: [{ temporadaCodigo: 'base', fechaDesde: '2000-01-01', fechaHasta: '2099-12-31', prioridad: 0,
+    diasSemana: [1, 2, 3, 4, 5, 6, 7],
     tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 7,
     baseCalculo: 'unidad_noche', importeCentavos: 7_500_000, exclusividadDesde: null, exclusividadHasta: null }],
   reglasSena: [{ subtotalDesdeCentavos: 0, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 3000 }],

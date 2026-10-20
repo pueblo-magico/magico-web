@@ -6,7 +6,7 @@ import { transicionPagoValida, type EstadoPagoReserva } from '../../_domain/rese
 
 export type ResultadoProcesamientoPago =
   | { estado: 'pago_no_disponible' | 'referencia_invalida' | 'reserva_desconocida' | 'pago_inconsistente' | 'duplicado' | 'sin_cambios' | 'cancelada' }
-  | { estado: 'confirmada' };
+  | { estado: 'confirmada'; reservaId: number };
 
 export async function procesarPagoMercadoPago(
   pagoId: string,
@@ -94,7 +94,7 @@ export async function procesarPagoMercadoPago(
     });
     if (!registrada) return { estado: 'duplicado' };
     if (!reserva) return { estado: 'sin_cambios' };
-    return { estado: 'confirmada' };
+    return { estado: 'confirmada', reservaId };
   }
 
   if (pago.estado === 'rejected' || pago.estado === 'cancelled') {

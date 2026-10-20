@@ -1,10 +1,12 @@
 import type { SolicitudCotizacion } from './models.ts';
+import { fechaOperativaCordoba } from './operationalDate.ts';
 
 export type ReglaPrecioVersionada = {
   temporadaCodigo: string;
   fechaDesde: string;
   fechaHasta: string;
   prioridad: number;
+  diasSemana: number[];
   tipoAlojamiento: 'domo' | 'refugio' | 'camping' | 'bell_tent';
   modalidad: 'cualquiera' | 'privada' | 'compartida' | 'camping';
   ocupacionMin: number;
@@ -29,6 +31,15 @@ export type ConfiguracionTarifa = {
   moneda: string;
   reglasPrecio: ReglaPrecioVersionada[];
   reglasSena: ReglaSenaVersionada[];
+  reglasAjuste?: Array<{
+    codigo: string;
+    nombre: string;
+    anticipacionDesdeDias: number;
+    anticipacionHastaDias: number | null;
+    direccion: 'descuento' | 'recargo';
+    tipo: 'porcentaje_bps' | 'importe_fijo';
+    valor: number;
+  }>;
 };
 
 export type CotizacionVersionada = {
@@ -38,6 +49,9 @@ export type CotizacionVersionada = {
   senaCentavos: number;
   saldoCentavos: number;
   exclusividadGratis: boolean;
+  subtotalAntesAjustesCentavos: number;
+  ajusteTotalCentavos: number;
+  ajustes: Array<{ codigo: string; nombre: string; importeCentavos: number }>;
   noches: Array<{
     fecha: string;
     temporada: string;
@@ -58,10 +72,16 @@ function fechasNocturnas(desde: string, hasta: string): string[] {
   return fechas;
 }
 
+function diaSemanaIso(fecha: string): number {
+  const diaUtc = new Date(`${fecha}T00:00:00Z`).getUTCDay();
+  return diaUtc === 0 ? 7 : diaUtc;
+}
+
 export function cotizarConPlan(
   solicitud: SolicitudCotizacion,
   configuracion: ConfiguracionTarifa,
-  subtotalAdicionalCentavos = 0
+  subtotalAdicionalCentavos = 0,
+  fechaReferencia = fechaOperativaCordoba()
 ): CotizacionVersionada | { error: ErrorTarifa } {
   const noches = [] as CotizacionVersionada['noches'];
   let exclusividadGratis = false;
@@ -73,7 +93,8 @@ export function cotizarConPlan(
         (regla.modalidad === 'cualquiera' || regla.modalidad === solicitud.modalidad) &&
         solicitud.personas >= regla.ocupacionMin &&
         solicitud.personas <= regla.ocupacionMax &&
-        fecha >= regla.fechaDesde && fecha <= regla.fechaHasta
+        fecha >= regla.fechaDesde && fecha <= regla.fechaHasta &&
+        (regla.diasSemana || [1, 2, 3, 4, 5, 6, 7]).includes(diaSemanaIso(fecha))
       )
       .sort((a, b) => b.prioridad - a.prioridad);
     if (candidatas.length === 0) return { error: 'TARIFA_NO_CONFIGURADA' };
@@ -90,8 +111,26 @@ export function cotizarConPlan(
       solicitud.personas <= (regla.exclusividadHasta ?? Number.MAX_SAFE_INTEGER);
   }
 
-  const subtotalCentavos = noches.reduce((total, noche) => total + noche.importeCentavos, 0) +
+  const subtotalAntesAjustesCentavos = noches.reduce((total, noche) => total + noche.importeCentavos, 0) +
     subtotalAdicionalCentavos;
+  const anticipacionDias = Math.max(0, Math.floor(
+    (Date.parse(`${solicitud.fechaEntrada}T00:00:00Z`) - Date.parse(`${fechaReferencia}T00:00:00Z`)) / 86_400_000
+  ));
+  const ajustes = (configuracion.reglasAjuste || []).filter(regla =>
+    anticipacionDias >= regla.anticipacionDesdeDias &&
+    (regla.anticipacionHastaDias === null || anticipacionDias <= regla.anticipacionHastaDias)
+  ).map(regla => {
+    const magnitud = regla.tipo === 'porcentaje_bps'
+      ? Math.round(subtotalAntesAjustesCentavos * regla.valor / 10_000)
+      : regla.valor;
+    return {
+      codigo: regla.codigo,
+      nombre: regla.nombre,
+      importeCentavos: regla.direccion === 'descuento' ? -magnitud : magnitud,
+    };
+  });
+  const ajusteTotalCentavos = ajustes.reduce((total, ajuste) => total + ajuste.importeCentavos, 0);
+  const subtotalCentavos = Math.max(0, subtotalAntesAjustesCentavos + ajusteTotalCentavos);
   const reglasSena = configuracion.reglasSena.filter(regla =>
     subtotalCentavos >= regla.subtotalDesdeCentavos &&
     (regla.subtotalHastaCentavos === null || subtotalCentavos <= regla.subtotalHastaCentavos)
@@ -106,6 +145,9 @@ export function cotizarConPlan(
     plan: { id: configuracion.planId, codigo: configuracion.codigo, version: configuracion.version },
     moneda: configuracion.moneda,
     subtotalCentavos,
+    subtotalAntesAjustesCentavos,
+    ajusteTotalCentavos,
+    ajustes,
     senaCentavos,
     saldoCentavos: subtotalCentavos - senaCentavos,
     exclusividadGratis,

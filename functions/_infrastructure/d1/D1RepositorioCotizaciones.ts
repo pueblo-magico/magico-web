@@ -42,11 +42,12 @@ export class D1RepositorioCotizaciones implements RepositorioCotizaciones {
         fecha_checkin, fecha_checkout, cantidad_personas,
         subtotal_centavos, sena_centavos, total_centavos, alojamiento_centavos,
         alimentacion_centavos, regimen_alimentacion, tarifa_alimentacion_version,
+        subtotal_antes_ajustes_centavos, ajuste_total_centavos,
         desglose_json, request_hash, expires_at,
         politica_cancelacion_codigo, politica_cancelacion_version,
         politica_cancelacion_estado, politica_cancelacion_json
       )
-      SELECT ?, p.id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      SELECT ?, p.id, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
              pc.codigo, pc.version, pc.estado, pc.reglas_json
       FROM planes_tarifa p
       CROSS JOIN (
@@ -69,6 +70,8 @@ export class D1RepositorioCotizaciones implements RepositorioCotizaciones {
       resultado.sena.monto_centavos, resultado.desglose.subtotal_centavos,
       resultado.desglose.alojamiento_centavos, resultado.desglose.alimentacion_centavos,
       resultado.desglose.regimen_alimentacion, resultado.desglose.tarifa_alimentacion_version,
+      resultado.desglose.subtotal_antes_ajustes_centavos ?? resultado.desglose.subtotal_centavos,
+      resultado.desglose.ajuste_total_centavos ?? 0,
       JSON.stringify(resultado.desglose), requestHash, expiresAt,
       resultado.desglose.plan_codigo, resultado.desglose.plan_version
     ).first();

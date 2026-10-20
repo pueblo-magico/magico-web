@@ -9,6 +9,7 @@ import { D1RepositorioEstadoPagoReserva } from '../../functions/_infrastructure/
 import { crearReservaPublica } from '../../functions/_application/reservas/crearReservaPublica.ts';
 import { procesarPagoMercadoPago } from '../../functions/_application/reservas/procesarPagoMercadoPago.ts';
 import { onRequestGet as listarAlojamientos } from '../../functions/api/v1/public/alojamientos.ts';
+import { onRequestGet as listarPreciosPublicos } from '../../functions/api/v1/public/precios.ts';
 import { onRequestGet as consultarDisponibilidad } from '../../functions/api/v1/public/disponibilidad.ts';
 import { onRequestPost as crearCotizacion } from '../../functions/api/v1/public/cotizaciones.ts';
 import { onRequestPost as crearReserva } from '../../functions/api/v1/public/reservas.ts';
@@ -89,8 +90,125 @@ test('el catálogo v1 publica capacidades comerciales sin PII ni ids internos', 
   const domos = body.data.filter((item: any) => item.tipo === 'domo');
   assert.equal(domos.length, 2);
   assert.ok(domos.every((item: any) => item.capacidad_comercial === 7));
+  assert.ok(domos.every((item: any) => item.servicios.some((servicio: any) =>
+    servicio.codigo === 'electricidad-alojamiento' && servicio.disponibilidad === 'no_disponible'
+  )));
+  assert.ok(domos.every((item: any) => item.opciones_preparacion.some((opcion: any) =>
+    opcion.codigo === 'cama_doble' && opcion.modalidad === 'privada' && opcion.cantidad_personas === 2
+  )));
+  const refugio = body.data.find((item: any) => item.tipo === 'refugio');
+  assert.ok(refugio.servicios.some((servicio: any) =>
+    servicio.codigo === 'wifi-satelital' && servicio.disponibilidad === 'incluido'
+  ));
+  assert.ok(refugio.servicios.some((servicio: any) =>
+    servicio.codigo === 'bano-privado' && servicio.disponibilidad === 'no_disponible'
+  ));
   assert.ok(domos.every((item: any) => !('id' in item) && !('parent_id' in item)));
   assert.doesNotMatch(JSON.stringify(body), /cliente_|email|telefono/i);
+  sqlite.close();
+});
+
+test('publica y calcula disponibilidad de camping cuando espacio y modalidad están habilitados', async () => {
+  const { sqlite, db } = baseMigrada();
+  sqlite.exec(`
+    UPDATE espacios
+    SET capacidad_comercial = 6, capacidad_operativa_maxima = 8,
+        reservable_general = 1, estado = 'activo'
+    WHERE codigo = 'camping-exterior';
+    UPDATE modalidades_espacio
+    SET habilitada = 1
+    WHERE espacio_id = (SELECT id FROM espacios WHERE codigo = 'camping-exterior')
+      AND modalidad = 'camping' AND contexto = 'general';
+  `);
+
+  const catalogo = await listarAlojamientos({
+    request: new Request('https://test/api/v1/public/alojamientos?contexto=general'),
+    env: env(db),
+  });
+  const bodyCatalogo = await catalogo.json() as any;
+  const camping = bodyCatalogo.data.find((item: any) => item.tipo === 'camping');
+  assert.equal(camping.codigo, 'camping-exterior');
+  assert.equal(camping.capacidad_comercial, 6);
+  assert.deepEqual(camping.modalidades, [{
+    codigo: 'camping', nombre: 'Camping',
+    descripcion: 'Traé tu propia carpa. Incluye acceso a duchas calientes y baños.',
+    unidad_venta: 'parcela',
+  }]);
+  assert.ok(camping.servicios.some((servicio: any) =>
+    servicio.codigo === 'sanitarios-compartidos' && servicio.disponibilidad === 'incluido'
+  ));
+  assert.ok(camping.servicios.some((servicio: any) =>
+    servicio.codigo === 'electricidad-alojamiento' && servicio.disponibilidad === 'no_disponible'
+  ));
+
+  const disponibilidad = await consultarDisponibilidad({
+    request: new Request('https://test/api/v1/public/disponibilidad?check_in=2027-04-11&check_out=2027-04-13&personas=4&tipo_alojamiento=camping&modalidad=camping'),
+    env: env(db),
+  });
+  const bodyDisponibilidad = await disponibilidad.json() as any;
+  assert.equal(disponibilidad.status, 200);
+  assert.equal(bodyDisponibilidad.data.estado, 'disponible');
+  assert.equal(bodyDisponibilidad.data.opcion.espacio_codigo, 'camping-exterior');
+  assert.equal(bodyDisponibilidad.data.opcion.capacidad_disponible, 6);
+  sqlite.close();
+});
+
+test('el resumen público de precios refleja sólo modalidades habilitadas y el plan publicado', async () => {
+  const { sqlite, db } = baseMigrada();
+
+  const inicial = await listarPreciosPublicos({
+    request: new Request('https://test/api/v1/public/precios?fecha=2027-04-10'),
+    env: env(db),
+  });
+  assert.equal(inicial.status, 200);
+  const bodyInicial = await inicial.json() as any;
+  assert.equal(bodyInicial.data.plan.codigo, 'alojamiento-base');
+  assert.equal(bodyInicial.data.plan.version, 1);
+  assert.deepEqual(bodyInicial.data.opciones.map((item: any) => item.tipo_alojamiento), ['domo', 'refugio']);
+  assert.equal(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas.length, 4);
+  assert.equal(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo')
+    .nombres_modalidades.compartida, 'Compartida');
+  assert.ok(bodyInicial.data.opciones.find((item: any) => item.tipo_alojamiento === 'domo').tarifas
+    .every((item: any) => Number.isFinite(item.prioridad)));
+  assert.equal(bodyInicial.data.alimentacion.pension_completa.adicional_por_persona_noche_centavos, 4_000_000);
+  assert.deepEqual(bodyInicial.data.horarios_comidas.cena, { desde: '20:00', hasta: '21:00' });
+
+  sqlite.exec(`
+    UPDATE espacios
+    SET capacidad_comercial = 6, capacidad_operativa_maxima = 8,
+        reservable_general = 1, estado = 'activo'
+    WHERE codigo = 'camping-exterior';
+    UPDATE modalidades_espacio
+    SET habilitada = 1
+    WHERE espacio_id = (SELECT id FROM espacios WHERE codigo = 'camping-exterior')
+      AND modalidad = 'camping' AND contexto = 'general';
+    UPDATE configuracion_horarios_comidas
+    SET almuerzo_desde = '13:30', almuerzo_hasta = '15:00', version = version + 1
+    WHERE id = 1;
+  `);
+  const sinTarifaCamping = await listarPreciosPublicos({
+    request: new Request('https://test/api/v1/public/precios?fecha=2027-04-10'),
+    env: env(db),
+  });
+  const bodyCamping = await sinTarifaCamping.json() as any;
+  const camping = bodyCamping.data.opciones.find((item: any) => item.tipo_alojamiento === 'camping');
+  assert.ok(camping);
+  assert.deepEqual(camping.modalidades, ['camping']);
+  assert.equal(camping.nombres_modalidades.camping, 'Camping');
+  assert.deepEqual(camping.tarifas, []);
+  assert.deepEqual(bodyCamping.data.horarios_comidas.almuerzo, { desde: '13:30', hasta: '15:00' });
+  assert.doesNotMatch(JSON.stringify(bodyCamping), /cliente_|email|telefono/i);
+  sqlite.close();
+});
+
+test('el resumen público de precios rechaza una fecha inválida', async () => {
+  const { sqlite, db } = baseMigrada();
+  const response = await listarPreciosPublicos({
+    request: new Request('https://test/api/v1/public/precios?fecha=no-es-fecha'),
+    env: env(db),
+  });
+  assert.equal(response.status, 400);
+  assert.equal((await response.json() as any).error.codigo, 'FECHA_INVALIDA');
   sqlite.close();
 });
 
@@ -235,6 +353,64 @@ test('cotiza pensión completa con dos comidas de ARS 20.000 por persona y noche
   sqlite.close();
 });
 
+test('persiste cotizaciones con recargos sin romper la igualdad de sus componentes', async () => {
+  const { sqlite, db } = baseMigrada();
+  sqlite.prepare(`
+    INSERT INTO reglas_ajuste_precio (
+      plan_tarifa_id, codigo, nombre, anticipacion_desde_dias,
+      anticipacion_hasta_dias, direccion, tipo, valor
+    )
+    SELECT id, 'recargo-qa', 'Recargo QA', 0, NULL, 'recargo', 'porcentaje_bps', 1000
+    FROM planes_tarifa WHERE estado = 'publicado'
+  `).run();
+
+  const response = await crearCotizacion({
+    request: new Request('https://test/api/v1/public/cotizaciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in: '2027-04-10', check_out: '2027-04-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
+        regimen_alimentacion: 'pension_completa',
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 200);
+  const body = await response.json() as any;
+  assert.equal(body.data.precio.subtotal_antes_ajustes_centavos, 31_000_000);
+  assert.equal(body.data.precio.ajuste_total_centavos, 3_100_000);
+  assert.equal(body.data.precio.subtotal_centavos, 34_100_000);
+
+  const snapshot = sqlite.prepare(`
+    SELECT subtotal_antes_ajustes_centavos, ajuste_total_centavos,
+           alojamiento_centavos, alimentacion_centavos, subtotal_centavos
+    FROM cotizaciones ORDER BY id DESC LIMIT 1
+  `).get() as Record<string, number>;
+  assert.equal(snapshot.subtotal_antes_ajustes_centavos,
+    snapshot.alojamiento_centavos + snapshot.alimentacion_centavos);
+  assert.equal(snapshot.subtotal_centavos,
+    snapshot.subtotal_antes_ajustes_centavos + snapshot.ajuste_total_centavos);
+  sqlite.close();
+});
+
+test('cotizaciones v1 transforma fallas inesperadas en un error JSON estable', async () => {
+  const response = await crearCotizacion({
+    request: new Request('https://test/api/v1/public/cotizaciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in: '2027-04-10', check_out: '2027-04-12', personas: 2,
+        tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
+      }),
+    }),
+    env: env({ prepare() { throw new Error('database unavailable'); } }),
+  });
+
+  assert.equal(response.status, 500);
+  assert.match(response.headers.get('content-type') || '', /application\/json/);
+  assert.equal((await response.json() as any).error.codigo, 'ERROR_INTERNO');
+});
+
 test('rechaza regímenes de alimentación fuera del contrato', async () => {
   const { sqlite, db } = baseMigrada();
   const response = await crearCotizacion({
@@ -255,7 +431,7 @@ test('rechaza regímenes de alimentación fuera del contrato', async () => {
   sqlite.close();
 });
 
-async function cotizarDomo(db: unknown) {
+async function cotizarDomo(db: unknown, entorno: Record<string, unknown> = {}) {
   const response = await crearCotizacion({
     request: new Request('https://test/api/v1/public/cotizaciones', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -264,7 +440,7 @@ async function cotizarDomo(db: unknown) {
         tipo_alojamiento: 'domo', modalidad: 'privada', contexto: 'general',
       }),
     }),
-    env: env(db),
+    env: { ...env(db), ...entorno },
   });
   assert.equal(response.status, 200);
   return response.json() as Promise<any>;
@@ -282,6 +458,7 @@ function requestReserva(
     body: JSON.stringify({
       cotizacion_codigo: cotizacionCodigo,
       espacio_codigo: 'domo-1',
+      preferencias: { preparacion_cama: 'cama_doble' },
       cliente: { nombre, email: 'QA@Example.Test' },
       ...(idioma === undefined ? {} : { idioma }),
     }),
@@ -308,6 +485,11 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
 
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM retenciones_reserva').get()?.n, 1);
+  assert.deepEqual({ ...sqlite.prepare(`
+    SELECT categoria, opcion_codigo, opcion_nombre FROM reserva_preferencias
+  `).get() }, {
+    categoria: 'preparacion_cama', opcion_codigo: 'cama_doble', opcion_nombre: '1 cama doble',
+  });
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM cuentas_cobro_reserva WHERE estado = 'disabled'").get()?.n, 1);
   assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM ocupacion_reserva_noches').get()?.n, 2);
   assert.deepEqual({ ...sqlite.prepare(`
@@ -323,10 +505,91 @@ test('crea una retención atómica y un retry devuelve la misma reserva', async 
   sqlite.close();
 });
 
-test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII', async () => {
+test('exige una preparación válida para domo privado de dos personas', async () => {
   const { sqlite, db } = baseMigrada();
   const quote = await cotizarDomo(db);
-  const request = requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001');
+  const bodyBase = {
+    cotizacion_codigo: quote.data.cotizacion.codigo,
+    espacio_codigo: 'domo-1',
+    cliente: { nombre: 'Huésped Camas', email: 'camas@example.test' },
+  };
+  const enviar = (clave: string, body: Record<string, unknown>) => crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': clave },
+      body: JSON.stringify(body),
+    }),
+    env: env(db),
+  });
+
+  const faltante = await enviar('qa-cama-faltante-0001', bodyBase);
+  assert.equal(faltante.status, 400);
+  assert.equal((await faltante.json() as any).error.codigo, 'PREFERENCIA_PREPARACION_REQUERIDA');
+
+  const invalida = await enviar('qa-cama-invalida-0001', {
+    ...bodyBase, preferencias: { preparacion_cama: 'cama-inexistente' },
+  });
+  assert.equal(invalida.status, 400);
+  assert.equal((await invalida.json() as any).error.codigo, 'PREFERENCIA_PREPARACION_INVALIDA');
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reservas').get()?.n, 0);
+  sqlite.close();
+});
+
+test('no exige preparación cuando el superadmin deshabilita todas las opciones aplicables', async () => {
+  const { sqlite, db } = baseMigrada();
+  sqlite.prepare(`
+    UPDATE opciones_preparacion_estadia
+    SET habilitada = 0
+    WHERE tipo_alojamiento = 'domo'
+      AND modalidad = 'privada'
+      AND cantidad_personas = 2
+  `).run();
+  const quote = await cotizarDomo(db);
+
+  const response = await crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-cama-deshabilitada-0001' },
+      body: JSON.stringify({
+        cotizacion_codigo: quote.data.cotizacion.codigo,
+        espacio_codigo: 'domo-1',
+        cliente: { nombre: 'Huésped sin preparación', email: 'sin-preparacion@example.test' },
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 201);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) n FROM reserva_preferencias').get()?.n, 0);
+  sqlite.close();
+});
+
+test('rechaza crear una reserva pública sin email', async () => {
+  const { sqlite, db } = baseMigrada();
+  const quote = await cotizarDomo(db);
+  const response = await crearReserva({
+    request: new Request('https://test/api/v1/public/reservas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'qa-email-required-0001' },
+      body: JSON.stringify({
+        cotizacion_codigo: quote.data.cotizacion.codigo,
+        espacio_codigo: 'domo-1',
+        cliente: { nombre: 'Huésped sin email' },
+      }),
+    }),
+    env: env(db),
+  });
+
+  assert.equal(response.status, 400);
+  const body = await response.json() as any;
+  assert.equal(body.error.codigo, 'SOLICITUD_INVALIDA');
+  assert.match(body.error.mensaje, /email/i);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM reservas').get()?.cantidad, 0);
+  sqlite.close();
+});
+
+test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII', async () => {
+  const { sqlite, db } = baseMigrada();
   const entornoMp = {
     ...env(db),
     MP_CHECKOUT_ENABLED: 'true',
@@ -337,6 +600,13 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     MP_TRANSFER_ACCOUNT_HOLDER: 'Pueblo Mágico',
     PAYMENT_RECONCILIATION_SECRET: 'qa-secret-mercado-pago-32-caracteres-minimo',
   };
+  const quote = await cotizarDomo(db, entornoMp);
+  assert.deepEqual(quote.data.metodos_pago, ['mercado_pago_checkout', 'transferencia_mp']);
+  assert.deepEqual(quote.data.recargos_metodo_pago, {
+    mercado_pago_checkout: { porcentaje_bps: 1_000 },
+    transferencia_mp: { porcentaje_bps: 0 },
+  });
+  const request = requestReserva(quote.data.cotizacion.codigo, 'qa-mp-checkout-0001');
   const originalFetch = globalThis.fetch;
   const llamadas: Array<{ url: string; method: string; body?: string }> = [];
   globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
@@ -367,7 +637,21 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     assert.equal(llamadas.length, 2);
     assert.match(llamadas[0].url, new RegExp(`external_reference=${encodeURIComponent(body.data.reserva.codigo)}`));
     assert.equal(JSON.parse(llamadas[1].body || '{}').external_reference, body.data.reserva.codigo);
+    assert.equal(JSON.parse(llamadas[1].body || '{}').items[0].unit_price, 49_500);
     assert.equal(sqlite.prepare('SELECT mp_preference_id FROM reservas').get()?.mp_preference_id, 'pref-publica-1');
+    assert.deepEqual({ ...sqlite.prepare(`
+      SELECT r.monto_total_centavos, r.monto_sena_centavos,
+             rpm.monto_esperado_centavos, rpm.recargo_porcentaje_bps,
+             rpm.recargo_total_centavos, rpm.recargo_sena_centavos
+      FROM reservas r JOIN reserva_metodos_pago rpm ON rpm.reserva_id = r.id
+    `).get() }, {
+      monto_total_centavos: 16_500_000,
+      monto_sena_centavos: 4_950_000,
+      monto_esperado_centavos: 4_950_000,
+      recargo_porcentaje_bps: 1_000,
+      recargo_total_centavos: 1_500_000,
+      recargo_sena_centavos: 450_000,
+    });
     assert.deepEqual({ ...sqlite.prepare(`
       SELECT proveedor, estado, external_preference_id,
              json_extract(metadata_json, '$.estado_checkout') estado_checkout
@@ -395,8 +679,33 @@ test('crea una preferencia Mercado Pago una sola vez y expone su estado sin PII'
     assert.equal(estado.status, 200);
     assert.equal(bodyEstado.data.reserva.codigo, body.data.reserva.codigo);
     assert.equal(bodyEstado.data.reserva.estado, 'pendiente_pago');
+    assert.equal(bodyEstado.data.reserva.confirmed_at, null);
+    assert.equal(bodyEstado.data.reserva.idioma, 'es');
+    assert.deepEqual(bodyEstado.data.estadia, {
+      check_in: '2027-08-10',
+      check_out: '2027-08-12',
+      noches: 2,
+      personas: 2,
+      alojamiento: { codigo: 'domo-1', nombre: 'Domo 1', tipo: 'domo' },
+      modalidad: 'privada',
+      regimen_alimentacion: 'desayuno_incluido',
+      preparacion: {
+        codigo: 'cama_doble',
+        nombre: '1 cama doble',
+        descripcion: 'Prepararemos el domo con una cama doble.',
+      },
+    });
+    assert.deepEqual(bodyEstado.data.precio, {
+      total_centavos: 16_500_000,
+      sena_centavos: 4_950_000,
+      saldo_centavos: 11_550_000,
+      moneda: 'ARS',
+    });
     assert.equal(bodyEstado.data.pago.estado, 'pendiente');
-    assert.doesNotMatch(JSON.stringify(bodyEstado), /cliente_|email|telefono|checkout_url/i);
+    assert.equal(bodyEstado.data.pago.monto_centavos, 4_950_000);
+    assert.equal(bodyEstado.data.pago.metodo, 'mercado_pago_checkout');
+    assert.equal(bodyEstado.data.pago.checkout_url, 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=pref-publica-1');
+    assert.doesNotMatch(JSON.stringify(bodyEstado), /cliente_|email|telefono/i);
   } finally {
     globalThis.fetch = originalFetch;
     sqlite.close();
@@ -446,6 +755,7 @@ test('registra una transferencia por DNI protegido y sólo entonces expone el de
     body: JSON.stringify({
       cotizacion_codigo: quote.data.cotizacion.codigo,
       espacio_codigo: 'domo-1',
+      preferencias: { preparacion_cama: 'cama_doble' },
       cliente: { nombre: 'Huésped Transferencia', email: 'qa@example.test' },
       pago: {
         metodo: 'transferencia_mp',
@@ -466,17 +776,39 @@ test('registra una transferencia por DNI protegido y sólo entonces expone el de
     },
   });
   const metodo = sqlite.prepare(`
-    SELECT metodo, pagador_documento_hash, pagador_documento_ultimos4
+    SELECT metodo, pagador_documento_hash, pagador_documento_ultimos4,
+           recargo_porcentaje_bps, recargo_total_centavos, recargo_sena_centavos
     FROM reserva_metodos_pago
   `).get() as any;
   assert.equal(metodo.metodo, 'transferencia_mp');
   assert.match(String(metodo.pagador_documento_hash), /^[a-f0-9]{64}$/);
   assert.equal(metodo.pagador_documento_ultimos4, '5678');
+  assert.equal(metodo.recargo_porcentaje_bps, 0);
+  assert.equal(metodo.recargo_total_centavos, 0);
+  assert.equal(metodo.recargo_sena_centavos, 0);
   assert.equal(sqlite.prepare('SELECT COUNT(*) cantidad FROM cuentas_cobro_reserva').get()?.cantidad, 0);
   assert.doesNotMatch(
     JSON.stringify(body),
     /"pagador_documento_hash"|"pagador_documento_ultimos4"|"documento_numero"/,
   );
+
+  const estado = await consultarEstadoReserva({
+    request: new Request(`https://test/api/v1/public/reservas/${body.data.reserva.codigo}`),
+    env: entornoTransferencia,
+    params: { codigo: body.data.reserva.codigo },
+  });
+  const bodyEstado = await estado.json() as any;
+  assert.equal(bodyEstado.data.pago.metodo, 'transferencia_mp');
+  assert.deepEqual(bodyEstado.data.transferencia, {
+    estado: 'ready',
+    destino: {
+      alias: 'pueblo.magico.test',
+      cvu: '0000003100012345678901',
+      titular: 'Pueblo Mágico',
+      moneda: 'ARS',
+    },
+  });
+  assert.equal(bodyEstado.data.cuenta_cobro.estado, 'no_disponible');
   sqlite.close();
 });
 
@@ -496,6 +828,7 @@ test('confirma de punta a punta una transferencia por DNI, importe y moneda', as
       body: JSON.stringify({
         cotizacion_codigo: quote.data.cotizacion.codigo,
         espacio_codigo: 'domo-1',
+        preferencias: { preparacion_cama: 'dos_camas_simples' },
         cliente: { nombre: 'Huésped Transferencia E2E', email: 'qa@example.test' },
         pago: {
           metodo: 'transferencia_mp',
@@ -529,7 +862,12 @@ test('confirma de punta a punta una transferencia por DNI, importe y moneda', as
     'request-transfer-e2e-1',
   );
 
-  assert.deepEqual(resultado, { estado: 'confirmada' });
+  assert.deepEqual(resultado, {
+    estado: 'confirmada',
+    reservaId: Number(sqlite.prepare('SELECT id FROM reservas WHERE codigo = ?').get(
+      creada.data.reserva.codigo
+    )?.id),
+  });
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT r.estado_flujo, rpm.estado metodo_estado, p.estado pago_estado
     FROM reservas r
@@ -552,8 +890,9 @@ test('persiste el idioma y selecciona plantillas versionadas para la reserva pú
   assert.equal(response.status, 201);
   assert.equal(sqlite.prepare('SELECT idioma_comunicacion FROM reservas').get()?.idioma_comunicacion, 'en');
   assert.deepEqual(sqlite.prepare(`
-    SELECT DISTINCT idioma, plantilla_version FROM comunicacion_intenciones ORDER BY idioma
-  `).all().map(row => ({ ...row })), [{ idioma: 'en', plantilla_version: 1 }]);
+    SELECT DISTINCT idioma, plantilla_version FROM comunicacion_intenciones
+    WHERE audiencia = 'huesped' ORDER BY idioma
+  `).all().map(row => ({ ...row })), [{ idioma: 'en', plantilla_version: 2 }]);
 
   const invalidQuote = await cotizarDomo(db);
   const invalid = await crearReserva({
@@ -597,6 +936,18 @@ test('Preview puede provisionar un destino mock visible, durable e idempotente',
   assert.equal(bodyRetry.data.reserva.id, bodyPrimera.data.reserva.id);
   assert.equal(bodyRetry.data.cuenta_cobro.destino.cvu, bodyPrimera.data.cuenta_cobro.destino.cvu);
   assert.equal(bodyRetry.meta.idempotente, true);
+
+  const estado = await consultarEstadoReserva({
+    request: new Request(`https://test/api/v1/public/reservas/${bodyPrimera.data.reserva.codigo}`),
+    env: entornoMock,
+    params: { codigo: bodyPrimera.data.reserva.codigo },
+  });
+  const bodyEstado = await estado.json() as any;
+  assert.equal(bodyEstado.data.cuenta_cobro.proveedor, 'cucuru_mock');
+  assert.equal(bodyEstado.data.cuenta_cobro.estado, 'ready');
+  assert.equal(bodyEstado.data.cuenta_cobro.simulado, true);
+  assert.equal(bodyEstado.data.cuenta_cobro.destino.alias, bodyPrimera.data.cuenta_cobro.destino.alias);
+  assert.equal(bodyEstado.data.cuenta_cobro.destino.cvu, bodyPrimera.data.cuenta_cobro.destino.cvu);
 
   assert.deepEqual({ ...sqlite.prepare(`
     SELECT estado, simulada, COUNT(*) OVER () AS cantidad
@@ -680,7 +1031,8 @@ test('la restricción D1 evita sobreventa aunque dos chequeos hayan visto dispon
     espacioCodigo: 'domo-1',
     clienteNombre: 'Carrera QA',
     clienteTelefono: null,
-    clienteEmail: null,
+    clienteEmail: 'expiry@example.test',
+    preferenciaPreparacionCodigo: 'cama_doble',
     idempotencyKey: 'qa-race-0002',
   }, new D1RepositorioCreacionReservaPublica(db), {
     async consultar() {
@@ -706,13 +1058,23 @@ test('confirmar una reserva convierte la retención y protege estados finales', 
     request: requestReserva(quote.data.cotizacion.codigo, 'qa-confirm-0001'), env: env(db),
   });
   assert.equal(creada.status, 201);
+  const codigo = (await creada.json() as any).data.reserva.codigo;
   sqlite.prepare("UPDATE reservas SET estado = 'confirmada' WHERE codigo = ?")
-    .run((await creada.json() as any).data.reserva.codigo);
+    .run(codigo);
 
   assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas').get()?.estado_flujo, 'confirmada');
   assert.equal(sqlite.prepare('SELECT estado FROM retenciones_reserva').get()?.estado, 'convertida');
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM ocupacion_reserva_noches WHERE estado = 'confirmada'").get()?.n, 2);
   assert.equal(sqlite.prepare("SELECT COUNT(*) n FROM reserva_eventos WHERE tipo = 'reserva.confirmada'").get()?.n, 1);
+  const estado = await consultarEstadoReserva({
+    request: new Request(`https://test/api/v1/public/reservas/${codigo}`),
+    env: env(db), params: { codigo },
+  });
+  const bodyEstado = await estado.json() as any;
+  assert.equal(bodyEstado.data.reserva.estado, 'confirmada');
+  assert.match(bodyEstado.data.reserva.confirmed_at, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(bodyEstado.data.precio.total_centavos, quote.data.precio.subtotal_centavos);
+  assert.equal(bodyEstado.data.estadia.preparacion.nombre, '1 cama doble');
   sqlite.prepare("UPDATE reservas SET estado_flujo = 'cancelada'").run();
   assert.equal(sqlite.prepare('SELECT estado_flujo FROM reservas').get()?.estado_flujo, 'cancelada');
   assert.throws(

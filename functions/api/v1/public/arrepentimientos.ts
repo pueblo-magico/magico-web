@@ -3,6 +3,7 @@ import { D1RepositorioSolicitudesArrepentimiento } from '../../../_infrastructur
 import { jsonPublico, leerJsonPublico, optionsPublico } from '../../../_interfaces/http/publicApiV1.ts';
 import { consumirLimite, respuestaLimite } from '../../../_interfaces/http/rateLimit.ts';
 import { observarSolicitud } from '../../../_interfaces/http/observability.ts';
+import { programarDespachoOutbox } from '../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 const METODOS = 'GET, POST';
 export const onRequestOptions = ({ request }: any) => optionsPublico(request, METODOS);
@@ -16,7 +17,12 @@ const STATUS: Record<string, number> = {
   IDIOMA_INVALIDO: 400,
 };
 
-async function crear(request: Request, env: any, requestId: string): Promise<Response> {
+async function crear(
+  request: Request,
+  env: any,
+  requestId: string,
+  waitUntil?: (promise: Promise<unknown>) => void
+): Promise<Response> {
   const limitada = respuestaLimite(await consumirLimite(request, env, 'publico.v1.arrepentimientos', 5, 3600));
   if (limitada) return limitada;
   const lectura = await leerJsonPublico(request, METODOS);
@@ -36,6 +42,15 @@ async function crear(request: Request, env: any, requestId: string): Promise<Res
       error: { codigo: resultado.codigo, mensaje: resultado.mensaje, reintentable: false },
       meta: { version: 'v1' },
     }, STATUS[resultado.codigo] || 400);
+  }
+
+  if (!resultado.idempotente) {
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'public.withdrawal_request.create',
+      { eventIds: resultado.valor.notificacionUid ? [resultado.valor.notificacionUid] : [] }
+    );
   }
 
   return jsonPublico(request, METODOS, {
@@ -85,11 +100,11 @@ async function consultar(request: Request, env: any): Promise<Response> {
   return response;
 }
 
-export async function onRequestPost({ request, env }: any): Promise<Response> {
+export async function onRequestPost({ request, env, waitUntil }: any): Promise<Response> {
   return observarSolicitud(
     request,
     'public.v1.withdrawal_requests.create',
-    contexto => crear(request, env, contexto.requestId)
+    contexto => crear(request, env, contexto.requestId, waitUntil)
   );
 }
 

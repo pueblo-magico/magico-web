@@ -5,6 +5,7 @@ import {
   normalizarCollectionCucuru,
 } from '../../../../_infrastructure/cucuru/CucuruProveedorCuentasCobro.ts';
 import { D1RepositorioConciliacionCucuru } from '../../../../_infrastructure/d1/D1RepositorioConciliacionCucuru.ts';
+import { registrarUsoAplicacionApi } from '../../../../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import { observarSolicitud, type ContextoObservabilidad } from '../../../../_interfaces/http/observability.ts';
 import { consumirLimite, respuestaLimite } from '../../../../_interfaces/http/rateLimit.ts';
 import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../_interfaces/http/requestSecurity.ts';
@@ -55,6 +56,7 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
     return json({ error: 'No autorizado.' }, 401);
   }
+  await registrarUsoAplicacionApi(env.DB, 'cucuru', request.method, '/api/v1/integrations/cucuru/collection_received');
   if (typeof env.CUCURU_COLLECTOR_ID !== 'string' || !env.CUCURU_COLLECTOR_ID.trim()) {
     contexto.signal('payment.webhook_configuration_error', 'error', { metric: 'reservas_webhook_errors_total' });
     return json({ error: 'Integración no configurada.' }, 503);

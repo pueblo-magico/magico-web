@@ -174,3 +174,18 @@ test('la migración y el flujo PII exportan y anonimizan sin borrar información
   db.exec(readFileSync(new URL('../../scripts/reservas/verificar-seguridad.sql', import.meta.url), 'utf8'));
   db.close();
 });
+
+test('la migración de auditoría elimina detalles legacy creados después del refuerzo inicial', () => {
+  const db = new DatabaseSync(':memory:');
+  for (let i = 1; i <= 4; i++) {
+    const name = ['initial_reservas', 'normalize_reservation_core', 'accommodation_inventory', 'capacity_exceptions'][i - 1];
+    db.exec(readFileSync(new URL(`../../migrations/000${i}_${name}.sql`, import.meta.url), 'utf8'));
+  }
+  db.exec(readFileSync(new URL('../../migrations/0005_security_rbac_pii.sql', import.meta.url), 'utf8'));
+  db.exec("INSERT INTO auditoria_admin (email, accion, detalle) VALUES ('admin@test', 'legacy_tardio', 'dato sensible')");
+  db.exec(readFileSync(new URL('../../migrations/0042_redact_legacy_audit_details.sql', import.meta.url), 'utf8'));
+
+  assert.equal(db.prepare("SELECT detalle FROM auditoria_admin WHERE accion = 'legacy_tardio'").get()?.detalle, null);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM schema_migrations WHERE version = '0042'").get()?.n, 1);
+  db.close();
+});

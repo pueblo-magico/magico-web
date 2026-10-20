@@ -17,6 +17,7 @@ export type IntencionComunicacion = {
   intencionUid: string;
   reservaId: number;
   tipo: TipoIntencionComunicacion;
+  audiencia: 'huesped' | 'equipo';
   idioma: 'es' | 'en';
   plantillaCodigo: string;
   plantillaVersion: number;
@@ -29,6 +30,7 @@ export type IntencionComunicacionOperativa = {
   intencionUid: string;
   reservaId: number;
   tipo: TipoIntencionComunicacion;
+  audiencia: 'huesped' | 'equipo';
   idioma: 'es' | 'en';
   estado: EstadoIntencionComunicacion;
   attempts: number;

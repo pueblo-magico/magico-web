@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Flame, Leaf, Heart, Star, Users, Sun, Moon, Mountain, Sprout, Calendar, Compass, ChevronDown, Instagram, Linkedin, Home, Handshake, Sparkles, Utensils, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { img } from './lib/img';
-import { WA_MAGICO } from './data/config';
+import { RESERVATION_START_PATH, WA_MAGICO } from './data/config';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 const WA_INFO    = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Me interesa el Pachamama Fest del 14 al 17 de agosto. ¿Me pueden dar más info?')}`;
-const WA_RESERVA = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('¡Hola! Quiero reservar mi lugar para el Pachamama Fest del 14 al 17 de agosto. ¿Cómo procedo?')}`;
 
 const C = {
   green:     '#005333', // Pantone P138-16U · verano
@@ -290,13 +289,6 @@ const PachamamaFest: React.FC = () => {
   const totalCuotas = totalEfectivo * 1.2;
   const cuotaMensual = totalCuotas / 3;
 
-  const waMsgCalc = modalidad === 'dia'
-    ? `¡Hola! Quiero sumarme al Pachamama Fest el domingo (${detalleDomingoTxt}).\n\nAporte: ${fmt(totalEfectivo)}\n\n¿Cómo sigo?`
-    : modalidad === 'completa'
-    ? `¡Hola! Quiero reservar la Experiencia Completa en el Pachamama Fest.\n\nExperiencia completa (con cama)\nTotal: ${fmt(totalEfectivo)} (o 3x ${fmt(cuotaMensual)})\n${detalleAportes.length ? `\nAportes por actividades:\n${detalleAportes.join('\n')}\nSubtotal aportes: ${fmt(aportesTotal)}\n` : ''}\n¿Cómo sigo?`
-    : `¡Hola! Quiero reservar mi Pijamada en el Pachamama Fest.\n\nPijamada · ${opcion.label}\nTotal alojamiento: ${fmt(totalEfectivo)} (o 3x ${fmt(cuotaMensual)})\n${detalleAportes.length ? `\nAportes por actividades:\n${detalleAportes.join('\n')}\nSubtotal aportes: ${fmt(aportesTotal)}\n` : ''}\n¿Cómo sigo?`;
-  const waCalcUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(waMsgCalc)}`;
-
   return (
     <div style={{ backgroundColor: C.cream, color: C.dark }} className="overflow-x-hidden">
       <Header />
@@ -349,9 +341,7 @@ const PachamamaFest: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
             <a
-              href={WA_RESERVA}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={RESERVATION_START_PATH}
               className="btn-gold text-sm py-4 px-8 inline-block"
             >
               Quiero participar
@@ -1052,7 +1042,7 @@ const PachamamaFest: React.FC = () => {
                 </ul>
               )}
 
-              <a href={waCalcUrl} target="_blank" rel="noopener noreferrer"
+              <a href={RESERVATION_START_PATH}
                 className="block text-center py-3.5 px-4 rounded-xl font-bold text-sm text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: modalidad === 'dia' ? C.primavera : modalidad === 'completa' ? EXPERIENCIA_COMPLETA_COLOR : PIJAMADA_COLOR }}>
                 {modalidad === 'dia' ? 'Quiero sumarme ese día' : modalidad === 'completa' ? 'Reservar experiencia completa' : 'Reservar pijamada'}
@@ -1172,7 +1162,7 @@ const PachamamaFest: React.FC = () => {
             Y a recordar, juntos, que somos parte de la Pachamama.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer"
+            <a href={RESERVATION_START_PATH}
               className="btn-gold text-sm py-5 px-10 inline-block">
               Reservar mi lugar
             </a>
@@ -1197,7 +1187,7 @@ const PachamamaFest: React.FC = () => {
           backdropFilter: 'blur(8px)',
         }}
       >
-        <a href={WA_RESERVA} target="_blank" rel="noopener noreferrer" className="btn-gold text-sm py-3 w-full text-center block">
+        <a href={RESERVATION_START_PATH} className="btn-gold text-sm py-3 w-full text-center block">
           Reservar mi lugar
         </a>
       </div>

@@ -5,6 +5,7 @@ export type AlcanceServicio =
   | 'consultas:crear'
   | 'reservas:leer'
   | 'reservas:expirar'
+  | 'reservas:recordar_llegadas'
   | 'pagos:notificar'
   | 'pagos:conciliar'
   | 'integraciones:despachar'
@@ -21,7 +22,7 @@ const IDENTIDADES = {
     alcances: [
       'reservas:disponibilidad', 'reservas:cotizar', 'reservas:crear',
       'reservas:leer', 'reservas:expirar', 'consultas:crear', 'pagos:conciliar',
-      'comunicaciones:entregar',
+      'comunicaciones:entregar', 'reservas:recordar_llegadas',
     ],
   },
   accounting: { env: 'ACCOUNTING_API_SECRET', alcances: ['reservas:leer'] },

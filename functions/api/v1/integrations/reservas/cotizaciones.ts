@@ -3,6 +3,7 @@ import { cotizarEstadia } from '../../../../_lib/cotizador.ts';
 import {
   autenticarIntegracionReservas,
   errorIntegracion,
+  registrarUsoIntegracionReservas,
   respuestaIntegracion,
 } from '../../../../_interfaces/http/integrationApiV1.ts';
 import { observarSolicitud } from '../../../../_interfaces/http/observability.ts';
@@ -12,6 +13,7 @@ import { leerJsonSeguro } from '../../../../_interfaces/http/requestSecurity.ts'
 async function cotizar(request: Request, env: any): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'reservas:cotizar');
   if (identidad instanceof Response) return identidad;
+  await registrarUsoIntegracionReservas(request, env, identidad);
   const limitada = respuestaLimite(await consumirLimite(
     request, env, 'integracion.v1.cotizaciones', 60, 60, `integracion:${identidad}`
   ));
@@ -23,18 +25,18 @@ async function cotizar(request: Request, env: any): Promise<Response> {
     return errorIntegracion('SOLICITUD_INVALIDA', 'El cuerpo JSON es inválido.', 400, false);
   }
   const tipo = body.tipo_alojamiento;
-  const modalidad = body.modalidad || (tipo === 'domo' ? 'privada' : 'compartida');
+  const modalidad = body.modalidad || (tipo === 'domo' ? 'privada' : tipo === 'camping' ? 'camping' : 'compartida');
   const contexto = body.contexto || 'general';
   const personas = Number(body.personas);
   const regimen = body.regimen_alimentacion ?? 'desayuno_incluido';
-  if ((tipo !== 'domo' && tipo !== 'refugio') || !Number.isInteger(personas) || personas < 1 ||
-      !['privada', 'compartida'].includes(String(modalidad)) ||
+  if (!['domo', 'refugio', 'camping'].includes(String(tipo)) || !Number.isInteger(personas) || personas < 1 ||
+      !['privada', 'compartida', 'camping'].includes(String(modalidad)) ||
       !['general', 'retiro'].includes(String(contexto)) || !esRegimenAlimentacion(regimen)) {
     return errorIntegracion('SOLICITUD_INVALIDA', 'La solicitud de cotización es inválida.', 400, false);
   }
   const resultado = await cotizarEstadia(env.DB, {
-    tipo, personas, fechaEntrada: String(body.check_in || ''), fechaSalida: String(body.check_out || ''),
-    modalidad: modalidad as 'privada' | 'compartida', contexto: contexto as 'general' | 'retiro',
+    tipo: tipo as 'domo' | 'refugio' | 'camping', personas, fechaEntrada: String(body.check_in || ''), fechaSalida: String(body.check_out || ''),
+    modalidad: modalidad as 'privada' | 'compartida' | 'camping', contexto: contexto as 'general' | 'retiro',
     regimenAlimentacion: regimen,
   });
   if (resultado.ok === false) {

@@ -8,10 +8,17 @@ import { observarSolicitud } from '../../../../_interfaces/http/observability.ts
 import { leerJsonSeguro, respuestaJsonInvalido } from '../../../../_interfaces/http/requestSecurity.ts';
 import { jsonReserva as json } from '../../../../_interfaces/http/reservasHttp.ts';
 import { requirePermission } from '../../../../_lib/authGuard.ts';
+import { programarDespachoOutbox } from '../../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 const ESTADOS = new Set(['recibida', 'en_revision', 'resuelta', 'rechazada']);
 
-async function actualizar(request: Request, env: any, params: any, requestId: string): Promise<Response> {
+async function actualizar(
+  request: Request,
+  env: any,
+  params: any,
+  requestId: string,
+  waitUntil?: (promise: Promise<unknown>) => void
+): Promise<Response> {
   const auth = await requirePermission(request, env, 'arrepentimientos.gestionar');
   if (auth instanceof Response) return auth;
   let body: Record<string, any>;
@@ -35,6 +42,12 @@ async function actualizar(request: Request, env: any, params: any, requestId: st
       correlationId: requestId,
     }, new D1RepositorioSolicitudesArrepentimiento(env.DB), new D1RegistroAuditoriaReservas(env.DB));
     if (!item) return json({ error: 'La solicitud cambió o ya fue resuelta.' }, 409);
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'admin.withdrawal_request.update',
+      { eventIds: item.notificacionUid ? [item.notificacionUid] : [] }
+    );
     return json({ data: { id: item.id, codigo: item.codigo, estado: item.estado }, meta: { version: 'v1' } });
   } catch (error) {
     const codigo = error instanceof Error ? error.message : '';
@@ -45,10 +58,10 @@ async function actualizar(request: Request, env: any, params: any, requestId: st
   }
 }
 
-export async function onRequestPatch({ request, env, params }: any): Promise<Response> {
+export async function onRequestPatch({ request, env, params, waitUntil }: any): Promise<Response> {
   return observarSolicitud(
     request,
     'admin.withdrawal_requests.update',
-    contexto => actualizar(request, env, params, contexto.requestId)
+    contexto => actualizar(request, env, params, contexto.requestId, waitUntil)
   );
 }

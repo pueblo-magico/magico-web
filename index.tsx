@@ -10,6 +10,7 @@ import { FloatingUiProvider } from './components/FloatingUiContext';
 import './src/i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Main from './Main';
+import '@pueblo-magico/react-ui/styles.css';
 import './index.css';
 import Familion from './src/Familion';
 import Gondorbows from './src/Gondorbows';
@@ -24,6 +25,7 @@ const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
 const PachamamaFest = lazy(() => import('./src/PachamamaFest'));
 const KillaRaymi = lazy(() => import('./src/KillaRaymi'));
 const AlmaDeLobo = lazy(() => import('./src/AlmaDeLobo'));
+const SunsetRio = lazy(() => import('./src/SunsetRio'));
 const Empresas = lazy(() => import('./src/Empresas'));
 const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
@@ -32,6 +34,7 @@ const Despertar = lazy(() => import('./src/Despertar'));
 const PropuestaNicoGrupe = lazy(() => import('./src/PropuestaNicoGrupe'));
 const ResetVitalApp = lazy(() => import('./ResetVital.jsx'));
 const Estadia = lazy(() => import('./src/Estadia'));
+const Reservar = lazy(() => import('./src/Reservar'));
 const Coliving = lazy(() => import('./src/Coliving'));
 const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
@@ -63,6 +66,14 @@ const ScrollToTop: React.FC = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [pathname, hash]);
   return null;
+};
+
+const EstadiaRoute: React.FC = () => {
+  const location = useLocation();
+  if (new URLSearchParams(location.search).get('reservar') === '1') {
+    return <Navigate to="/reservar?paso=fechas" replace />;
+  }
+  return <Estadia />;
 };
 
 const PageLoader = () => (
@@ -104,6 +115,7 @@ root.render(
               <Route path="/pachamama-fest" element={<PachamamaFest />} />
               <Route path="/killa-raymi" element={<KillaRaymi />} />
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
+              <Route path="/sunset-y-rio" element={<SunsetRio />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/cordoba-fly-fishing" element={<CordobaFlyFishing />} />
               <Route path="/voluntariado" element={<Voluntariado />} />
@@ -113,12 +125,13 @@ root.render(
               <Route path="/winter-camp" element={<Navigate to="/estadia" replace />} />
               <Route path="/winter-redirection" element={<Navigate to="/estadia" replace />} />
               <Route path="/propuesta/nico-grupe" element={<PropuestaNicoGrupe />} />
-              <Route path="/estadia" element={<Estadia />} />
+              <Route path="/estadia" element={<EstadiaRoute />} />
+              <Route path="/reservar" element={<Reservar />} />
               <Route path="/coliving" element={<Coliving />} />
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
               <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
               <Route path="/boton-de-arrepentimiento" element={<BotonArrepentimiento />} />
-              <Route path="/admin/reservas" element={<PanelReservas />} />
+              <Route path="/admin/reservas/*" element={<PanelReservas />} />
               <Route path="/reserva-confirmada" element={<EstadoPagoReserva returnState="success" />} />
               <Route path="/reserva-pendiente" element={<EstadoPagoReserva returnState="pending" />} />
               <Route path="/reserva-fallida" element={<EstadoPagoReserva returnState="failure" />} />

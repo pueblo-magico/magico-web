@@ -1,7 +1,10 @@
 import type { FiltrosReservasAdmin } from './adminReservationManagement.ts';
 import { ErrorReserva } from './errors.ts';
 
-export type FiltrosExportacionReservas = Omit<FiltrosReservasAdmin, 'pagina' | 'limite'> & {
+export type FiltrosExportacionReservas = Omit<
+  FiltrosReservasAdmin,
+  'pagina' | 'limite' | 'orden' | 'direccion'
+> & {
   incluirPii: boolean;
 };
 

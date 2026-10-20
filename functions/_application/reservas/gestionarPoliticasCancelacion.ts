@@ -81,7 +81,8 @@ export async function crearBorradorPoliticaCancelacion(
   politica: BorradorPoliticaCancelacion,
   actorEmail: string,
   repositorio: RepositorioPoliticasCancelacion,
-  auditoria: RegistroAuditoriaReservas
+  auditoria: RegistroAuditoriaReservas,
+  motivo?: string
 ): Promise<ResumenPoliticaCancelacion> {
   if (!/^[a-z0-9][a-z0-9-]{2,63}$/.test(politica.codigo) ||
       politica.nombre.trim().length < 3 || politica.nombre.trim().length > 120 ||
@@ -94,6 +95,7 @@ export async function crearBorradorPoliticaCancelacion(
     accion: 'crear_borrador_politica_cancelacion',
     entidadTipo: 'politica_cancelacion',
     entidadId: creada.id,
+    motivo: motivo?.trim() || undefined,
     metadata: { codigo: creada.codigo, version: creada.version },
   });
   return creada;
@@ -103,7 +105,8 @@ export async function publicarPoliticaCancelacion(
   id: number,
   actorEmail: string,
   repositorio: RepositorioPoliticasCancelacion,
-  auditoria: RegistroAuditoriaReservas
+  auditoria: RegistroAuditoriaReservas,
+  motivo?: string
 ): Promise<ResumenPoliticaCancelacion> {
   const publicada = await repositorio.publicar(id);
   if (!publicada) {
@@ -114,6 +117,7 @@ export async function publicarPoliticaCancelacion(
     accion: 'publicar_politica_cancelacion',
     entidadTipo: 'politica_cancelacion',
     entidadId: publicada.id,
+    motivo: motivo?.trim() || undefined,
     metadata: { codigo: publicada.codigo, version: publicada.version },
   });
   return publicada;

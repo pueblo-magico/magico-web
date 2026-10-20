@@ -17,6 +17,10 @@ type Database = {
 
 const CAMPOS = 'id, codigo, nombre, moneda, version, estado, publicado_at, created_at';
 
+function mascaraDias(dias: number[]): number {
+  return dias.reduce((mascara, dia) => mascara | (1 << (dia - 1)), 0);
+}
+
 function mapear(row: Record<string, unknown>): ResumenPlanTarifa {
   return {
     id: Number(row.id), codigo: String(row.codigo), nombre: String(row.nombre), moneda: String(row.moneda),
@@ -45,12 +49,14 @@ export class D1RepositorioAdministracionTarifas implements RepositorioAdministra
 
     for (const temporada of plan.temporadas) {
       statements.push(this.db.prepare(`
-        INSERT INTO temporadas (plan_tarifa_id, codigo, nombre, fecha_desde, fecha_hasta, prioridad)
-        SELECT id, ?, ?, ?, ?, ? FROM planes_tarifa
+        INSERT INTO temporadas (
+          plan_tarifa_id, codigo, nombre, fecha_desde, fecha_hasta, prioridad, dias_semana_mask
+        )
+        SELECT id, ?, ?, ?, ?, ?, ? FROM planes_tarifa
         WHERE codigo = ? AND estado = 'borrador' ORDER BY version DESC LIMIT 1
       `).bind(
         temporada.codigo, temporada.nombre.trim(), temporada.fechaDesde, temporada.fechaHasta,
-        temporada.prioridad, plan.codigo
+        temporada.prioridad, mascaraDias(temporada.diasSemana), plan.codigo
       ));
       for (const regla of temporada.reglas) {
         statements.push(this.db.prepare(`
@@ -80,6 +86,19 @@ export class D1RepositorioAdministracionTarifas implements RepositorioAdministra
         sena.subtotalDesdeCentavos, sena.subtotalHastaCentavos, sena.tipo, sena.valor, plan.codigo
       ));
     }
+    for (const ajuste of plan.ajustes || []) {
+      statements.push(this.db.prepare(`
+        INSERT INTO reglas_ajuste_precio (
+          plan_tarifa_id, codigo, nombre, anticipacion_desde_dias, anticipacion_hasta_dias,
+          direccion, tipo, valor
+        )
+        SELECT id, ?, ?, ?, ?, ?, ?, ? FROM planes_tarifa
+        WHERE codigo = ? AND estado = 'borrador' ORDER BY version DESC LIMIT 1
+      `).bind(
+        ajuste.codigo, ajuste.nombre.trim(), ajuste.anticipacionDesdeDias,
+        ajuste.anticipacionHastaDias, ajuste.direccion, ajuste.tipo, ajuste.valor, plan.codigo
+      ));
+    }
 
     await this.db.batch(statements);
     const row = await this.db.prepare(`
@@ -94,8 +113,8 @@ export class D1RepositorioAdministracionTarifas implements RepositorioAdministra
     const results = await this.db.batch([
       this.db.prepare(`
         UPDATE planes_tarifa SET estado = 'retirado'
-        WHERE estado = 'publicado' AND codigo = (
-          SELECT p.codigo FROM planes_tarifa p
+        WHERE estado = 'publicado' AND EXISTS (
+          SELECT 1 FROM planes_tarifa p
           WHERE p.id = ? AND p.estado = 'borrador'
             AND EXISTS (SELECT 1 FROM temporadas t WHERE t.plan_tarifa_id = p.id)
             AND EXISTS (SELECT 1 FROM reglas_precio r JOIN temporadas t ON t.id = r.temporada_id WHERE t.plan_tarifa_id = p.id)

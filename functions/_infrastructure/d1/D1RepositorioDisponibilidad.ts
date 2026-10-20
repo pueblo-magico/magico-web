@@ -11,11 +11,14 @@ function alojamientoLegacy(codigo: string): number | null {
   if (codigo === 'domo-1') return 1;
   if (codigo === 'domo-2') return 2;
   if (codigo === 'refugio' || codigo === 'refugio-habitacion-4') return 3;
+  if (codigo === 'camping-exterior') return 4;
   return null;
 }
 
 function modalidadPorDefecto(solicitud: SolicitudCotizacion): 'privada' | 'compartida' | 'camping' {
-  return solicitud.modalidad ?? (solicitud.tipo === 'domo' ? 'privada' : 'compartida');
+  return solicitud.modalidad ?? (solicitud.tipo === 'domo'
+    ? 'privada'
+    : solicitud.tipo === 'camping' ? 'camping' : 'compartida');
 }
 
 export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
@@ -28,10 +31,78 @@ export class D1RepositorioDisponibilidad implements RepositorioDisponibilidad {
   async consultar(solicitud: SolicitudCotizacion): Promise<Disponibilidad> {
     const modalidad = modalidadPorDefecto(solicitud);
     const contexto = solicitud.contexto ?? 'general';
+    if (solicitud.tipo === 'camping') {
+      return modalidad === 'camping'
+        ? this.consultarCamping(solicitud, contexto)
+        : this.noDisponible(modalidad, 'MODALIDAD_NO_DISPONIBLE');
+    }
     if (modalidad === 'camping') return this.noDisponible(modalidad, 'MODALIDAD_NO_DISPONIBLE');
     return solicitud.tipo === 'domo'
       ? this.consultarDomos(solicitud, modalidad, contexto)
       : this.consultarRefugio(solicitud, modalidad, contexto);
+  }
+
+  private async consultarCamping(
+    solicitud: SolicitudCotizacion,
+    contexto: 'general' | 'retiro'
+  ): Promise<Disponibilidad> {
+    const row = await this.db.prepare(`
+      WITH RECURSIVE noches(fecha) AS (
+        SELECT ?1
+        UNION ALL SELECT date(fecha, '+1 day') FROM noches WHERE date(fecha, '+1 day') < ?2
+      ), candidato AS (
+        SELECT e.id, e.codigo, e.capacidad_comercial
+        FROM espacios e JOIN modalidades_espacio m ON m.espacio_id = e.id
+        WHERE e.codigo = 'camping-exterior' AND e.tipo = 'camping' AND e.estado = 'activo'
+          AND m.modalidad = 'camping' AND m.contexto = ?3 AND m.habilitada = 1
+          AND ((?3 = 'general' AND e.reservable_general = 1)
+            OR (?3 = 'retiro' AND e.reservable_retiro = 1))
+        LIMIT 1
+      )
+      SELECT c.id espacio_id, c.codigo, c.capacidad_comercial,
+        COALESCE(MAX((
+          SELECT SUM(re.cantidad_huespedes)
+          FROM reservas r
+          JOIN reserva_estadias re ON re.reserva_id = r.id
+          JOIN reserva_estadia_espacios ree ON ree.reserva_estadia_id = re.id
+          WHERE (
+              r.estado = 'confirmada'
+              OR (r.estado = 'pendiente' AND (r.hold_expires_at IS NULL OR r.hold_expires_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now')))
+            )
+            AND re.fecha_checkin <= n.fecha AND re.fecha_checkout > n.fecha
+            AND ree.espacio_id = c.id
+        )), 0) reservas_ocupadas,
+        COALESCE(MAX((
+          SELECT SUM(CASE
+            WHEN oo.origen_tipo = 'estadia_no_comercial' THEN oo.cantidad_personas
+            WHEN oo.unidad_inventario_id IS NOT NULL THEN ui.capacidad
+            ELSE c.capacidad_comercial
+          END)
+          FROM ocupacion_operativa oo
+          LEFT JOIN unidades_inventario ui ON ui.id = oo.unidad_inventario_id
+          WHERE oo.fecha_desde <= n.fecha AND oo.fecha_hasta > n.fecha
+            AND (oo.espacio_id = c.id OR ui.espacio_id = c.id)
+        )), 0) operativas
+      FROM candidato c CROSS JOIN noches n
+      GROUP BY c.id, c.codigo, c.capacidad_comercial
+    `).bind(solicitud.fechaEntrada, solicitud.fechaSalida, contexto).first();
+
+    if (!row) return this.noDisponible('camping', 'MODALIDAD_NO_DISPONIBLE');
+    const capacidad = Number(row.capacidad_comercial);
+    const ocupadas = Number(row.reservas_ocupadas || 0) + Number(row.operativas || 0);
+    const capacidadDisponible = Math.max(0, capacidad - ocupadas);
+    const disponible = solicitud.personas <= capacidadDisponible;
+    return {
+      estado: disponible ? 'disponible' : 'ocupado',
+      alojamiento_id: alojamientoLegacy(String(row.codigo)),
+      motivo_codigo: disponible
+        ? 'DISPONIBLE'
+        : solicitud.personas > capacidad ? 'CAPACIDAD_INSUFICIENTE' : 'INVENTARIO_OCUPADO',
+      espacio_id: Number(row.espacio_id),
+      espacio_codigo: String(row.codigo),
+      modalidad: 'camping',
+      capacidad_disponible: capacidadDisponible,
+    };
   }
 
   private async consultarDomos(

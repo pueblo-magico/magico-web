@@ -5,6 +5,7 @@
 export const ROUTES = {
   HOME: '/',
   ESTADIA: '/estadia',
+  RESERVAR: '/reservar',
   FAMILION: '/familion',
   ACHALA_VIVA: '/achala-viva',
   ESCUELAS: '/escuelas',
@@ -24,9 +25,11 @@ export const ROUTES = {
   CICLO_VITAL_FEMENINO: '/ciclo-vital-femenino',
   KILLA_RAYMI: '/killa-raymi',
   ALMA_DE_LOBO: '/alma-de-lobo',
+  SUNSET_RIO: '/sunset-y-rio',
   EMPRESAS: '/empresas',
   FLY_FISHING: '/cordoba-fly-fishing',
   VOLUNTARIADO: '/voluntariado',
   REFORESTACION: '/reforestacion',
   ADMIN_RESERVAS: '/admin/reservas',
+  ADMIN_RESERVAS_CONFIGURACION: '/admin/reservas/configuracion',
 };

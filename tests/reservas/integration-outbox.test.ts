@@ -139,6 +139,45 @@ test('reintenta con backoff y entrega al menos una vez con event_id estable', as
   sqlite.close();
 });
 
+test('el despacho inmediato entrega sólo el objetivo y nunca vuelve a reclamar un entregado', async () => {
+  const sqlite = baseCompleta();
+  crearEvento(sqlite, 'evento:historico-pendiente');
+  sqlite.prepare(`
+    INSERT INTO reserva_eventos (
+      reserva_id, tipo, actor_tipo, actor_ref, correlation_id, payload_json,
+      evento_uid, version, agregado_tipo, agregado_id
+    ) SELECT reserva_id, 'qa.objetivo', 'sistema', 'qa', 'correlation-target',
+      '{}', 'evento:objetivo', 1, 'reserva', agregado_id
+    FROM reserva_eventos WHERE evento_uid = 'evento:historico-pendiente'
+  `).run();
+  const repositorio = new D1RepositorioOutboxIntegracion(d1(sqlite));
+  const entregados: string[] = [];
+  const entregador = { async entregar(evento: { eventId: string }) { entregados.push(evento.eventId); } };
+
+  const primera = await despacharEventosIntegracion(repositorio, entregador, {
+    consumer: 'live', eventIds: ['evento:objetivo'],
+    ahora: () => new Date('2099-10-01T10:00:00.000Z'),
+    generarClaimUid: () => 'claim-target-1',
+  });
+  assert.deepEqual(primera, { reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0 });
+  assert.deepEqual(entregados, ['evento:objetivo']);
+  assert.deepEqual(sqlite.prepare(`
+    SELECT event_id, estado FROM integration_outbox ORDER BY event_id
+  `).all().map(row => ({ ...row })), [
+    { event_id: 'evento:historico-pendiente', estado: 'pending' },
+    { event_id: 'evento:objetivo', estado: 'delivered' },
+  ]);
+
+  const segunda = await despacharEventosIntegracion(repositorio, entregador, {
+    consumer: 'live', eventIds: ['evento:objetivo'],
+    ahora: () => new Date('2099-10-01T10:01:00.000Z'),
+    generarClaimUid: () => 'claim-target-2',
+  });
+  assert.deepEqual(segunda, { reclamados: 0, entregados: 0, reprogramados: 0, deadLetter: 0 });
+  assert.deepEqual(entregados, ['evento:objetivo']);
+  sqlite.close();
+});
+
 test('agota intentos en dead letter y permite deduplicar por consumidor', async () => {
   const sqlite = baseCompleta();
   crearEvento(sqlite, 'reserva:outbox-dlq');
@@ -271,6 +310,28 @@ test('el contrato admin permite observar y reserva el reproceso al super admin',
   const exitoso = await reprocesarOutboxAdmin({ request: requestReproceso(tokenAdmin), env });
   assert.equal(exitoso.status, 200);
   assert.equal((await exitoso.json() as any).estado, 'pending');
+  sqlite.prepare(`
+    UPDATE integration_outbox
+    SET event_type = 'comunicacion.intencion_creada',
+      payload_json = json_object(
+        'event_id', event_id,
+        'event_type', 'comunicacion.intencion_creada',
+        'reservation_id', 1,
+        'intent_type', 'pago_aprobado'
+      )
+    WHERE event_id = 'reserva:outbox-admin'
+  `).run();
+  sqlite.prepare(`
+    INSERT INTO integration_outbox (
+      event_id, event_type, schema_version, aggregate_type, aggregate_id,
+      payload_json, occurred_at
+    ) VALUES (
+      'arrepentimiento:pendiente-no-masivo', 'arrepentimiento.notificacion_pendiente',
+      1, 'arrepentimiento', 'ARR-QA',
+      json_object('event_id', 'arrepentimiento:pendiente-no-masivo'),
+      strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+    )
+  `).run();
 
   const requestDespacho = (token: string) => new Request(
     'https://test/api/v1/admin/integraciones/outbox/despachar', {
@@ -282,13 +343,22 @@ test('el contrato admin permite observar y reserva el reproceso al super admin',
   });
   assert.equal(despachoProhibido.status, 403);
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => new Response(null, { status: 204 });
+  const enviados: string[] = [];
+  globalThis.fetch = async (_input, init) => {
+    enviados.push(String(JSON.parse(String(init?.body)).event_id));
+    return new Response(null, { status: 204 });
+  };
   try {
     const despacho = await despacharOutboxAdmin({ request: requestDespacho(tokenAdmin), env });
     assert.equal(despacho.status, 200);
     assert.deepEqual((await despacho.json() as any).data, {
       reclamados: 1, entregados: 1, reprogramados: 0, deadLetter: 0,
     });
+    assert.deepEqual(enviados, ['reserva:outbox-admin']);
+    assert.equal(sqlite.prepare(`
+      SELECT estado FROM integration_outbox
+      WHERE event_id = 'arrepentimiento:pendiente-no-masivo'
+    `).get()?.estado, 'pending');
   } finally {
     globalThis.fetch = originalFetch;
   }

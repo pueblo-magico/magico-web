@@ -4,11 +4,16 @@ import { pdf } from '@react-pdf/renderer';
 import DossierAulaVerde from './pdf/DossierAulaVerde';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { submitForm } from '../lib/submitForm';
+import { useAntiBot } from '../lib/useAntiBot';
+import { validarEmail } from '../lib/validarContacto';
 
 const AulaVerdeLeadMagnet: React.FC = () => {
   const { t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const { trampa, esBot } = useAntiBot();
+  const [errorEmail, setErrorEmail] = useState(false);
+  const errorEmailMsg = t.contact.status.invalidEmail;
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -28,11 +33,16 @@ const AulaVerdeLeadMagnet: React.FC = () => {
 
     const myForm = e.target as HTMLFormElement;
     const formData = new FormData(myForm);
+    const data = formData;
+    if (validarEmail(String(data.get('email') || ''))) { setErrorEmail(true); return; }
+    setErrorEmail(false);
+    // Bot (campo trampa o envío instantáneo): se entrega igual sin mandar nada.
+    const enviar = !esBot();
 
     setIsGenerating(true);
 
     // La captura del lead (email) no debe bloquear la entrega del PDF prometido.
-    submitForm('Dossier PDF — Aula Verde', formData)
+    (enviar ? submitForm('dossier-aula-verde', formData) : Promise.resolve())
       .catch((error) => console.error("Error al enviar el formulario", error))
       .finally(async () => {
         try {
@@ -101,6 +111,7 @@ const AulaVerdeLeadMagnet: React.FC = () => {
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-5">
+                    {trampa}
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1" htmlFor="nombre_apellido">{t.aula_verde.lead_magnet.form.label_name}</label>
                       <input required type="text" id="nombre_apellido" name="nombre_apellido" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-colors text-gray-800" placeholder={t.aula_verde.lead_magnet.form.placeholder_name} />
@@ -121,6 +132,9 @@ const AulaVerdeLeadMagnet: React.FC = () => {
                       <input required type="tel" id="whatsapp" name="whatsapp" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-colors text-gray-800" placeholder={t.aula_verde.lead_magnet.form.placeholder_whatsapp} />
                     </div>
 
+                    {errorEmail && (
+                      <p role="alert" className="text-sm font-semibold text-red-600">{errorEmailMsg}</p>
+                    )}
                     <button type="submit" disabled={isGenerating} className="w-full bg-gold hover:bg-yellow-500 text-brand font-extrabold uppercase tracking-widest text-sm py-4 rounded-xl shadow-lg hover:-translate-y-1 hover:shadow-xl transition-all duration-300 mt-4 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-wait">
                       {isGenerating ? (
                         <>

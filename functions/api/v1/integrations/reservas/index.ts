@@ -5,12 +5,14 @@ import { D1RepositorioDisponibilidad } from '../../../../_infrastructure/d1/D1Re
 import {
   autenticarIntegracionReservas,
   errorIntegracion,
+  registrarUsoIntegracionReservas,
   respuestaIntegracion,
 } from '../../../../_interfaces/http/integrationApiV1.ts';
 import { observarSolicitud } from '../../../../_interfaces/http/observability.ts';
 import { consumirLimite, respuestaLimite } from '../../../../_interfaces/http/rateLimit.ts';
 import { leerJsonSeguro } from '../../../../_interfaces/http/requestSecurity.ts';
 import { prepararCuentaCobroReservaHttp } from '../../../../_interfaces/http/reservationCollectionAccount.ts';
+import { programarDespachoOutbox } from '../../../../_interfaces/http/backgroundOutboxDispatch.ts';
 
 const statusPorCodigo: Record<string, number> = {
   SOLICITUD_INVALIDA: 400,
@@ -19,12 +21,15 @@ const statusPorCodigo: Record<string, number> = {
   CONSULTA_NO_ENCONTRADA: 404,
   COTIZACION_NO_ENCONTRADA: 404,
   COTIZACION_VENCIDA: 410,
+  PREFERENCIA_PREPARACION_REQUERIDA: 400,
+  PREFERENCIA_PREPARACION_INVALIDA: 400,
   INVENTARIO_NO_DISPONIBLE: 409,
 };
 
-async function crear(request: Request, env: any): Promise<Response> {
+async function crear(request: Request, env: any, waitUntil?: (promise: Promise<unknown>) => void): Promise<Response> {
   const identidad = autenticarIntegracionReservas(request, env, 'reservas:crear');
   if (identidad instanceof Response) return identidad;
+  await registrarUsoIntegracionReservas(request, env, identidad);
   const limitada = respuestaLimite(await consumirLimite(
     request, env, 'integracion.v1.reservas', 30, 60, `integracion:${identidad}`
   ));
@@ -47,8 +52,12 @@ async function crear(request: Request, env: any): Promise<Response> {
     espacioCodigo: String(body.espacio_codigo || ''),
     clienteNombre: String(cliente.nombre || ''),
     clienteTelefono: cliente.telefono ? String(cliente.telefono) : null,
-    clienteEmail: cliente.email ? String(cliente.email) : null,
+    clienteEmail: String(cliente.email || ''),
     idioma: body.idioma === undefined ? undefined : String(body.idioma) as 'es' | 'en',
+    preferenciaPreparacionCodigo: body.preferencias && typeof body.preferencias === 'object' &&
+      !Array.isArray(body.preferencias)
+      ? String((body.preferencias as Record<string, unknown>).preparacion_cama || '') || null
+      : null,
     idempotencyKey: request.headers.get('Idempotency-Key') || '',
     canalOrigen: 'n8n',
     referenciaIntegracion: {
@@ -69,6 +78,14 @@ async function crear(request: Request, env: any): Promise<Response> {
     );
   }
   const cuentaCobro = await prepararCuentaCobroReservaHttp(env, resultado.valor.reservaId);
+  if (!resultado.valor.idempotente) {
+    programarDespachoOutbox(
+      env,
+      waitUntil,
+      'integration.reservation.create',
+      { reservationId: resultado.valor.reservaId }
+    );
+  }
   return respuestaIntegracion(identidad, {
     reserva: {
       codigo: resultado.valor.codigo,
@@ -82,6 +99,10 @@ async function crear(request: Request, env: any): Promise<Response> {
   }, resultado.valor.idempotente ? 200 : 201, { idempotente: resultado.valor.idempotente });
 }
 
-export async function onRequestPost({ request, env }: any): Promise<Response> {
-  return observarSolicitud(request, 'integration.v1.reservation.create', () => crear(request, env));
+export async function onRequestPost({ request, env, waitUntil }: any): Promise<Response> {
+  return observarSolicitud(
+    request,
+    'integration.v1.reservation.create',
+    () => crear(request, env, waitUntil)
+  );
 }

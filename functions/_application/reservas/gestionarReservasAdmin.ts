@@ -61,6 +61,7 @@ export async function cambiarEstadoReservaAdmin(
     motivo: unknown;
     actorEmail: string;
     correlationId: string;
+    operacionUid?: string;
   },
   repositorio: RepositorioGestionReservasAdmin
 ): Promise<ResumenReservaAdmin> {
@@ -71,7 +72,7 @@ export async function cambiarEstadoReservaAdmin(
   const actualizada = await repositorio.cambiarEstado({
     ...entrada,
     motivo: validarMotivoCambioSensible(entrada.motivo),
-    operacionUid: crypto.randomUUID(),
+    operacionUid: entrada.operacionUid || crypto.randomUUID(),
   });
   if (!actualizada) throw new ErrorReserva('CONFLICTO_RESERVA', 'La transición no es válida o la reserva cambió.');
   return actualizada;

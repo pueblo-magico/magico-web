@@ -24,8 +24,10 @@ export class D1RepositorioCheckoutReservaPublica implements RepositorioCheckoutR
       SELECT r.id, r.codigo, r.estado_flujo, r.hold_expires_at,
              COALESCE(r.monto_sena_centavos, CAST(round(r.monto_sena * 100) AS INTEGER)) monto_sena_centavos,
              r.moneda,
-             CASE WHEN json_extract(c.desglose_json, '$.tipo_alojamiento') = 'refugio'
-               THEN 'refugio' ELSE 'domo' END tipo_alojamiento,
+             CASE json_extract(c.desglose_json, '$.tipo_alojamiento')
+               WHEN 'refugio' THEN 'refugio'
+               WHEN 'camping' THEN 'camping'
+               ELSE 'domo' END tipo_alojamiento,
              p.external_preference_id,
              json_extract(p.metadata_json, '$.checkout_url') checkout_url
       FROM reservas r
@@ -42,7 +44,9 @@ export class D1RepositorioCheckoutReservaPublica implements RepositorioCheckoutR
     return {
       reservaId: Number(row.id),
       reservaCodigo: String(row.codigo),
-      tipoAlojamiento: row.tipo_alojamiento === 'refugio' ? 'refugio' : 'domo',
+      tipoAlojamiento: row.tipo_alojamiento === 'refugio'
+        ? 'refugio'
+        : row.tipo_alojamiento === 'camping' ? 'camping' : 'domo',
       montoSenaCentavos: Number(row.monto_sena_centavos),
       moneda: String(row.moneda),
       estadoFlujo: String(row.estado_flujo),

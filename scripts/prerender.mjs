@@ -62,6 +62,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/estadia',
   },
   {
+    path: '/reservar',
+    title: 'Reservá tu estadía — Pueblo Mágico',
+    description: 'Elegí fechas, alojamiento y comidas, consultá disponibilidad y reservá tu estadía en Pueblo Mágico.',
+    image: 'https://experienciamagico.com/uploads/domos_2.jpg',
+    canonical: 'https://experienciamagico.com/reservar',
+  },
+  {
     path: '/politica-de-privacidad',
     title: 'Política de Privacidad — Pueblo Mágico',
     description: 'Política de privacidad y protección de datos personales de Pueblo Mágico conforme a la Ley 25.326. Información sobre recopilación, uso y derechos sobre tus datos.',
@@ -116,6 +123,13 @@ export const ROUTES = [
     description: 'Retiro para hombres bajo la luna llena: círculos de palabra, temazcal, fuego y naturaleza para habitar lo masculino desde un lugar consciente y verdadero. Los Gigantes, Córdoba.',
     image: 'https://experienciamagico.com/uploads/alma-de-lobo-hero-desktop.webp',
     canonical: 'https://experienciamagico.com/alma-de-lobo',
+  },
+  {
+    path: '/sunset-y-rio',
+    title: 'Sunset y Río — en la montaña · 30 oct al 1 nov · Los Gigantes | Pueblo Mágico',
+    description: 'Un sábado de río, el sol cayendo con música y un fogón con guitarreada a la noche. A 90 km de Córdoba. Vení con tus amigos o venite solo o sola.',
+    image: 'https://experienciamagico.com/uploads/sunset-rio-og.jpg',
+    canonical: 'https://experienciamagico.com/sunset-y-rio',
   },
   {
     path: '/empresas',
@@ -227,6 +241,17 @@ const shellReservas = template
 mkdirSync(join(DIST, 'admin', 'reservas'), { recursive: true });
 writeFileSync(join(DIST, 'admin', 'reservas', 'index.html'), shellReservas);
 console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
+
+const ADMIN_RESERVAS_SECTIONS = [
+  'listado', 'bloqueos', 'reportes', 'consultas', 'interesados', 'formularios', 'arrepentimientos',
+  'configuracion', 'precios', 'integraciones', 'usuarios', 'actividad',
+];
+for (const section of ADMIN_RESERVAS_SECTIONS) {
+  const sectionDirectory = join(DIST, 'admin', 'reservas', section);
+  mkdirSync(sectionDirectory, { recursive: true });
+  writeFileSync(join(sectionDirectory, 'index.html'), shellReservas);
+}
+console.log(`  ✓ admin/reservas/{${ADMIN_RESERVAS_SECTIONS.join(',')}}/index.html`);
 
 // ─── Per-route JSON-LD builder ───────────────────────────────────────────────
 function buildJsonLD(route) {

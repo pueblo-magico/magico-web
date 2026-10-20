@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Tree, UsersThree, Mountains } from '@phosphor-icons/react';
 import { BookingWidget, G } from './BookingWidget';
 import { WithdrawalAccessLink } from './WithdrawalAccessLink';
+import { usePublicPricingSummary } from './booking/usePublicPricingSummary';
 
 const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { t } = useLanguage();
@@ -20,12 +21,23 @@ const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }
 };
 
 export const HeroNuevo: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { data: pricing, loaded: pricingLoaded } = usePublicPricingSummary();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [compactBookingOpen, setCompactBookingOpen] = useState(false);
   const [desktopBookingOpen, setDesktopBookingOpen] = useState(false);
   const images   = (t.hero as any).bgImages || [t.hero.bgImage];
   const colivingBadge = (t.hero as any).colivingBadge;
+  const personRates = pricing?.opciones.flatMap(option => option.tarifas)
+    .filter(rule => rule.base_calculo === 'persona_noche') || [];
+  const startingRate = personRates.length > 0
+    ? personRates.reduce((lowest, rule) => rule.importe_centavos < lowest.importe_centavos ? rule : lowest)
+    : null;
+  const reservationPricing = startingRate
+    ? `${language === 'es' ? 'Desde' : 'From'} ${new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', { style: 'currency', currency: pricing?.plan.moneda || 'ARS', maximumFractionDigits: 0 }).format(startingRate.importe_centavos / 100)}/${language === 'es' ? 'persona/noche' : 'person/night'} · ${language === 'es' ? 'precio publicado' : 'published rate'}`
+    : pricingLoaded
+      ? (language === 'es' ? 'Consultá disponibilidad y precio real antes de reservar' : 'Check availability and the current price before booking')
+      : (language === 'es' ? 'Cargando tarifa vigente…' : 'Loading current rate…');
 
   useEffect(() => {
     if (images.length <= 1) return;
@@ -91,7 +103,7 @@ export const HeroNuevo: React.FC = () => {
               {(t.hero as any).reservationCta}
             </p>
             <p style={{ fontSize: 11, color: 'rgba(212,175,55,0.9)', fontWeight: 600, margin: '4px 0 0' }}>
-              {(t.hero as any).reservationPricing}
+              {reservationPricing}
             </p>
           </div>}
           <div style={{ background: 'rgba(255,255,255,0.97)' }}>
@@ -200,11 +212,11 @@ export const HeroNuevo: React.FC = () => {
                 {(t.hero as any).reservationTitle}
               </h2>
               <p style={{ fontSize: 12, color: 'rgba(212,175,55,0.9)', fontWeight: 600, margin: '6px 0 0' }}>
-                {(t.hero as any).reservationPricing}
+                {reservationPricing}
               </p>
             </div>}
             <div style={{ background: 'rgba(255,255,255,0.96)' }}>
-              <BookingWidget activeViewport="desktop" onOpenChange={setDesktopBookingOpen} />
+              <BookingWidget compact activeViewport="desktop" onOpenChange={setDesktopBookingOpen} />
             </div>
           </div>
           <WithdrawalAccessLink embedded inverse />

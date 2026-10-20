@@ -44,16 +44,20 @@ export async function onRequestPost({ request, env }: any) {
   const excepciones = new D1RepositorioExcepcionesPoliticaReserva(env.DB);
   const auditoria = new D1RegistroAuditoriaReservas(env.DB);
   try {
+    const motivoCambio = String(body.motivo || '').trim();
+    if (['crear_borrador', 'publicar'].includes(body.accion) && (motivoCambio.length < 5 || motivoCambio.length > 500)) {
+      return json({ error: 'El motivo debe tener entre 5 y 500 caracteres.' }, 400);
+    }
     if (body.accion === 'crear_borrador') {
       const politica = await crearBorradorPoliticaCancelacion(
-        mapearBorrador(body.politica), auth.email, repositorio, auditoria
+        mapearBorrador(body.politica), auth.email, repositorio, auditoria, motivoCambio
       );
       return json({ ok: true, politica }, 201);
     }
     if (body.accion === 'publicar') {
       const id = Number(body.politica_id);
       if (!Number.isSafeInteger(id) || id < 1) return json({ error: 'politica_id inválido.' }, 400);
-      const politica = await publicarPoliticaCancelacion(id, auth.email, repositorio, auditoria);
+      const politica = await publicarPoliticaCancelacion(id, auth.email, repositorio, auditoria, motivoCambio);
       return json({ ok: true, politica });
     }
     if (body.accion === 'solicitar_excepcion') {

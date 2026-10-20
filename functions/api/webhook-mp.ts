@@ -15,10 +15,12 @@
 
 import { procesarPagoMercadoPago } from '../_application/reservas/procesarPagoMercadoPago.ts';
 import { D1RepositorioEstadoPagoReserva } from '../_infrastructure/d1/D1RepositorioEstadoPagoReserva.ts';
+import { registrarUsoAplicacionApi } from '../_infrastructure/d1/D1RegistroUsoAplicacionApi.ts';
 import { MercadoPagoProveedorPagos } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { ErrorProveedorPagosTransitorio } from '../_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
 import { consumirLimite, respuestaLimite } from '../_interfaces/http/rateLimit.ts';
 import { observarSolicitud, type ContextoObservabilidad } from '../_interfaces/http/observability.ts';
+import { programarDespachoOutbox } from '../_interfaces/http/backgroundOutboxDispatch.ts';
 
 async function hmacSha256Hex(secret: string, message: string): Promise<string> {
   const enc = new TextEncoder();
@@ -62,11 +64,20 @@ async function firmaValida(request: Request, env: any): Promise<{ ok: boolean; d
   return { ok: hashesIguales(hash, v1), dataId };
 }
 
-export async function onRequestPost({ request, env }: any) {
-  return observarSolicitud(request, 'integration.mercadopago.webhook', contexto => ejecutar(request, env, contexto));
+export async function onRequestPost({ request, env, waitUntil }: any) {
+  return observarSolicitud(
+    request,
+    'integration.mercadopago.webhook',
+    contexto => ejecutar(request, env, contexto, waitUntil)
+  );
 }
 
-async function ejecutar(request: Request, env: any, contexto: ContextoObservabilidad) {
+async function ejecutar(
+  request: Request,
+  env: any,
+  contexto: ContextoObservabilidad,
+  waitUntil?: (promise: Promise<unknown>) => void
+) {
   contexto.setEventId(request.headers.get('x-request-id'));
   const limitada = respuestaLimite(await consumirLimite(request, env, 'webhook.mercadopago', 120, 60));
   if (limitada) {
@@ -81,15 +92,23 @@ async function ejecutar(request: Request, env: any, contexto: ContextoObservabil
     contexto.signal('payment.webhook_rejected', 'warn', { metric: 'reservas_webhook_rejections_total' });
     return new Response('Firma inválida', { status: 401 });
   }
+  await registrarUsoAplicacionApi(env.DB, 'mercado_pago', request.method, '/api/webhook-mp');
 
   try {
-    await procesarPagoMercadoPago(
+    const resultado = await procesarPagoMercadoPago(
       dataId,
       new MercadoPagoProveedorPagos(env.MP_ACCESS_TOKEN, env.PAYMENT_RECONCILIATION_SECRET || ''),
       new D1RepositorioEstadoPagoReserva(env.DB),
       request.headers.get('x-request-id') || `payment:${dataId}`,
       contexto.requestId
     );
+
+    if (resultado.estado === 'confirmada') {
+      programarDespachoOutbox(env, waitUntil, 'integration.mercadopago.webhook', {
+        reservationId: resultado.reservaId,
+        communicationIntentTypes: ['pago_aprobado'],
+      });
+    }
 
     contexto.signal('payment.webhook_processed', 'info', { metric: 'reservas_webhooks_processed_total' });
 

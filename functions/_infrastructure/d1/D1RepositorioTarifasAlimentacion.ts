@@ -20,7 +20,8 @@ export class D1RepositorioTarifasAlimentacion implements RepositorioTarifasAlime
   async obtenerPublicada(regimen: RegimenAlimentacion): Promise<ConfiguracionTarifaAlimentacion | null> {
     const row = await this.db.prepare(`
       SELECT codigo, version, moneda, precio_comida_centavos,
-             comidas_adicionales_por_persona_noche
+             comidas_adicionales_por_persona_noche, precio_desayuno_centavos,
+             precio_almuerzo_centavos, precio_cena_centavos, ajuste_paquete_centavos
       FROM tarifas_alimentacion
       WHERE codigo = ? AND estado = 'publicado'
       LIMIT 1
@@ -32,6 +33,10 @@ export class D1RepositorioTarifasAlimentacion implements RepositorioTarifasAlime
       moneda: String(row.moneda),
       precioComidaCentavos: Number(row.precio_comida_centavos),
       comidasAdicionalesPorPersonaNoche: Number(row.comidas_adicionales_por_persona_noche),
+      precioDesayunoCentavos: Number(row.precio_desayuno_centavos),
+      precioAlmuerzoCentavos: Number(row.precio_almuerzo_centavos),
+      precioCenaCentavos: Number(row.precio_cena_centavos),
+      ajustePaqueteCentavos: Number(row.ajuste_paquete_centavos),
     };
   }
 }

@@ -4,6 +4,7 @@ import type {
   CuentaCobroReservaAdmin,
   DetalleReservaAdmin,
   FiltrosReservasAdmin,
+  OrdenReservasAdmin,
   PaginaReservasAdmin,
   ResumenReservaAdmin,
 } from '../../_domain/reservas/adminReservationManagement.ts';
@@ -39,6 +40,17 @@ const FROM_RESERVA = `
   LEFT JOIN espacios e ON e.id = ree.espacio_id
 `;
 
+const COLUMNA_ORDEN: Record<OrdenReservasAdmin, string> = {
+  creada: 'r.created_at',
+  titular: 'LOWER(r.cliente_nombre)',
+  alojamiento: 'LOWER(COALESCE(e.nombre, a.tipo))',
+  checkin: 're.fecha_checkin',
+  estado: 'r.estado_flujo',
+  origen: "LOWER(COALESCE(r.canal_origen, ''))",
+  total: 'r.monto_total_centavos',
+  unidad: "LOWER(COALESCE(r.unidad_asignada, ''))",
+};
+
 function mapearResumen(row: Record<string, unknown>): ResumenReservaAdmin {
   return {
     id: Number(row.id), codigo: String(row.codigo), version: Number(row.version),
@@ -69,7 +81,14 @@ function consultaFiltros(filtros: FiltrosReservasAdmin): { where: string; valore
   if (filtros.estado) agregar('r.estado_flujo = ?', filtros.estado);
   if (filtros.origen) agregar('LOWER(COALESCE(r.canal_origen, \'\')) = LOWER(?)', filtros.origen);
   if (filtros.espacioCodigo) agregar('e.codigo = ?', filtros.espacioCodigo);
-  if (filtros.titular) agregar('LOWER(r.cliente_nombre) LIKE LOWER(?)', `%${filtros.titular}%`);
+  if (filtros.titular) {
+    const termino = `%${filtros.titular}%`;
+    condiciones.push(`(
+      LOWER(r.cliente_nombre) LIKE LOWER(?) OR
+      LOWER(COALESCE(r.codigo, printf('RES-%08d', r.id))) LIKE LOWER(?)
+    )`);
+    valores.push(termino, termino);
+  }
   return { where: condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '', valores };
 }
 
@@ -83,11 +102,13 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
   async listar(filtros: FiltrosReservasAdmin): Promise<PaginaReservasAdmin> {
     const { where, valores } = consultaFiltros(filtros);
     const offset = (filtros.pagina - 1) * filtros.limite;
+    const columnaOrden = COLUMNA_ORDEN[filtros.orden];
+    const direccionOrden = filtros.direccion === 'asc' ? 'ASC' : 'DESC';
     const [totalRow, result] = await Promise.all([
       this.db.prepare(`SELECT COUNT(*) total ${FROM_RESERVA} ${where}`).bind(...valores).first(),
       this.db.prepare(`
         SELECT ${SELECT_RESUMEN} ${FROM_RESERVA} ${where}
-        ORDER BY re.fecha_checkin DESC, r.id DESC LIMIT ? OFFSET ?
+        ORDER BY ${columnaOrden} ${direccionOrden}, r.id ${direccionOrden} LIMIT ? OFFSET ?
       `).bind(...valores, filtros.limite, offset).all(),
     ]);
     const total = Number(totalRow?.total) || 0;
@@ -101,7 +122,7 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
   }
 
   async obtenerDetalle(reservaId: number): Promise<DetalleReservaAdmin | null> {
-    const [row, estadias, excepciones, cuentaCobro, metodoPago] = await Promise.all([
+    const [row, estadias, excepciones, preferencias, cuentaCobro, metodoPago] = await Promise.all([
       this.db.prepare(`
         SELECT ${SELECT_RESUMEN}, r.moneda
         ${FROM_RESERVA} WHERE r.id = ?
@@ -121,6 +142,11 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
         FROM excepciones_capacidad ec
         JOIN reserva_estadias re ON re.id = ec.reserva_estadia_id
         WHERE re.reserva_id = ? ORDER BY ec.id DESC
+      `).bind(reservaId).all(),
+      this.db.prepare(`
+        SELECT categoria, opcion_codigo codigo, opcion_nombre nombre,
+          opcion_descripcion descripcion
+        FROM reserva_preferencias WHERE reserva_id = ? ORDER BY id
       `).bind(reservaId).all(),
       this.db.prepare(`
         SELECT c.estado, c.simulada, c.cvu, c.alias, c.moneda, c.intentos,
@@ -145,6 +171,11 @@ export class D1RepositorioGestionReservasAdmin implements RepositorioGestionRese
       moneda: String(row.moneda),
       estadias: estadias.results || [],
       excepciones: excepciones.results || [],
+      preferencias: (preferencias.results || []).map(item => ({
+        categoria: String(item.categoria) as 'preparacion_cama',
+        codigo: String(item.codigo), nombre: String(item.nombre),
+        descripcion: String(item.descripcion || ''),
+      })),
       cuentaCobro: cuentaCobro ? {
         proveedor: Number(cuentaCobro.simulada) === 1 ? 'cucuru_mock' : 'cucuru',
         estado: String(cuentaCobro.estado) as CuentaCobroReservaAdmin['estado'],

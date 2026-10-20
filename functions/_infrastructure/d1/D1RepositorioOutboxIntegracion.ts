@@ -155,6 +155,28 @@ export class D1RepositorioOutboxIntegracion implements RepositorioOutboxIntegrac
     return (resultado.results || []).map(mapearEvento);
   }
 
+  async reclamarEventos(
+    entrada: Parameters<NonNullable<RepositorioOutboxIntegracion['reclamarEventos']>>[0]
+  ): Promise<EventoOutboxIntegracion[]> {
+    const eventIds = [...new Set(entrada.eventIds.map(id => id.trim()).filter(Boolean))].slice(0, 100);
+    if (eventIds.length === 0) return [];
+    const placeholders = eventIds.map(() => '?').join(', ');
+    const resultado = await this.db.prepare(`
+      UPDATE integration_outbox
+      SET estado = 'processing', claim_uid = ?, claimed_at = ?, claim_expires_at = ?,
+        attempts = attempts + 1
+      WHERE event_id IN (${placeholders})
+        AND estado = 'pending'
+        AND julianday(next_attempt_at) <= julianday(?) + (1.0 / 86400.0)
+      RETURNING event_id, event_type, schema_version, aggregate_type, aggregate_id,
+        payload_json, estado, attempts, occurred_at, created_at
+    `).bind(
+      entrada.claimUid, entrada.ahora, entrada.claimExpiresAt,
+      ...eventIds, entrada.ahora
+    ).all();
+    return (resultado.results || []).map(mapearEvento);
+  }
+
   async marcarEntregado(
     entrada: Parameters<RepositorioOutboxIntegracion['marcarEntregado']>[0]
   ): Promise<void> {

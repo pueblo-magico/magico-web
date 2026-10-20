@@ -9,9 +9,11 @@ const base: ConfiguracionTarifa = {
   planId: 1, codigo: 'base', version: 2, moneda: 'ARS',
   reglasPrecio: [
     { temporadaCodigo: 'baja', fechaDesde: '2026-01-01', fechaHasta: '2026-06-30', prioridad: 0,
+      diasSemana: [1, 2, 3, 4, 5, 6, 7],
       tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 7,
       baseCalculo: 'persona_noche', importeCentavos: 10_000, exclusividadDesde: 6, exclusividadHasta: 7 },
     { temporadaCodigo: 'alta', fechaDesde: '2026-07-01', fechaHasta: '2026-12-31', prioridad: 0,
+      diasSemana: [1, 2, 3, 4, 5, 6, 7],
       tipoAlojamiento: 'domo', modalidad: 'cualquiera', ocupacionMin: 1, ocupacionMax: 7,
       baseCalculo: 'persona_noche', importeCentavos: 20_000, exclusividadDesde: 6, exclusividadHasta: 7 },
   ],
@@ -54,10 +56,89 @@ test('aplica importe fijo y exclusividad sólo dentro de la banda configurada', 
   assert.equal(resultado.exclusividadGratis, true);
 });
 
+test('aplica porcentajes distintos a ambos lados de un umbral de seña', () => {
+  const configuracion: ConfiguracionTarifa = {
+    ...base,
+    reglasPrecio: [{
+      ...base.reglasPrecio[0], fechaHasta: '2026-12-31', baseCalculo: 'unidad_noche',
+      importeCentavos: 15_000_000,
+    }],
+    reglasSena: [
+      { subtotalDesdeCentavos: 0, subtotalHastaCentavos: 14_999_999, tipo: 'porcentaje_bps', valor: 3000 },
+      { subtotalDesdeCentavos: 15_000_000, subtotalHastaCentavos: null, tipo: 'porcentaje_bps', valor: 5000 },
+    ],
+  };
+  const resultado = cotizarConPlan(
+    { tipo: 'domo', personas: 1, fechaEntrada: '2026-02-02', fechaSalida: '2026-02-03' },
+    configuracion,
+  );
+  assert.ok(!('error' in resultado));
+  assert.equal(resultado.subtotalCentavos, 15_000_000);
+  assert.equal(resultado.senaCentavos, 7_500_000);
+
+  const resultadoBandaInferior = cotizarConPlan(
+    { tipo: 'domo', personas: 1, fechaEntrada: '2026-02-02', fechaSalida: '2026-02-03' },
+    {
+      ...configuracion,
+      reglasPrecio: [{ ...configuracion.reglasPrecio[0], importeCentavos: 14_000_000 }],
+    },
+  );
+  assert.ok(!('error' in resultadoBandaInferior));
+  assert.equal(resultadoBandaInferior.subtotalCentavos, 14_000_000);
+  assert.equal(resultadoBandaInferior.senaCentavos, 4_200_000);
+});
+
+test('combina tarifa de semana y fin de semana noche por noche', () => {
+  const resultado = cotizarConPlan(
+    { tipo: 'domo', personas: 2, fechaEntrada: '2026-10-16', fechaSalida: '2026-10-19' },
+    {
+      ...base,
+      reglasPrecio: [
+        {
+          ...base.reglasPrecio[0], fechaDesde: '2026-01-01', fechaHasta: '2026-12-31',
+          diasSemana: [1, 2, 3, 4, 5], importeCentavos: 10_000,
+        },
+        {
+          ...base.reglasPrecio[0], temporadaCodigo: 'fin-semana', fechaDesde: '2026-01-01',
+          fechaHasta: '2026-12-31', diasSemana: [6, 7], importeCentavos: 20_000,
+        },
+      ],
+    },
+  );
+  assert.ok(!('error' in resultado));
+  assert.equal(resultado.subtotalCentavos, 100_000);
+  assert.deepEqual(resultado.noches.map(noche => noche.temporada), ['baja', 'fin-semana', 'fin-semana']);
+});
+
+test('aplica descuentos y recargos por anticipación antes de calcular la seña', () => {
+  const resultado = cotizarConPlan(
+    { tipo: 'domo', personas: 2, fechaEntrada: '2026-10-17', fechaSalida: '2026-10-18' },
+    {
+      ...base,
+      reglasAjuste: [
+        { codigo: 'ultima-hora', nombre: 'Última hora', anticipacionDesdeDias: 0,
+          anticipacionHastaDias: 3, direccion: 'descuento', tipo: 'porcentaje_bps', valor: 1000 },
+        { codigo: 'operativo', nombre: 'Recargo operativo', anticipacionDesdeDias: 0,
+          anticipacionHastaDias: 1, direccion: 'recargo', tipo: 'importe_fijo', valor: 5_000 },
+      ],
+    },
+    0,
+    '2026-10-16',
+  );
+  assert.ok(!('error' in resultado));
+  assert.equal(resultado.subtotalAntesAjustesCentavos, 40_000);
+  assert.equal(resultado.ajusteTotalCentavos, 1_000);
+  assert.equal(resultado.subtotalCentavos, 41_000);
+  assert.equal(resultado.senaCentavos, 20_500);
+  assert.deepEqual(resultado.ajustes.map(item => item.importeCentavos), [-4_000, 5_000]);
+});
+
 test('el repositorio D1 carga y normaliza el plan publicado', async () => {
   const bindings: unknown[][] = [];
+  const queries: string[] = [];
   const db = {
     prepare(query: string) {
+      queries.push(query);
       return {
         bind(...values: unknown[]) { bindings.push(values); return this; },
         async first() {
@@ -71,7 +152,12 @@ test('el repositorio D1 carga y normaliza el plan publicado', async () => {
             tipo_alojamiento: 'domo', modalidad: 'cualquiera', ocupacion_min: '1', ocupacion_max: '7',
             base_calculo: 'unidad_noche', importe_centavos: '5000', exclusividad_desde: null, exclusividad_hasta: null,
           }] };
-          return { results: [{ subtotal_desde_centavos: '0', subtotal_hasta_centavos: null, tipo: 'importe_fijo', valor: '1000' }] };
+          if (query.includes('FROM reglas_sena')) return { results: [{ subtotal_desde_centavos: '0', subtotal_hasta_centavos: null, tipo: 'importe_fijo', valor: '1000' }] };
+          if (query.includes('FROM reglas_ajuste_precio')) return { results: [
+            { codigo: 'ultima-hora', nombre: 'Última hora', anticipacion_desde_dias: '0', anticipacion_hasta_dias: '3', direccion: 'descuento', tipo: 'porcentaje_bps', valor: '1000' },
+            { codigo: 'larga-estadia', nombre: 'Larga estadía', anticipacion_desde_dias: '30', anticipacion_hasta_dias: null, direccion: 'recargo', tipo: 'importe_fijo', valor: '5000' },
+          ] };
+          return { results: [] };
         },
       };
     },
@@ -80,7 +166,12 @@ test('el repositorio D1 carga y normaliza el plan publicado', async () => {
   assert.equal(configuracion?.planId, 9);
   assert.equal(configuracion?.reglasPrecio[0].importeCentavos, 5000);
   assert.equal(configuracion?.reglasSena[0].subtotalHastaCentavos, null);
-  assert.deepEqual(bindings, [[9], [9]]);
+  assert.equal(configuracion?.reglasAjuste?.[0].anticipacionHastaDias, 3);
+  assert.equal(configuracion?.reglasAjuste?.[1].anticipacionHastaDias, null);
+  assert.deepEqual(bindings, [[9], [9], [9]]);
+  assert.match(queries[0], /WHERE estado = 'publicado'/);
+  assert.match(queries[0], /ORDER BY publicado_at DESC, id DESC LIMIT 1/);
+  assert.doesNotMatch(queries[0], /codigo = 'alojamiento-base'/);
 });
 
 test('el repositorio D1 devuelve null si no existe un plan publicado', async () => {
@@ -125,8 +216,8 @@ test('persiste un snapshot con código, hash y vencimiento sin datos personales'
   assert.match(guardada.codigo, /^COT-[0-9a-f-]+$/);
   assert.ok(Date.parse(guardada.expiresAt) > Date.now());
   assert.equal(values[0], guardada.codigo);
-  assert.match(String(values[15]), /^[a-f0-9]{64}$/);
-  assert.equal(String(values[14]).includes('cliente'), false);
+  assert.match(String(values[17]), /^[a-f0-9]{64}$/);
+  assert.equal(String(values[16]).includes('cliente'), false);
 });
 
 test('falla cerrado si D1 no devuelve el snapshot insertado', async () => {

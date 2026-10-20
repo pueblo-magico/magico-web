@@ -15,7 +15,7 @@ import {
   ErrorProveedorPagosTransitorio,
   MercadoPagoProveedorPagos,
 } from '../../functions/_infrastructure/mercadopago/MercadoPagoProveedorPagos.ts';
-import { hashDni } from '../../functions/_lib/paymentIdentity.ts';
+import { hashDni, normalizarDni } from '../../functions/_lib/paymentIdentity.ts';
 
 function pagos(
   estado: string,
@@ -42,6 +42,21 @@ function repositorio(overrides: Partial<RepositorioEstadoPagoReserva> = {}): Rep
   };
 }
 
+test('normaliza documentos permitidos y rechaza formatos o longitudes inválidas', () => {
+  assert.equal(normalizarDni('12.345.678'), '12345678');
+  assert.equal(normalizarDni(1234567), '1234567');
+  assert.equal(normalizarDni(null), null);
+  assert.equal(normalizarDni('12A34567'), null);
+  assert.equal(normalizarDni('123456'), null);
+});
+
+test('rechaza secretos de conciliación demasiado cortos', async () => {
+  await assert.rejects(
+    hashDni('12345678', 'secreto-corto'),
+    /PAYMENT_RECONCILIATION_SECRET_INVALIDO/
+  );
+});
+
 test('confirma una sola vez ante entregas duplicadas sin invocar un canal', async () => {
   let primera = true;
   const repository = repositorio({
@@ -49,7 +64,7 @@ test('confirma una sola vez ante entregas duplicadas sin invocar un canal', asyn
   });
   assert.deepEqual(
     await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, 'delivery-1'),
-    { estado: 'confirmada' }
+    { estado: 'confirmada', reservaId: 7 }
   );
   assert.deepEqual(
     await procesarPagoMercadoPago('pay-7', pagos('approved'), repository, 'delivery-1'),
@@ -73,7 +88,7 @@ test('resuelve la referencia pública RES sin mezclar ids de preview y producci�
   });
 
   const resultado = await procesarPagoMercadoPago('pay-public', pagos('approved', codigo), repository);
-  assert.deepEqual(resultado, { estado: 'confirmada' });
+  assert.deepEqual(resultado, { estado: 'confirmada', reservaId: 77 });
   assert.equal(confirmada, 77);
 });
 
@@ -103,7 +118,7 @@ test('concilia una transferencia aprobada por DNI, importe y moneda cuando la co
   };
 
   const resultado = await procesarPagoMercadoPago('transfer-81', provider, repository);
-  assert.deepEqual(resultado, { estado: 'confirmada' });
+  assert.deepEqual(resultado, { estado: 'confirmada', reservaId: 81 });
   assert.equal(confirmada, 81);
 });
 
@@ -140,8 +155,8 @@ test('la confirmación no depende de que exista una identidad de mensajería', a
     })
   );
 
-  assert.deepEqual(conUsuario, { estado: 'confirmada' });
-  assert.deepEqual(sinUsuario, { estado: 'confirmada' });
+  assert.deepEqual(conUsuario, { estado: 'confirmada', reservaId: 7 });
+  assert.deepEqual(sinUsuario, { estado: 'confirmada', reservaId: 8 });
 });
 
 test('registra rechazos, cancelaciones, devoluciones y estados intermedios', async () => {
