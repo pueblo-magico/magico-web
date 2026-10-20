@@ -31,6 +31,7 @@ import { PageSectionNav, type PageNavigation } from '../components/PageSectionNa
 import {
   FESTIVAL_OCTUBRE,
   type FestivalAccessOption,
+  type FestivalArtist,
   type FestivalTeamMember,
 } from './data/festivalOctubre';
 import { img } from './lib/img';
@@ -248,6 +249,65 @@ const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number
   </article>
 );
 
+const ArtistCard = ({ artist, index }: { artist: FestivalArtist; index: number }) => {
+  const { accent, glow, surface, ink, imagePosition } = artist.theme;
+
+  return (
+    <article
+      className="group h-full min-w-0 overflow-hidden rounded-[1.75rem] border shadow-[0_28px_70px_rgba(0,0,0,0.34)]"
+      style={{ backgroundColor: surface, borderColor: `${accent}66` }}
+      data-reveal
+      data-delay={String(index + 1)}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <img
+          src={img(artist.image, 1000)}
+          alt={artist.imageAlt}
+          loading="lazy"
+          width="900"
+          height="1200"
+          className="h-full w-full object-cover brightness-[.92] contrast-[1.04] saturate-[.88] transition duration-700 group-hover:scale-[1.035]"
+          style={{ objectPosition: imagePosition }}
+        />
+        <div className="absolute inset-0 opacity-10 mix-blend-color" style={{ backgroundColor: glow }} aria-hidden="true" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,13,19,0.14)_0%,rgba(20,13,19,0.06)_42%,rgba(20,13,19,0.96)_100%)]" aria-hidden="true" />
+        <div className="pointer-events-none absolute left-1/2 top-[27%] h-72 w-72 -translate-x-1/2 -translate-y-1/2 opacity-45" style={{ color: accent }} aria-hidden="true">
+          <SunRings className="h-full w-full" />
+        </div>
+        <div className="absolute inset-x-5 top-5 flex items-start justify-center gap-3">
+          <span className="text-[9px] font-bold uppercase tracking-[0.42em]" style={{ color: ink }}>AtardeSer</span>
+          <span className="absolute right-0 rounded-full border px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] backdrop-blur-md" style={{ borderColor: `${accent}73`, backgroundColor: `${surface}99`, color: ink }}>Acto 0{index + 1}</span>
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 w-full opacity-35" style={{ color: accent }} aria-hidden="true">
+          <OrganicWave className="h-full w-full" />
+        </div>
+        <div className="absolute inset-x-5 bottom-5 text-center">
+          {'logo' in artist && artist.logo && (
+            <div className="mx-auto mb-3 w-fit max-w-[150px] rounded-lg bg-[#FFF8EA]/90 px-3 py-1.5 shadow-lg backdrop-blur-sm">
+              <img src={artist.logo} alt="Logo de Maurión" loading="lazy" className="h-6 w-auto object-contain mix-blend-multiply" />
+            </div>
+          )}
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: accent }}>Artista AtardeSer</p>
+          <h3 className="mt-2 break-words text-[2.65rem] leading-[0.92] serif-title sm:text-5xl" style={{ color: ink }}>{artist.name}</h3>
+          <div className="mx-auto mt-4 h-px w-14" style={{ backgroundColor: accent }} aria-hidden="true" />
+          <p className="mt-3 text-[9px] uppercase tracking-[0.32em]" style={{ color: `${ink}B8` }}>Pueblo Mágico</p>
+        </div>
+      </div>
+      <div className="border-t p-6" style={{ borderColor: `${accent}3D`, background: `linear-gradient(145deg, ${surface}, ${glow}38)` }}>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>{artist.style}</p>
+        {'credit' in artist && artist.credit && <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: `${ink}8F` }}>{artist.credit}</p>}
+        <p className="mt-4 text-sm leading-relaxed" style={{ color: `${ink}B8` }}>{artist.bio}</p>
+        <div className="mt-5 flex items-center justify-between gap-4 border-t pt-4" style={{ borderColor: `${accent}2E` }}>
+          <p className="text-[9px] uppercase tracking-[0.13em]" style={{ color: `${ink}80` }}>{artist.imageNote}</p>
+          {'sourceUrl' in artist && artist.sourceUrl && (
+            <a href={artist.sourceUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[9px] font-bold uppercase tracking-[0.14em] underline underline-offset-4" style={{ color: accent }}>Conocé más</a>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+};
+
 const accessCardTones = [
   'border-[#C35D3C]/25 bg-[#F8E3D7]',
   'border-[#656853]/25 bg-[#E7E5D8]',
@@ -259,7 +319,7 @@ const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: nu
   <article className={`relative flex h-full min-w-0 flex-col overflow-hidden rounded-[1.75rem] border p-6 md:p-7 ${option.featured ? 'border-[#F0B25D] bg-[#482A3C] text-white shadow-[0_24px_60px_rgba(72,42,60,0.28)]' : accessCardTones[index % accessCardTones.length]}`} data-reveal data-delay={String((index % 3) + 1)}>
     <div className={`absolute inset-x-0 top-0 h-1.5 ${option.featured ? 'bg-[linear-gradient(90deg,#EF5A2F,#F0B25D)]' : index % 2 === 0 ? 'bg-[#C35D3C]' : 'bg-[#656853]'}`} aria-hidden="true" />
     <div className="mb-4 flex h-7 items-center justify-center">
-      {option.featured && <span className="rounded-full bg-[#F0B25D] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#482A3C]">Equilibrio ideal</span>}
+      {option.featured && <span className="rounded-full bg-[#F0B25D] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#482A3C]">{'featuredLabel' in option ? option.featuredLabel : 'Destacada'}</span>}
     </div>
     <p className={`text-center text-[10px] font-bold uppercase tracking-[0.2em] ${option.featured ? 'text-[#F4C48B]' : 'text-[#C35D3C]'}`}>{option.eyebrow}</p>
     <h3 className="mt-3 text-center text-3xl leading-[1.05] serif-title md:min-h-[5rem]">{option.title}</h3>
@@ -298,29 +358,33 @@ const RailControls: React.FC<RailControlsProps> = ({
   onBack,
   onForward,
 }) => {
-  const buttonClassName = inverse
-    ? 'border-[#F4C48B]/25 bg-white/[0.06] text-white hover:border-[#F4C48B]/60 hover:bg-white/15 disabled:border-white/10 disabled:text-white/25'
-    : 'border-[#482A3C]/20 bg-white text-[#482A3C] hover:border-[#482A3C] hover:bg-[#482A3C] hover:text-white disabled:border-[#482A3C]/10 disabled:bg-white/50 disabled:text-[#482A3C]/25';
+  const backButtonClassName = inverse
+    ? 'border-white/25 bg-white/10 text-white hover:border-[#F4C48B] hover:bg-white/20 disabled:border-white/10 disabled:text-white/25'
+    : 'border-[#482A3C]/25 bg-white text-[#482A3C] hover:border-[#482A3C] hover:bg-[#482A3C] hover:text-white disabled:border-[#482A3C]/10 disabled:bg-white/50 disabled:text-[#482A3C]/25';
+  const forwardButtonClassName = inverse
+    ? 'border-[#F4C48B] bg-[#EF5A2F] text-white shadow-[0_8px_24px_rgba(239,90,47,0.42)] hover:bg-[#F0B25D] hover:text-[#1B1520] disabled:border-white/10 disabled:bg-white/10 disabled:text-white/25 disabled:shadow-none'
+    : 'border-[#482A3C] bg-[#482A3C] text-white shadow-[0_8px_24px_rgba(72,42,60,0.28)] hover:border-[#EF5A2F] hover:bg-[#EF5A2F] disabled:border-[#482A3C]/10 disabled:bg-[#482A3C]/10 disabled:text-[#482A3C]/25 disabled:shadow-none';
 
   return (
-    <div className="flex shrink-0 items-center gap-2" aria-label={label}>
+    <div className="flex shrink-0 items-center gap-2.5" aria-label={label}>
+      <span className={`hidden text-[9px] font-bold uppercase tracking-[0.18em] sm:inline ${inverse ? 'text-white/45' : 'text-[#482A3C]/45'}`}>Navegá</span>
       <button
         type="button"
         onClick={onBack}
         disabled={!canGoBack}
         aria-label="Ver tarjeta anterior"
-        className={`flex h-10 w-10 items-center justify-center rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF5A2F] disabled:cursor-default ${buttonClassName}`}
+        className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF5A2F] disabled:cursor-default md:h-11 md:w-11 ${backButtonClassName}`}
       >
-        <ChevronLeft size={18} aria-hidden="true" />
+        <ChevronLeft size={24} strokeWidth={2.5} aria-hidden="true" />
       </button>
       <button
         type="button"
         onClick={onForward}
         disabled={!canGoForward}
         aria-label="Ver tarjeta siguiente"
-        className={`flex h-10 w-10 items-center justify-center rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF5A2F] disabled:cursor-default ${buttonClassName}`}
+        className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF5A2F] disabled:cursor-default md:h-11 md:w-11 ${forwardButtonClassName}`}
       >
-        <ChevronRight size={18} aria-hidden="true" />
+        <ChevronRight size={24} strokeWidth={2.5} aria-hidden="true" />
       </button>
     </div>
   );
@@ -435,30 +499,6 @@ const FestivalOctubre: React.FC = () => {
   const artistRail = useHorizontalRail();
   const teamRail = useHorizontalRail();
   const accessRail = useHorizontalRail();
-
-  useEffect(() => {
-    const rail = accessRail.ref.current;
-    if (!rail) return;
-
-    const mobileQuery = window.matchMedia('(max-width: 767px)');
-    const centerFeaturedOption = () => {
-      if (!mobileQuery.matches) return;
-      const featuredOption = rail.querySelector<HTMLElement>('[data-featured-option="true"]');
-      if (!featuredOption) return;
-      rail.scrollTo({
-        left: featuredOption.offsetLeft - (rail.clientWidth - featuredOption.clientWidth) / 2,
-        behavior: 'auto',
-      });
-    };
-
-    const frame = window.requestAnimationFrame(centerFeaturedOption);
-    mobileQuery.addEventListener('change', centerFeaturedOption);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      mobileQuery.removeEventListener('change', centerFeaturedOption);
-    };
-  }, [accessRail.ref]);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -710,7 +750,7 @@ const FestivalOctubre: React.FC = () => {
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
             </div>
             <div className="mb-5 flex items-center justify-between gap-4">
-              <p className="text-xs leading-relaxed text-white/50 md:text-sm">Deslizá o usá las flechas para conocer a cada artista.</p>
+              <p className="text-xs font-semibold leading-relaxed text-white/65 md:text-sm"><span className="md:hidden">Usá las flechas para avanzar artista por artista.</span><span className="hidden md:inline">Deslizá o usá las flechas para conocer a cada artista.</span></p>
               <RailControls
                 inverse
                 label="Controles de artistas"
@@ -720,25 +760,12 @@ const FestivalOctubre: React.FC = () => {
                 onForward={() => artistRail.scroll(1)}
               />
             </div>
-            <div ref={artistRail.ref} className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-proximity scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Artistas confirmados">
+            <div ref={artistRail.ref} className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-mandatory scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Artistas confirmados">
               <div className="flex gap-5">
                 {FESTIVAL_OCTUBRE.artists.map((artist, index) => (
-                  <article key={artist.name} data-rail-item className="group w-[calc(100vw-3rem)] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-[1.75rem] border border-[#F4C48B]/18 bg-[#2A1D2A] shadow-[0_24px_60px_rgba(0,0,0,0.26)]" data-reveal data-delay={String(index + 1)}>
-                    <div className="relative aspect-[4/5] overflow-hidden">
-                      <img src={img(artist.image, 900)} alt={artist.imageAlt} loading="lazy" width="900" height="1125" className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.04]" />
-                      <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(27,21,32,0.92),transparent_65%)]" />
-                      <span className="absolute right-5 top-5 rounded-full border border-white/20 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/75 backdrop-blur-sm">Acto 0{index + 1}</span>
-                      <p className="absolute bottom-4 left-5 right-5 text-[9px] uppercase tracking-[0.14em] text-white/45">{artist.imageNote}</p>
-                    </div>
-                    <div className="p-6">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#F4C48B]">{artist.style}</p>
-                      <h3 className="mt-2 text-3xl serif-title md:text-4xl">{artist.name}</h3>
-                      <p className="mt-4 text-sm leading-relaxed text-white/60">{artist.bio}</p>
-                      {'sourceUrl' in artist && artist.sourceUrl && (
-                        <a href={artist.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex text-[10px] font-bold uppercase tracking-[0.14em] text-white/50 underline decoration-[#EF5A2F] underline-offset-4">Referencia pública</a>
-                      )}
-                    </div>
-                  </article>
+                  <div key={artist.name} data-rail-item className="w-[calc(100vw-3rem)] max-w-[365px] shrink-0 snap-center md:w-[350px] md:snap-start">
+                    <ArtistCard artist={artist} index={index} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -755,7 +782,7 @@ const FestivalOctubre: React.FC = () => {
               <p className="mx-auto mt-4 max-w-lg text-base text-[#211B20]/60">Un equipo y una comunidad de referentes que suman su energía a esta celebración.</p>
             </div>
             <div className="mb-5 flex items-center justify-between gap-4">
-              <p className="text-xs leading-relaxed text-[#1F2922]/55 md:text-sm">Deslizá o usá las flechas para conocer al equipo.</p>
+              <p className="text-xs font-semibold leading-relaxed text-[#1F2922]/65 md:text-sm"><span className="md:hidden">Usá las flechas para avanzar persona por persona.</span><span className="hidden md:inline">Deslizá o usá las flechas para conocer al equipo.</span></p>
               <RailControls
                 label="Controles del equipo"
                 canGoBack={teamRail.canGoBack}
@@ -764,7 +791,7 @@ const FestivalOctubre: React.FC = () => {
                 onForward={() => teamRail.scroll(1)}
               />
             </div>
-            <div ref={teamRail.ref} className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-proximity scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Equipo de AtardeSer">
+            <div ref={teamRail.ref} className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-mandatory scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-4 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Equipo de AtardeSer">
               <div className="flex items-stretch gap-5">
                 {FESTIVAL_OCTUBRE.team.map((member, index) => (
                   <div key={member.fullName} data-rail-item className="w-[calc(100vw-3rem)] max-w-[320px] shrink-0 snap-start">
@@ -822,7 +849,7 @@ const FestivalOctubre: React.FC = () => {
             </div>
             <div className="mb-5 flex items-center justify-between gap-4">
               <p className="max-w-lg text-xs leading-relaxed text-[#1F2922]/55 md:text-sm">
-                <span className="md:hidden">Deslizá para comparar las cinco opciones.</span>
+                <span className="font-semibold md:hidden">Empezá por Pase por el Día y usá las flechas para comparar.</span>
                 <span className="hidden md:inline">Cinco opciones para comparar con calma: pase por el día, camping o habitación compartida.</span>
               </p>
               <RailControls
@@ -833,10 +860,10 @@ const FestivalOctubre: React.FC = () => {
                 onForward={() => accessRail.scroll(1)}
               />
             </div>
-            <div ref={accessRail.ref} id="festival-access-options" className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-proximity scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
+            <div ref={accessRail.ref} id="festival-access-options" className="scrollbar-hide -mx-6 touch-pan-x touch-pan-y snap-x snap-mandatory scroll-px-6 overflow-x-auto overflow-y-hidden overscroll-x-contain px-6 pb-5 md:-mx-10 md:scroll-px-10 md:px-10" aria-label="Modalidades de acceso">
               <div className="flex items-stretch gap-5">
                 {FESTIVAL_OCTUBRE.accessOptions.map((option, index) => (
-                  <div key={option.title} data-rail-item data-featured-option={option.featured ? 'true' : undefined} className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-center md:w-[320px] md:snap-start lg:w-[330px] xl:w-[340px]">
+                  <div key={option.title} data-rail-item className="w-[calc(100vw-3rem)] max-w-[350px] shrink-0 snap-center md:w-[320px] md:snap-start lg:w-[330px] xl:w-[340px]">
                     <AccessCard option={option} index={index} />
                   </div>
                 ))}
