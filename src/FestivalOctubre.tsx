@@ -34,6 +34,8 @@ import {
   type FestivalTeamMember,
 } from './data/festivalOctubre';
 import { img } from './lib/img';
+import { WhatsAppButton } from '../components/WhatsAppButton';
+import { CookieBanner } from '../components/CookieBanner';
 
 const C = {
   pine: '#2F3A31',
@@ -452,6 +454,40 @@ const CelebrationMosaic = () => (
 );
 
 const FestivalOctubre: React.FC = () => {
+
+  const [belowFoldReady, setBelowFoldReady] = useState(false);
+
+
+  useEffect(() => {
+    // Forzamos la carga de elementos pesados después de que la prioridad inicial termine
+    // o después de 1 segundo como máximo (seguridad para PageSpeed y UX)
+    const timer = setTimeout(() => setBelowFoldReady(true), 1000);
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        clearTimeout(timer);
+        setBelowFoldReady(true);
+      });
+    }
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Forzamos la carga de elementos pesados después de que la prioridad inicial termine
+    // o después de 1 segundo como máximo (seguridad para PageSpeed y UX)
+    const timer = setTimeout(() => setBelowFoldReady(true), 1000);
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        clearTimeout(timer);
+        setBelowFoldReady(true);
+      });
+    }
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [showDesktopHeroEffects, setShowDesktopHeroEffects] = useState(() => (
     typeof window === 'undefined' || window.matchMedia('(min-width: 768px)').matches
@@ -768,7 +804,7 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
- <section id="entradas" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
+        <section id="entradas" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
           <SunRings className="pointer-events-none absolute -left-40 -top-36 h-[32rem] w-[32rem] text-[#FF6A00]/11" />
           <TopographicLines className="pointer-events-none absolute -bottom-12 -right-20 h-72 w-[36rem] text-[#E40067]/12" />
           <div className="relative mx-auto max-w-7xl">
@@ -942,7 +978,10 @@ const FestivalOctubre: React.FC = () => {
         </section>
       </main>
 
-      <Footer />
+      {belowFoldReady && <Footer />}
+      <WhatsAppButton />
+      {belowFoldReady && <CookieBanner />}
+
     </div>
   );
 };
