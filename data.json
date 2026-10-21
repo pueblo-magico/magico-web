@@ -933,6 +933,8 @@
       "cards": [
         {
           "date": "17-18 OCTUBRE",
+          "startDate": "2026-10-17",
+          "endDate": "2026-10-18",
           "title": "Retiro Pueblo Mágico · Los Gigantes",
           "desc": "Dos días para bajar el ritmo, respirar aire puro y reconectar con lo esencial: yoga, meditación, caminatas al río, fogón y ceremonia del cacao. Desde $280.000.",
           "btn": "Anotarme",
@@ -3694,6 +3696,8 @@
       "cards": [
         {
           "date": "OCT 17-18",
+          "startDate": "2026-10-17",
+          "endDate": "2026-10-18",
           "title": "Pueblo Mágico Retreat · Los Gigantes",
           "desc": "Two days to slow down, breathe fresh air and reconnect with what matters: yoga, meditation, walks to the river, bonfire and a cacao ceremony. From USD 190.",
           "btn": "Sign me up",
