@@ -18,7 +18,8 @@ permissions:
 jobs:
   preview:
     name: Build and deploy preview
-    runs-on: ubuntu-latest
+    # Keep previews on the same Playwright-compatible image as production.
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout pull request
