@@ -98,22 +98,76 @@ const TopographicLines = ({ className = '' }: { className?: string }) => (
 
 const navigation: PageNavigation = {
   ariaLabel: 'Navegación del festival',
-  pageEyebrow: '31 · 10 · 2026',
+  pageEyebrow: '31/10/2026',
   pageTitle: 'Raíz Sonora · Pueblo Mágico',
   sections: [
-    { id: 'lugar', label: 'El lugar' },
-    { id: 'artistas', label: 'Artistas' },
-    { id: 'temazcal', label: 'Temazcal' },
-    { id: 'entradas', label: 'Entradas' },
     { id: 'propuesta', label: 'La propuesta' },
+    { id: 'artistas', label: 'Artistas' },
+    { id: 'cronograma', label: 'Horarios' },
+    { id: 'temazcal', label: 'Temazcal' },
+    { id: 'lugar', label: 'El lugar' },
+    { id: 'entradas', label: 'Entradas' },
     { id: 'para-quien', label: 'Para quién es' },
-    { id: 'experiencias', label: 'Experiencias' },
     { id: 'equipo', label: 'Equipo' },
     { id: 'preguntas', label: 'Preguntas' },
   ],
 };
 
 const faqs = [
+  {
+    Icon: MapPin,
+    question: '¿Cómo llegar a Pueblo Mágico?',
+    answer: (
+      <div className="space-y-5">
+        <div className="space-y-2">
+          <p className="font-bold text-[#003630]">⛰️ ECO-CENTRO PUEBLO MÁGICO ⛰️</p>
+          <p className="font-bold text-[#003630]">📍 ¿Cómo llegar?</p>
+        </div>
+
+        <p className="font-bold text-[#C34F32]">👉 Desde Tanti</p>
+
+        <ol className="space-y-4">
+          <li className="flex items-start gap-3">
+            <span className="shrink-0" aria-hidden="true">1️⃣</span>
+            <span>Pasando Tanti, tomar el asfalto nuevo (aprox. 10 km) hasta llegar a Cerro Blanco.</span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="shrink-0" aria-hidden="true">2️⃣</span>
+            <span>Desde allí, continuar 30 km por el camino principal de ripio. Lo están asfaltando, está en muy buen estado y es apto para todo tipo de vehículo.</span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="shrink-0" aria-hidden="true">3️⃣</span>
+            <span>Vas a llegar a un cruce de caminos donde están trabajando máquinas y hay un cartel que dice “Taninga y Tala Cañada”. <strong className="font-bold text-[#003630]">➡️ Doblá a la derecha.</strong></span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="shrink-0" aria-hidden="true">4️⃣</span>
+            <span>Seguí 8,5 km hasta encontrar, a mano izquierda, un cartel que dice “Mágico Ensueño” y una tranquera que dice “El Divisadero”.</span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="shrink-0" aria-hidden="true">5️⃣</span>
+            <span>
+              Ingresá por allí y avanzá 2 km, siguiendo las indicaciones:
+              <span className="mt-2 block space-y-1 font-semibold text-[#003630]">
+                <span className="block">✔️ Pasá una cantera</span>
+                <span className="block">✔️ Bajá por el camino</span>
+              </span>
+            </span>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="shrink-0" aria-hidden="true">6️⃣</span>
+            <span>Cruzá una tranquera de alambre. 🚗 Apenas la pases, vas a encontrar el estacionamiento del predio.</span>
+          </li>
+        </ol>
+
+        <div className="rounded-2xl border border-[#004B43]/15 bg-[#004B43]/[0.04] p-4">
+          <p className="font-bold text-[#003630]">📍 Ubicación en Google Maps:</p>
+          <a href="https://acortar.link/STOwP7" target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 font-bold text-[#C34F32] underline decoration-[#C34F32]/35 underline-offset-4 transition hover:text-[#003630] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FF6A00]">
+            Abrir ubicación en Google Maps <ArrowRight size={16} aria-hidden="true" />
+          </a>
+        </div>
+      </div>
+    ),
+  },
   {
     Icon: CalendarDays,
     question: '¿Puedo asistir solamente el sábado?',
@@ -153,11 +207,6 @@ const faqs = [
     Icon: Flame,
     question: '¿Cómo funciona el temazcal del domingo?',
     answer: 'El temazcal forma parte de la propuesta del domingo y tiene cupo limitado, inscripción previa y un valor adicional. Consultanos para reservar tu lugar.',
-  },
-  {
-    Icon: MapPin,
-    question: '¿Dónde queda Pueblo Mágico?',
-    answer: 'En Los Gigantes, Sierras de Córdoba, Argentina. Consultanos por WhatsApp para recibir la ubicación y la información vigente para llegar.',
   },
   {
     Icon: CreditCard,
@@ -207,11 +256,10 @@ const FestivalButton = ({ href, children, secondary = false, fullWidth = false }
     href={href}
     target={href.startsWith('http') ? '_blank' : undefined}
     rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-    className={`group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${fullWidth ? 'w-full' : ''} ${
-      secondary
-        ? 'border border-white/55 bg-[#003A34]/35 text-white backdrop-blur-sm hover:bg-white/10 focus-visible:outline-white'
-        : 'bg-[#FF6A00] text-white shadow-[0_14px_38px_rgba(93,35,28,0.28)] hover:-translate-y-0.5 hover:bg-[#FF7048] focus-visible:outline-[#FF6A00]'
-    }`}
+    className={`group inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 ${fullWidth ? 'w-full' : ''} ${secondary
+      ? 'border border-white/55 bg-[#003A34]/35 text-white backdrop-blur-sm hover:bg-white/10 focus-visible:outline-white'
+      : 'bg-[#FF6A00] text-white shadow-[0_14px_38px_rgba(93,35,28,0.28)] hover:-translate-y-0.5 hover:bg-[#FF7048] focus-visible:outline-[#FF6A00]'
+      }`}
   >
     {children}
     <ArrowRight size={16} aria-hidden="true" className="transition-transform group-hover:translate-x-1" />
@@ -244,6 +292,7 @@ const TeamCard = ({ member, index }: { member: FestivalTeamMember; index: number
 
 const ArtistCard = ({ artist, index }: { artist: FestivalArtist; index: number }) => {
   const { accent, glow, surface, ink, imagePosition } = artist.theme;
+  const sourceLabel = 'sourceLabel' in artist ? artist.sourceLabel : 'Conocé más';
 
   return (
     <article
@@ -290,12 +339,14 @@ const ArtistCard = ({ artist, index }: { artist: FestivalArtist; index: number }
         <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>{artist.style}</p>
         {'credit' in artist && artist.credit && <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: `${ink}8F` }}>{artist.credit}</p>}
         <p className="mt-4 text-sm leading-relaxed" style={{ color: `${ink}B8` }}>{artist.bio}</p>
-        <div className="mt-auto flex items-center justify-between gap-4 border-t pt-4" style={{ borderColor: `${accent}2E` }}>
-          <p className="text-[9px] uppercase tracking-[0.13em]" style={{ color: `${ink}80` }}>{artist.imageNote}</p>
-          {'sourceUrl' in artist && artist.sourceUrl && (
-            <a href={artist.sourceUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[9px] font-bold uppercase tracking-[0.14em] underline underline-offset-4" style={{ color: accent }}>Conocé más</a>
-          )}
-        </div>
+        {'sourceUrl' in artist && artist.sourceUrl && (
+          <div className="mt-auto flex justify-end border-t pt-4" style={{ borderColor: `${accent}2E` }}>
+            <a href={artist.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] underline underline-offset-4" style={{ color: accent }}>
+              {sourceLabel === 'Instagram' ? <Instagram size={14} aria-hidden="true" /> : <ArrowRight size={14} aria-hidden="true" />}
+              {sourceLabel}
+            </a>
+          </div>
+        )}
       </div>
     </article>
   );
@@ -330,7 +381,7 @@ const AccessCard = ({ option, index }: { option: FestivalAccessOption; index: nu
     <div className={`my-6 border-y py-6 text-center ${option.featured ? 'border-white/10' : 'border-[#123B2D]/10'}`}>
       <p className={`mx-auto mb-4 inline-flex rounded-full px-3 py-1.5 text-[10px] font-bold whitespace-nowrap ${option.featured ? 'bg-white/10 text-[#FFD166]' : 'bg-white/65 text-[#004B43]'}`}>💳 {option.installments}</p>
       <p className="text-4xl serif-title">{option.price}</p>
-      <p className={`mt-2 text-[10px] font-bold uppercase tracking-[0.12em] ${option.featured ? 'text-white/50' : 'text-[#16423D]/50'}`}>por persona · transferencia · 20% off</p>
+      <p className={`mt-2 text-[10px] font-bold uppercase tracking-[0.12em] ${option.featured ? 'text-white/50' : 'text-[#16423D]/50'}`}>por persona · transferencia · efectivo</p>
     </div>
     <p className={`mb-4 text-center text-[10px] font-bold uppercase tracking-[0.18em] ${option.featured ? 'text-[#FFD166]' : 'text-[#FF5A1F]'}`}>Incluye</p>
     <ul className="mb-6 space-y-3">
@@ -361,8 +412,8 @@ const celebrationMoments = [
     label: 'Naturaleza compartida',
   },
   {
-    src: '/uploads/pachamama-fogon-grupo-cielo.webp',
-    alt: 'Grupo reunido alrededor del fogón bajo el cielo estrellado',
+    src: '/uploads/sunset-rio-fogon-real.webp',
+    alt: 'Personas reunidas alrededor de un fogón en Pueblo Mágico',
     label: 'Fogón bajo las estrellas',
   },
 ] as const;
@@ -515,17 +566,17 @@ const FestivalOctubre: React.FC = () => {
               </div>
               <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#FFD166] md:text-xs">Progressive · House · Trance · Organic · Tambores</p>
               <h1 className="text-[4.25rem] leading-[0.76] tracking-[-0.065em] text-[#FFF8EA] [text-shadow:0_8px_35px_rgba(0,30,27,.55)] serif-title sm:text-8xl md:text-9xl lg:text-[9.5rem]"><span className="block">RAÍZ</span><span className="block">SONORA</span></h1>
-              <p className="mx-auto mt-6 text-xl leading-tight text-[#FFD166] serif-title md:text-3xl">Movimiento · conexión · naturaleza · montaña</p>
+              <p className="mx-auto mt-6 max-w-full text-xl leading-tight text-[#FFE28A] [text-shadow:0_3px_12px_rgba(0,0,0,0.95),0_1px_2px_rgba(0,0,0,0.95)] serif-title md:text-3xl">Movimiento · Conexión · Naturaleza</p>
               <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/80 md:text-lg">
-                Una tribu de artistas y un día entero de música para bailar en el corazón de la montaña. Sumate al Jam de AcroYoga, compartí el fogón y elegí vivir el día o quedarte durante todo el fin de semana.
+                Una tribu de artistas y un día entero de música en vivo para bailar en el corazón de la montaña. Veni a celebrar y co-crear experiencias y por el día o quedarte durante todo el fin de semana.
               </p>
               <div className="mx-auto mt-5 flex max-w-3xl flex-wrap justify-center gap-2 text-[9px] font-bold uppercase tracking-[0.16em]">
                 {[
-                  ['Movimiento', '#00A69C'],
-                  ['Conexión', '#FFB300'],
-                  ['Naturaleza', '#E40067'],
-                  ['Montaña', '#00A69C'],
-                  ['Temazcal', '#FF5A1F'],
+                  ['Celebracion', '#00A69C'],
+                  ['Danza', '#FFB300'],
+                  ['Comunidad', '#E40067'],
+                  ['Experiencias', '#00A69C'],
+                  ['Bienestar', '#FF5A1F'],
                 ].map(([label, color]) => <span key={label} className="rounded-full border bg-[#003A34]/65 px-3 py-1.5 text-white backdrop-blur-sm" style={{ borderColor: color }}>{label}</span>)}
               </div>
               <div className="mt-6 flex justify-center"><Countdown /></div>
@@ -544,39 +595,49 @@ const FestivalOctubre: React.FC = () => {
           </a>
         </section>
 
-        <section id="lugar" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 md:px-10 md:py-28">
-          <TopographicLines className="pointer-events-none absolute -left-20 bottom-0 h-72 w-[36rem] text-[#008C86]/14" />
-          <div className="mx-auto max-w-6xl text-center">
-            <div className="mx-auto max-w-3xl" data-reveal>
-              <Eyebrow>El lugar</Eyebrow>
-              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico,<br />Los Gigantes.</h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#16423D]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone Raíz Sonora: naturaleza, comunidad y presencia.</p>
-              <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left text-sm text-[#16423D]/65 sm:grid-cols-2">
-                {['A 90 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón'].map(item => (
-                  <li key={item} className="flex items-start gap-3"><Check size={16} className="mt-0.5 shrink-0 text-[#B85A3D]" aria-hidden="true" />{item}</li>
+        <section id="propuesta" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 text-[#003630] md:px-10 md:py-28">
+          <TopographicLines className="pointer-events-none absolute -left-28 top-4 h-80 w-[38rem] text-[#E40067]/16" />
+          <SunRings className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] text-[#FF5A1F]/16" />
+          <div className="relative mx-auto max-w-5xl">
+            <div className="text-center" data-reveal>
+              <div className="mb-7 flex items-center justify-center gap-3">
+                {[{ Icon: Music2, color: '#FF5A1F' }, { Icon: Sun, color: '#FF9F1C' }, { Icon: UsersRound, color: '#E40067' }].map(({ Icon, color }, index) => (
+                  <span key={index} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#004B43]/10 bg-white/70 shadow-sm">
+                    <Icon size={17} color={color} aria-hidden="true" />
+                  </span>
                 ))}
-              </ul>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
               </div>
-              <article className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-[#008C86]/25 bg-[#E2F5EE] p-6 text-left shadow-[0_14px_35px_rgba(31,41,34,0.06)] md:flex md:items-center md:gap-6 md:p-7">
-                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#004B43] text-[#FFD166] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FF5A1F]">Viernes 30 de octubre de 2026</p>
-                  <h3 className="mt-2 text-2xl text-[#003630] serif-title md:text-3xl">Llegada y bienvenida</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[#16423D]/65">Llegada para quienes elijan dos noches, instalación y un primer encuentro para empezar a compartir.</p>
-                </div>
-              </article>
-              <div className="mt-8"><FestivalButton href="/">Conocer Pueblo Mágico</FestivalButton></div>
+              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.34em] text-[#FF5A1F]">El festival</p>
+              <h2 className="mx-auto max-w-3xl text-4xl leading-[1.04] text-[#003630] serif-title md:text-6xl">Un pulso que nace en la montaña</h2>
+              <p className="mx-auto mt-7 max-w-2xl text-sm leading-relaxed text-[#003630]/65 md:text-base">
+                Raíz Sonora reúne progressive, house, trance y tambores con movimiento, naturaleza y comunidad. Un festival abierto para venir por el día o quedarse a vivir el fin de semana completo.
+              </p>
             </div>
-            <div className="mt-12 grid grid-cols-2 gap-3" data-reveal data-delay="1">
-              <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
-              <img src={img('/uploads/domos_2.jpg', 700)} alt="Domos geodésicos entre las piedras y la vegetación de Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
-              <img src={img('/uploads/flyfishing-refugio-exterior.jpg', 700)} alt="Frente del Refugio de Piedra integrado al paisaje de montaña" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+
+            <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
+              {[
+                { Icon: Music2, title: 'Música en vivo', text: 'Cuatro artistas y ocho horas de house, trance, música orgánica y tambores.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
+                { Icon: Leaf, title: 'Naturaleza', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86] text-white' },
+                { Icon: UsersRound, title: 'Movimiento y conexión', text: 'Jam de AcroYoga, fogón y espacios para celebrar, jugar y conocer gente nueva.', shell: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067] text-white' },
+              ].map(({ Icon, title, text, shell, icon }) => (
+                <article key={title} className={`rounded-[1.75rem] border px-7 py-8 text-center shadow-[0_16px_40px_rgba(72,42,60,0.07)] ${shell}`}>
+                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${icon}`}>
+                    <Icon size={18} aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-5 text-xl text-[#003630] serif-title">{title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[#003630]/60">{text}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-9 flex flex-wrap justify-center gap-2.5" data-reveal data-delay="2">
+              {['Abierto a toda la familia', 'Vení por el día', 'Quedate el finde', 'Buffet y barra disponibles'].map(item => (
+                <span key={item} className="rounded-full border border-[#004B43]/15 bg-white/65 px-4 py-2 text-[10px] font-semibold tracking-wide text-[#004B43]">{item}</span>
+              ))}
             </div>
           </div>
         </section>
+
 
         <section id="artistas" className="relative overflow-hidden bg-[#003A34] px-6 py-20 text-white md:px-10 md:py-28">
           <img
@@ -592,11 +653,28 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-6xl">El pulso de Raíz Sonora.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
               <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
+                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FF5A1F] text-[#004B43] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Viernes 30/10/2026</p>
+                  <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Llegada y bienvenida</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/65">Llegada para quienes elijan llegar antes, instalarse y empezar a compartir.</p>
+                </div>
+              </article>
+
+              <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
                 <div className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FFB300] text-[#004B43] md:mb-0"><Sun size={21} aria-hidden="true" /></div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Sábado 31 de octubre de 2026</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Sábado 31/10/2026</p>
                   <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Jornada central</h3>
                   <p className="mt-2 text-sm leading-relaxed text-white/65">Cuatro artistas, ocho horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.</p>
+                </div>
+              </article>
+              <article className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-[#FFD166]/20 bg-white/[0.06] p-6 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-7">
+                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#008C86] text-white md:mb-0"><Leaf size={21} aria-hidden="true" /></div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Domingo 01/11/2026</p>
+                  <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Naturaleza e integración</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/65">Temazcal, yoga, caminatas y conexión con ríos y montañas para quienes extiendan su estadía.</p>
                 </div>
               </article>
             </div>
@@ -619,21 +697,38 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
+        <section id="cronograma" className="relative overflow-hidden bg-[#FFF0D5] px-6 py-16 text-[#003630] md:px-10 md:py-20">
+          <TopographicLines className="pointer-events-none absolute -right-24 bottom-0 h-64 w-[34rem] text-[#FF5A1F]/12" />
+          <div className="relative mx-auto max-w-5xl">
+            <div className="text-center" data-reveal>
+              <p className="mb-5 inline-block rounded-full bg-[#004B43] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-white">Sábado 31/10/2026</p>
+              <h2 className="text-4xl leading-tight serif-title md:text-5xl">Horarios de la jornada</h2>
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[#003630]/65 md:text-base">Las puertas quedan abiertas durante toda la jornada: llegá a la hora que mejor te funcione.</p>
+            </div>
+            <div className="mt-10 grid gap-4 md:grid-cols-2" data-reveal data-delay="1">
+              <article className="rounded-[1.75rem] border border-[#008C86]/25 bg-[#E2F5EE] p-7 shadow-[0_16px_38px_rgba(31,41,34,0.07)] md:p-8">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#008C86] text-white"><Clock3 size={19} aria-hidden="true" /></span>
+                <p className="mt-6 text-4xl text-[#003630] serif-title">10:00</p>
+                <h3 className="mt-2 text-lg font-bold text-[#003630]">Apertura de puertas</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#003630]/65">Llegá cuando quieras y empezá a disfrutar del lugar a tu ritmo.</p>
+              </article>
+              <article className="rounded-[1.75rem] border border-[#FF5A1F]/25 bg-[#FFE3D2] p-7 shadow-[0_16px_38px_rgba(72,42,60,0.07)] md:p-8">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FF5A1F] text-white"><Music2 size={19} aria-hidden="true" /></span>
+                <p className="mt-6 text-4xl text-[#003630] serif-title">14:00</p>
+                <h3 className="mt-2 text-lg font-bold text-[#003630]">Comienzan los artistas en vivo</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#003630]/65">La programación musical en vivo empieza el sábado a las 14:00.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section id="temazcal" className="relative overflow-hidden bg-[#003A34] px-6 py-20 text-white md:px-10 md:py-28">
           <SunRings className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] text-[#FF6A00]/18" />
           <div className="mx-auto max-w-5xl text-center">
             <div data-reveal>
-              <p className="mb-5 inline-block rounded-full bg-[#FF5A1F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-white">Domingo 1 de noviembre de 2026 · Cupo limitado</p>
-              <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-5xl">¿Qué es el Temazcal?</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/65 md:text-lg">Una ceremonia ancestral de calor, vapor y encuentro que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
-              <article className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-[#FFD166]/20 bg-white/[0.06] p-6 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-7">
-                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#008C86] text-white md:mb-0"><Leaf size={21} aria-hidden="true" /></div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Programa del domingo</p>
-                  <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Naturaleza e integración</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/65">Temazcal, yoga, caminatas y conexión con ríos y montañas para quienes extiendan su estadía.</p>
-                </div>
-              </article>
+              <p className="mb-5 inline-block rounded-full bg-[#FF5A1F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-white">Domingo 01/11/2026 · Cupo limitado</p>
+              <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-5xl">Temazcal</h2>
+              <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/65 md:text-lg">Una ceremonia ancestral de conexión y purificación, que invita a hacer una pausa, escuchar el cuerpo e integrar lo vivido durante el fin de semana.</p>
             </div>
             <div className="mt-12 overflow-hidden rounded-[2rem] border border-[#FFD166]/20 bg-[#2A1D2A]" data-reveal data-delay="1">
               <img src={img('/uploads/temazcal.webp', 1400)} alt="Ceremonia de Temazcal en Pueblo Mágico" loading="lazy" width="1400" height="900" className="aspect-[16/8] w-full object-cover" />
@@ -645,14 +740,42 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="entradas" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
+
+
+        <section id="lugar" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 md:px-10 md:py-28">
+          <TopographicLines className="pointer-events-none absolute -left-20 bottom-0 h-72 w-[36rem] text-[#008C86]/14" />
+          <div className="mx-auto max-w-6xl text-center">
+            <div className="mx-auto max-w-3xl" data-reveal>
+              <Eyebrow>El lugar</Eyebrow>
+              <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico,<br />Los Gigantes.</h2>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#16423D]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone Raíz Sonora: naturaleza, comunidad y presencia.</p>
+              <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left text-sm text-[#16423D]/65 sm:grid-cols-2">
+                {['A 90 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón', "Acceso fácil en todo tipo de vehículos"].map(item => (
+                  <li key={item} className="flex items-start gap-3"><Check size={16} className="mt-0.5 shrink-0 text-[#B85A3D]" aria-hidden="true" />{item}</li>
+                ))}
+              </ul>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><MapPin size={15} aria-hidden="true" />Los Gigantes, Córdoba</span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#123B2D]/15 px-4 py-2 text-xs text-[#123B2D]"><Leaf size={15} aria-hidden="true" />Entorno natural serrano</span>
+              </div>
+              <div className="mt-8"><FestivalButton href="/">Conocer Pueblo Mágico</FestivalButton></div>
+            </div>
+            <div className="mt-12 grid grid-cols-2 gap-3" data-reveal data-delay="1">
+              <img src={img(FESTIVAL_OCTUBRE.images.place, 1200)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" loading="lazy" width="1200" height="900" className="col-span-2 aspect-[16/10] w-full rounded-[2rem] object-cover" />
+              <img src={img('/uploads/domos_2.jpg', 700)} alt="Domos geodésicos entre las piedras y la vegetación de Pueblo Mágico" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+              <img src={img('/uploads/flyfishing-refugio-exterior.jpg', 700)} alt="Frente del Refugio de Piedra integrado al paisaje de montaña" loading="lazy" width="700" height="800" className="aspect-square w-full rounded-[1.5rem] object-cover" />
+            </div>
+          </div>
+        </section>
+
+ <section id="entradas" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
           <SunRings className="pointer-events-none absolute -left-40 -top-36 h-[32rem] w-[32rem] text-[#FF6A00]/11" />
           <TopographicLines className="pointer-events-none absolute -bottom-12 -right-20 h-72 w-[36rem] text-[#E40067]/12" />
           <div className="relative mx-auto max-w-7xl">
             <div className="mx-auto mb-10 max-w-3xl text-center md:mb-12" data-reveal>
               <Eyebrow>Modalidades de acceso</Eyebrow>
               <h2 className="text-4xl serif-title md:text-6xl">Elegí cómo sumarte.</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#16423D]/60">Vení por el día o elegí una o dos noches en camping o habitación compartida. Todos los tickets con alojamiento incluyen desayuno.</p>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#16423D]/60">Vení por el día o elegí una o dos noches en camping, habitación o Domo. Todos los tickets con alojamiento incluyen desayuno.</p>
               <p className="mt-4 text-sm font-bold text-[#FF5A1F]">✨ pagá en 3 cuotas sin interés</p>
             </div>
             <p className="mb-5 text-center text-xs leading-relaxed text-[#16423D]/55 md:text-sm"><span className="font-semibold">Empezá por Pase por el Día</span> y deslizá o usá las flechas para comparar.</p>
@@ -672,52 +795,21 @@ const FestivalOctubre: React.FC = () => {
                 ))}
               </HorizontalCardRail>
             </div>
-            <div className="mt-5 rounded-2xl border border-[#123B2D]/15 bg-[#123B2D]/[0.04] p-5 text-center text-sm leading-relaxed text-[#16423D]/60"><Sparkles size={15} className="mr-2 inline text-[#B85A3D]" aria-hidden="true" />{FESTIVAL_OCTUBRE.pricingNote}</div>
-          </div>
-        </section>
-
-        <section id="propuesta" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 text-[#003630] md:px-10 md:py-28">
-          <TopographicLines className="pointer-events-none absolute -left-28 top-4 h-80 w-[38rem] text-[#E40067]/16" />
-          <SunRings className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] text-[#FF5A1F]/16" />
-          <div className="relative mx-auto max-w-5xl">
-            <div className="text-center" data-reveal>
-              <div className="mb-7 flex items-center justify-center gap-3">
-                {[{ Icon: Music2, color: '#FF5A1F' }, { Icon: Sun, color: '#FF9F1C' }, { Icon: UsersRound, color: '#E40067' }].map(({ Icon, color }, index) => (
-                  <span key={index} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#004B43]/10 bg-white/70 shadow-sm">
-                    <Icon size={17} color={color} aria-hidden="true" />
-                  </span>
-                ))}
+            <article className="relative mx-auto mt-8 max-w-xl overflow-hidden rounded-[1.75rem] border border-[#FF9F1C]/30 bg-[#FFF1C7] p-7 text-left shadow-[0_14px_35px_rgba(31,41,34,0.06)]" data-reveal data-delay="1">
+              <span className="absolute inset-x-0 top-0 h-1.5 bg-[#FF9F1C]" aria-hidden="true" />
+              <div className="mb-5 flex items-center justify-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/75 text-[#8B5A23] shadow-sm"><Sun size={18} aria-hidden="true" /></span>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-[#8B5A23]">Gastronomía &amp; comunidad</h3>
               </div>
-              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.34em] text-[#FF5A1F]">El festival</p>
-              <h2 className="mx-auto max-w-3xl text-4xl leading-[1.04] text-[#003630] serif-title md:text-6xl">Un pulso que nace en la montaña</h2>
-              <p className="mx-auto mt-7 max-w-2xl text-sm leading-relaxed text-[#003630]/65 md:text-base">
-                Raíz Sonora reúne música electrónica, house, trance y tambores con movimiento, naturaleza y comunidad. Un festival abierto para venir por el día o quedarse a vivir el fin de semana completo.
-              </p>
-            </div>
-
-            <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
-              {[
-                { Icon: Music2, title: 'Pulso electrónico', text: 'Cuatro artistas y ocho horas de house, trance, música electrónica y tambores.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
-                { Icon: Leaf, title: 'Naturaleza viva', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86] text-white' },
-                { Icon: UsersRound, title: 'Movimiento y conexión', text: 'Jam de AcroYoga, fogón y espacios para celebrar, jugar y conocer gente nueva.', shell: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067] text-white' },
-              ].map(({ Icon, title, text, shell, icon }) => (
-                <article key={title} className={`rounded-[1.75rem] border px-7 py-8 text-center shadow-[0_16px_40px_rgba(72,42,60,0.07)] ${shell}`}>
-                  <span className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full ${icon}`}>
-                    <Icon size={18} aria-hidden="true" />
-                  </span>
-                  <h3 className="mt-5 text-xl text-[#003630] serif-title">{title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[#003630]/60">{text}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-9 flex flex-wrap justify-center gap-2.5" data-reveal data-delay="2">
-              {['Abierto a toda la familia', 'Vení por el día', 'Quedate el finde', 'Buffet y barra disponibles'].map(item => (
-                <span key={item} className="rounded-full border border-[#004B43]/15 bg-white/65 px-4 py-2 text-[10px] font-semibold tracking-wide text-[#004B43]">{item}</span>
-              ))}
-            </div>
+              <ul className="mx-auto max-w-md space-y-3">
+                {['Buffet de comida artesanal todo el fin de semana', 'Barra de bebidas', 'Encuentro abierto a toda la familia', 'Opciones para venir por el día o quedarse'].map(item => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-[#16423D]/65"><span className="mt-1 shrink-0 text-[#8B5A23]">◆</span>{item}</li>
+                ))}
+              </ul>
+            </article>
           </div>
         </section>
+
 
         <CelebrationMosaic />
 
@@ -762,37 +854,6 @@ const FestivalOctubre: React.FC = () => {
           </div>
         </section>
 
-        <section id="experiencias" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
-          <div className="pointer-events-none absolute left-[-6rem] top-[-5rem] h-72 w-72 rounded-full bg-[#E40067]/10 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute bottom-[-7rem] right-[-5rem] h-80 w-80 rounded-full bg-[#FF6A00]/12 blur-3xl" aria-hidden="true" />
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-14 text-center" data-reveal>
-              <Eyebrow>Qué vas a encontrar</Eyebrow>
-              <h2 className="text-4xl leading-tight serif-title md:text-5xl">Cada propuesta es una puerta.<br /><span className="text-[#FF5A1F]">Vos elegís cómo transitarla.</span></h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-[#003630]/60 md:text-base">Nada es obligatorio: son invitaciones abiertas para armar tu propia experiencia, en el momento y con la intensidad que quieras.</p>
-            </div>
-            <div className="grid gap-5 md:grid-cols-2" data-reveal data-delay="1">
-              {[
-                { Icon: Music2, color: '#C83C00', bg: 'bg-[#FFF0D5]', border: 'border-[#FF5A1F]/25', bar: 'bg-[#FF5A1F]', title: 'Música & movimiento', items: ['Cuatro artistas confirmados', 'Ocho horas de música electrónica', 'House, trance y tambores', 'Jam de AcroYoga abierto'] },
-                { Icon: Leaf, color: '#555945', bg: 'bg-[#E2F5EE]', border: 'border-[#008C86]/25', bar: 'bg-[#008C86]', title: 'Naturaleza & exploración', items: ['Río y senderos de montaña', 'Caminatas y espacios de descanso', 'Yoga y conexión con el cuerpo', 'Tiempo libre para habitar el lugar'] },
-                { Icon: Flame, color: '#773D57', bg: 'bg-[#FFE3EF]', border: 'border-[#E40067]/25', bar: 'bg-[#E40067]', title: 'Ritual & integración', items: ['Fogón y círculos para compartir', 'Conversaciones significativas y auténticas', 'Temazcal opcional el domingo', 'Espacios para bajar el ritmo e integrar'] },
-                { Icon: Sun, color: '#8B5A23', bg: 'bg-[#FFF1C7]', border: 'border-[#FF9F1C]/30', bar: 'bg-[#FF9F1C]', title: 'Gastronomía & comunidad', items: ['Buffet de comida artesanal todo el fin de semana', 'Barra de bebidas', 'Encuentro abierto a toda la familia', 'Opciones para venir por el día o quedarse'] },
-              ].map(({ Icon, color, bg, border, bar, title, items }) => (
-                <article key={title} className={`relative overflow-hidden rounded-[1.75rem] border p-7 text-left shadow-[0_14px_35px_rgba(31,41,34,0.06)] ${bg} ${border}`}>
-                  <span className={`absolute inset-x-0 top-0 h-1.5 ${bar}`} aria-hidden="true" />
-                  <div className="mb-5 flex items-center justify-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/75 shadow-sm" style={{ color }}><Icon size={18} aria-hidden="true" /></span>
-                    <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color }}>{title}</h3>
-                  </div>
-                  <ul className="mx-auto max-w-md space-y-3">
-                    {items.map(item => <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-[#16423D]/65"><span className="mt-1 shrink-0" style={{ color }}>◆</span>{item}</li>)}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section id="equipo" className="relative overflow-hidden bg-[#FFFDF5] px-6 py-20 md:px-10 md:py-28">
           <TopographicLines className="pointer-events-none absolute -left-28 top-0 h-72 w-[36rem] text-[#E40067]/12" />
           <div className="mx-auto max-w-7xl">
@@ -819,9 +880,9 @@ const FestivalOctubre: React.FC = () => {
               <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#FF6A00]/30 blur-[100px]" />
               <OrganicWave className="pointer-events-none absolute inset-x-0 bottom-0 h-24 w-full text-[#FFD166]/16" />
               <div className="relative z-10">
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FFD166]">Una coproducción de</p>
-              <h3 className="mt-3 text-3xl serif-title md:text-4xl">Kintu × Pueblo Mágico</h3>
-              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65">Dos equipos que se encuentran para cuidar la producción, la hospitalidad y el sentido de una celebración creada en conexión con el lugar.</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FFD166]">Una coproducción de</p>
+                <h3 className="mt-3 text-3xl serif-title md:text-4xl">Kintu × Pueblo Mágico</h3>
+                <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65">Dos equipos que se encuentran para cuidar la producción, la hospitalidad y el sentido de una celebración creada en conexión con el lugar.</p>
               </div>
             </div>
           </div>
@@ -846,7 +907,7 @@ const FestivalOctubre: React.FC = () => {
                       <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform ${isOpen ? 'rotate-180 bg-[#FF6A00] text-white' : 'bg-[#004B43]/[0.06] text-[#004B43]'}`}><ChevronDown size={16} aria-hidden="true" /></span>
                     </button>
                     <div id={`festival-faq-${index}`} className={`grid transition-[grid-template-rows] duration-300 ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                      <div className="min-h-0 overflow-hidden"><div className="px-6 pb-6 md:pl-[5rem] md:pr-8"><div className="mb-4 h-px w-full bg-[#123B2D]/10" /><p className="text-sm leading-relaxed text-[#16423D]/65">{faq.answer}</p></div></div>
+                      <div className="min-h-0 overflow-hidden"><div className="px-6 pb-6 md:pl-[5rem] md:pr-8"><div className="mb-4 h-px w-full bg-[#123B2D]/10" /><div className="text-sm leading-relaxed text-[#16423D]/65">{faq.answer}</div></div></div>
                     </div>
                   </div>
                 );
