@@ -208,3 +208,10 @@ h1, h2, h3, h4, .serif-title { font-family: 'Gilda Display', serif; }
 @media (prefers-reduced-motion: reduce) {
   .btn-gold:hover, .btn-glass:hover, .card-hover:hover { transform: none; }
 }
+
+/* iOS/WebKit can paint offscreen CSS blur layers at the viewport origin. */
+@media (max-width: 767px) {
+  .festival-page main div[class*="blur-"]:not([class*="backdrop-blur-"]) {
+    display: none !important;
+  }
+}

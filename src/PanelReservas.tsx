@@ -23,7 +23,7 @@ import { X, ChevronLeft, ChevronRight, RefreshCw, CheckCircle2, MessageCircle, D
 // más específicos, sin tocar el CSS global del sitio.
 
 type TipoAlojamiento = 'domo' | 'refugio';
-type VistaActiva = 'operativa' | 'metricas' | 'historial' | 'consultas' | 'usuarios' | 'actividad';
+type VistaActiva = 'operativa' | 'metricas' | 'historial' | 'consultas' | 'interesados' | 'formularios' | 'usuarios' | 'actividad';
 type EstadoReserva = 'pendiente' | 'confirmada' | 'cancelada';
 
 type Alojamiento = {
@@ -1246,7 +1246,7 @@ const ACCION_LABEL: Record<string, string> = {
 
 const fmtFechaHora = (iso: string) => {
   const d = new Date(iso.replace(' ', 'T') + (iso.endsWith('Z') ? '' : 'Z'));
-  return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+  return d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Buenos_Aires' });
 };
 
 const SeccionActividad: React.FC = () => {
@@ -1281,6 +1281,169 @@ const SeccionActividad: React.FC = () => {
         )}
       </ul>
     </div>
+  );
+};
+
+// ─── Formularios del sitio — ver functions/api/admin/formularios.ts ───
+type EnvioFormulario = {
+  id: number; created_at: string; formulario: string; nombre: string; email: string;
+  telefono: string | null; mensaje: string | null; extra: string | null; pagina: string | null;
+};
+
+const FORMULARIO_LABEL: Record<string, string> = {
+  contacto: 'Contacto', 'guia-coliving': 'Guía Coliving', 'dossier-aula-verde': 'Dossier Aula Verde', 'recetario-familion': 'Recetario Familion',
+};
+
+const SeccionFormularios: React.FC = () => {
+  const [envios, setEnvios] = useState<EnvioFormulario[] | null>(null);
+  const [filtro, setFiltro] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/formularios')
+      .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+      .then(data => setEnvios(data.formularios || []))
+      .catch(err => setError(err.message || 'Error al cargar los formularios'));
+  }, []);
+
+  const lista = (envios || []).filter(e => !filtro || e.formulario === filtro);
+  const extraTexto = (extra: string | null) => {
+    if (!extra) return '';
+    try { return Object.entries(JSON.parse(extra)).map(([k, v]) => `${k}: ${v}`).join(' · '); } catch { return extra; }
+  };
+
+  return (
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Formularios del sitio</h2>
+          <p className="text-xs text-gray-400 mt-1">Contacto del inicio y descargas de guías. {lista.length} envíos.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={filtro} onChange={e => setFiltro(e.target.value)} aria-label="Filtrar por formulario"
+            className={`text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white ${FOCUS_RING}`}>
+            <option value="">Todos</option>
+            {Object.entries(FORMULARIO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          <a href={`/api/admin/formularios?formato=csv${filtro ? `&formulario=${filtro}` : ''}`}
+            className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-lg bg-brand-green text-white hover:opacity-90 ${FOCUS_RING}`}>
+            <Download size={14} aria-hidden="true" /> Descargar CSV
+          </a>
+        </div>
+      </div>
+      {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+        {lista.map(e => (
+          <div key={e.id} className="px-4 sm:px-5 py-3.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="text-sm text-gray-800">
+                <span className="font-semibold">{e.nombre}</span>
+                <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 bg-gray-100 rounded px-1.5 py-0.5">{FORMULARIO_LABEL[e.formulario] || e.formulario}</span>
+              </p>
+              <span className="text-[11px] text-gray-400 tabular-nums">{fmtFechaHora(e.created_at)}</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+              <a href={`mailto:${e.email}`} className={`text-brand font-semibold hover:underline rounded ${FOCUS_RING}`}>{e.email}</a>
+              {e.telefono && (
+                <a href={waLink(e.telefono)} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1 text-brand font-semibold hover:underline rounded ${FOCUS_RING}`}>
+                  <MessageCircle size={11} aria-hidden="true" /> {e.telefono}
+                </a>
+              )}
+            </p>
+            {e.mensaje && <p className="text-sm text-gray-700 mt-2 whitespace-pre-line">{e.mensaje}</p>}
+            {e.extra && <p className="text-[11px] text-gray-400 mt-1">{extraTexto(e.extra)}</p>}
+          </div>
+        ))}
+        {envios !== null && lista.length === 0 && (
+          <p className="px-4 py-8 text-center text-sm text-gray-400">Todavía no hay envíos.</p>
+        )}
+      </div>
+    </>
+  );
+};
+
+// ─── Interesados (landings de eventos) — ver functions/api/admin/interesados.ts ───
+type Interesado = {
+  id: number; created_at: string; nombre: string; telefono: string; email: string;
+  edad: number; genero: string; fuente: string; modalidad: 'solo' | 'grupo'; cantidad: number | null;
+  codigo: string; email_confirmado_at: string | null;
+};
+
+const GENERO_LABEL: Record<string, string> = { mujer: 'Mujer', hombre: 'Hombre', no_binario: 'No binario', prefiero_no_decir: 'Prefiere no decir' };
+
+const SeccionInteresados: React.FC = () => {
+  const [interesados, setInteresados] = useState<Interesado[] | null>(null);
+  const [clics, setClics] = useState<{ valor: string; total: number }[]>([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/interesados?evento=sunset-y-rio')
+      .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+      .then(data => { setInteresados(data.interesados || []); setClics(data.clics || []); })
+      .catch(err => setError(err.message || 'Error al cargar los interesados'));
+  }, []);
+
+  const lista = interesados || [];
+  const personas = lista.reduce((n, i) => n + (i.cantidad || 1), 0);
+  const totalClics = clics.reduce((n, c) => n + c.total, 0);
+  const confirmados = lista.filter(i => i.email_confirmado_at).length;
+
+  return (
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">Interesados · Sunset y Río</h2>
+          <p className="text-xs text-gray-400 mt-1">
+            {lista.length} formularios · {personas} personas · {confirmados} confirmaron el mail · {totalClics} clics en los botones
+          </p>
+        </div>
+        <a href="/api/admin/interesados?evento=sunset-y-rio&formato=csv"
+          className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3.5 py-2 rounded-lg bg-brand-green text-white hover:opacity-90 ${FOCUS_RING}`}>
+          <Download size={14} aria-hidden="true" /> Descargar CSV
+        </a>
+      </div>
+      {error && <p className="text-xs text-red-600 mb-3" role="alert">{error}</p>}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
+        <table className="text-sm border-collapse w-full">
+          <thead>
+            <tr className="text-left text-xs font-semibold uppercase tracking-wider text-gray-500 bg-gray-50">
+              {['Nombre', 'Contacto', 'Edad', 'Género', 'Cómo se enteró', 'Viene', 'Registro'].map(h => (
+                <th key={h} scope="col" className="border-b border-gray-200 px-3 py-2.5 whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {lista.map(i => (
+              <tr key={i.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="px-3 py-2.5 whitespace-nowrap">
+                  <p className="font-semibold text-gray-800">{i.nombre}</p>
+                  <p className="text-[11px] text-gray-400 tabular-nums">{i.codigo}</p>
+                </td>
+                <td className="px-3 py-2.5 text-xs text-gray-500">
+                  <a href={waLink(i.telefono)} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1 text-brand font-semibold hover:underline rounded ${FOCUS_RING}`}>
+                    <MessageCircle size={11} aria-hidden="true" /> {i.telefono}
+                  </a>
+                  <p>
+                    {i.email}{' '}
+                    {i.email_confirmado_at
+                      ? <span className="text-green-700 font-semibold" title={`Confirmó el ${fmtFechaHora(i.email_confirmado_at)}`}>✓ confirmado</span>
+                      : <span className="text-gray-400">· sin confirmar</span>}
+                  </p>
+                </td>
+                <td className="px-3 py-2.5 text-gray-600 tabular-nums">{i.edad}</td>
+                <td className="px-3 py-2.5 text-gray-600">{GENERO_LABEL[i.genero] || i.genero}</td>
+                <td className="px-3 py-2.5 text-gray-600">{i.fuente}</td>
+                <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{i.modalidad === 'grupo' ? `Grupo (${i.cantidad})` : 'Solo/a'}</td>
+                <td className="px-3 py-2.5 text-gray-500 tabular-nums whitespace-nowrap">{fmtFechaHora(i.created_at)}</td>
+              </tr>
+            ))}
+            {interesados !== null && lista.length === 0 && (
+              <tr><td colSpan={7} className="px-3 py-8 text-center text-sm text-gray-400">Todavía no hay interesados.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 };
 
@@ -1490,6 +1653,8 @@ const PanelReservas: React.FC = () => {
     { key: 'metricas', label: 'Métricas' },
     { key: 'historial', label: 'Historial' },
     { key: 'consultas', label: 'Consultas' },
+    { key: 'interesados', label: 'Interesados' },
+    { key: 'formularios', label: 'Formularios' },
     ...(esSuperAdmin ? [{ key: 'usuarios' as VistaActiva, label: 'Usuarios' }, { key: 'actividad' as VistaActiva, label: 'Actividad' }] : []),
   ];
 
@@ -1778,6 +1943,8 @@ const PanelReservas: React.FC = () => {
         )}
 
         {vistaActiva === 'usuarios' && esSuperAdmin && <SeccionUsuarios emailActual={auth.email} />}
+        {vistaActiva === 'interesados' && <SeccionInteresados />}
+        {vistaActiva === 'formularios' && <SeccionFormularios />}
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}
       </main>
 

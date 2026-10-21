@@ -2,10 +2,11 @@ import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Calendar, ArrowRight, Tag } from 'lucide-react';
 import { HorizontalCardRail } from './HorizontalCardRail';
+import { shouldShowMainCalendarEvent } from '../src/utils/eventCalendar';
 
 export const SectionEventos: React.FC = () => {
   const { t } = useLanguage();
-  const mainEvents = t.events.cards.filter((card: any) => card.showInMainEvents !== false);
+  const mainEvents = t.events.cards.filter((card: any) => shouldShowMainCalendarEvent(card));
 
   return (
     <section id="eventos" className="py-24 bg-white">

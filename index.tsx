@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { StrictMode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { injectContentsquareScript } from '@contentsquare/tag-sdk';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { UpdateBanner } from './components/UpdateBanner';
@@ -22,6 +23,8 @@ const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
 const PachamamaFest = lazy(() => import('./src/PachamamaFest'));
 const KillaRaymi = lazy(() => import('./src/KillaRaymi'));
 const AlmaDeLobo = lazy(() => import('./src/AlmaDeLobo'));
+const SunsetRio = lazy(() => import('./src/SunsetRio'));
+const FestivalOctubre = lazy(() => import('./src/FestivalOctubre'));
 const Empresas = lazy(() => import('./src/Empresas'));
 const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
@@ -35,6 +38,8 @@ const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
+
+injectContentsquareScript({ clientId: '91718b26f9ef8' });
 
 const ScrollToTop: React.FC = () => {
   const { pathname, hash } = useLocation();
@@ -98,6 +103,10 @@ root.render(
               <Route path="/pachamama-fest" element={<PachamamaFest />} />
               <Route path="/killa-raymi" element={<KillaRaymi />} />
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
+              <Route path="/sunset-y-rio" element={<SunsetRio />} />
+              <Route path="/festival-RAÍZ-SONORA" element={<FestivalOctubre />} />
+              <Route path="/festival-atardeser" element={<Navigate to="/festival-RAÍZ-SONORA" replace />} />
+              <Route path="/festival-31-octubre" element={<Navigate to="/festival-RAÍZ-SONORA" replace />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/cordoba-fly-fishing" element={<CordobaFlyFishing />} />
               <Route path="/voluntariado" element={<Voluntariado />} />

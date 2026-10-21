@@ -6,8 +6,11 @@ import {
   CalendarDays,
   Camera,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Gift,
+  Share2,
   Coins,
   Copy,
   Globe2,
@@ -21,6 +24,7 @@ import {
   ShieldCheck,
   Sprout,
   Target,
+  Ticket,
   TreePine,
   Users,
   X,
@@ -29,7 +33,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Header } from '../components/Header';
 import { HorizontalCardRail } from '../components/HorizontalCardRail';
 import { Footer } from '../components/Footer';
-import { SectionHojaDeRuta } from '../components/SectionHojaDeRuta';
+import ReforestacionTransparencia from './components/ReforestacionTransparencia';
+import { AliadosAmbientales } from '../components/AliadosAmbientales';
+import { PracticasRegenerativas } from '../components/PracticasRegenerativas';
 import { useLanguage } from '../contexts/LanguageContext';
 import { REFORESTATION_CONTRIBUTION, SITE_URL, WA_MAGICO, WA_VOLUNTEERS } from './data/config';
 import { ROUTES } from './routes';
@@ -101,7 +107,10 @@ const Reforestacion: React.FC = () => {
     .sort((first: any, second: any) => (first.startDate || '').localeCompare(second.startDate || ''));
   const [copiedField, setCopiedField] = useState<CopyField | null>(null);
   const [selectedContributionMethod, setSelectedContributionMethod] = useState<ContributionMethod>('argentina');
-  const [donationModalOpen, setDonationModalOpen] = useState(false);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [showSticky, setShowSticky] = useState(false);
   const [cryptoQr, setCryptoQr] = useState<CryptoQrDetails | null>(null);
   const [expandedGallery, setExpandedGallery] = useState<ExpandedGallery | null>(null);
   const galleryTouchStartX = useRef<number | null>(null);
@@ -122,9 +131,13 @@ const Reforestacion: React.FC = () => {
     : 0;
   const progressPercentage = Math.min(100, (raisedAmount / phaseOneGoal) * 100);
   const displayedPercentage = Math.round((raisedAmount / phaseOneGoal) * 100);
+  const displayedRaisedAmount = language === 'en'
+    ? Math.max(0, REFORESTATION_CONTRIBUTION.raisedAmountUsd)
+    : raisedAmount;
+  const displayedPhaseOneGoal = language === 'en' ? 1_000 : phaseOneGoal;
   const currencyFormatter = new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
     style: 'currency',
-    currency: 'ARS',
+    currency: language === 'es' ? 'ARS' : 'USD',
     maximumFractionDigits: 0,
   });
   const contributionMethodLabels: Record<ContributionMethod, string> = {
@@ -136,10 +149,28 @@ const Reforestacion: React.FC = () => {
   const contributionConfirmationWhatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(
     content.contribution.confirmationWhatsappMessage.replace('{method}', contributionMethodLabels[selectedContributionMethod]),
   )}`;
-  const genericContributionConfirmationWhatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(
-    content.contribution.confirmationWhatsappMessage.replace('{method}', content.contribution.methodPlaceholder),
-  )}`;
   const corporateWhatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(content.corporate.whatsappMessage)}`;
+  // El voucher solidario usa la misma cuenta y suma a la misma meta que el aporte libre.
+  // "VOUCHER" es la palabra clave para la respuesta automática de WhatsApp.
+  const voucherWhatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(content.voucher.whatsappMessage)}`;
+  const giftWhatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(content.gift.whatsappMessage)}`;
+  const shareWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(content.share.message.replace('{url}', SITE_URL + ROUTES.REFORESTACION))}`;
+  const { treePrice, donorsCount } = REFORESTATION_CONTRIBUTION;
+  const displayedTreePrice = language === 'en' ? 1 : treePrice;
+  const formatTrees = (amount: number) => String(Math.floor(amount / displayedTreePrice));
+  // Días hasta la fecha límite de la seña (inclusive). null = vencida: no se muestra.
+  const daysLeft = (() => {
+    const deadline = new Date(`${REFORESTATION_CONTRIBUTION.depositDeadline}T23:59:59-03:00`);
+    const diff = deadline.getTime() - Date.now();
+    return diff < 0 ? null : Math.floor(diff / 86_400_000);
+  })();
+  const confirmationWhatsappUrl = selectedAmount
+    ? `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(
+      content.contribution.confirmationWhatsappMessage
+        .replace('{method}', contributionMethodLabels[selectedContributionMethod])
+        .replace(/(Monto y moneda|Amount and currency): \[[^\]]+\]/, `$1: ${currencyFormatter.format(selectedAmount)} (${content.contribution.treesLabel.replace('{trees}', formatTrees(selectedAmount))})`),
+    )}`
+    : contributionConfirmationWhatsappUrl;
   const getVolunteerWhatsappUrl = (event: { title: string; date: string }) => {
     const message = content.volunteering.applyMessage
       .replace('{event}', event.title)
@@ -224,13 +255,29 @@ const Reforestacion: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Botón fijo "Aportar" en celular: visible después de la portada, oculto
+  // mientras la sección de aportes está en pantalla (ahí ya están los botones).
   useEffect(() => {
-    if (!donationModalOpen && !cryptoQr) return;
+    const contributeSection = document.getElementById('aportar');
+    let contributeVisible = false;
+    const update = () => setShowSticky(window.scrollY > window.innerHeight * 0.8 && !contributeVisible);
+    const observer = new IntersectionObserver(([entry]) => {
+      contributeVisible = entry.isIntersecting;
+      update();
+    });
+    if (contributeSection) observer.observe(contributeSection);
+    window.addEventListener('scroll', update, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!cryptoQr) return;
 
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (cryptoQr) setCryptoQr(null);
-      else setDonationModalOpen(false);
+      if (event.key === 'Escape') setCryptoQr(null);
     };
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -240,7 +287,7 @@ const Reforestacion: React.FC = () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [donationModalOpen, cryptoQr]);
+  }, [cryptoQr]);
 
   const moveExpandedGallery = (direction: -1 | 1) => {
     setExpandedGallery(current => {
@@ -427,7 +474,7 @@ const Reforestacion: React.FC = () => {
       <Header />
 
       <main>
-        <section className="relative min-h-[720px] h-[94vh] flex items-end overflow-hidden">
+        <section className="relative min-h-[720px] md:min-h-[94vh] flex items-end overflow-hidden pt-32">
           <img
             src={HERO_IMAGE}
             alt={content.hero.imageAlt}
@@ -442,11 +489,41 @@ const Reforestacion: React.FC = () => {
             <h1 className="max-w-4xl text-white font-serif text-5xl sm:text-6xl md:text-7xl leading-[0.98] font-light mb-6">
               {content.hero.title}
             </h1>
-            <p className="max-w-2xl text-white/80 text-lg md:text-xl font-light leading-relaxed mb-9">
+            <p className="max-w-2xl text-white/80 text-lg md:text-xl font-light leading-relaxed mb-7">
               {content.hero.description}
             </p>
+            <div className="mb-8 max-w-xl rounded-2xl border border-white/15 bg-[#071d14]/45 p-4 backdrop-blur-sm md:p-5">
+              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-white">
+                <p>
+                  <span className="font-serif text-2xl md:text-3xl">{currencyFormatter.format(displayedRaisedAmount)}</span>{' '}
+                  <span className="text-sm text-white/70">{content.hero.raisedLabel}</span>
+                </p>
+                <p className="text-sm font-semibold text-gold">{displayedPercentage}% {content.hero.ofGoal} {currencyFormatter.format(displayedPhaseOneGoal)}</p>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-label={content.funding.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, displayedPercentage)}>
+                <div className="h-full rounded-full bg-gold" style={{ width: `${Math.max(3, progressPercentage)}%` }} />
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-white/85">
+                {daysLeft !== null && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
+                    <CalendarDays size={14} className="text-gold" aria-hidden="true" />
+                    {daysLeft === 0 ? content.hero.lastDay : content.hero.daysLeft.replace('{days}', String(daysLeft))}
+                  </span>
+                )}
+                <a href="#voucher" className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1.5 text-brand transition-opacity hover:opacity-90">
+                  <Ticket size={14} aria-hidden="true" />
+                  {content.hero.voucherBadge}
+                </a>
+                {donorsCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
+                    <Users size={14} className="text-gold" aria-hidden="true" />
+                    {content.hero.donors.replace('{count}', String(donorsCount))}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <a href="#metas" className="btn-gold btn-icon-inline">
+              <a href="#aportar" className="btn-gold btn-icon-inline">
                 {content.hero.primaryCta}
                 <ArrowDown size={17} aria-hidden="true" />
               </a>
@@ -494,6 +571,16 @@ const Reforestacion: React.FC = () => {
                 );
               })}
             </div>
+            <div data-reveal>
+              <div className="mt-16">
+                <PracticasRegenerativas variant="light" />
+              </div>
+            </div>
+            <div data-reveal>
+              <div className="mt-16">
+                <AliadosAmbientales />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -512,30 +599,6 @@ const Reforestacion: React.FC = () => {
               <p className="text-brand text-[11px] uppercase tracking-[0.25em] font-bold mb-4">{content.funding.eyebrow}</p>
               <h2 className="font-serif text-4xl md:text-5xl text-brand leading-tight mb-6">{content.funding.title}</h2>
               <p className="text-gray-600 text-lg font-light leading-relaxed">{content.funding.description}</p>
-            </div>
-
-            <div data-reveal data-delay="1" className="rounded-3xl bg-brand p-7 md:p-10 text-white shadow-[0_24px_80px_rgba(0,83,51,0.16)] mb-10">
-              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-7">
-                <div>
-                  <p className="text-gold text-xs uppercase tracking-[0.2em] font-bold mb-2">{content.funding.currentLabel}</p>
-                  <p className="font-serif text-4xl md:text-5xl">{currencyFormatter.format(raisedAmount)}</p>
-                </div>
-                <div className="md:text-right">
-                  <p className="text-3xl font-semibold text-gold">{displayedPercentage}%</p>
-                  <p className="text-white/65 text-sm">{content.funding.ofGoal} {currencyFormatter.format(phaseOneGoal)}</p>
-                </div>
-              </div>
-              <div
-                className="h-4 rounded-full bg-white/15 overflow-hidden"
-                role="progressbar"
-                aria-label={content.funding.progressLabel}
-                aria-valuemin={0}
-                aria-valuemax={phaseOneGoal}
-                aria-valuenow={Math.min(raisedAmount, phaseOneGoal)}
-              >
-                <div className="h-full rounded-full bg-gold transition-[width] duration-700" style={{ width: `${progressPercentage}%` }} />
-              </div>
-              <p className="text-white/55 text-xs mt-4">{content.funding.updatedNote}</p>
             </div>
 
             <ol className="relative grid gap-5 md:grid-cols-2 lg:grid-cols-4 lg:gap-4 before:hidden lg:before:block lg:before:absolute lg:before:left-[12.5%] lg:before:right-[12.5%] lg:before:top-8 lg:before:h-px lg:before:bg-brand/15">
@@ -566,10 +629,10 @@ const Reforestacion: React.FC = () => {
               })}
             </ol>
             <div data-reveal className="mt-10 flex flex-col items-center justify-center gap-3 rounded-2xl border border-brand/10 bg-white/65 p-5 sm:flex-row sm:flex-wrap md:p-6">
-              <button type="button" onClick={() => setDonationModalOpen(true)} className="btn-gold btn-icon-inline">
+              <a href="#aportar" className="btn-gold btn-icon-inline">
                 <Heart size={18} aria-hidden="true" />
                 {content.funding.cta}
-              </button>
+              </a>
               <a href={`${ROUTES.VOLUNTARIADO}#convocatorias`} className="inline-flex items-center justify-center gap-2 rounded-full border border-brand/20 bg-white px-6 py-3 text-xs font-bold uppercase tracking-wider text-brand transition-colors hover:border-brand hover:bg-brand hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                 <HandHeart size={18} aria-hidden="true" />
                 {content.funding.volunteerCta}
@@ -582,15 +645,28 @@ const Reforestacion: React.FC = () => {
           </div>
         </section>
 
-        <section id="avances" className="py-20 md:py-28 px-6 bg-[#eef3ed]">
+        <section id="avances" className="py-14 md:py-20 px-6 bg-[#eef3ed] scroll-mt-24">
           <div className="max-w-6xl mx-auto">
-            <div data-reveal className="max-w-3xl mx-auto text-center mb-14">
+            <div data-reveal className="max-w-3xl mx-auto text-center">
               <p className="text-brand text-[11px] uppercase tracking-[0.25em] font-bold mb-4">{content.updates.eyebrow}</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-brand leading-tight mb-6">{content.updates.title}</h2>
-              <p className="text-gray-600 text-lg font-light leading-relaxed">{content.updates.description}</p>
+              <h2 className="font-serif text-3xl md:text-4xl text-brand leading-tight mb-4">{content.updates.title}</h2>
+              <p className="text-gray-600 font-light leading-relaxed mb-6">{content.updates.description}</p>
+              <button
+                type="button"
+                onClick={() => setLogOpen(open => !open)}
+                aria-expanded={logOpen}
+                aria-controls="bitacora-fases"
+                className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-white px-6 py-3 text-xs font-bold uppercase tracking-wider text-brand transition-colors hover:border-brand hover:bg-brand hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              >
+                <Camera size={17} aria-hidden="true" />
+                {logOpen ? content.updates.toggleClose : content.updates.toggleOpen}
+                <ChevronDown size={17} className={`transition-transform ${logOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </button>
             </div>
 
-            <div className="space-y-8">
+            {/* Siempre en el DOM (oculto con `hidden`) para que el IntersectionObserver
+                de data-reveal ya los observe y aparezcan al abrir la bitácora. */}
+            <div id="bitacora-fases" hidden={!logOpen} className="mt-12 space-y-8">
               {content.updates.phases.map((phase: {
                 number: string;
                 title: string;
@@ -688,213 +764,6 @@ const Reforestacion: React.FC = () => {
           </div>
         </section>
 
-        <section className="py-20 md:py-28 px-6 bg-bone">
-          <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div data-reveal>
-              <img
-                src="/uploads/reforestacion/jornada-plantines.jpeg"
-                alt={content.story.imageAlt}
-                className="w-full aspect-[4/3] object-cover rounded-2xl shadow-xl"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div data-reveal data-delay="1">
-              <p className="text-brand text-[11px] uppercase tracking-[0.25em] font-bold mb-4">{content.story.eyebrow}</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-brand leading-tight mb-6">{content.story.title}</h2>
-              {content.story.paragraphs.map((paragraph: string) => (
-                <p key={paragraph} className="text-gray-600 text-lg font-light leading-relaxed mb-5">{paragraph}</p>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-brand py-20 md:py-28 px-6 text-white">
-          <div className="max-w-6xl mx-auto">
-            <div data-reveal>
-              <div className="max-w-3xl mb-14">
-                <p className="text-gold text-[11px] uppercase tracking-[0.25em] font-bold mb-4">{content.use.eyebrow}</p>
-                <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-6">{content.use.title}</h2>
-                <p className="text-white/70 text-lg font-light leading-relaxed">{content.use.description}</p>
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {content.use.items.map((item: { title: string; description: string }, index: number) => {
-                const Icon = useIcons[index];
-                return (
-                  <div data-reveal data-delay={String(index + 1)} key={item.title}>
-                    <article className="h-full rounded-2xl border border-white/15 bg-white/5 p-6">
-                      <Icon size={28} strokeWidth={1.5} className="text-gold mb-5" aria-hidden="true" />
-                      <h3 className="font-serif text-2xl mb-3">{item.title}</h3>
-                      <p className="text-white/65 text-sm font-light leading-relaxed">{item.description}</p>
-                    </article>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="py-20 md:py-28 px-6 bg-white">
-          <div className="max-w-6xl mx-auto grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-20 items-center">
-            <div data-reveal className="lg:order-2">
-              <img
-                src="/uploads/reforestacion/vivero-plantines.jpeg"
-                alt={content.community.imageAlt}
-                className="w-full max-h-[680px] object-cover rounded-2xl shadow-xl"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div data-reveal className="lg:order-1">
-              <p className="text-brand text-[11px] uppercase tracking-[0.25em] font-bold mb-4">{content.community.eyebrow}</p>
-              <h2 className="font-serif text-4xl md:text-5xl text-brand leading-tight mb-6">{content.community.title}</h2>
-              <p className="text-gray-600 text-lg font-light leading-relaxed mb-8">{content.community.description}</p>
-              <ul className="space-y-4">
-                {content.community.items.map((item: string) => (
-                  <li key={item} className="flex gap-3 text-gray-600 font-light">
-                    <Check size={20} className="text-gold flex-shrink-0 mt-0.5" aria-hidden="true" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section id={language === 'es' ? 'voluntariado' : 'volunteering'} className="bg-bone px-6 py-20 md:py-24">
-          <div className="mx-auto max-w-6xl">
-            <div data-reveal className="overflow-hidden rounded-3xl border border-gold/25 bg-gold/10 p-7 shadow-[0_18px_60px_rgba(0,83,51,0.08)] md:p-10 lg:p-12">
-              <div className="grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-                <div>
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-gold">
-                    <HandHeart size={28} strokeWidth={1.5} aria-hidden="true" />
-                  </div>
-                  <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-brand">{content.volunteering.eyebrow}</p>
-                  <h2 className="mb-6 font-serif text-4xl leading-tight text-brand md:text-5xl">{content.volunteering.title}</h2>
-                  <p className="text-lg font-light leading-relaxed text-gray-600">{content.volunteering.description}</p>
-                </div>
-                <ul className="space-y-4">
-                  {content.volunteering.items.map((item: string) => (
-                    <li key={item} className="flex gap-3 text-gray-700">
-                      <Check size={20} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="mt-14">
-              <div data-reveal className="mx-auto mb-10 max-w-3xl text-center">
-                <CalendarDays size={34} strokeWidth={1.5} className="mx-auto mb-5 text-gold" aria-hidden="true" />
-                <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-brand">{content.volunteering.scheduleEyebrow}</p>
-                <h3 className="mb-5 font-serif text-4xl leading-tight text-brand md:text-5xl">{content.volunteering.scheduleTitle}</h3>
-                <p className="text-lg font-light leading-relaxed text-gray-600">{content.volunteering.scheduleDescription}</p>
-              </div>
-
-              <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-2" gapClassName="gap-6">
-                {reforestationEvents.map((event: any, index: number) => (
-                  <article key={`${event.date}-${event.title}`} data-reveal data-delay={String(index + 1)} className="flex h-full flex-col overflow-hidden rounded-2xl border border-brand/10 bg-white shadow-[0_12px_35px_rgba(0,83,51,0.08)]">
-                    <div className="relative aspect-[16/9] overflow-hidden bg-brand/5">
-                      <img src={event.image} alt={event.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.02]" loading="lazy" decoding="async" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#071d14]/75 via-transparent to-transparent" />
-                      <span className="absolute left-4 top-4 rounded-full bg-gold px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-brand">{content.volunteering.eventBadge}</span>
-                      <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-white">
-                        <CalendarDays size={16} className="text-gold" aria-hidden="true" />
-                        {event.date}
-                      </div>
-                    </div>
-                    <div className="flex flex-1 flex-col p-6 md:p-7">
-                      <h4 className="mb-3 font-serif text-3xl leading-tight text-brand">{event.title}</h4>
-                      <p className="mb-5 flex-1 font-light leading-relaxed text-gray-600">{event.desc}</p>
-                      <div className="mb-5 rounded-xl bg-brand/5 px-4 py-3">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand/60">{content.volunteering.eventGoalLabel}</p>
-                        <p className="mt-1 font-serif text-xl text-brand">{content.volunteering.eventGoal}</p>
-                      </div>
-                      <p className="mb-6 text-sm leading-relaxed text-gray-500">{content.volunteering.eventDetails}</p>
-                      <a href={getVolunteerWhatsappUrl(event)} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline self-start">
-                        <MessageCircle size={18} aria-hidden="true" />
-                        {content.volunteering.cta}
-                      </a>
-                    </div>
-                  </article>
-                ))}
-              </HorizontalCardRail>
-            </div>
-          </div>
-        </section>
-
-        <section id={language === 'es' ? 'mapas' : 'maps'} className="bg-white px-6 py-20 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <div data-reveal className="mx-auto mb-12 max-w-3xl text-center">
-              <MapPinned size={34} strokeWidth={1.5} className="mx-auto mb-5 text-gold" aria-hidden="true" />
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-brand">{content.maps.eyebrow}</p>
-              <h2 className="mb-6 font-serif text-4xl leading-tight text-brand md:text-5xl">{content.maps.title}</h2>
-              <p className="text-lg font-light leading-relaxed text-gray-600">{content.maps.description}</p>
-            </div>
-            <div className="grid gap-5 md:grid-cols-2">
-              {content.maps.areas.map((area: { status: string; title: string; description: string; image: string; imageAlt: string }, index: number) => (
-                <article key={area.title} data-reveal data-delay={String(index + 1)} className="overflow-hidden rounded-2xl border border-brand/10 bg-bone shadow-[0_12px_35px_rgba(0,83,51,0.07)]">
-                  <button type="button" onClick={() => setExpandedGallery({ items: [{ src: area.image, alt: area.imageAlt, caption: area.title }], index: 0 })} className="group block aspect-[16/10] w-full overflow-hidden bg-brand/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-gold" aria-label={`${content.updates.goTo}: ${area.imageAlt}`}>
-                    <img src={area.image} alt={area.imageAlt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" decoding="async" />
-                  </button>
-                  <div className="p-7 md:p-8">
-                    <span className="mb-5 inline-flex rounded-full bg-brand/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-brand">{area.status}</span>
-                    <h3 className="mb-3 font-serif text-3xl text-brand">{area.title}</h3>
-                    <p className="font-light leading-relaxed text-gray-600">{area.description}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <p className="mt-6 rounded-xl border border-gold/25 bg-gold/10 px-5 py-4 text-center text-sm leading-relaxed text-gray-600">{content.maps.note}</p>
-          </div>
-        </section>
-
-        <SectionHojaDeRuta />
-
-        <section className="bg-brand px-6 py-20 text-white md:py-24">
-          <div className="mx-auto grid min-w-0 max-w-6xl gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:gap-16">
-            <div data-reveal className="min-w-0">
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-gold text-brand">
-                <Building2 size={28} strokeWidth={1.5} aria-hidden="true" />
-              </div>
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-gold">{content.corporate.eyebrow}</p>
-              <h2 className="mb-6 font-serif text-4xl leading-tight md:text-5xl">{content.corporate.title}</h2>
-              <p className="max-w-xl text-lg font-light leading-relaxed text-white/75">{content.corporate.description}</p>
-            </div>
-
-            <div data-reveal data-delay="1" className="min-w-0">
-              <div className="space-y-3">
-                {content.corporate.items.map((item: { title: string; description: string }, index: number) => {
-                  const Icon = [TreePine, Users, ShieldCheck][index] ?? TreePine;
-                  return (
-                    <article key={item.title} className="flex min-w-0 gap-4 rounded-2xl border border-white/15 bg-white/[0.06] p-5 backdrop-blur-sm">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold">
-                        <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="mb-1 break-words font-serif text-xl">{item.title}</h3>
-                        <p className="break-words text-sm font-light leading-relaxed text-white/65">{item.description}</p>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-              <div className="mt-7 flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <a href={ROUTES.EMPRESAS} className="btn-gold btn-icon-inline !w-full !max-w-full !whitespace-normal text-center !leading-snug sm:!w-auto">
-                  {content.corporate.cta}
-                  <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
-                </a>
-                <a href={corporateWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-glass btn-icon-inline !w-full !max-w-full !whitespace-normal text-center !leading-snug sm:!w-auto">
-                  <MessageCircle size={18} className="shrink-0" aria-hidden="true" />
-                  {content.corporate.contactCta}
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section id="aportar" className="bg-bone px-6 py-20 md:py-28">
           <div className="mx-auto max-w-6xl">
             <div data-reveal className="mx-auto mb-10 max-w-4xl text-center">
@@ -920,8 +789,8 @@ const Reforestacion: React.FC = () => {
                 </div>
                 <div>
                   <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-brand">
-                    <p><span className="font-serif text-3xl md:text-4xl">{currencyFormatter.format(raisedAmount)}</span> <span className="text-sm text-gray-500">{content.funding.currentLabel.toLowerCase()}</span></p>
-                    <p className="text-sm font-semibold">{displayedPercentage}% · {currencyFormatter.format(phaseOneGoal)}</p>
+                    <p><span className="font-serif text-3xl md:text-4xl">{currencyFormatter.format(displayedRaisedAmount)}</span> <span className="text-sm text-gray-500">{content.funding.currentLabel.toLowerCase()}</span></p>
+                    <p className="text-sm font-semibold">{displayedPercentage}% · {currencyFormatter.format(displayedPhaseOneGoal)}</p>
                   </div>
                   <div className="h-4 overflow-hidden rounded-full bg-brand/10" role="progressbar" aria-label={content.funding.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, displayedPercentage)}>
                     <div className="flex h-full min-w-[2.5rem] items-center justify-center rounded-full bg-gradient-to-r from-[#d6a91e] to-gold text-[10px] font-bold text-white transition-[width] duration-700" style={{ width: `${Math.max(4, progressPercentage)}%` }}>
@@ -936,12 +805,110 @@ const Reforestacion: React.FC = () => {
               </div>
             </div>
 
+            <div data-reveal data-delay="2">
+              <div id="voucher" className="mb-10 scroll-mt-28 overflow-hidden rounded-2xl border-2 border-gold/70 bg-white shadow-[0_20px_65px_rgba(212,175,55,0.16)]">
+                <div className="grid min-w-0 lg:grid-cols-[1fr_1fr]">
+                  <div className="min-w-0 bg-brand p-7 text-white md:p-10">
+                    <p className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-gold">
+                      <Ticket size={16} aria-hidden="true" />
+                      {content.voucher.eyebrow}
+                    </p>
+                    <h3 className="mb-4 font-serif text-3xl leading-tight md:text-4xl">{content.voucher.title}</h3>
+                    <p className="mb-7 font-light leading-relaxed text-white/70">{content.voucher.description}</p>
+                    <div className="mb-7 grid grid-cols-2 gap-3">
+                      {content.voucher.priceOptions.map((option: { label: string; price: string }) => (
+                        <div key={option.price} className="rounded-xl border border-gold/40 bg-white/[0.06] p-4 text-center">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/60">{option.label}</p>
+                          <p className="mt-1 font-serif text-2xl text-gold md:text-3xl">{option.price}</p>
+                          <p className="mt-1 text-xs font-semibold text-white/75">
+                            {content.voucher.treesEquivalent.replace('{trees}', formatTrees(Number(option.price.replace(/\D/g, ''))))}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-3 text-white/80">
+                      {content.voucher.benefits.map((benefit: string) => (
+                        <p key={benefit} className="flex gap-3 leading-relaxed">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold"><Check size={15} aria-hidden="true" /></span>
+                          <span className="pt-0.5">{benefit}</span>
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 p-7 md:p-10">
+                    <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.22em] text-brand/60">{content.voucher.stepsTitle}</p>
+                    <ol className="mb-5 space-y-3">
+                      {content.voucher.steps.map((step: string, index: number) => (
+                        <li key={step} className="flex gap-3 leading-relaxed text-gray-600">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">{index + 1}</span>
+                          <span className="pt-0.5">{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    {hasAlias && (
+                      <div className="mb-6 flex flex-col gap-3 rounded-xl border border-brand/15 bg-bone p-4 sm:flex-row sm:items-center">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-400">{content.contribution.aliasLabel}</p>
+                          <code className="break-all text-xl font-semibold text-brand">{REFORESTATION_CONTRIBUTION.alias}</code>
+                          {REFORESTATION_CONTRIBUTION.accountHolder && (
+                            <p className="text-xs text-gray-500">{content.contribution.holderLabel}: {REFORESTATION_CONTRIBUTION.accountHolder}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => copyValue('alias', REFORESTATION_CONTRIBUTION.alias)}
+                          className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-gold hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                        >
+                          {copiedField === 'alias' ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+                          {copiedField === 'alias' ? content.contribution.copied : content.contribution.copy}
+                        </button>
+                      </div>
+                    )}
+                    <a href={voucherWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline w-full">
+                      <MessageCircle size={18} aria-hidden="true" />
+                      {content.voucher.cta}
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <p className="mb-5 text-center font-serif text-2xl text-brand">{content.voucher.orLabel}</p>
+            </div>
+
             <div data-reveal data-delay="2" className="overflow-hidden rounded-2xl border border-brand/10 bg-white shadow-[0_20px_65px_rgba(0,83,51,0.08)]">
               <div className="grid min-w-0 lg:grid-cols-[0.72fr_1.55fr]">
                 <aside className="min-w-0 border-b border-white/10 bg-brand p-7 text-white md:p-10 lg:border-b-0 lg:border-r">
                   <h3 className="mb-5 font-serif text-4xl text-white">{content.contribution.cardTitle}</h3>
                   <div className="mb-6 h-0.5 w-16 bg-gold" aria-hidden="true" />
-                  <p className="mb-8 text-lg font-light leading-relaxed text-white/70">{content.contribution.cardDescription}</p>
+                  <p className="mb-6 text-lg font-light leading-relaxed text-white/70">{content.contribution.cardDescription} {content.contribution.treePrice}</p>
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gold">{content.contribution.amountsTitle}</p>
+                  <div className="mb-8 grid grid-cols-2 gap-2" role="radiogroup" aria-label={content.contribution.amountsTitle}>
+                    {content.contribution.amounts.map((amount: number) => {
+                      const selected = selectedAmount === amount;
+                      return (
+                        <button
+                          key={amount}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => setSelectedAmount(selected ? null : amount)}
+                          className={`rounded-xl border px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold ${selected ? 'border-gold bg-gold text-brand' : 'border-white/20 bg-white/[0.06] text-white hover:border-gold/60'}`}
+                        >
+                          <span className="block font-serif text-lg leading-tight">{currencyFormatter.format(amount)}</span>
+                          <span className={`block text-[11px] font-semibold ${selected ? 'text-brand/80' : 'text-white/60'}`}>{content.contribution.treesLabel.replace('{trees}', formatTrees(amount))}</span>
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={selectedAmount === null}
+                      onClick={() => setSelectedAmount(null)}
+                      className={`rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold ${selectedAmount === null ? 'border-gold bg-gold text-brand' : 'border-white/20 bg-white/[0.06] text-white hover:border-gold/60'}`}
+                    >
+                      {content.contribution.otherAmount}
+                    </button>
+                  </div>
                   <div className="space-y-5 text-white/75">
                     {content.contribution.notes.map((note: string) => (
                       <p key={note} className="flex gap-3 leading-relaxed">
@@ -995,7 +962,7 @@ const Reforestacion: React.FC = () => {
                           <p className="mt-1 text-sm leading-relaxed text-gray-600">{content.contribution.afterTransferDescription}</p>
                         </div>
                       </div>
-                      <a href={contributionConfirmationWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline mt-5 w-full">
+                      <a href={confirmationWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline mt-5 w-full">
                         <MessageCircle size={18} aria-hidden="true" />
                         {content.contribution.confirmCta}
                       </a>
@@ -1014,7 +981,204 @@ const Reforestacion: React.FC = () => {
                 </div>
               </div>
             </div>
+            <div data-reveal data-delay="2">
+              <div className="mt-8 flex flex-col gap-6 rounded-2xl border border-gold/50 bg-white p-6 shadow-[0_14px_45px_rgba(0,83,51,0.07)] md:flex-row md:items-center md:p-8">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gold/15 text-[#76570d]">
+                  <Gift size={28} strokeWidth={1.5} aria-hidden="true" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-brand/60">{content.gift.eyebrow}</p>
+                  <h3 className="mb-2 font-serif text-3xl text-brand">{content.gift.title}</h3>
+                  <p className="font-light leading-relaxed text-gray-600">{content.gift.description}</p>
+                  <p className="mt-2 flex gap-2 text-sm leading-relaxed text-gray-500">
+                    <MapPinned size={16} className="mt-0.5 shrink-0 text-gold" aria-hidden="true" />
+                    {content.gift.certificate}
+                  </p>
+                </div>
+                <a href={giftWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline shrink-0">
+                  <MessageCircle size={18} aria-hidden="true" />
+                  {content.gift.cta}
+                </a>
+              </div>
+            </div>
             <p className="mx-auto mt-6 max-w-3xl text-center text-xs font-light leading-relaxed text-gray-400">{content.contribution.legalNote}</p>
+          </div>
+        </section>
+
+        <section className="bg-brand py-20 md:py-28 px-6 text-white">
+          <div className="max-w-6xl mx-auto">
+            <div data-reveal>
+              <div className="max-w-3xl mb-14">
+                <p className="text-gold text-[11px] uppercase tracking-[0.25em] font-bold mb-4">{content.use.eyebrow}</p>
+                <h2 className="font-serif text-4xl md:text-5xl leading-tight mb-6">{content.use.title}</h2>
+                <p className="text-white/70 text-lg font-light leading-relaxed">{content.use.description}</p>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {content.use.items.map((item: { title: string; description: string }, index: number) => {
+                const Icon = useIcons[index];
+                return (
+                  <div data-reveal data-delay={String(index + 1)} key={item.title}>
+                    <article className="h-full rounded-2xl border border-white/15 bg-white/5 p-6">
+                      <Icon size={28} strokeWidth={1.5} className="text-gold mb-5" aria-hidden="true" />
+                      <h3 className="font-serif text-2xl mb-3">{item.title}</h3>
+                      <p className="text-white/65 text-sm font-light leading-relaxed">{item.description}</p>
+                    </article>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section id={language === 'es' ? 'voluntariado' : 'volunteering'} className="bg-bone px-6 py-20 md:py-24">
+          <div className="mx-auto max-w-6xl">
+            <div data-reveal className="overflow-hidden rounded-3xl border border-gold/25 bg-gold/10 p-7 shadow-[0_18px_60px_rgba(0,83,51,0.08)] md:p-10 lg:p-12">
+              <div className="grid gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+                <div>
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-gold">
+                    <HandHeart size={28} strokeWidth={1.5} aria-hidden="true" />
+                  </div>
+                  <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-brand">{content.volunteering.eyebrow}</p>
+                  <h2 className="mb-6 font-serif text-4xl leading-tight text-brand md:text-5xl">{content.volunteering.title}</h2>
+                  <p className="text-lg font-light leading-relaxed text-gray-600">{content.volunteering.description}</p>
+                </div>
+                <ul className="space-y-4">
+                  {content.volunteering.items.map((item: string) => (
+                    <li key={item} className="flex gap-3 text-gray-700">
+                      <Check size={20} className="mt-0.5 shrink-0 text-brand" aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-14">
+              <div data-reveal className="mx-auto mb-10 max-w-3xl text-center">
+                <CalendarDays size={34} strokeWidth={1.5} className="mx-auto mb-5 text-gold" aria-hidden="true" />
+                <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-brand">{content.volunteering.scheduleEyebrow}</p>
+                <h3 className="mb-5 font-serif text-4xl leading-tight text-brand md:text-5xl">{content.volunteering.scheduleTitle}</h3>
+                <p className="text-lg font-light leading-relaxed text-gray-600">{content.volunteering.scheduleDescription}</p>
+                <p className="mt-3 text-sm leading-relaxed text-gray-500">{content.volunteering.eventDetails}</p>
+              </div>
+
+              <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-2" gapClassName="gap-6">
+                {reforestationEvents.map((event: any, index: number) => (
+                  <article key={`${event.date}-${event.title}`} data-reveal data-delay={String(index + 1)} className="flex h-full flex-col overflow-hidden rounded-2xl border border-brand/10 bg-white shadow-[0_12px_35px_rgba(0,83,51,0.08)]">
+                    <div className="relative aspect-[16/9] overflow-hidden bg-brand/5">
+                      <img src={event.image} alt={event.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.02]" loading="lazy" decoding="async" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#071d14]/75 via-transparent to-transparent" />
+                      <span className="absolute left-4 top-4 rounded-full bg-gold px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-brand">{content.volunteering.eventBadge}</span>
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-white">
+                        <CalendarDays size={16} className="text-gold" aria-hidden="true" />
+                        {event.date}
+                      </div>
+                    </div>
+                    <div className="flex flex-1 flex-col p-6 md:p-7">
+                      <h4 className="mb-3 font-serif text-3xl leading-tight text-brand">{event.title}</h4>
+                      <p className="mb-5 flex-1 font-light leading-relaxed text-gray-600">{event.desc}</p>
+                      <div className="mb-5 rounded-xl bg-brand/5 px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand/60">{content.volunteering.eventGoalLabel}</p>
+                        <p className="mt-1 font-serif text-xl text-brand">{content.volunteering.eventGoal}</p>
+                      </div>
+                      <a href={getVolunteerWhatsappUrl(event)} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline self-start">
+                        <MessageCircle size={18} aria-hidden="true" />
+                        {content.volunteering.cta}
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </HorizontalCardRail>
+            </div>
+          </div>
+        </section>
+
+        <section id={language === 'es' ? 'mapas' : 'maps'} className="bg-white px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <div data-reveal className="mx-auto mb-12 max-w-3xl text-center">
+              <MapPinned size={34} strokeWidth={1.5} className="mx-auto mb-5 text-gold" aria-hidden="true" />
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-brand">{content.maps.eyebrow}</p>
+              <h2 className="mb-6 font-serif text-4xl leading-tight text-brand md:text-5xl">{content.maps.title}</h2>
+              <p className="text-lg font-light leading-relaxed text-gray-600">{content.maps.description}</p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              {content.maps.areas.map((area: { status: string; title: string; description: string; image: string; imageAlt: string }, index: number) => (
+                <article key={area.title} data-reveal data-delay={String(index + 1)} className="overflow-hidden rounded-2xl border border-brand/10 bg-bone shadow-[0_12px_35px_rgba(0,83,51,0.07)]">
+                  <button type="button" onClick={() => setExpandedGallery({ items: [{ src: area.image, alt: area.imageAlt, caption: area.title }], index: 0 })} className="group block aspect-[16/10] w-full overflow-hidden bg-brand/5 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-gold" aria-label={`${content.updates.goTo}: ${area.imageAlt}`}>
+                    <img src={area.image} alt={area.imageAlt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" decoding="async" />
+                  </button>
+                  <div className="p-7 md:p-8">
+                    <span className="mb-5 inline-flex rounded-full bg-brand/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-brand">{area.status}</span>
+                    <h3 className="mb-3 font-serif text-3xl text-brand">{area.title}</h3>
+                    <p className="font-light leading-relaxed text-gray-600">{area.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <p className="mt-6 rounded-xl border border-gold/25 bg-gold/10 px-5 py-4 text-center text-sm leading-relaxed text-gray-600">{content.maps.note}</p>
+          </div>
+        </section>
+
+        <ReforestacionTransparencia raised={currencyFormatter.format(displayedRaisedAmount)} />
+
+        <section className="bg-brand px-6 py-12 text-white md:py-14">
+          <div data-reveal>
+            <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex min-w-0 items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gold text-brand">
+                  <Building2 size={24} strokeWidth={1.5} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.25em] text-gold">{content.corporate.eyebrow}</p>
+                  <h2 className="mb-2 font-serif text-3xl leading-tight">{content.corporate.title}</h2>
+                  <p className="max-w-2xl font-light leading-relaxed text-white/75">{content.corporate.description}</p>
+                </div>
+              </div>
+              <div className="flex min-w-0 shrink-0 flex-col gap-3 sm:flex-row">
+                <a href={ROUTES.EMPRESAS} className="btn-gold btn-icon-inline !w-full !max-w-full !whitespace-normal text-center !leading-snug sm:!w-auto">
+                  {content.corporate.cta}
+                  <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
+                </a>
+                <a href={corporateWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-glass btn-icon-inline !w-full !max-w-full !whitespace-normal text-center !leading-snug sm:!w-auto">
+                  <MessageCircle size={18} className="shrink-0" aria-hidden="true" />
+                  {content.corporate.contactCta}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="preguntas" className="bg-bone px-6 py-20 md:py-24">
+          <div className="mx-auto max-w-3xl">
+            <div data-reveal className="mb-10 text-center">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.25em] text-brand">{content.faq.eyebrow}</p>
+              <h2 className="font-serif text-4xl leading-tight text-brand md:text-5xl">{content.faq.title}</h2>
+            </div>
+            <div className="space-y-3">
+              {content.faq.items.map((item: { q: string; a: string }, index: number) => {
+                const open = openFaq === index;
+                return (
+                  <div key={item.q} className="overflow-hidden rounded-2xl border border-brand/10 bg-white">
+                    <h3>
+                      <button
+                        type="button"
+                        onClick={() => setOpenFaq(open ? null : index)}
+                        aria-expanded={open}
+                        aria-controls={`faq-${index}`}
+                        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-semibold text-brand transition-colors hover:bg-brand/[0.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold md:px-6"
+                      >
+                        {item.q}
+                        <ChevronDown size={20} className={`shrink-0 text-gold transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+                      </button>
+                    </h3>
+                    <div id={`faq-${index}`} hidden={!open} className="px-5 pb-5 font-light leading-relaxed text-gray-600 md:px-6">
+                      {item.a}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -1032,7 +1196,13 @@ const Reforestacion: React.FC = () => {
               <Leaf size={34} strokeWidth={1.5} className="text-gold mx-auto mb-6" aria-hidden="true" />
               <h2 className="font-serif text-4xl md:text-6xl leading-tight mb-6">{content.closing.title}</h2>
               <p className="text-white/75 text-lg font-light leading-relaxed mb-8">{content.closing.description}</p>
-              <button type="button" onClick={() => setDonationModalOpen(true)} className="btn-gold inline-flex items-center justify-center">{content.closing.cta}</button>
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <a href="#aportar" className="btn-gold inline-flex items-center justify-center">{content.closing.cta}</a>
+                <a href={shareWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-glass btn-icon-inline">
+                  <Share2 size={18} aria-hidden="true" />
+                  {content.share.cta}
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -1171,48 +1341,16 @@ const Reforestacion: React.FC = () => {
         </div>
       )}
 
-      {donationModalOpen && (
-        <div
-          className="fixed inset-0 z-[5000] flex items-center justify-center bg-[#071d14]/80 px-4 py-8 backdrop-blur-sm"
-          role="presentation"
-          onMouseDown={event => {
-            if (event.target === event.currentTarget) setDonationModalOpen(false);
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="donation-modal-title"
-            className="relative max-h-full w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-7 shadow-2xl md:p-10"
-          >
-            <button
-              type="button"
-              onClick={() => setDonationModalOpen(false)}
-              aria-label={content.contribution.closeModal}
-              className="absolute right-5 top-5 rounded-full p-2 text-gray-400 transition-colors hover:bg-bone hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-            >
-              <X size={22} aria-hidden="true" />
-            </button>
-            <Sprout size={34} strokeWidth={1.5} className="text-gold mb-5" aria-hidden="true" />
-            <p className="text-brand text-[11px] uppercase tracking-[0.22em] font-bold mb-3">{content.contribution.eyebrow}</p>
-            <h2 id="donation-modal-title" className="font-serif text-3xl md:text-4xl text-brand leading-tight mb-4">{content.contribution.modalTitle}</h2>
-            <p className="text-gray-600 font-light leading-relaxed mb-7">{content.contribution.modalDescription}</p>
-
-            {hasAlias || hasSepa || hasCrypto ? (
-              renderTransferOptions()
-            ) : (
-              <div className="rounded-2xl bg-bone p-5 mb-6">
-                <p className="text-gray-600 font-light leading-relaxed">{content.contribution.fallbackDescription}</p>
-              </div>
-            )}
-
-            <a href={hasAlias || hasSepa || hasCrypto ? genericContributionConfirmationWhatsappUrl : requestContributionDataWhatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline mt-6 w-full">
-              <MessageCircle size={18} aria-hidden="true" />
-              {hasAlias || hasSepa || hasCrypto ? content.contribution.confirmCta : content.contribution.fallbackCta}
-            </a>
-          </section>
-        </div>
-      )}
+      {/* Botón fijo "Aportar" solo en celular, abajo a la izquierda (a la derecha está el WhatsApp flotante). */}
+      <a
+        href="#aportar"
+        aria-hidden={!showSticky}
+        tabIndex={showSticky ? 0 : -1}
+        className={`fixed bottom-5 left-4 z-[900] inline-flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-xs font-bold uppercase tracking-wider text-brand shadow-[0_10px_30px_rgba(0,0,0,0.25)] transition-all duration-300 md:hidden ${showSticky ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"}`}
+      >
+        <TreePine size={17} aria-hidden="true" />
+        {content.sticky.cta}
+      </a>
 
       <Footer />
     </div>
