@@ -21,7 +21,7 @@ export const FESTIVAL_OCTUBRE = {
     overlay: '/uploads/atardeser/atardeser-sun-wave-overlay-transparent.webp',
     concept: '/uploads/atardeser/movimiento.jpeg',
     place: '/uploads/dji_0074.webp',
-    og: '/uploads/atardeser/raiz-sonora-flyer.webp',
+    og: '/uploads/atardeser/raiz-sonora-flyer.png',
     gallery: [
       { src: '/uploads/atardeser/celebracion-grupal.jpeg', alt: 'Celebración con música y baile en Pueblo Mágico' },
       { src: '/uploads/atardeser/mationix.jpg', alt: 'Mationix, artista de progressive tribal organic house' },
