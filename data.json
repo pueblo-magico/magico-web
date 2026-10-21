@@ -942,13 +942,13 @@
           "isVolunariado": true
         },
         {
-          "date": "31 OCTUBRE 2026",
+          "date": "SÁBADO 31 DE OCTUBRE DE 2026",
           "startDate": "2026-10-31",
           "endDate": "2026-10-31",
-          "title": "Raíz Sonora 31·10 · Música, naturaleza y encuentro",
-          "desc": "Festival de electrónica orgánica, río, montaña y experiencias para compartir. Cinco formas de participar desde AR$ 35.000. Mationix, Mauri Sayri, Federico Salas y Stefano confirmados.",
+          "title": "Raíz Sonora · Música, naturaleza y encuentro",
+          "desc": "Una tribu de artistas y un día entero de música en la montaña. Jam de AcroYoga, fogón y opciones para vivir el día o todo el fin de semana. Desde AR$ 35.000.",
           "btn": "Conocer el festival",
-          "image": "/uploads/sunset-rio-baile.webp",
+          "image": "/uploads/atardeser/raiz-sonora-hero-v1.webp",
           "link": "/festival-RAÍZ-SONORA",
           "pdfLink": ""
         },
@@ -3703,13 +3703,13 @@
           "isVolunariado": true
         },
         {
-          "date": "OCT 31, 2026",
+          "date": "SATURDAY, OCTOBER 31, 2026",
           "startDate": "2026-10-31",
           "endDate": "2026-10-31",
-          "title": "Raíz Sonora Oct 31 · Music, nature and connection",
-          "desc": "An organic electronic music festival with river, mountains and shared experiences. Five ways to join from USD 25. Mationix, Mauri Sayri, Federico Salas and Stefano confirmed.",
+          "title": "Raíz Sonora · Music, nature and connection",
+          "desc": "A tribe of artists and a full day of music in the mountains. AcroYoga Jam, bonfire and options for the day or the entire weekend. From USD 25.",
           "btn": "Discover the festival",
-          "image": "/uploads/sunset-rio-baile.webp",
+          "image": "/uploads/atardeser/raiz-sonora-hero-v1.webp",
           "link": "/festival-RAÍZ-SONORA",
           "pdfLink": ""
         },
