@@ -1119,6 +1119,10 @@
           "href": "#eventos"
         },
         {
+          "label": "Escuelas",
+          "href": "/escuelas"
+        },
+        {
           "label": "Empresas",
           "href": "/empresas"
         },
