@@ -19,6 +19,7 @@ import CicloVitalFemenino from './src/CicloVitalFemenino';
 import { ROUTES } from './src/routes.js';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
+const AulaVerdeTravel360 = lazy(() => import('./src/AulaVerdeTravel360'));
 const OrganizamosTuExperiencia = lazy(() => import('./src/OrganizamosTuExperiencia'));
 const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
 const PachamamaFest = lazy(() => import('./src/PachamamaFest'));
@@ -40,7 +41,9 @@ const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
 
-injectContentsquareScript({ clientId: '91718b26f9ef8' });
+if (!window.location.pathname.startsWith('/aulas-verdes-travel-360')) {
+  injectContentsquareScript({ clientId: '91718b26f9ef8' });
+}
 
 const ScrollToTop: React.FC = () => {
   const { pathname, hash } = useLocation();
@@ -95,6 +98,7 @@ root.render(
               <Route path="/familion" element={<Familion />} />
               <Route path="/gondorbows" element={<Gondorbows />} />
               <Route path="/escuelas" element={<AulaVerde />} />
+              <Route path="/aulas-verdes-travel-360" element={<AulaVerdeTravel360 />} />
               <Route path="/achala-viva" element={<AchalaViva />} />
               <Route path="/el-vuelo-del-condor" element={<VueloDelCondor />} />
               <Route path="/ciclo-vital-femenino" element={<CicloVitalFemenino />} />
