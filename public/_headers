@@ -26,6 +26,12 @@
   Cache-Control: no-cache
 
 # Unlisted agency proposal, including .html and trailing-slash variants.
+/aulas-verdes-360-travel*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+
+# Previous URL, kept private while it redirects to the corrected route.
 /aulas-verdes-travel-360*
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store

@@ -41,7 +41,7 @@ const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
 
-if (!window.location.pathname.startsWith('/aulas-verdes-travel-360')) {
+if (!['/aulas-verdes-360-travel', '/aulas-verdes-travel-360'].some(path => window.location.pathname.startsWith(path))) {
   injectContentsquareScript({ clientId: '91718b26f9ef8' });
 }
 
@@ -98,7 +98,8 @@ root.render(
               <Route path="/familion" element={<Familion />} />
               <Route path="/gondorbows" element={<Gondorbows />} />
               <Route path="/escuelas" element={<AulaVerde />} />
-              <Route path="/aulas-verdes-travel-360" element={<AulaVerdeTravel360 />} />
+              <Route path="/aulas-verdes-360-travel" element={<AulaVerdeTravel360 />} />
+              <Route path="/aulas-verdes-travel-360" element={<Navigate to="/aulas-verdes-360-travel" replace />} />
               <Route path="/achala-viva" element={<AchalaViva />} />
               <Route path="/el-vuelo-del-condor" element={<VueloDelCondor />} />
               <Route path="/ciclo-vital-femenino" element={<CicloVitalFemenino />} />

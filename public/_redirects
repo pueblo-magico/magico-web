@@ -18,6 +18,9 @@
 /festival-atardeser    /festival-raiz-sonora    301
 /festival-31-octubre    /festival-raiz-sonora    301
 
+# Nombre corregido de la propuesta privada para 360 Travel
+/aulas-verdes-travel-360    /aulas-verdes-360-travel    301
+
 # SPA fallback SOLO para las rutas client-only que no están prerenderizadas
 # (todo lo demás ya tiene su propio dist/<ruta>.html real — ver
 # scripts/prerender.mjs ROUTES). Un catch-all "/* -> /index.html 200" acá
