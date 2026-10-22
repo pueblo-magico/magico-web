@@ -145,7 +145,7 @@ const faqs = [
           </li>
           <li className="flex items-start gap-3">
             <span className="shrink-0" aria-hidden="true">4️⃣</span>
-            <span>Seguí 8,5 km hasta encontrar, a mano izquierda, un cartel que dice “Mágico Ensueño” y una tranquera que dice “El Divisadero”.</span>
+            <span>Seguí 8,5 km hasta encontrar, a mano izquierda, un cartel que dice “Pueblo Mágico” y una tranquera que dice “El Divisadero”.</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="shrink-0" aria-hidden="true">5️⃣</span>
