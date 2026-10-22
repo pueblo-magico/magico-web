@@ -26,6 +26,7 @@ const ROUTE_PATHS = [
   '/propuesta/calma-magico',
   '/inti-raymi',
   '/pachamama-fest',
+  '/festival-raiz-sonora',
   '/organizamos-tu-experiencia',
   '/coliving',
   '/ciclo-vital-femenino',

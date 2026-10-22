@@ -14,8 +14,9 @@
 /recetario-familion    /uploads/Recetarios/recetario-familion.pdf    302
 
 # Alias anteriores de Raíz Sonora
-/festival-atardeser    /festival-RAÍZ-SONORA    301
-/festival-31-octubre    /festival-RAÍZ-SONORA    301
+/festival-RAÍZ-SONORA    /festival-raiz-sonora    301
+/festival-atardeser    /festival-raiz-sonora    301
+/festival-31-octubre    /festival-raiz-sonora    301
 
 # SPA fallback SOLO para las rutas client-only que no están prerenderizadas
 # (todo lo demás ya tiene su propio dist/<ruta>.html real — ver

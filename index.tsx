@@ -106,6 +106,7 @@ root.render(
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
               <Route path="/sunset-y-rio" element={<SunsetRio />} />
               <Route path={ROUTES.RAIZ_SONORA} element={<FestivalOctubre />} />
+              <Route path="/festival-RAÍZ-SONORA" element={<Navigate to={ROUTES.RAIZ_SONORA} replace />} />
               <Route path="/festival-atardeser" element={<Navigate to={ROUTES.RAIZ_SONORA} replace />} />
               <Route path="/festival-31-octubre" element={<Navigate to={ROUTES.RAIZ_SONORA} replace />} />
               <Route path="/empresas" element={<Empresas />} />

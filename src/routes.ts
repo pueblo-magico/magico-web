@@ -29,5 +29,5 @@ export const ROUTES = {
   VOLUNTARIADO: '/voluntariado',
   REFORESTACION: '/reforestacion',
   ADMIN_RESERVAS: '/admin/reservas',
-  RAIZ_SONORA: '/festival-RAÍZ-SONORA',
+  RAIZ_SONORA: '/festival-raiz-sonora',
 };

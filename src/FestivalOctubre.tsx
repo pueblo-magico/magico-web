@@ -523,15 +523,27 @@ const FestivalOctubre: React.FC = () => {
       el.setAttribute('href', href);
     };
 
-    const IMG = FESTIVAL_OCTUBRE.images.og ? `${window.location.origin}${FESTIVAL_OCTUBRE.images.og}` : `${SITE_URL}/uploads/atardeser/raizsonoracard.png`;
-    const URL   = FESTIVAL_OCTUBRE.canonical || `${SITE_URL}/raiz-sonora`;
+    const IMG = `${SITE_URL}${FESTIVAL_OCTUBRE.images.og}`;
+    const URL = FESTIVAL_OCTUBRE.canonical;
+    const TITLE = `${FESTIVAL_OCTUBRE.name} · ${FESTIVAL_OCTUBRE.tagline}`;
+    const IMAGE_ALT = 'Raíz Sonora · Progressive, house, trance, organic y tambores en Pueblo Mágico';
 
     setMeta('meta[name="description"]', 'name', 'description').content = FESTIVAL_OCTUBRE.description;
-    setMeta('meta[property="og:title"]', 'property', 'og:title').content = `${FESTIVAL_OCTUBRE.name} · ${FESTIVAL_OCTUBRE.tagline}`;
+    setMeta('meta[property="og:title"]', 'property', 'og:title').content = TITLE;
     setMeta('meta[property="og:description"]', 'property', 'og:description').content = FESTIVAL_OCTUBRE.description;
     setMeta('meta[property="og:image"]', 'property', 'og:image').content = IMG;
-    setMeta('meta[property="og:url"]', 'property', 'og:url').content = FESTIVAL_OCTUBRE.canonical;
+    setMeta('meta[property="og:image:secure_url"]', 'property', 'og:image:secure_url').content = IMG;
+    setMeta('meta[property="og:image:width"]', 'property', 'og:image:width').content = '1084';
+    setMeta('meta[property="og:image:height"]', 'property', 'og:image:height').content = '631';
+    setMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt').content = IMAGE_ALT;
+    setMeta('meta[property="og:url"]', 'property', 'og:url').content = URL;
     setMeta('meta[property="og:type"]', 'property', 'og:type').content = 'website';
+    setMeta('meta[property="og:locale"]', 'property', 'og:locale').content = 'es_AR';
+    setMeta('meta[name="twitter:card"]', 'name', 'twitter:card').content = 'summary_large_image';
+    setMeta('meta[name="twitter:title"]', 'name', 'twitter:title').content = TITLE;
+    setMeta('meta[name="twitter:description"]', 'name', 'twitter:description').content = FESTIVAL_OCTUBRE.description;
+    setMeta('meta[name="twitter:image"]', 'name', 'twitter:image').content = IMG;
+    setMeta('meta[name="twitter:image:alt"]', 'name', 'twitter:image:alt').content = IMAGE_ALT;
     setLink('canonical', URL);
 
     const schema = document.createElement('script');
@@ -546,13 +558,13 @@ const FestivalOctubre: React.FC = () => {
       endDate: FESTIVAL_OCTUBRE.endDate,
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       eventStatus: 'https://schema.org/EventScheduled',
-      image: `${window.location.origin}${FESTIVAL_OCTUBRE.images.og}`,
+      image: IMG,
       location: {
         '@type': 'Place',
         name: 'Pueblo Mágico',
         address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' },
       },
-      organizer: { '@type': 'Organization', name: 'Pueblo Mágico', url: window.location.origin },
+      organizer: { '@type': 'Organization', name: 'Pueblo Mágico', url: SITE_URL },
       performer: FESTIVAL_OCTUBRE.artists.map(artist => ({ '@type': 'Person', name: artist.name })),
     });
     document.getElementById(schema.id)?.remove();

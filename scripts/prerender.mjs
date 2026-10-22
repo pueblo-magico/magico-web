@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DIST = join(__dirname, '..', 'dist');
+const DIST = process.env.PRERENDER_DIST || join(__dirname, '..', 'dist');
 const CONTENT = JSON.parse(readFileSync(join(__dirname, '..', 'data.json'), 'utf8'));
 const VOLUNTEER_IMAGE = `https://experienciamagico.com${CONTENT.es.volunteer.image}`;
 
@@ -118,11 +118,14 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/sunset-y-rio',
   },
   {
-    path: '/festival-RAÍZ-SONORA',
+    path: '/festival-raiz-sonora',
     title: 'Raíz Sonora · 31 de octubre | Pueblo Mágico',
     description: 'Cuatro artistas y ocho horas de música electrónica, house, trance y tambores, con Jam de AcroYoga, naturaleza y encuentro en Los Gigantes.',
-    image: 'https://experienciamagico.com/uploads/atardeser/raiz-sonora-flyer.png',
-    canonical: 'https://experienciamagico.com/festival-RAÍZ-SONORA',
+    image: 'https://experienciamagico.com/uploads/atardeser/raizsonoracard.png',
+    imageWidth: 1084,
+    imageHeight: 631,
+    imageAlt: 'Raíz Sonora · Progressive, house, trance, organic y tambores en Pueblo Mágico',
+    canonical: 'https://experienciamagico.com/festival-raiz-sonora',
   },
   {
     path: '/empresas',
@@ -259,8 +262,10 @@ for (const route of ROUTES) {
     `  <meta property="og:title" content="${route.title}" />`,
     `  <meta property="og:description" content="${route.description}" />`,
     `  <meta property="og:image" content="${route.image}" />`,
-    `  <meta property="og:image:width" content="1200" />`,
-    `  <meta property="og:image:height" content="630" />`,
+    `  <meta property="og:image:secure_url" content="${route.image}" />`,
+    `  <meta property="og:image:width" content="${route.imageWidth ?? 1200}" />`,
+    `  <meta property="og:image:height" content="${route.imageHeight ?? 630}" />`,
+    `  <meta property="og:image:alt" content="${route.imageAlt ?? route.title}" />`,
     `  <meta property="og:url" content="${route.canonical}" />`,
     `  <meta property="og:type" content="website" />`,
     `  <meta property="og:locale" content="es_AR" />`,
@@ -268,6 +273,7 @@ for (const route of ROUTES) {
     `  <meta name="twitter:title" content="${route.title}" />`,
     `  <meta name="twitter:description" content="${route.description}" />`,
     `  <meta name="twitter:image" content="${route.image}" />`,
+    `  <meta name="twitter:image:alt" content="${route.imageAlt ?? route.title}" />`,
     `  <link rel="canonical" href="${route.canonical}" />`,
     `  <meta name="geo.region" content="AR-X" />`,
     `  <meta name="geo.placename" content="Los Gigantes, Córdoba, Argentina" />`,
