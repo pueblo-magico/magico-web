@@ -688,6 +688,7 @@ const FestivalOctubre: React.FC = () => {
               <Eyebrow light>Artistas confirmados</Eyebrow>
               <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-6xl">El pulso de Raíz Sonora.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
+              
               <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
                 <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FF5A1F] text-[#004B43] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
                 <div>
@@ -705,7 +706,8 @@ const FestivalOctubre: React.FC = () => {
                   <p className="mt-2 text-sm leading-relaxed text-white/65">Cuatro artistas, ocho horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.</p>
                 </div>
               </article>
-              <article className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-[#FFD166]/20 bg-white/[0.06] p-6 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-7">
+
+              <article className="mx-auto mt-8 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/20 bg-white/[0.06] p-6 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-7">
                 <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#008C86] text-white md:mb-0"><Leaf size={21} aria-hidden="true" /></div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Domingo 01/11/2026</p>
