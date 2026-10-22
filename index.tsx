@@ -16,6 +16,7 @@ import AulaVerde from './src/AulaVerde';
 import AchalaViva from './src/AchalaViva';
 import VueloDelCondor from './src/VueloDelCondor';
 import CicloVitalFemenino from './src/CicloVitalFemenino';
+import { ROUTES } from './src/routes.js';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
 const OrganizamosTuExperiencia = lazy(() => import('./src/OrganizamosTuExperiencia'));
@@ -104,9 +105,9 @@ root.render(
               <Route path="/killa-raymi" element={<KillaRaymi />} />
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
               <Route path="/sunset-y-rio" element={<SunsetRio />} />
-              <Route path="/festival-RAÍZ-SONORA" element={<FestivalOctubre />} />
-              <Route path="/festival-atardeser" element={<Navigate to="/festival-RAÍZ-SONORA" replace />} />
-              <Route path="/festival-31-octubre" element={<Navigate to="/festival-RAÍZ-SONORA" replace />} />
+              <Route path={ROUTES.RAIZ_SONORA} element={<FestivalOctubre />} />
+              <Route path="/festival-atardeser" element={<Navigate to={ROUTES.RAIZ_SONORA} replace />} />
+              <Route path="/festival-31-octubre" element={<Navigate to={ROUTES.RAIZ_SONORA} replace />} />
               <Route path="/empresas" element={<Empresas />} />
               <Route path="/cordoba-fly-fishing" element={<CordobaFlyFishing />} />
               <Route path="/voluntariado" element={<Voluntariado />} />

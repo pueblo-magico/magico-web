@@ -36,6 +36,8 @@ import {
 import { img } from './lib/img';
 import { WhatsAppButton } from '../components/WhatsAppButton';
 import { CookieBanner } from '../components/CookieBanner';
+import { SITE_URL } from './data/config';
+import { ROUTES } from './routes';
 
 const C = {
   pine: '#2F3A31',
@@ -514,12 +516,23 @@ const FestivalOctubre: React.FC = () => {
       element.setAttribute(attr, value);
       return element;
     };
+
+    const setLink = (rel: string, href: string) => {
+      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+      if (!el) { el = document.createElement('link'); el.setAttribute('rel', rel); document.head.appendChild(el); }
+      el.setAttribute('href', href);
+    };
+
+    const IMG = FESTIVAL_OCTUBRE.images.og ? `${window.location.origin}${FESTIVAL_OCTUBRE.images.og}` : `${SITE_URL}/uploads/atardeser/raizsonoracard.png`;
+    const URL   = FESTIVAL_OCTUBRE.canonical || `${SITE_URL}/raiz-sonora`;
+
     setMeta('meta[name="description"]', 'name', 'description').content = FESTIVAL_OCTUBRE.description;
     setMeta('meta[property="og:title"]', 'property', 'og:title').content = `${FESTIVAL_OCTUBRE.name} · ${FESTIVAL_OCTUBRE.tagline}`;
     setMeta('meta[property="og:description"]', 'property', 'og:description').content = FESTIVAL_OCTUBRE.description;
-    setMeta('meta[property="og:image"]', 'property', 'og:image').content = `${window.location.origin}${FESTIVAL_OCTUBRE.images.og}`;
+    setMeta('meta[property="og:image"]', 'property', 'og:image').content = IMG;
     setMeta('meta[property="og:url"]', 'property', 'og:url').content = FESTIVAL_OCTUBRE.canonical;
     setMeta('meta[property="og:type"]', 'property', 'og:type').content = 'website';
+    setLink('canonical', URL);
 
     const schema = document.createElement('script');
     schema.type = 'application/ld+json';
@@ -688,7 +701,7 @@ const FestivalOctubre: React.FC = () => {
               <Eyebrow light>Artistas confirmados</Eyebrow>
               <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-6xl">El pulso de Raíz Sonora.</h2>
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
-              
+
               <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
                 <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FF5A1F] text-[#004B43] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
                 <div>

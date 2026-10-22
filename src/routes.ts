@@ -24,10 +24,10 @@ export const ROUTES = {
   KILLA_RAYMI: '/killa-raymi',
   ALMA_DE_LOBO: '/alma-de-lobo',
   SUNSET_RIO: '/sunset-y-rio',
-  FESTIVAL_OCTUBRE: '/festival-RAÍZ-SONORA',
   EMPRESAS: '/empresas',
   FLY_FISHING: '/cordoba-fly-fishing',
   VOLUNTARIADO: '/voluntariado',
   REFORESTACION: '/reforestacion',
   ADMIN_RESERVAS: '/admin/reservas',
+  RAIZ_SONORA: '/festival-RAÍZ-SONORA',
 };

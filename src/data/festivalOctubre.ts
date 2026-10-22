@@ -1,3 +1,4 @@
+import { ROUTES } from '../routes';
 import { WA_MAGICO, SITE_URL, SOCIAL_LINKS } from './config';
 
 const whatsapp = (message: string) =>
@@ -11,8 +12,8 @@ export const FESTIVAL_OCTUBRE = {
   startDate: '2026-10-30',
   endDate: '2026-11-01',
   location: 'Pueblo Mágico, Los Gigantes, Córdoba',
-  route: '/festival-RAÍZ-SONORA',
-  canonical: `${SITE_URL}/festival-RAÍZ-SONORA`,
+  route: ROUTES.RAIZ_SONORA,
+  canonical: `${SITE_URL}${ROUTES.RAIZ_SONORA}`,
   description:
     'Raíz Sonora es un festival de música electrónica, house, trance, tambores, movimiento y naturaleza en Pueblo Mágico, Los Gigantes.',
   images: {
