@@ -703,7 +703,7 @@ const FestivalOctubre: React.FC = () => {
               <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
 
               <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
-                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FF5A1F] text-[#004B43] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
+                <div className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FF5A1F] text-[#004B43] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Viernes 30/10/2026</p>
                   <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Llegada y bienvenida</h3>
@@ -720,8 +720,8 @@ const FestivalOctubre: React.FC = () => {
                 </div>
               </article>
 
-              <article className="mx-auto mt-8 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/20 bg-white/[0.06] p-6 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-7">
-                <div className="mb-5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#008C86] text-white md:mb-0"><Leaf size={21} aria-hidden="true" /></div>
+              <article className="mx-auto mt-8 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/20 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
+                <div className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#008C86] text-white md:mb-0"><Leaf size={21} aria-hidden="true" /></div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Domingo 01/11/2026</p>
                   <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Naturaleza e integración</h3>
