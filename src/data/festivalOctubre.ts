@@ -58,7 +58,7 @@ export const FESTIVAL_OCTUBRE = {
       theme: { accent: '#B89AF4', glow: '#65438F', surface: '#191321', ink: '#F7EEFF', imagePosition: '43% center' },
     },
     {
-      name: 'Federico Salas',
+      name: 'Fede W Salas',
       style: 'DJ set · electrónica solarpunk',
       bio: 'Se suma a la jornada central con una selección pensada para acompañar el encuentro, el paisaje y el movimiento compartido.',
       image: '/uploads/atardeser/artist-fede-w-salas.webp',
