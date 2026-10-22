@@ -413,7 +413,7 @@ const AulaVerdeContent: React.FC = () => {
         <AulaVerdeLeadMagnet />
       </Suspense>
 
-      <AulaVerdePrecios />
+      {/* <AulaVerdePrecios /> */}
       <AulaVerdeFAQ />
 
       {/* ====== CTA FINAL ====== */}
