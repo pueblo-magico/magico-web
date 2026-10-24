@@ -231,6 +231,7 @@ const faqs = [
 ];
 
 const EVENT_START = new Date('2026-10-31T12:00:00-03:00').getTime();
+const GROUP_PROMOTION_END = new Date('2026-10-26T00:00:00-03:00').getTime();
 
 const Countdown = () => {
   const [remaining, setRemaining] = useState(() => Math.max(0, EVENT_START - Date.now()));
@@ -257,6 +258,54 @@ const Countdown = () => {
         </div>
       ))}
     </div>
+  );
+};
+
+const GroupPromotionCard = () => {
+  const [remaining, setRemaining] = useState(() => Math.max(0, GROUP_PROMOTION_END - Date.now()));
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setRemaining(Math.max(0, GROUP_PROMOTION_END - Date.now())), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const totalSeconds = Math.floor(remaining / 1000);
+  const units = [
+    ['Días', Math.floor(totalSeconds / 86400)],
+    ['Horas', Math.floor((totalSeconds % 86400) / 3600)],
+    ['Min', Math.floor((totalSeconds % 3600) / 60)],
+    ['Seg', totalSeconds % 60],
+  ] as const;
+
+  return (
+    <article className="relative overflow-hidden rounded-[1.75rem] border border-[#E40067]/25 bg-[#FFE3EF] p-6 text-left shadow-[0_16px_38px_rgba(72,42,60,0.08)] md:p-7">
+      <span className="absolute inset-x-0 top-0 h-1.5 bg-[#E40067]" aria-hidden="true" />
+      {remaining > 0 ? (
+        <>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E40067]">Promo Grupos · hasta el 25/10 inclusive</p>
+          <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">Vengan 4 o más y reciban 50% OFF.</h3>
+          <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">En Pase por el Día o Festival + 1 noche en camping. Reserva conjunta y pago confirmados. No acumulable.</p>
+          <div className="mt-5 rounded-2xl border border-[#E40067]/15 bg-white/60 p-4">
+            <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#8D315A]">La promoción termina en</p>
+            <div className="grid grid-cols-4 gap-2" role="timer" aria-label="Tiempo restante de la Promo Grupos">
+              {units.map(([label, value]) => (
+                <div key={label} className="rounded-xl bg-white/80 px-1.5 py-2.5 text-center shadow-sm">
+                  <span className="block text-xl leading-none text-[#003630] serif-title md:text-2xl">{String(value).padStart(2, '0')}</span>
+                  <span className="mt-1.5 block text-[7px] font-bold uppercase tracking-[0.12em] text-[#16423D]/55">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <a href={FESTIVAL_OCTUBRE.contact.groupPromotion} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#004B43] underline decoration-[#E40067] decoration-2 underline-offset-4">Consultar promo <ArrowRight size={15} aria-hidden="true" /></a>
+        </>
+      ) : (
+        <>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E40067]">Promo Grupos · finalizada</p>
+          <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">La promoción estuvo disponible hasta el 25/10.</h3>
+          <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">Podés revisar las modalidades vigentes y elegir la que mejor se adapte a tu estadía.</p>
+        </>
+      )}
+    </article>
   );
 };
 
@@ -896,13 +945,7 @@ const FestivalOctubre: React.FC = () => {
               </div>
             </div>
             <div className="mx-auto mb-8 grid max-w-5xl gap-4 md:grid-cols-2" data-reveal data-delay="1">
-              <article className="relative overflow-hidden rounded-[1.75rem] border border-[#E40067]/25 bg-[#FFE3EF] p-6 text-left shadow-[0_16px_38px_rgba(72,42,60,0.08)] md:p-7">
-                <span className="absolute inset-x-0 top-0 h-1.5 bg-[#E40067]" aria-hidden="true" />
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E40067]">Promo Grupos · solo 24 y 25/10</p>
-                <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">Vengan 4 o más y reciban 50% OFF.</h3>
-                <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">En Pase por el Día o Festival + 1 noche en camping. Reserva conjunta y pago confirmados. No acumulable.</p>
-                <a href={FESTIVAL_OCTUBRE.contact.groupPromotion} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#004B43] underline decoration-[#E40067] decoration-2 underline-offset-4">Consultar promo <ArrowRight size={15} aria-hidden="true" /></a>
-              </article>
+              <GroupPromotionCard />
               <article className="relative overflow-hidden rounded-[1.75rem] border border-[#FF9F1C]/30 bg-[#FFF1C7] p-6 text-left shadow-[0_16px_38px_rgba(31,41,34,0.08)] md:p-7">
                 <span className="absolute inset-x-0 top-0 h-1.5 bg-[#FF9F1C]" aria-hidden="true" />
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8B5A23]">Plan Familias</p>

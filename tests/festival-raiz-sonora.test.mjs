@@ -46,7 +46,10 @@ test('makes the bad-weather policy explicit', () => {
 });
 
 test('publishes only the confirmed public promotions and family conditions', () => {
-  assert.match(pageSource, /Promo Grupos · solo 24 y 25\/10/);
+  assert.match(pageSource, /GROUP_PROMOTION_END = new Date\('2026-10-26T00:00:00-03:00'\)/);
+  assert.match(pageSource, /Promo Grupos · hasta el 25\/10 inclusive/);
+  assert.match(pageSource, /La promoción termina en/);
+  assert.match(pageSource, /Promo Grupos · finalizada/);
   assert.match(pageSource, /Vengan 4 o más y reciban 50% OFF/);
   assert.match(pageSource, /Niñas y niños de 0 a 12 entran gratis/);
   assert.match(pageSource, /Tu entrada también regenera/);
