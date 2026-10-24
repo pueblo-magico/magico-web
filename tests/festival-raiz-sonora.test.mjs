@@ -39,6 +39,7 @@ test('keeps practical purchase information visible before the FAQ', () => {
   assert.match(pageSource, /Abrir Google Maps/);
   assert.match(pageSource, /Consultar viaje compartido/);
   assert.doesNotMatch(pageSource, /camping, habitación o Domo/);
+  assert.doesNotMatch(`${dataSource}\n${pageSource}`, /estacionamiento|parking/i);
 });
 
 test('makes the bad-weather policy explicit', () => {

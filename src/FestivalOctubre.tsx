@@ -160,7 +160,7 @@ const faqs = [
           </li>
           <li className="flex items-start gap-3">
             <span className="shrink-0" aria-hidden="true">6️⃣</span>
-            <span>Cruzá una tranquera de alambre. 🚗 Apenas la pases, vas a encontrar el estacionamiento del predio.</span>
+            <span>Cruzá una tranquera de alambre y continuá siguiendo la señalización de Pueblo Mágico.</span>
           </li>
         </ol>
 
@@ -181,7 +181,7 @@ const faqs = [
   {
     Icon: Ticket,
     question: '¿Qué incluye la entrada general?',
-    answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, cuatro artistas, ocho horas de música, el Jam de AcroYoga, el fogón y las propuestas abiertas. No incluye comidas, bebidas, estacionamiento, alojamiento ni experiencias con inscripción propia.',
+    answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, cuatro artistas, ocho horas de música, el Jam de AcroYoga, el fogón y las propuestas abiertas. No incluye comidas, bebidas, alojamiento ni experiencias con inscripción propia.',
   },
   {
     Icon: Utensils,
@@ -941,7 +941,7 @@ const FestivalOctubre: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#004B43]">Se reserva por separado</p>
-                <p className="mt-2 text-sm leading-relaxed text-[#16423D]/70">Comidas, bebidas, estacionamiento y Temazcal. Las modalidades con alojamiento sí incluyen desayuno.</p>
+                <p className="mt-2 text-sm leading-relaxed text-[#16423D]/70">Comidas, bebidas y Temazcal. Las modalidades con alojamiento sí incluyen desayuno.</p>
               </div>
             </div>
             <div className="mx-auto mb-8 grid max-w-5xl gap-4 md:grid-cols-2" data-reveal data-delay="1">
