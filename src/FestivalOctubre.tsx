@@ -710,7 +710,20 @@ const FestivalOctubre: React.FC = () => {
                 <span key={item} className="rounded-full border border-[#004B43]/15 bg-white/65 px-4 py-2 text-[10px] font-semibold tracking-wide text-[#004B43]">{item}</span>
               ))}
             </div>
-            <p className="mx-auto mt-9 max-w-3xl rounded-2xl border border-[#008C86]/20 bg-[#E2F5EE] px-6 py-4 text-center text-sm font-semibold leading-relaxed text-[#004B43]" data-reveal data-delay="2">El 10% de lo recaudado por Raíz Sonora se destina a reforestar tabaquillos y restaurar nuestras Sierras Grandes.</p>
+            <aside className="mx-auto mt-10 flex max-w-4xl flex-col items-center gap-5 rounded-[2rem] border border-[#008C86]/25 bg-[#003A34] px-7 py-8 text-center text-white shadow-[0_20px_50px_rgba(0,58,52,0.16)] md:flex-row md:px-10 md:py-9 md:text-left" data-reveal data-delay="2">
+              <div className="flex h-28 w-28 shrink-0 flex-col items-center justify-center rounded-full border border-[#FFD166]/40 bg-[#FFD166] text-[#003A34] shadow-[0_12px_35px_rgba(255,209,102,0.24)]">
+                <Leaf size={20} aria-hidden="true" />
+                <strong className="mt-1 text-4xl leading-none serif-title">10%</strong>
+              </div>
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#FFD166]">Tu entrada también regenera</p>
+                <h3 className="mt-3 text-2xl leading-tight text-white serif-title md:text-3xl">Celebramos hoy y restauramos el bosque nativo.</h3>
+                <p className="mt-3 text-sm leading-relaxed text-white/75 md:text-base">El 10% de lo recaudado por Raíz Sonora se destina a reforestar tabaquillos y restaurar nuestras Sierras Grandes.</p>
+                <a href="/reforestacion" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#FFD166] underline decoration-[#FFD166]/40 underline-offset-4 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFD166]">
+                  Conocé el programa de reforestación <ArrowRight size={15} aria-hidden="true" />
+                </a>
+              </div>
+            </aside>
           </div>
         </section>
 

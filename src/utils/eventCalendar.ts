@@ -19,15 +19,18 @@ export const getEventCalendarDateKey = (date = new Date()) => {
   return `${values.year}-${values.month}-${values.day}`;
 };
 
-export const shouldShowMainCalendarEvent = (
+export const shouldShowUpcomingEvent = (
   card: CalendarEventCard,
   today = getEventCalendarDateKey(),
 ) => {
-  if (card.showInMainEvents === false) return false;
-
   const finalDate = card.endDate || card.startDate;
   if (!finalDate || !DATE_KEY_PATTERN.test(finalDate)) return true;
 
   return finalDate >= today;
 };
+
+export const shouldShowMainCalendarEvent = (
+  card: CalendarEventCard,
+  today = getEventCalendarDateKey(),
+) => card.showInMainEvents !== false && shouldShowUpcomingEvent(card, today);
 

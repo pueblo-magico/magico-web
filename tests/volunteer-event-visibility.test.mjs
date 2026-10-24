@@ -17,6 +17,13 @@ test('Raíz Sonora is open for four volunteers for the complete weekend', () => 
   assert.match(spanishEvent.desc, /alojamiento y comidas/);
 });
 
-test('volunteer calendar hides events after their final date', () => {
-  assert.match(pageSource, /isVolunariado === true && shouldShowMainCalendarEvent\(event\)/);
+test('volunteer calendar keeps upcoming volunteer events even when hidden from the homepage', () => {
+  assert.match(pageSource, /isVolunariado === true && shouldShowUpcomingEvent\(event\)/);
+
+  const reforestationCalls = data.es.events.cards.filter((event) => (
+    event.isVolunariado === true && event.isReforestacion === true
+  ));
+
+  assert.deepEqual(reforestationCalls.map((event) => event.startDate), ['2026-11-07', '2026-12-05']);
+  assert.ok(reforestationCalls.every((event) => event.showInMainEvents === false));
 });
