@@ -7,6 +7,7 @@ import {
   Check,
   ChevronDown,
   Clock3,
+  CloudRain,
   CreditCard,
   Flame,
   Instagram,
@@ -216,6 +217,11 @@ const faqs = [
     Icon: Flame,
     question: '¿Cómo funciona el temazcal del domingo?',
     answer: 'El temazcal forma parte de la propuesta del domingo y tiene cupo limitado, inscripción previa y un valor adicional. Consultanos para reservar tu lugar.',
+  },
+  {
+    Icon: CloudRain,
+    question: '¿Qué pasa si hay mal tiempo?',
+    answer: 'Raíz Sonora no se suspende por mal tiempo.',
   },
   {
     Icon: CreditCard,

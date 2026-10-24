@@ -41,6 +41,10 @@ test('keeps practical purchase information visible before the FAQ', () => {
   assert.doesNotMatch(pageSource, /camping, habitación o Domo/);
 });
 
+test('makes the bad-weather policy explicit', () => {
+  assert.match(pageSource, /Raíz Sonora no se suspende por mal tiempo\./);
+});
+
 test('publishes only the confirmed public promotions and family conditions', () => {
   assert.match(pageSource, /Promo Grupos · solo 24 y 25\/10/);
   assert.match(pageSource, /Vengan 4 o más y reciban 50% OFF/);
