@@ -35,6 +35,8 @@ export const FESTIVAL_OCTUBRE = {
     festivalNight: whatsapp('¡Hola! Quiero reservar Raíz Sonora con una noche. Somos ___ personas. ¿Qué opciones quedan disponibles?'),
     weekend: whatsapp('¡Hola! Quiero reservar Raíz Sonora con dos noches, del viernes 30 de octubre al domingo 1 de noviembre de 2026. Somos ___ personas. ¿Hay disponibilidad?'),
     sharedRide: whatsapp('¡Hola! Voy a Raíz Sonora y quiero consultar si hay otras personas interesadas en compartir viaje.'),
+    groupPromotion: whatsapp('¡Hola! Quiero consultar la Promo Grupos de Raíz Sonora para 4 o más personas adultas. Somos ___ adultos y ___ niñas/os. Nos interesa ___ (Pase por el Día / Festival + 1 noche en camping).'),
+    familyPlan: whatsapp('¡Hola! Quiero reservar Raíz Sonora con el Plan Familias. Somos ___ personas adultas y ___ niñas/os de 0 a 12 años. Nos interesa ___.'),
     instagram: SOCIAL_LINKS.instagram,
   },
   artists: [
@@ -167,6 +169,7 @@ export const FESTIVAL_OCTUBRE = {
     },
   ],
   pricingNote: 'Valores por persona. El precio publicado para efectivo o transferencia incluye 20% de descuento. Con tarjeta se abona el total informado en 3 cuotas. Comidas, bebidas, estacionamiento y experiencias especiales se reservan por separado.',
+  bookingDeadline: 'Reservas online hasta el 30/10/2026 a las 18:00. Promociones sujetas a disponibilidad y aseguradas únicamente con el pago confirmado.',
   team: [
     { name: 'Diego', fullName: 'Diego Epelman Hodara', role: 'Anfitrión · dirección de experiencia', description: 'Fundador de Pueblo Mágico. Crea el clima de confianza, presencia y encuentro que sostiene la experiencia.', image: '/uploads/Diego_perfil.png', instagram: 'https://www.instagram.com/diegoepel/' },
     { name: 'China', fullName: 'China Dericia', role: 'Movimiento · bienestar · hospitalidad', description: 'Guía prácticas de yoga, movimiento consciente, respiración y canto para volver al cuerpo durante el encuentro.', image: '/uploads/china.jpeg', instagram: 'https://www.instagram.com/bambu.alquimia.terapeutica/' },

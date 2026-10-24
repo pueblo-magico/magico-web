@@ -205,7 +205,12 @@ const faqs = [
   {
     Icon: UsersRound,
     question: '¿Puedo venir con niños o niñas?',
-    answer: 'Sí. Raíz Sonora es un encuentro apto para toda la familia: niños y niñas son bienvenidos. Es importante que permanezcan acompañados por una persona adulta responsable.',
+    answer: 'Sí. Niñas y niños de 0 a 12 años entran gratis y deben permanecer acompañados por una persona adulta responsable. Su lugar cuenta para la capacidad del alojamiento. Comidas, Temazcal y otros extras con costo se reservan aparte. El ingreso infantil gratuito puede combinarse con la Promo Grupos aplicada a las personas adultas que pagan.',
+  },
+  {
+    Icon: UsersRound,
+    question: '¿Cómo funciona la Promo Grupos?',
+    answer: 'Reservando juntos 4 o más adultos durante el 24 o 25 de octubre reciben 50% off en Pase por el Día o Festival + 1 noche en camping. Niñas y niños de 0 a 12 años no cuentan para alcanzar los cuatro adultos. La promo está sujeta a disponibilidad, no se acumula con vouchers de invitación u otros descuentos y queda asegurada únicamente con el pago confirmado.',
   },
   {
     Icon: Flame,
@@ -628,7 +633,7 @@ const FestivalOctubre: React.FC = () => {
                 <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/35 px-4 py-2 backdrop-blur-sm">Sábado 31/10/2026</span>
                 <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/35 px-4 py-2 backdrop-blur-sm">Los Gigantes · Córdoba</span>
               </div>
-              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#FFD166] md:text-xs">Progressive · House · Trance · Organic · Tambores</p>
+              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#FFD166] md:text-xs">4 artistas · 8 horas · un viaje sonoro</p>
               <h1 className="text-[4.25rem] leading-[0.76] tracking-[-0.065em] text-[#FFF8EA] [text-shadow:0_8px_35px_rgba(0,30,27,.55)] serif-title sm:text-8xl md:text-9xl lg:text-[9.5rem]"><span className="block">RAÍZ</span><span className="block">SONORA</span></h1>
               <p className="mx-auto mt-6 max-w-full text-xl leading-tight text-[#FFE28A] [text-shadow:0_3px_12px_rgba(0,0,0,0.95),0_1px_2px_rgba(0,0,0,0.95)] serif-title md:text-3xl">Movimiento · Conexión · Naturaleza</p>
               <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/80 md:text-lg">
@@ -680,7 +685,7 @@ const FestivalOctubre: React.FC = () => {
 
             <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
               {[
-                { Icon: Music2, title: 'Música en vivo', text: 'Cuatro artistas y ocho horas de house, trance, música orgánica y tambores.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
+                { Icon: Music2, title: 'Un viaje sonoro', text: 'Cuatro artistas y ocho horas de música para acompañar el movimiento del día al fuego de la noche.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
                 { Icon: Leaf, title: 'Naturaleza', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86] text-white' },
                 { Icon: UsersRound, title: 'Movimiento y conexión', text: 'Jam de AcroYoga, fogón y espacios para celebrar, jugar y conocer gente nueva.', shell: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067] text-white' },
               ].map(({ Icon, title, text, shell, icon }) => (
@@ -699,6 +704,7 @@ const FestivalOctubre: React.FC = () => {
                 <span key={item} className="rounded-full border border-[#004B43]/15 bg-white/65 px-4 py-2 text-[10px] font-semibold tracking-wide text-[#004B43]">{item}</span>
               ))}
             </div>
+            <p className="mx-auto mt-9 max-w-3xl rounded-2xl border border-[#008C86]/20 bg-[#E2F5EE] px-6 py-4 text-center text-sm font-semibold leading-relaxed text-[#004B43]" data-reveal data-delay="2">El 10% de lo recaudado por Raíz Sonora se destina a reforestar tabaquillos y restaurar nuestras Sierras Grandes.</p>
           </div>
         </section>
 
@@ -870,6 +876,22 @@ const FestivalOctubre: React.FC = () => {
                 <p className="mt-2 text-sm leading-relaxed text-[#16423D]/70">Comidas, bebidas, estacionamiento y Temazcal. Las modalidades con alojamiento sí incluyen desayuno.</p>
               </div>
             </div>
+            <div className="mx-auto mb-8 grid max-w-5xl gap-4 md:grid-cols-2" data-reveal data-delay="1">
+              <article className="relative overflow-hidden rounded-[1.75rem] border border-[#E40067]/25 bg-[#FFE3EF] p-6 text-left shadow-[0_16px_38px_rgba(72,42,60,0.08)] md:p-7">
+                <span className="absolute inset-x-0 top-0 h-1.5 bg-[#E40067]" aria-hidden="true" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E40067]">Promo Grupos · solo 24 y 25/10</p>
+                <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">Vengan 4 o más y reciban 50% OFF.</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">En Pase por el Día o Festival + 1 noche en camping. Reserva conjunta y pago confirmados. No acumulable.</p>
+                <a href={FESTIVAL_OCTUBRE.contact.groupPromotion} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#004B43] underline decoration-[#E40067] decoration-2 underline-offset-4">Consultar promo <ArrowRight size={15} aria-hidden="true" /></a>
+              </article>
+              <article className="relative overflow-hidden rounded-[1.75rem] border border-[#FF9F1C]/30 bg-[#FFF1C7] p-6 text-left shadow-[0_16px_38px_rgba(31,41,34,0.08)] md:p-7">
+                <span className="absolute inset-x-0 top-0 h-1.5 bg-[#FF9F1C]" aria-hidden="true" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8B5A23]">Plan Familias</p>
+                <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">Niñas y niños de 0 a 12 entran gratis.</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">Siempre acompañados por una persona adulta. Comidas, alojamiento y experiencias con costo se reservan aparte.</p>
+                <a href={FESTIVAL_OCTUBRE.contact.familyPlan} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#004B43] underline decoration-[#FF9F1C] decoration-2 underline-offset-4">Consultar plan familiar <ArrowRight size={15} aria-hidden="true" /></a>
+              </article>
+            </div>
             <p className="mb-5 text-center text-xs leading-relaxed text-[#16423D]/55 md:text-sm"><span className="font-semibold">Empezá por la experiencia recomendada</span> y deslizá o usá las flechas para comparar.</p>
             <div id="festival-access-options">
               <HorizontalCardRail
@@ -899,6 +921,7 @@ const FestivalOctubre: React.FC = () => {
                 ))}
               </ul>
             </article>
+            <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-[#16423D]/55">{FESTIVAL_OCTUBRE.bookingDeadline}</p>
           </div>
         </section>
 
@@ -921,14 +944,14 @@ const FestivalOctubre: React.FC = () => {
                   Icon: Sparkles,
                   title: 'Para venir como sos',
                   text: 'Si querés salir de la rutina, bailar al aire libre, bajar un cambio o compartir un día diferente en la montaña, este encuentro es para vos.',
-                  items: ['Personas que vienen solas, en pareja o con amigos', 'Quienes buscan música y naturaleza sin formato rígido', 'Familias: niños y niñas son bienvenidos', 'Sin experiencia previa en las actividades'],
+                  items: ['Personas que vienen solas, en pareja o con amigos', 'Quienes buscan música y naturaleza sin formato rígido', 'Familias: niñas y niños de 0 a 12 entran gratis', 'Sin experiencia previa en las actividades'],
                   tone: 'green',
                 },
                 {
                   Icon: Leaf,
                   title: 'Para elegir tu propio ritmo',
                   text: 'Podés venir solamente el sábado o transformar la celebración en un fin de semana completo, con camping o habitación compartida.',
-                  items: ['Pase por el día para vivir la jornada central', 'Una o dos noches para quedarse en Pueblo Mágico', 'Actividades abiertas para elegir libremente', 'Temazcal opcional con inscripción y cupo propios'],
+                  items: ['AcroYoga para familias y ronda de percusión', 'Exploración de naturaleza y espacio creativo con materiales naturales', 'Fogón familiar temprano', 'Actividades generales para niñas, niños y toda la familia'],
                   tone: 'gold',
                 },
               ].map(({ Icon, title, text, items, tone }) => (
@@ -1022,6 +1045,7 @@ const FestivalOctubre: React.FC = () => {
             <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.32em] text-[#FFD166]">Movimiento · Conexión · Naturaleza · Montaña</p>
             <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-7xl">Sé parte del ritual.<br />Celebrá en la montaña.</h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/75">Música, naturaleza y buena compañía. Quedate a vivir el fin de semana completo o elegí el Pase por el Día si solamente podés venir el sábado.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-sm font-semibold text-[#FFD166]">Evento para toda la familia · niñas y niños de 0 a 12 años entran gratis.</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <FestivalButton href="#entradas">Elegir mi estadía</FestivalButton>
               <a href={FESTIVAL_OCTUBRE.contact.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/35 px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"><Instagram size={16} aria-hidden="true" />Seguir novedades</a>

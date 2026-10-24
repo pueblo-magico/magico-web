@@ -40,3 +40,13 @@ test('keeps practical purchase information visible before the FAQ', () => {
   assert.match(pageSource, /Consultar viaje compartido/);
   assert.doesNotMatch(pageSource, /camping, habitación o Domo/);
 });
+
+test('publishes only the confirmed public promotions and family conditions', () => {
+  assert.match(pageSource, /Promo Grupos · solo 24 y 25\/10/);
+  assert.match(pageSource, /Vengan 4 o más y reciban 50% OFF/);
+  assert.match(pageSource, /Niñas y niños de 0 a 12 entran gratis/);
+  assert.match(pageSource, /El 10% de lo recaudado por Raíz Sonora/);
+  assert.match(dataSource, /Reservas online hasta el 30\/10\/2026 a las 18:00/);
+  assert.doesNotMatch(`${dataSource}\n${pageSource}`, /50% off para una persona/i);
+  assert.doesNotMatch(`${dataSource}\n${pageSource}`, /máximo 10/i);
+});
