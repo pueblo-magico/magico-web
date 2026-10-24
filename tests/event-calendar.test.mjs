@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   getEventCalendarDateKey,
   shouldShowMainCalendarEvent,
+  shouldShowUpcomingEvent,
 } from '../src/utils/eventCalendar.ts';
 
 test('calendar hides events only after their final day', () => {
@@ -24,6 +25,16 @@ test('calendar still respects cards explicitly hidden from the main calendar', (
     shouldShowMainCalendarEvent({ showInMainEvents: false, endDate: '2026-12-31' }, '2026-10-21'),
     false,
   );
+});
+
+test('upcoming-event checks do not inherit homepage visibility', () => {
+  const reforestationCall = {
+    showInMainEvents: false,
+    endDate: '2026-11-08',
+  };
+
+  assert.equal(shouldShowUpcomingEvent(reforestationCall, '2026-10-23'), true);
+  assert.equal(shouldShowMainCalendarEvent(reforestationCall, '2026-10-23'), false);
 });
 
 test('calendar day uses the event location timezone', () => {
