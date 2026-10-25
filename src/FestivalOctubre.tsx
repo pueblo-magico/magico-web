@@ -719,6 +719,14 @@ const FestivalOctubre: React.FC = () => {
           </a>
         </section>
 
+        <section id="promo-grupos" className="relative overflow-hidden bg-[#FFF0F5] px-6 py-12 md:px-10 md:py-16" aria-label="Promoción para grupos">
+          <div className="pointer-events-none absolute -left-20 top-0 h-56 w-56 rounded-full bg-[#E40067]/10 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-[#FF9F1C]/15 blur-3xl" aria-hidden="true" />
+          <div className="relative mx-auto max-w-7xl">
+            <GroupPromotionCard />
+          </div>
+        </section>
+
         <section id="propuesta" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 text-[#003630] md:px-10 md:py-28">
           <TopographicLines className="pointer-events-none absolute -left-28 top-4 h-80 w-[38rem] text-[#E40067]/16" />
           <SunRings className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] text-[#FF5A1F]/16" />
