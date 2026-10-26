@@ -20,6 +20,7 @@ import { ROUTES } from './src/routes.js';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
 const AulaVerdeTravel360 = lazy(() => import('./src/AulaVerdeTravel360'));
+const AulaVerdeSalvadorMazza = lazy(() => import('./src/AulaVerdeSalvadorMazza'));
 const OrganizamosTuExperiencia = lazy(() => import('./src/OrganizamosTuExperiencia'));
 const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
 const PachamamaFest = lazy(() => import('./src/PachamamaFest'));
@@ -41,7 +42,7 @@ const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
 
-if (!['/aulas-verdes-360-travel', '/aulas-verdes-travel-360'].some(path => window.location.pathname.startsWith(path))) {
+if (!['/aulas-verdes-360-travel', '/aulas-verdes-travel-360', '/aulas-verdes-729-salvador-mazza'].some(path => window.location.pathname.startsWith(path))) {
   injectContentsquareScript({ clientId: '91718b26f9ef8' });
 }
 
@@ -99,6 +100,7 @@ root.render(
               <Route path="/gondorbows" element={<Gondorbows />} />
               <Route path="/escuelas" element={<AulaVerde />} />
               <Route path="/aulas-verdes-360-travel" element={<AulaVerdeTravel360 />} />
+              <Route path="/aulas-verdes-729-salvador-mazza" element={<AulaVerdeSalvadorMazza />} />
               <Route path="/aulas-verdes-travel-360" element={<Navigate to="/aulas-verdes-360-travel" replace />} />
               <Route path="/achala-viva" element={<AchalaViva />} />
               <Route path="/el-vuelo-del-condor" element={<VueloDelCondor />} />
