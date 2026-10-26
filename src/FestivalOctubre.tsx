@@ -206,12 +206,7 @@ const faqs = [
   {
     Icon: UsersRound,
     question: '¿Puedo venir con niños o niñas?',
-    answer: 'Sí. Niñas y niños de 0 a 12 años entran gratis y deben permanecer acompañados por una persona adulta responsable. Su lugar cuenta para la capacidad del alojamiento. Comidas, Temazcal y otros extras con costo se reservan aparte. El ingreso infantil gratuito puede combinarse con la Promo Grupos aplicada a las personas adultas que pagan.',
-  },
-  {
-    Icon: UsersRound,
-    question: '¿Cómo funciona la Promo Grupos?',
-    answer: 'Reservando juntos 4 o más adultos durante el 24 o 25 de octubre reciben 50% off en Pase por el Día o Festival + 1 noche en camping. Niñas y niños de 0 a 12 años no cuentan para alcanzar los cuatro adultos. La promo está sujeta a disponibilidad, no se acumula con vouchers de invitación u otros descuentos y queda asegurada únicamente con el pago confirmado.',
+    answer: 'Sí. Niñas y niños de hasta 12 años entran gratis y deben permanecer acompañados por una persona adulta responsable. Su lugar cuenta para la capacidad del alojamiento. Comidas, Temazcal y otros extras con costo se reservan aparte.',
   },
   {
     Icon: Flame,
@@ -231,7 +226,6 @@ const faqs = [
 ];
 
 const EVENT_START = new Date('2026-10-31T12:00:00-03:00').getTime();
-const GROUP_PROMOTION_END = new Date('2026-10-26T00:00:00-03:00').getTime();
 
 const Countdown = () => {
   const [remaining, setRemaining] = useState(() => Math.max(0, EVENT_START - Date.now()));
@@ -258,54 +252,6 @@ const Countdown = () => {
         </div>
       ))}
     </div>
-  );
-};
-
-const GroupPromotionCard = () => {
-  const [remaining, setRemaining] = useState(() => Math.max(0, GROUP_PROMOTION_END - Date.now()));
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setRemaining(Math.max(0, GROUP_PROMOTION_END - Date.now())), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  const totalSeconds = Math.floor(remaining / 1000);
-  const units = [
-    ['Días', Math.floor(totalSeconds / 86400)],
-    ['Horas', Math.floor((totalSeconds % 86400) / 3600)],
-    ['Min', Math.floor((totalSeconds % 3600) / 60)],
-    ['Seg', totalSeconds % 60],
-  ] as const;
-
-  return (
-    <article className="relative overflow-hidden rounded-[1.75rem] border border-[#E40067]/25 bg-[#FFE3EF] p-6 text-left shadow-[0_16px_38px_rgba(72,42,60,0.08)] md:p-7">
-      <span className="absolute inset-x-0 top-0 h-1.5 bg-[#E40067]" aria-hidden="true" />
-      {remaining > 0 ? (
-        <>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E40067]">Promo Grupos · hasta el 25/10 inclusive</p>
-          <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">Vengan 4 o más y reciban 50% OFF.</h3>
-          <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">En Pase por el Día o Festival + 1 noche en camping. Reserva conjunta y pago confirmados. No acumulable.</p>
-          <div className="mt-5 rounded-2xl border border-[#E40067]/15 bg-white/60 p-4">
-            <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#8D315A]">La promoción termina en</p>
-            <div className="grid grid-cols-4 gap-2" role="timer" aria-label="Tiempo restante de la Promo Grupos">
-              {units.map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-white/80 px-1.5 py-2.5 text-center shadow-sm">
-                  <span className="block text-xl leading-none text-[#003630] serif-title md:text-2xl">{String(value).padStart(2, '0')}</span>
-                  <span className="mt-1.5 block text-[7px] font-bold uppercase tracking-[0.12em] text-[#16423D]/55">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <a href={FESTIVAL_OCTUBRE.contact.groupPromotion} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#004B43] underline decoration-[#E40067] decoration-2 underline-offset-4">Consultar promo <ArrowRight size={15} aria-hidden="true" /></a>
-        </>
-      ) : (
-        <>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E40067]">Promo Grupos · finalizada</p>
-          <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">La promoción estuvo disponible hasta el 25/10.</h3>
-          <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">Podés revisar las modalidades vigentes y elegir la que mejor se adapte a tu estadía.</p>
-        </>
-      )}
-    </article>
   );
 };
 
@@ -719,14 +665,6 @@ const FestivalOctubre: React.FC = () => {
           </a>
         </section>
 
-        <section id="promo-grupos" className="relative overflow-hidden bg-[#FFF0F5] px-6 py-12 md:px-10 md:py-16" aria-label="Promoción para grupos">
-          <div className="pointer-events-none absolute -left-20 top-0 h-56 w-56 rounded-full bg-[#E40067]/10 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute -right-20 bottom-0 h-56 w-56 rounded-full bg-[#FF9F1C]/15 blur-3xl" aria-hidden="true" />
-          <div className="relative mx-auto max-w-7xl">
-            <GroupPromotionCard />
-          </div>
-        </section>
-
         <section id="propuesta" className="relative overflow-hidden bg-[#FFF6E3] px-6 py-20 text-[#003630] md:px-10 md:py-28">
           <TopographicLines className="pointer-events-none absolute -left-28 top-4 h-80 w-[38rem] text-[#E40067]/16" />
           <SunRings className="pointer-events-none absolute -bottom-40 -right-40 h-[30rem] w-[30rem] text-[#FF5A1F]/16" />
@@ -952,12 +890,11 @@ const FestivalOctubre: React.FC = () => {
                 <p className="mt-2 text-sm leading-relaxed text-[#16423D]/70">Comidas, bebidas y Temazcal. Las modalidades con alojamiento sí incluyen desayuno.</p>
               </div>
             </div>
-            <div className="mx-auto mb-8 grid max-w-5xl gap-4 md:grid-cols-2" data-reveal data-delay="1">
-              <GroupPromotionCard />
+            <div className="mx-auto mb-8 max-w-2xl" data-reveal data-delay="1">
               <article className="relative overflow-hidden rounded-[1.75rem] border border-[#FF9F1C]/30 bg-[#FFF1C7] p-6 text-left shadow-[0_16px_38px_rgba(31,41,34,0.08)] md:p-7">
                 <span className="absolute inset-x-0 top-0 h-1.5 bg-[#FF9F1C]" aria-hidden="true" />
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8B5A23]">Plan Familias</p>
-                <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">Niñas y niños de 0 a 12 entran gratis.</h3>
+                <h3 className="mt-3 text-2xl leading-tight text-[#003630] serif-title">Niñas y niños de hasta 12 años entran gratis.</h3>
                 <p className="mt-3 text-sm leading-relaxed text-[#16423D]/70">Siempre acompañados por una persona adulta. Comidas, alojamiento y experiencias con costo se reservan aparte.</p>
                 <a href={FESTIVAL_OCTUBRE.contact.familyPlan} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#004B43] underline decoration-[#FF9F1C] decoration-2 underline-offset-4">Consultar plan familiar <ArrowRight size={15} aria-hidden="true" /></a>
               </article>
@@ -1014,7 +951,7 @@ const FestivalOctubre: React.FC = () => {
                   Icon: Sparkles,
                   title: 'Para venir como sos',
                   text: 'Si querés salir de la rutina, bailar al aire libre, bajar un cambio o compartir un día diferente en la montaña, este encuentro es para vos.',
-                  items: ['Personas que vienen solas, en pareja o con amigos', 'Quienes buscan música y naturaleza sin formato rígido', 'Familias: niñas y niños de 0 a 12 entran gratis', 'Sin experiencia previa en las actividades'],
+                  items: ['Personas que vienen solas, en pareja o con amigos', 'Quienes buscan música y naturaleza sin formato rígido', 'Familias: niñas y niños de hasta 12 años entran gratis', 'Sin experiencia previa en las actividades'],
                   tone: 'green',
                 },
                 {
@@ -1115,7 +1052,7 @@ const FestivalOctubre: React.FC = () => {
             <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.32em] text-[#FFD166]">Movimiento · Conexión · Naturaleza · Montaña</p>
             <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-7xl">Sé parte del ritual.<br />Celebrá en la montaña.</h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/75">Música, naturaleza y buena compañía. Quedate a vivir el fin de semana completo o elegí el Pase por el Día si solamente podés venir el sábado.</p>
-            <p className="mx-auto mt-4 max-w-2xl text-sm font-semibold text-[#FFD166]">Evento para toda la familia · niñas y niños de 0 a 12 años entran gratis.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-sm font-semibold text-[#FFD166]">Evento para toda la familia · niñas y niños de hasta 12 años entran gratis.</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <FestivalButton href="#entradas">Elegir mi estadía</FestivalButton>
               <a href={FESTIVAL_OCTUBRE.contact.instagram} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/35 px-6 py-3 text-xs font-bold uppercase tracking-[0.13em] transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"><Instagram size={16} aria-hidden="true" />Seguir novedades</a>

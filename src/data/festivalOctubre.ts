@@ -35,7 +35,6 @@ export const FESTIVAL_OCTUBRE = {
     festivalNight: whatsapp('¡Hola! Quiero reservar Raíz Sonora con una noche. Somos ___ personas. ¿Qué opciones quedan disponibles?'),
     weekend: whatsapp('¡Hola! Quiero reservar Raíz Sonora con dos noches, del viernes 30 de octubre al domingo 1 de noviembre de 2026. Somos ___ personas. ¿Hay disponibilidad?'),
     sharedRide: whatsapp('¡Hola! Voy a Raíz Sonora y quiero consultar si hay otras personas interesadas en compartir viaje.'),
-    groupPromotion: whatsapp('¡Hola! Quiero consultar la Promo Grupos de Raíz Sonora para 4 o más personas adultas. Somos ___ adultos y ___ niñas/os. Nos interesa ___ (Pase por el Día / Festival + 1 noche en camping).'),
     familyPlan: whatsapp('¡Hola! Quiero reservar Raíz Sonora con el Plan Familias. Somos ___ personas adultas y ___ niñas/os de 0 a 12 años. Nos interesa ___.'),
     instagram: SOCIAL_LINKS.instagram,
   },
