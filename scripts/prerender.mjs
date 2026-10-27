@@ -119,6 +119,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/sunset-y-rio',
   },
   {
+    path: '/brote-ronda-de-mujeres',
+    title: 'BROTE · Ronda de Mujeres, Ciclo Primavera | Pueblo Mágico',
+    description: 'BROTE, Ronda de Mujeres — Ciclo Primavera. Del 6 al 8 de noviembre de 2026 en Los Gigantes, Córdoba. Movimiento, canto, fuego, agua, círculo y naturaleza.',
+    image: 'https://experienciamagico.com/uploads/Ciclo%20Femenino/Mujeres%20meditando%20en%20circulo%20acostadas.jpeg',
+    canonical: 'https://experienciamagico.com/brote-ronda-de-mujeres',
+  },
+  {
     path: '/festival-raiz-sonora',
     title: 'Raíz Sonora · 31 de octubre | Pueblo Mágico',
     description: 'Cuatro artistas y ocho horas de música electrónica, house, trance y tambores, con Jam de AcroYoga, naturaleza y encuentro en Los Gigantes.',
@@ -243,6 +250,22 @@ console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
 
 // ─── Per-route JSON-LD builder ───────────────────────────────────────────────
 function buildJsonLD(route) {
+  if (route.path === '/brote-ronda-de-mujeres') {
+    return `<script id="brote-event-schema" type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: 'BROTE — Ronda de Mujeres, Ciclo Primavera',
+      description: route.description,
+      startDate: '2026-11-06',
+      endDate: '2026-11-08',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type': 'Place', name: 'Los Gigantes, Córdoba', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
+      organizer: { '@type': 'Organization', name: 'Cuenca Lunar' },
+      url: route.canonical,
+      image: route.image,
+    })}</script>`;
+  }
   const base = {
     "@context": "https://schema.org",
     "@type": "TouristAttraction",

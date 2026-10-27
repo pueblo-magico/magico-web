@@ -956,6 +956,17 @@
           "isVolunariado": true
         },
         {
+          "date": "6–8 NOVIEMBRE 2026",
+          "startDate": "2026-11-06",
+          "endDate": "2026-11-08",
+          "title": "BROTE · Ronda de Mujeres · Ciclo Primavera",
+          "desc": "Tres días para conectar con la primavera y con lo que quiere brotar: círculo de mujeres, canto, danza, ceremonia de fuego, caminatas al río, ofrenda al agua y naturaleza en Los Gigantes, Córdoba.",
+          "btn": "Conocer el encuentro",
+          "image": "/uploads/brote/brote-primavera.svg",
+          "link": "/brote-ronda-de-mujeres",
+          "pdfLink": ""
+        },
+        {
           "date": "7-8 NOVIEMBRE 2026",
           "startDate": "2026-11-07",
           "endDate": "2026-11-08",
@@ -3722,6 +3733,17 @@
           "link": "/festival-raiz-sonora",
           "pdfLink": "",
           "isVolunariado": true
+        },
+        {
+          "date": "NOVEMBER 6–8, 2026",
+          "startDate": "2026-11-06",
+          "endDate": "2026-11-08",
+          "title": "BROTE · Women's Circle · Spring Gathering",
+          "desc": "A three-day women's gathering to reconnect with spring through singing, dance, fire ceremony, walks by the river, an offering to the water and connection with nature in Los Gigantes, Córdoba. Landing page in Spanish.",
+          "btn": "Explore the gathering",
+          "image": "/uploads/brote/brote-primavera.svg",
+          "link": "/brote-ronda-de-mujeres",
+          "pdfLink": ""
         },
         {
           "date": "NOV 7-8, 2026",
