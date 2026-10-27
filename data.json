@@ -4,26 +4,93 @@
       "title": "Organizaciones ambientales aliadas",
       "note": "Con Acción Ambiental ya cerramos un acuerdo de trabajo conjunto. Bosques de Agua y Acción Serrana aportan conocimiento técnico y experiencia territorial según cada intervención.",
       "items": [
-        {"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Conservación del ambiente: difusión, educación y acción ambiental en la provincia de Córdoba."},
-        {"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restauran el bosque nativo de altura y las cuencas hídricas de las Sierras Grandes."},
-        {"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regeneran los bosques de altura y sus nacientes de agua junto a las comunidades locales."},
-        {"name":"Consciencia Nativa","text":"Provee los árboles nativos de la campaña de reforestación."}
+        {
+          "name": "Acción Ambiental",
+          "url": "https://accionambiental.org.ar/",
+          "logo": "/uploads/aliados/accion-ambiental.png",
+          "text": "Conservación del ambiente: difusión, educación y acción ambiental en la provincia de Córdoba."
+        },
+        {
+          "name": "Bosques de Agua",
+          "url": "https://bosquesdeagua.ar/",
+          "logo": "/uploads/aliados/bosques-de-agua.webp",
+          "text": "Restauran el bosque nativo de altura y las cuencas hídricas de las Sierras Grandes."
+        },
+        {
+          "name": "Acción Serrana",
+          "url": "https://www.accionserrana.com/",
+          "logo": "/uploads/aliados/accion-serrana.png",
+          "text": "Regeneran los bosques de altura y sus nacientes de agua junto a las comunidades locales."
+        },
+        {
+          "name": "Consciencia Nativa",
+          "text": "Provee los árboles nativos de la campaña de reforestación."
+        }
       ]
     },
     "practicas": {
       "title": "La regeneración también está en la operación diaria",
       "items": [
-        {"title":"Energía solar casi al 100%","text":"El generador solo se usa en emergencias o en días muy nublados."},
-        {"title":"Baños secos","text":"No usan ni contaminan agua: cuidamos las nacientes de los arroyos serranos."},
-        {"title":"Compost","text":"Los residuos orgánicos y de los baños secos vuelven al suelo como abono."}
+        {
+          "title": "Energía solar casi al 100%",
+          "text": "El generador solo se usa en emergencias o en días muy nublados."
+        },
+        {
+          "title": "Baños secos",
+          "text": "No usan ni contaminan agua: cuidamos las nacientes de los arroyos serranos."
+        },
+        {
+          "title": "Compost",
+          "text": "Los residuos orgánicos y de los baños secos vuelven al suelo como abono."
+        }
       ]
     },
     "booking": {
       "months": [
-        { "label": "Octubre", "short": "Oct" }, { "label": "Noviembre", "short": "Nov" }, { "label": "Diciembre", "short": "Dic" }, { "label": "Enero", "short": "Ene" }, { "label": "Febrero", "short": "Feb" }
+        {
+          "label": "Octubre",
+          "short": "Oct"
+        },
+        {
+          "label": "Noviembre",
+          "short": "Nov"
+        },
+        {
+          "label": "Diciembre",
+          "short": "Dic"
+        },
+        {
+          "label": "Enero",
+          "short": "Ene"
+        },
+        {
+          "label": "Febrero",
+          "short": "Feb"
+        }
       ],
-      "dayNames": ["L", "M", "X", "J", "V", "S", "D"],
-      "monthAbbr": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+      "dayNames": [
+        "L",
+        "M",
+        "X",
+        "J",
+        "V",
+        "S",
+        "D"
+      ],
+      "monthAbbr": [
+        "ene",
+        "feb",
+        "mar",
+        "abr",
+        "may",
+        "jun",
+        "jul",
+        "ago",
+        "sep",
+        "oct",
+        "nov",
+        "dic"
+      ],
       "selectDates": "Seleccioná tus fechas",
       "arrival": "Llegada",
       "departure": "Salida",
@@ -44,7 +111,15 @@
       "roomType": "Tipo de habitación",
       "sharedRoom": "Compartida",
       "privateRoom": "Privada",
-      "mealPlan": "Comidas", "mealBreakfast": "Con desayuno", "mealFullBoard": "Pensión completa", "mealBreakfastNote": "Alojamiento + desayuno. Almuerzo o cena se suman aparte (+$20.000 c/u).", "mealFullBoardNote": "Desayuno, almuerzo y cena incluidos — precio total cerrado por persona/noche.", "weekendNote": "🌙 Viernes y sábado se reservan solo con pensión completa: esas noches ya incluyen desayuno, almuerzo y cena.", "weekendRegimenSuffix": " (viernes y sábado con pensión completa)", "nightsAt": "{nights} a {precio}", "privateDomoNote": "Domo privado: de 2 a 7 personas ($50.000 por persona/noche con desayuno)",
+      "mealPlan": "Comidas",
+      "mealBreakfast": "Con desayuno",
+      "mealFullBoard": "Pensión completa",
+      "mealBreakfastNote": "Alojamiento + desayuno. Almuerzo o cena se suman aparte (+$20.000 c/u).",
+      "mealFullBoardNote": "Desayuno, almuerzo y cena incluidos — precio total cerrado por persona/noche.",
+      "weekendNote": "🌙 Viernes y sábado se reservan solo con pensión completa: esas noches ya incluyen desayuno, almuerzo y cena.",
+      "weekendRegimenSuffix": " (viernes y sábado con pensión completa)",
+      "nightsAt": "{nights} a {precio}",
+      "privateDomoNote": "Domo privado: de 2 a 7 personas ($50.000 por persona/noche con desayuno)",
       "retiroNote": "🗓️ Los fines de semana puede haber retiros o eventos en los domos — consultanos disponibilidad: te confirmamos por WhatsApp si hay lugar antes de cerrar la reserva.",
       "unavailableForDates": "Esa opción no tiene lugar en las fechas que elegiste — probá con otras fechas.",
       "capacityExceeded": "El {tipo} tiene capacidad para hasta {max} personas — para grupos más grandes, escribinos por WhatsApp.",
@@ -73,12 +148,36 @@
       "title": "En qué estamos trabajando ahora",
       "intro": "Lo que ya hacemos está a la vista: +25.000 árboles nativos plantados, 200 hectáreas cuidadas, energía solar casi al 100% y baños secos. Ahora estamos construyendo las herramientas para que ese impacto pueda verificarse desde afuera.",
       "items": [
-        { "status": "En implementación", "title": "Registro georreferenciado de cada árbol", "text": "Cada plantación quedará registrada con punto GPS, especie, cantidad, fecha, foto, zona y quién plantó (empresa, escuela o voluntarios). Lo estamos implementando para la temporada de plantación 2026–2027, que arranca con las jornadas de noviembre, y estamos mapeando las zonas ya reforestadas." },
-        { "status": "En proceso", "title": "Monitoreo satelital público", "text": "Estamos registrando nuestras áreas de restauración en Restor, una plataforma científica abierta con imágenes satelitales, para que empresas y donantes puedan seguir la evolución del territorio." },
-        { "status": "En gestión", "title": "Validación universitaria", "text": "Estamos gestionando convenios con la Universidad Nacional de Córdoba y la Universidad Empresarial Siglo 21 para medir cada año la supervivencia de los árboles plantados." },
-        { "status": "En postulación", "title": "Conservación voluntaria de las 200 ha", "text": "Estamos tramitando nuestra incorporación a la Red Argentina de Reservas Naturales Privadas y al programa Refugios de Vida Silvestre de Fundación Vida Silvestre." },
-        { "status": "En evaluación", "title": "Ley de Bosques Nativos", "text": "Estamos evaluando con la Secretaría de Ambiente de Córdoba la incorporación de nuestro bosque nativo de tabaquillos al programa de Pago por Servicios Ambientales (Ley 26.331)." },
-        { "status": "En curso", "title": "Diagnóstico de impacto", "text": "Estamos completando la Evaluación de Impacto B de Sistema B para medir y mejorar nuestra gestión de energía, residuos, agua, equipo y comunidad." }
+        {
+          "status": "En implementación",
+          "title": "Registro georreferenciado de cada árbol",
+          "text": "Cada plantación quedará registrada con punto GPS, especie, cantidad, fecha, foto, zona y quién plantó (empresa, escuela o voluntarios). Lo estamos implementando para la temporada de plantación 2026–2027, que arranca con las jornadas de noviembre, y estamos mapeando las zonas ya reforestadas."
+        },
+        {
+          "status": "En proceso",
+          "title": "Monitoreo satelital público",
+          "text": "Estamos registrando nuestras áreas de restauración en Restor, una plataforma científica abierta con imágenes satelitales, para que empresas y donantes puedan seguir la evolución del territorio."
+        },
+        {
+          "status": "En gestión",
+          "title": "Validación universitaria",
+          "text": "Estamos gestionando convenios con la Universidad Nacional de Córdoba y la Universidad Empresarial Siglo 21 para medir cada año la supervivencia de los árboles plantados."
+        },
+        {
+          "status": "En postulación",
+          "title": "Conservación voluntaria de las 200 ha",
+          "text": "Estamos tramitando nuestra incorporación a la Red Argentina de Reservas Naturales Privadas y al programa Refugios de Vida Silvestre de Fundación Vida Silvestre."
+        },
+        {
+          "status": "En evaluación",
+          "title": "Ley de Bosques Nativos",
+          "text": "Estamos evaluando con la Secretaría de Ambiente de Córdoba la incorporación de nuestro bosque nativo de tabaquillos al programa de Pago por Servicios Ambientales (Ley 26.331)."
+        },
+        {
+          "status": "En curso",
+          "title": "Diagnóstico de impacto",
+          "text": "Estamos completando la Evaluación de Impacto B de Sistema B para medir y mejorar nuestra gestión de energía, residuos, agua, equipo y comunidad."
+        }
       ],
       "closing": "Vamos a compartir cada avance a medida que se concrete."
     },
@@ -148,9 +247,27 @@
         "title": "Raíces para el futuro de la montaña",
         "description": "La nueva meta continúa un trabajo sostenido de restauración junto a organizaciones ambientales de la región. Los árboles nativos de esta campaña se compran a Consciencia Nativa.",
         "stats": [
-          { "value": "+25.000", "label": "árboles nativos plantados", "description": "El recorrido acumulado que impulsa esta nueva etapa.", "href": "#mapas", "action": "Ver áreas reforestadas" },
-          { "value": "+10.000", "label": "nuevos árboles", "description": "La meta de plantación de esta campaña.", "href": "#mapas", "action": "Conocer áreas previstas" },
-          { "value": "Comunidad", "label": "en acción", "description": "Organizaciones, voluntariado y personas unidas por la montaña.", "href": "/voluntariado#convocatorias", "action": "Sumarme como voluntario" }
+          {
+            "value": "+25.000",
+            "label": "árboles nativos plantados",
+            "description": "El recorrido acumulado que impulsa esta nueva etapa.",
+            "href": "#mapas",
+            "action": "Ver áreas reforestadas"
+          },
+          {
+            "value": "+10.000",
+            "label": "nuevos árboles",
+            "description": "La meta de plantación de esta campaña.",
+            "href": "#mapas",
+            "action": "Conocer áreas previstas"
+          },
+          {
+            "value": "Comunidad",
+            "label": "en acción",
+            "description": "Organizaciones, voluntariado y personas unidas por la montaña.",
+            "href": "/voluntariado#convocatorias",
+            "action": "Sumarme como voluntario"
+          }
         ]
       },
       "funding": {
@@ -213,16 +330,52 @@
             "description": "La mayoría de los árboles ya se encuentra en el proyecto. Mientras continúa la recaudación de la seña, avanzamos con su selección y conteo antes de iniciar los primeros cuidados.",
             "plannedDate": "Hasta 30/10/2026",
             "steps": [
-              { "title": "Pago de la seña", "status": "En recaudación", "state": "active" },
-              { "title": "Recepción de los arbolitos", "status": "Mayoría recibida", "state": "completed" },
-              { "title": "Selección y conteo", "status": "En curso", "state": "active" },
-              { "title": "Sanitización, poda y nutrición inicial", "status": "Siguiente tarea", "state": "upcoming" }
+              {
+                "title": "Pago de la seña",
+                "status": "En recaudación",
+                "state": "active"
+              },
+              {
+                "title": "Recepción de los arbolitos",
+                "status": "Mayoría recibida",
+                "state": "completed"
+              },
+              {
+                "title": "Selección y conteo",
+                "status": "En curso",
+                "state": "active"
+              },
+              {
+                "title": "Sanitización, poda y nutrición inicial",
+                "status": "Siguiente tarea",
+                "state": "upcoming"
+              }
             ],
             "photos": [
-              { "src": "/uploads/reforestacion/arboles-recibidos-04.webp", "alt": "Primer plano de arbolitos nativos recibidos", "caption": "Árboles a la espera de sanitización, poda y nutrición inicial.", "type": "image" },
-              { "src": "/uploads/reforestacion/arboles-recibidos-video.mov", "alt": "Video de los árboles nativos que ya llegaron al proyecto", "caption": "Registro en video de los árboles que ya se encuentran en el lugar.", "type": "video" },
-              { "src": "/uploads/reforestacion/arboles-recibidos-video-03.mp4", "alt": "Video del avance de la selección de árboles nativos", "caption": "Avance del proceso de selección y organización de los árboles.", "type": "video" },
-              { "src": "/uploads/reforestacion/arboles-recibidos-video-02.mp4", "alt": "Video del trabajo con los árboles nativos recibidos para la primera fase", "caption": "Nuevo registro del estado y cuidado de los árboles recibidos.", "type": "video" }
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-04.webp",
+                "alt": "Primer plano de arbolitos nativos recibidos",
+                "caption": "Árboles a la espera de sanitización, poda y nutrición inicial.",
+                "type": "image"
+              },
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-video.mov",
+                "alt": "Video de los árboles nativos que ya llegaron al proyecto",
+                "caption": "Registro en video de los árboles que ya se encuentran en el lugar.",
+                "type": "video"
+              },
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-video-03.mp4",
+                "alt": "Video del avance de la selección de árboles nativos",
+                "caption": "Avance del proceso de selección y organización de los árboles.",
+                "type": "video"
+              },
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-video-02.mp4",
+                "alt": "Video del trabajo con los árboles nativos recibidos para la primera fase",
+                "caption": "Nuevo registro del estado y cuidado de los árboles recibidos.",
+                "type": "video"
+              }
             ]
           },
           {
@@ -233,10 +386,26 @@
             "plannedDate": "Temporada de lluvias",
             "note": "Estas imágenes son alternativas conceptuales, no planos constructivos definitivos. La solución final se definirá según el terreno, la capacidad necesaria, los costos, el mantenimiento y la validación técnica.",
             "steps": [
-              { "title": "Identificar la ubicación", "status": "Pendiente", "state": "upcoming" },
-              { "title": "Definir el diseño concreto", "status": "Pendiente", "state": "upcoming" },
-              { "title": "Conseguir materiales, principalmente locales", "status": "Pendiente", "state": "upcoming" },
-              { "title": "Construir el vivero", "status": "Pendiente", "state": "upcoming" }
+              {
+                "title": "Identificar la ubicación",
+                "status": "Pendiente",
+                "state": "upcoming"
+              },
+              {
+                "title": "Definir el diseño concreto",
+                "status": "Pendiente",
+                "state": "upcoming"
+              },
+              {
+                "title": "Conseguir materiales, principalmente locales",
+                "status": "Pendiente",
+                "state": "upcoming"
+              },
+              {
+                "title": "Construir el vivero",
+                "status": "Pendiente",
+                "state": "upcoming"
+              }
             ],
             "photos": [
               {
@@ -286,10 +455,22 @@
         "title": "Del plantín al cuidado en territorio",
         "description": "Los fondos se aplicarán a las etapas necesarias para avanzar con la plantación y sostenerla. Publicaremos actualizaciones a medida que el proyecto avance.",
         "items": [
-          { "title": "Plantines nativos", "description": "Producción o adquisición de ejemplares adecuados para cada ambiente." },
-          { "title": "Preparación y protección", "description": "Materiales y tareas para preparar el terreno y proteger cada plantación." },
-          { "title": "Plantación y logística", "description": "Herramientas, traslados y jornadas de trabajo en la montaña." },
-          { "title": "Cuidado y seguimiento", "description": "Riego, monitoreo y reposición cuando las condiciones lo requieran." }
+          {
+            "title": "Plantines nativos",
+            "description": "Producción o adquisición de ejemplares adecuados para cada ambiente."
+          },
+          {
+            "title": "Preparación y protección",
+            "description": "Materiales y tareas para preparar el terreno y proteger cada plantación."
+          },
+          {
+            "title": "Plantación y logística",
+            "description": "Herramientas, traslados y jornadas de trabajo en la montaña."
+          },
+          {
+            "title": "Cuidado y seguimiento",
+            "description": "Riego, monitoreo y reposición cuando las condiciones lo requieran."
+          }
         ]
       },
       "community": {
@@ -308,7 +489,11 @@
         "eyebrow": "Manos a la tierra",
         "title": "Sumate a las jornadas de reforestación",
         "description": "Hay dos fines de semana confirmados para avanzar en la plantación de árboles nativos y compartir trabajo comunitario con campamento en la montaña.",
-        "items": ["Cuidado y preparación de los árboles", "Jornadas de plantación y protección", "Aprendizaje y trabajo comunitario en territorio"],
+        "items": [
+          "Cuidado y preparación de los árboles",
+          "Jornadas de plantación y protección",
+          "Aprendizaje y trabajo comunitario en territorio"
+        ],
         "cta": "Postularme como voluntario",
         "scheduleEyebrow": "Calendario de acción",
         "scheduleTitle": "Próximas jornadas",
@@ -324,8 +509,20 @@
         "title": "Dónde crece el bosque",
         "description": "Estos mapas muestran el área previamente reforestada y el sector definido para la próxima plantación de 10.000 árboles nativos.",
         "areas": [
-          { "status": "Reforestación realizada", "title": "Área reforestada · 9,42 ha", "description": "Sector donde ya se realizaron acciones de reforestación dentro del territorio de Pueblo Mágico.", "image": "/uploads/reforestacion/mapa-area-reforestada-9-42ha.webp", "imageAlt": "Mapa aéreo del área reforestada de 9,42 hectáreas en Pueblo Mágico" },
-          { "status": "Próxima intervención", "title": "Próximos 10.000 árboles", "description": "Sector definido para la próxima etapa de reforestación con 10.000 árboles nativos.", "image": "/uploads/reforestacion/mapa-proxima-reforestacion-10000-arboles.webp", "imageAlt": "Mapa aéreo del área prevista para reforestar con 10.000 árboles nativos" }
+          {
+            "status": "Reforestación realizada",
+            "title": "Área reforestada · 9,42 ha",
+            "description": "Sector donde ya se realizaron acciones de reforestación dentro del territorio de Pueblo Mágico.",
+            "image": "/uploads/reforestacion/mapa-area-reforestada-9-42ha.webp",
+            "imageAlt": "Mapa aéreo del área reforestada de 9,42 hectáreas en Pueblo Mágico"
+          },
+          {
+            "status": "Próxima intervención",
+            "title": "Próximos 10.000 árboles",
+            "description": "Sector definido para la próxima etapa de reforestación con 10.000 árboles nativos.",
+            "image": "/uploads/reforestacion/mapa-proxima-reforestacion-10000-arboles.webp",
+            "imageAlt": "Mapa aéreo del área prevista para reforestar con 10.000 árboles nativos"
+          }
         ],
         "note": "El área histórica de 9,42 ha surge del Informe Wayra Marka de diciembre de 2023. El sector de la próxima intervención fue señalado por el equipo de Pueblo Mágico y podrá ajustarse durante la planificación técnica."
       },
@@ -334,9 +531,18 @@
         "title": "Empresas que regeneran territorio",
         "description": "Las empresas y sus equipos pueden transformar sus objetivos de sustentabilidad en acciones concretas junto a Pueblo Mágico.",
         "items": [
-          { "title": "Financiar una etapa", "description": "Acompañar la compra de árboles, el vivero, la logística o una fase completa del proyecto." },
-          { "title": "Voluntariado corporativo", "description": "Crear jornadas de participación en territorio que conecten al equipo con la restauración ambiental." },
-          { "title": "Alianzas a largo plazo", "description": "Diseñar un programa de impacto, seguimiento y comunicación adaptado a los objetivos de la organización." }
+          {
+            "title": "Financiar una etapa",
+            "description": "Acompañar la compra de árboles, el vivero, la logística o una fase completa del proyecto."
+          },
+          {
+            "title": "Voluntariado corporativo",
+            "description": "Crear jornadas de participación en territorio que conecten al equipo con la restauración ambiental."
+          },
+          {
+            "title": "Alianzas a largo plazo",
+            "description": "Diseñar un programa de impacto, seguimiento y comunicación adaptado a los objetivos de la organización."
+          }
         ],
         "cta": "Conocé las propuestas para empresas",
         "contactCta": "Contactar directamente",
@@ -480,7 +686,7 @@
           "El 100% de lo que pagás vuelve como voucher para cualquier experiencia o estadía en Pueblo Mágico.",
           "Voucher válido por 6 meses."
         ],
-                "stepsTitle": "Cómo obtenerlo",
+        "stepsTitle": "Cómo obtenerlo",
         "steps": [
           "Transferí $30.000 o $50.000 al alias de la campaña.",
           "Mandanos el comprobante por WhatsApp.",
@@ -554,7 +760,11 @@
         "legalNote": "Aporte voluntario destinado a la campaña de reforestación. El voucher solidario y el aporte libre financian la misma campaña. Conservá tu comprobante de transferencia. No envíes fondos a ningún dato marcado como ejemplo.",
         "treePrice": "Cada árbol nativo cuesta $1.500.",
         "amountsTitle": "Elegí un monto",
-        "amounts": [15000,30000,75000],
+        "amounts": [
+          15000,
+          30000,
+          75000
+        ],
         "treesLabel": "{trees} árboles",
         "otherAmount": "Otro monto"
       },
@@ -574,11 +784,11 @@
       "title": "Diseñá tu <span class='italic text-gold'>Experiencia</span>",
       "intro_p1": "En Pueblo Mágico, <strong class='text-brand font-medium'>lo básico es extraordinario</strong>. Tu estadía siempre incluye <strong class='text-[#8B6914] font-medium'>Alojamiento, Pensión Completa y la experiencia Reset Vital</strong>. Descubrí la calma profunda de habitar la montaña durante la semana, el ritmo perfecto para el enfoque, la creatividad y la presencia.",
       "intro_p2": "Ya recibimos viajeros de todo el mundo. Somos el destino ideal para quienes buscan un <b>Coworking con alma</b> o un retiro personal autoguiado: el <b>Reset Vital</b>.",
-      "badge_accommodation": "Alojamiento", 
+      "badge_accommodation": "Alojamiento",
       "personalizeStay": "PERSONALIZÁ TU ESTADÍA",
       "coworkingBadge": "Coworking & Coliving",
       "card_extra_text": "También podés solo alojarte si querés — desde $20.000/persona/noche con desayuno, en carpa, Refugio de Piedra o domo compartido. Sumá almuerzo, cena o pensión completa a tu gusto.",
-      "btn": "RESERVAR MI LUGAR", 
+      "btn": "RESERVAR MI LUGAR",
       "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
       "cards": [
         {
@@ -670,17 +880,50 @@
         "pageTitle": "Voluntariados",
         "parent": "Nosotros",
         "sections": [
-          { "id": "programa", "label": "El programa" },
-          { "id": "modalidades", "label": "Modalidades" },
-          { "id": "intercambio", "label": "Intercambio" },
-          { "id": "areas", "label": "Áreas" },
-          { "id": "un-dia", "label": "Un día en Mágico" },
-          { "id": "organizacion", "label": "Organización" },
-          { "id": "convivencia", "label": "Convivencia" },
-          { "id": "testimonios-voluntarios", "label": "Testimonios" },
-          { "id": "como-sumarte", "label": "Cómo sumarte" },
-          { "id": "convocatorias", "label": "Convocatorias" },
-          { "id": "preguntas", "label": "Preguntas" }
+          {
+            "id": "programa",
+            "label": "El programa"
+          },
+          {
+            "id": "modalidades",
+            "label": "Modalidades"
+          },
+          {
+            "id": "intercambio",
+            "label": "Intercambio"
+          },
+          {
+            "id": "areas",
+            "label": "Áreas"
+          },
+          {
+            "id": "un-dia",
+            "label": "Un día en Mágico"
+          },
+          {
+            "id": "organizacion",
+            "label": "Organización"
+          },
+          {
+            "id": "convivencia",
+            "label": "Convivencia"
+          },
+          {
+            "id": "testimonios-voluntarios",
+            "label": "Testimonios"
+          },
+          {
+            "id": "como-sumarte",
+            "label": "Cómo sumarte"
+          },
+          {
+            "id": "convocatorias",
+            "label": "Convocatorias"
+          },
+          {
+            "id": "preguntas",
+            "label": "Preguntas"
+          }
         ]
       },
       "hero": {
@@ -712,11 +955,31 @@
           "title": "Otras formas de ser parte"
         },
         "items": [
-          { "tag": "2 a 4 semanas", "title": "Colibrí", "description": "Una primera inmersión en la vida comunitaria. Participás en una o más áreas, compartís el ritmo cotidiano y conocés el proyecto desde adentro." },
-          { "tag": "1 a 3 meses", "title": "Abeja", "description": "Un compromiso más profundo, con continuidad, responsabilidades sostenidas y la posibilidad de acompañar un área o proyecto específico." },
-          { "tag": "Fechas concretas", "title": "Eventos y retiros", "description": "Apoyo en cocina, hospitalidad, preparación del espacio, limpieza y logística antes, durante y después de una experiencia." },
-          { "tag": "Un día", "title": "Jornadas abiertas", "description": "Encuentros de reforestación, huerta, compost, arte o mantenimiento para quienes viven cerca o quieren conocer el proyecto." },
-          { "tag": "A medida", "title": "Proyectos especiales", "description": "Propuestas presenciales o digitales alineadas con Pueblo Mágico, revisadas junto al equipo antes de ponerse en marcha." }
+          {
+            "tag": "2 a 4 semanas",
+            "title": "Colibrí",
+            "description": "Una primera inmersión en la vida comunitaria. Participás en una o más áreas, compartís el ritmo cotidiano y conocés el proyecto desde adentro."
+          },
+          {
+            "tag": "1 a 3 meses",
+            "title": "Abeja",
+            "description": "Un compromiso más profundo, con continuidad, responsabilidades sostenidas y la posibilidad de acompañar un área o proyecto específico."
+          },
+          {
+            "tag": "Fechas concretas",
+            "title": "Eventos y retiros",
+            "description": "Apoyo en cocina, hospitalidad, preparación del espacio, limpieza y logística antes, durante y después de una experiencia."
+          },
+          {
+            "tag": "Un día",
+            "title": "Jornadas abiertas",
+            "description": "Encuentros de reforestación, huerta, compost, arte o mantenimiento para quienes viven cerca o quieren conocer el proyecto."
+          },
+          {
+            "tag": "A medida",
+            "title": "Proyectos especiales",
+            "description": "Propuestas presenciales o digitales alineadas con Pueblo Mágico, revisadas junto al equipo antes de ponerse en marcha."
+          }
         ]
       },
       "exchange": {
@@ -724,8 +987,26 @@
         "title": "Dar, recibir y habitar con presencia",
         "description": "La referencia general es una participación de aproximadamente seis horas por día, seis días por semana. El ritmo se conversa y se adapta al clima, los eventos, las necesidades del espacio y el bienestar del grupo.",
         "columns": [
-          { "title": "Lo que aportás", "items": ["Presencia, compromiso y responsabilidad", "Predisposición para aprender y colaborar", "Cuidado del espacio y de la comunidad", "Participación activa en las tareas acordadas", "Flexibilidad y comunicación clara"] },
-          { "title": "Lo que recibís", "items": ["Alojamiento compartido o acampe, según disponibilidad", "Alimentación y vida cotidiana compartida", "Aprendizaje práctico en distintas áreas", "Contacto profundo con la naturaleza", "Experiencia comunitaria y espacios de integración"] }
+          {
+            "title": "Lo que aportás",
+            "items": [
+              "Presencia, compromiso y responsabilidad",
+              "Predisposición para aprender y colaborar",
+              "Cuidado del espacio y de la comunidad",
+              "Participación activa en las tareas acordadas",
+              "Flexibilidad y comunicación clara"
+            ]
+          },
+          {
+            "title": "Lo que recibís",
+            "items": [
+              "Alojamiento compartido o acampe, según disponibilidad",
+              "Alimentación y vida cotidiana compartida",
+              "Aprendizaje práctico en distintas áreas",
+              "Contacto profundo con la naturaleza",
+              "Experiencia comunitaria y espacios de integración"
+            ]
+          }
         ],
         "note": "Para acompañar los costos del espacio, sugerimos un aporte semanal. Es opcional y se conversa según las posibilidades de cada persona. El valor vigente y las condiciones específicas se informan por escrito antes de confirmar cada estadía."
       },
@@ -734,13 +1015,69 @@
         "title": "Lo cotidiano también transforma",
         "description": "Las tareas cambian con la estación, el clima, los huéspedes y las prioridades del proyecto. Estas son las principales áreas donde podés aportar.",
         "items": [
-          { "title": "Cocina y alimentación", "description": "Cuidamos el alimento como parte central de la experiencia.", "tasks": ["Preparación y servicio de comidas", "Orden, limpieza y stock", "Planificación junto al responsable de cocina"] },
-          { "title": "Hospitalidad", "description": "Preparamos y sostenemos espacios cálidos para quienes llegan.", "tasks": ["Habitaciones, domos y baños", "Recepción y espacios comunes", "Apoyo durante entradas, salidas y eventos"] },
-          { "title": "Huerta y sintropía", "description": "Aprendemos a producir alimentos respetando los ciclos naturales.", "tasks": ["Siembra, riego y cosecha", "Compost, suelo y vivero", "Agricultura regenerativa y bosque comestible"] },
-          { "title": "Reforestación", "description": "Acompañamos la recuperación del bosque nativo de las Sierras.", "tasks": ["Semillas y propagación", "Plantación, riego y protección", "Monitoreo y jornadas comunitarias"] },
-          { "title": "Mantenimiento", "description": "Cuidamos la infraestructura que hace posible la vida del lugar.", "tasks": ["Leña, jardín y senderos", "Herramientas y materiales", "Reparaciones simples y mantenimiento preventivo"] },
-          { "title": "Arte y creatividad", "description": "La belleza y la expresión también construyen comunidad.", "tasks": ["Pintura y señalización", "Objetos decorativos o funcionales", "Intervenciones previamente acordadas"] },
-          { "title": "Sustentabilidad", "description": "Buscamos usar los recursos con conciencia y coherencia.", "tasks": ["Separación de residuos", "Compostaje y optimización de recursos", "Tecnologías y prácticas apropiadas"] }
+          {
+            "title": "Cocina y alimentación",
+            "description": "Cuidamos el alimento como parte central de la experiencia.",
+            "tasks": [
+              "Preparación y servicio de comidas",
+              "Orden, limpieza y stock",
+              "Planificación junto al responsable de cocina"
+            ]
+          },
+          {
+            "title": "Hospitalidad",
+            "description": "Preparamos y sostenemos espacios cálidos para quienes llegan.",
+            "tasks": [
+              "Habitaciones, domos y baños",
+              "Recepción y espacios comunes",
+              "Apoyo durante entradas, salidas y eventos"
+            ]
+          },
+          {
+            "title": "Huerta y sintropía",
+            "description": "Aprendemos a producir alimentos respetando los ciclos naturales.",
+            "tasks": [
+              "Siembra, riego y cosecha",
+              "Compost, suelo y vivero",
+              "Agricultura regenerativa y bosque comestible"
+            ]
+          },
+          {
+            "title": "Reforestación",
+            "description": "Acompañamos la recuperación del bosque nativo de las Sierras.",
+            "tasks": [
+              "Semillas y propagación",
+              "Plantación, riego y protección",
+              "Monitoreo y jornadas comunitarias"
+            ]
+          },
+          {
+            "title": "Mantenimiento",
+            "description": "Cuidamos la infraestructura que hace posible la vida del lugar.",
+            "tasks": [
+              "Leña, jardín y senderos",
+              "Herramientas y materiales",
+              "Reparaciones simples y mantenimiento preventivo"
+            ]
+          },
+          {
+            "title": "Arte y creatividad",
+            "description": "La belleza y la expresión también construyen comunidad.",
+            "tasks": [
+              "Pintura y señalización",
+              "Objetos decorativos o funcionales",
+              "Intervenciones previamente acordadas"
+            ]
+          },
+          {
+            "title": "Sustentabilidad",
+            "description": "Buscamos usar los recursos con conciencia y coherencia.",
+            "tasks": [
+              "Separación de residuos",
+              "Compostaje y optimización de recursos",
+              "Tecnologías y prácticas apropiadas"
+            ]
+          }
         ],
         "safety": "La seguridad está primero. Las tareas técnicas o de mayor riesgo —electricidad, altura, maquinaria y estructuras resistentes— requieren experiencia comprobada y supervisión competente; no forman parte del voluntariado general."
       },
@@ -749,10 +1086,26 @@
         "title": "Una base clara, un ritmo orgánico",
         "description": "No todos los días son iguales. Hay jornadas intensas y otras más livianas. Esta estructura nos ayuda a organizarnos sin perder escucha, descanso ni disfrute.",
         "items": [
-          { "time": "Mañana", "title": "Presencia y encuentro", "description": "Tiempo personal, desayuno compartido y un check-in breve para reconocer qué necesita el día y distribuir responsabilidades." },
-          { "time": "Bloque principal", "title": "La tarea central", "description": "El aporte principal sucede por la mañana, en equipo o de manera individual, con una prioridad clara y acompañamiento." },
-          { "time": "Mediodía", "title": "Alimento y descanso", "description": "Almuerzo compartido, pausa real y tiempo para descansar, ir al río, caminar o simplemente estar." },
-          { "time": "Tarde y noche", "title": "Flexibilidad e integración", "description": "Cierre de pendientes o tareas livianas, check-out breve y una noche abierta al descanso, la música, el fuego y los encuentros espontáneos." }
+          {
+            "time": "Mañana",
+            "title": "Presencia y encuentro",
+            "description": "Tiempo personal, desayuno compartido y un check-in breve para reconocer qué necesita el día y distribuir responsabilidades."
+          },
+          {
+            "time": "Bloque principal",
+            "title": "La tarea central",
+            "description": "El aporte principal sucede por la mañana, en equipo o de manera individual, con una prioridad clara y acompañamiento."
+          },
+          {
+            "time": "Mediodía",
+            "title": "Alimento y descanso",
+            "description": "Almuerzo compartido, pausa real y tiempo para descansar, ir al río, caminar o simplemente estar."
+          },
+          {
+            "time": "Tarde y noche",
+            "title": "Flexibilidad e integración",
+            "description": "Cierre de pendientes o tareas livianas, check-out breve y una noche abierta al descanso, la música, el fuego y los encuentros espontáneos."
+          }
         ]
       },
       "organization": {
@@ -760,10 +1113,22 @@
         "title": "Claridad antes que control",
         "description": "No trabajamos desde una jerarquía rígida. Sí existen responsables de área y coordinadores que cuidan las prioridades, la seguridad y los acuerdos. La autonomía siempre viene acompañada de responsabilidad.",
         "steps": [
-          { "title": "Actividad principal", "description": "El foco que debe suceder ese día." },
-          { "title": "Top 3", "description": "Tres tareas importantes que sostienen el funcionamiento." },
-          { "title": "Tablero abierto", "description": "Mejoras y tareas opcionales para aportar con iniciativa." },
-          { "title": "Roles rotativos", "description": "Coordinación, orden y cocina para que todas las personas aprendan y nadie se desgaste." }
+          {
+            "title": "Actividad principal",
+            "description": "El foco que debe suceder ese día."
+          },
+          {
+            "title": "Top 3",
+            "description": "Tres tareas importantes que sostienen el funcionamiento."
+          },
+          {
+            "title": "Tablero abierto",
+            "description": "Mejoras y tareas opcionales para aportar con iniciativa."
+          },
+          {
+            "title": "Roles rotativos",
+            "description": "Coordinación, orden y cocina para que todas las personas aprendan y nadie se desgaste."
+          }
         ],
         "imageAltOne": "Preparación comunitaria de alimentos",
         "imageAltTwo": "Herramientas para tareas de mantenimiento"
@@ -773,10 +1138,22 @@
         "title": "La comunidad se construye todos los días",
         "description": "La experiencia no depende solamente de lo que hacemos, sino de desde dónde y cómo lo hacemos.",
         "items": [
-          { "title": "Respeto", "description": "Por las personas, los tiempos, los espacios y los procesos individuales y colectivos." },
-          { "title": "Comunicación", "description": "Clara, directa, no violenta y abierta a conversar lo que necesita atención." },
-          { "title": "Autonomía", "description": "Cada persona se cuida a sí misma y reconoce el impacto de sus acciones en el grupo." },
-          { "title": "Interdependencia", "description": "Compartimos responsabilidades, pedimos ayuda y cuidamos el bienestar común." }
+          {
+            "title": "Respeto",
+            "description": "Por las personas, los tiempos, los espacios y los procesos individuales y colectivos."
+          },
+          {
+            "title": "Comunicación",
+            "description": "Clara, directa, no violenta y abierta a conversar lo que necesita atención."
+          },
+          {
+            "title": "Autonomía",
+            "description": "Cada persona se cuida a sí misma y reconoce el impacto de sus acciones en el grupo."
+          },
+          {
+            "title": "Interdependencia",
+            "description": "Compartimos responsabilidades, pedimos ayuda y cuidamos el bienestar común."
+          }
         ],
         "note": "Los círculos de palabra son una práctica comunitaria para escuchar y ajustar acuerdos. No sustituyen apoyo profesional, protocolos de emergencia ni un canal confidencial para situaciones de violencia, acoso o inseguridad."
       },
@@ -791,12 +1168,30 @@
         "title": "De la intención al encuentro",
         "description": "Queremos que cada llegada sea cuidada y que las expectativas sean claras para ambas partes. Postularte no confirma automáticamente una plaza ni un alojamiento.",
         "steps": [
-          { "title": "Elegí una modalidad", "description": "Contanos tus fechas, intereses y si buscás una convocatoria específica o una estadía general." },
-          { "title": "Compartí tu motivación", "description": "Queremos conocer tu experiencia, tus dones, lo que querés aprender y cómo vivís la comunidad." },
-          { "title": "Conversemos", "description": "Revisamos disponibilidad y, cuando corresponde, coordinamos una conversación antes de decidir." },
-          { "title": "Confirmación", "description": "Si hay un buen encaje, acordamos rol, fechas, alojamiento, comidas, aporte, llegada y convivencia." },
-          { "title": "Llegada e integración", "description": "Recibís una orientación inicial, conocés a las personas responsables y empezás a habitar el ritmo del lugar." },
-          { "title": "Cierre", "description": "Al finalizar compartimos aprendizajes y devoluciones para cuidar tanto a la persona como al proyecto." }
+          {
+            "title": "Elegí una modalidad",
+            "description": "Contanos tus fechas, intereses y si buscás una convocatoria específica o una estadía general."
+          },
+          {
+            "title": "Compartí tu motivación",
+            "description": "Queremos conocer tu experiencia, tus dones, lo que querés aprender y cómo vivís la comunidad."
+          },
+          {
+            "title": "Conversemos",
+            "description": "Revisamos disponibilidad y, cuando corresponde, coordinamos una conversación antes de decidir."
+          },
+          {
+            "title": "Confirmación",
+            "description": "Si hay un buen encaje, acordamos rol, fechas, alojamiento, comidas, aporte, llegada y convivencia."
+          },
+          {
+            "title": "Llegada e integración",
+            "description": "Recibís una orientación inicial, conocés a las personas responsables y empezás a habitar el ritmo del lugar."
+          },
+          {
+            "title": "Cierre",
+            "description": "Al finalizar compartimos aprendizajes y devoluciones para cuidar tanto a la persona como al proyecto."
+          }
         ]
       },
       "calendar": {
@@ -815,12 +1210,30 @@
         "eyebrow": "Antes de venir",
         "title": "Preguntas frecuentes",
         "items": [
-          { "question": "¿Programa Semilla es para mí?", "answer": "Es para personas con deseo genuino de involucrarse, aprender y colaborar. La vida comunitaria requiere presencia, flexibilidad, responsabilidad y capacidad de habitar un entorno natural de montaña. No está pensado como alojamiento económico ni como vacaciones pasivas." },
-          { "question": "¿Cuánto tiempo puedo quedarme?", "answer": "Colibrí propone estadías de 2 a 4 semanas y Abeja compromisos de 1 a 3 meses. Las jornadas y eventos tienen fechas específicas. Toda estadía depende de disponibilidad, conversación previa y confirmación." },
-          { "question": "¿Qué incluye el intercambio?", "answer": "Según la convocatoria puede incluir alojamiento compartido o acampe, alimentación y participación en la vida comunitaria. Antes de confirmar te enviaremos las condiciones exactas, qué debés traer y cualquier aporte sugerido vigente." },
-          { "question": "¿Puedo elegir solamente un área?", "answer": "Podés expresar preferencias y aportar habilidades concretas. Al mismo tiempo, la vida comunitaria incluye tareas esenciales compartidas, como orden, cocina o cuidado de espacios. El rol final se conversa según tus intereses y las necesidades reales del momento." },
-          { "question": "¿Necesito experiencia previa?", "answer": "No para todas las tareas. Valoramos la disposición para aprender. Las actividades técnicas, el uso de herramientas especiales y las tareas de riesgo solo se asignan con experiencia y supervisión adecuadas." },
-          { "question": "¿Cómo llego y qué tengo que llevar?", "answer": "Pueblo Mágico está en un entorno de montaña. Al confirmar te compartimos instrucciones de llegada y una lista actualizada según estación, alojamiento y actividad. Siempre debés traer ropa apropiada, calzado firme, medicación personal y elementos de higiene." }
+          {
+            "question": "¿Programa Semilla es para mí?",
+            "answer": "Es para personas con deseo genuino de involucrarse, aprender y colaborar. La vida comunitaria requiere presencia, flexibilidad, responsabilidad y capacidad de habitar un entorno natural de montaña. No está pensado como alojamiento económico ni como vacaciones pasivas."
+          },
+          {
+            "question": "¿Cuánto tiempo puedo quedarme?",
+            "answer": "Colibrí propone estadías de 2 a 4 semanas y Abeja compromisos de 1 a 3 meses. Las jornadas y eventos tienen fechas específicas. Toda estadía depende de disponibilidad, conversación previa y confirmación."
+          },
+          {
+            "question": "¿Qué incluye el intercambio?",
+            "answer": "Según la convocatoria puede incluir alojamiento compartido o acampe, alimentación y participación en la vida comunitaria. Antes de confirmar te enviaremos las condiciones exactas, qué debés traer y cualquier aporte sugerido vigente."
+          },
+          {
+            "question": "¿Puedo elegir solamente un área?",
+            "answer": "Podés expresar preferencias y aportar habilidades concretas. Al mismo tiempo, la vida comunitaria incluye tareas esenciales compartidas, como orden, cocina o cuidado de espacios. El rol final se conversa según tus intereses y las necesidades reales del momento."
+          },
+          {
+            "question": "¿Necesito experiencia previa?",
+            "answer": "No para todas las tareas. Valoramos la disposición para aprender. Las actividades técnicas, el uso de herramientas especiales y las tareas de riesgo solo se asignan con experiencia y supervisión adecuadas."
+          },
+          {
+            "question": "¿Cómo llego y qué tengo que llevar?",
+            "answer": "Pueblo Mágico está en un entorno de montaña. Al confirmar te compartimos instrucciones de llegada y una lista actualizada según estación, alojamiento y actividad. Siempre debés traer ropa apropiada, calzado firme, medicación personal y elementos de higiene."
+          }
         ]
       },
       "finalCta": {
@@ -956,6 +1369,17 @@
           "isVolunariado": true
         },
         {
+          "date": "6–8 NOVIEMBRE 2026",
+          "startDate": "2026-11-06",
+          "endDate": "2026-11-08",
+          "title": "BROTE · Ronda de Mujeres · Ciclo Primavera",
+          "desc": "Tres días para conectar con la primavera y con lo que quiere brotar: círculo de mujeres, canto, danza, ceremonia de fuego, caminatas al río, ofrenda al agua y naturaleza en Los Gigantes, Córdoba.",
+          "btn": "Conocer el encuentro",
+          "image": "/uploads/brote/brote-primavera.svg",
+          "link": "/brote-ronda-de-mujeres",
+          "pdfLink": ""
+        },
+        {
           "date": "7-8 NOVIEMBRE 2026",
           "startDate": "2026-11-07",
           "endDate": "2026-11-08",
@@ -1087,7 +1511,7 @@
               "icon": "trees"
             }
           ]
-        }, 
+        },
         {
           "label": "Experiencias",
           "href": "#experiencias",
@@ -1215,28 +1639,58 @@
         "faq": "Preguntas Frecuentes"
       },
       "exploreLinks": [
-        { "label": "Estadías & Glamping", "href": "/estadia" },
-        { "label": "Coliving", "href": "/coliving" }
+        {
+          "label": "Estadías & Glamping",
+          "href": "/estadia"
+        },
+        {
+          "label": "Coliving",
+          "href": "/coliving"
+        }
       ],
       "projectLinks": [
-        { "label": "Nuestros pilares", "href": "#pilares" },
-        { "label": "Reforestación", "href": "/reforestacion" },
-        { "label": "Voluntariado", "href": "/voluntariado" }
+        {
+          "label": "Nuestros pilares",
+          "href": "#pilares"
+        },
+        {
+          "label": "Reforestación",
+          "href": "/reforestacion"
+        },
+        {
+          "label": "Voluntariado",
+          "href": "/voluntariado"
+        }
       ],
       "experienceGroups": [
         {
           "title": "Experiencias con fecha",
           "links": [
-            { "label": "Killa Raymi", "href": "/killa-raymi" },
-            { "label": "Achala Viva", "href": "/achala-viva" }
+            {
+              "label": "Killa Raymi",
+              "href": "/killa-raymi"
+            },
+            {
+              "label": "Achala Viva",
+              "href": "/achala-viva"
+            }
           ]
         },
         {
           "title": "Para grupos e instituciones",
           "links": [
-            { "label": "Retiros Grupales", "href": "#retiros" },
-            { "label": "Aulas Verdes", "href": "/escuelas" },
-            { "label": "Empresas", "href": "/empresas" }
+            {
+              "label": "Retiros Grupales",
+              "href": "#retiros"
+            },
+            {
+              "label": "Aulas Verdes",
+              "href": "/escuelas"
+            },
+            {
+              "label": "Empresas",
+              "href": "/empresas"
+            }
           ]
         }
       ],
@@ -1304,12 +1758,27 @@
         "kids_title": "Tarifa para infancias",
         "kids_subtitle": "Los más chiquitos son siempre bienvenidos.",
         "kids": [
-          { "rango": "0 a 3 años", "desc": "Sin cargo", "note": "si no ocupan cama" },
-          { "rango": "0 a 3 años", "desc": "Tarifa adulto", "note": "si ocupan cama" },
-          { "rango": "4 años o más", "desc": "Tarifa adulto" }
+          {
+            "rango": "0 a 3 años",
+            "desc": "Sin cargo",
+            "note": "si no ocupan cama"
+          },
+          {
+            "rango": "0 a 3 años",
+            "desc": "Tarifa adulto",
+            "note": "si ocupan cama"
+          },
+          {
+            "rango": "4 años o más",
+            "desc": "Tarifa adulto"
+          }
         ],
-        "editions": ["PRÓXIMA EDICIÓN"],
-        "spots": ["¡ÚLTIMOS CUPOS!"],
+        "editions": [
+          "PRÓXIMA EDICIÓN"
+        ],
+        "spots": [
+          "¡ÚLTIMOS CUPOS!"
+        ],
         "includes": {
           "title": "¿Qué incluye tu lugar?",
           "items": [
@@ -2057,16 +2526,32 @@
         "wa_query_programa": "¡Hola! Quiero diseñar un programa de voluntariado corporativo / RSE con Pueblo Mágico para mi organización.",
         "wa_query_jornada": "¡Hola! Quiero coordinar un primer encuentro (llamada virtual, en Córdoba Capital o en Pueblo Mágico) para conocer la propuesta para organizaciones.",
         "stats": [
-          { "value": "+25.000", "label": "árboles plantados" },
-          { "value": "+200", "label": "hectáreas cuidadas" },
-          { "value": "+25 años", "label": "en Los Gigantes" }
+          {
+            "value": "+25.000",
+            "label": "árboles plantados"
+          },
+          {
+            "value": "+200",
+            "label": "hectáreas cuidadas"
+          },
+          {
+            "value": "+25 años",
+            "label": "en Los Gigantes"
+          }
         ]
       },
       "problema": {
         "tag": "El desafío",
         "title": "De los compromisos a la acción",
         "intro": "Muchas organizaciones ya cuentan con políticas de sustentabilidad, RSE, voluntariado o metas ambientales. El desafío suele estar en transformar esos compromisos en acciones que sean, al mismo tiempo:",
-        "items": ["Concretas y visibles", "Participativas", "Vinculadas con el territorio", "Valiosas para los colaboradores", "Documentables", "Adaptables a los objetivos de la organización"],
+        "items": [
+          "Concretas y visibles",
+          "Participativas",
+          "Vinculadas con el territorio",
+          "Valiosas para los colaboradores",
+          "Documentables",
+          "Adaptables a los objetivos de la organización"
+        ],
         "closing1": "Pueblo Mágico funciona como territorio, infraestructura y plataforma para diseñar esas experiencias en las Sierras Grandes.",
         "closing2": "No buscamos realizar una actividad ambiental aislada. Buscamos que tu organización se integre a un proceso de regeneración que ya existe.",
         "hr_note": {
@@ -2080,15 +2565,30 @@
         "items": [
           {
             "title": "Restauración & biodiversidad",
-            "items": ["Plantación de especies nativas", "Restauración de ecosistemas y tabaquillos", "Conservación y educación ambiental", "Conocimiento del territorio"]
+            "items": [
+              "Plantación de especies nativas",
+              "Restauración de ecosistemas y tabaquillos",
+              "Conservación y educación ambiental",
+              "Conocimiento del territorio"
+            ]
           },
           {
             "title": "Voluntariado corporativo",
-            "items": ["Programas de sustentabilidad y RSE", "Inversión social y voluntariado corporativo", "Participación activa de colaboradores", "Sensibilización ambiental"]
+            "items": [
+              "Programas de sustentabilidad y RSE",
+              "Inversión social y voluntariado corporativo",
+              "Participación activa de colaboradores",
+              "Sensibilización ambiental"
+            ]
           },
           {
             "title": "Experiencia de equipo",
-            "items": ["Colaboración e integración", "Liderazgo y coordinación entre áreas", "Comunicación y cultura", "Propósito compartido"]
+            "items": [
+              "Colaboración e integración",
+              "Liderazgo y coordinación entre áreas",
+              "Comunicación y cultura",
+              "Propósito compartido"
+            ]
           }
         ],
         "note": "La experiencia de equipo no reemplaza el objetivo ambiental. Lo potencia."
@@ -2101,12 +2601,36 @@
         "title": "Cómo puede ser una jornada",
         "subtitle": "Cada programa se diseña a medida, pero suele incluir estos momentos.",
         "steps": [
-          { "num": "01", "title": "Llegada al territorio", "text": "Recepción, presentación del lugar y contexto de la intervención: qué ecosistema visitan, qué problema se aborda y por qué su participación importa." },
-          { "num": "02", "title": "Acción ambiental", "text": "Plantación, restauración u otra intervención, adaptada a cantidad de participantes, temporada, disponibilidad de ejemplares y capacidades técnicas." },
-          { "num": "03", "title": "Comprender el impacto", "text": "No es solo \"plantar un árbol\": buscamos que los participantes entiendan qué están haciendo, cómo funciona ese ecosistema y de qué proceso de restauración forman parte." },
-          { "num": "04", "title": "Compartir", "text": "Gastronomía, naturaleza, recorridos y momentos de encuentro." },
-          { "num": "05", "title": "Integrar", "text": "Cuando la organización lo requiere, incorporamos dinámicas orientadas a desarrollar capacidades del equipo." },
-          { "num": "06", "title": "Documentar", "text": "Registro de indicadores acordados: participantes, horas de voluntariado, ejemplares plantados, material fotográfico y otros datos relevantes." }
+          {
+            "num": "01",
+            "title": "Llegada al territorio",
+            "text": "Recepción, presentación del lugar y contexto de la intervención: qué ecosistema visitan, qué problema se aborda y por qué su participación importa."
+          },
+          {
+            "num": "02",
+            "title": "Acción ambiental",
+            "text": "Plantación, restauración u otra intervención, adaptada a cantidad de participantes, temporada, disponibilidad de ejemplares y capacidades técnicas."
+          },
+          {
+            "num": "03",
+            "title": "Comprender el impacto",
+            "text": "No es solo \"plantar un árbol\": buscamos que los participantes entiendan qué están haciendo, cómo funciona ese ecosistema y de qué proceso de restauración forman parte."
+          },
+          {
+            "num": "04",
+            "title": "Compartir",
+            "text": "Gastronomía, naturaleza, recorridos y momentos de encuentro."
+          },
+          {
+            "num": "05",
+            "title": "Integrar",
+            "text": "Cuando la organización lo requiere, incorporamos dinámicas orientadas a desarrollar capacidades del equipo."
+          },
+          {
+            "num": "06",
+            "title": "Documentar",
+            "text": "Registro de indicadores acordados: participantes, horas de voluntariado, ejemplares plantados, material fotográfico y otros datos relevantes."
+          }
         ],
         "benchmark": "Las grandes compañías estructuran sus programas de voluntariado alrededor de acciones, participación e indicadores. Globant, por ejemplo, reportó en 2025 2.787 voluntarios y 34.073 horas destinadas a iniciativas comunitarias y ambientales.",
         "cta_lead": "¿Te imaginás esta jornada con tu equipo?"
@@ -2116,9 +2640,18 @@
         "title": "Es la posibilidad de sumarse a un proceso que ya existe",
         "text": "La regeneración ambiental forma parte de Pueblo Mágico desde mucho antes de esta propuesta corporativa.",
         "stats": [
-          { "value": "+25.000", "label": "árboles plantados y cuidados" },
-          { "value": "+200", "label": "hectáreas cuidadas" },
-          { "value": "+25", "label": "años de trayectoria en Los Gigantes" }
+          {
+            "value": "+25.000",
+            "label": "árboles plantados y cuidados"
+          },
+          {
+            "value": "+200",
+            "label": "hectáreas cuidadas"
+          },
+          {
+            "value": "+25",
+            "label": "años de trayectoria en Los Gigantes"
+          }
         ]
       },
       "bienestar": {
@@ -2214,16 +2747,45 @@
         "intro": "Sabemos que antes de presentar una iniciativa internamente aparecen muchas preguntas. Y no hace falta viajar hasta la montaña para empezar a resolverlas.",
         "modalidades_title": "Tres formas de dar el primer paso",
         "modalidades": [
-          { "title": "Llamada virtual", "text": "Una videollamada para presentarte la propuesta, mostrarte cómo funciona y responder tus preguntas, sin salir de la oficina." },
-          { "title": "Encuentro en Córdoba Capital", "text": "Nos juntamos en Vida Coworking. Ahí también organizamos jornadas informativas para contarte más sobre la experiencia y despejar dudas antes de pensar en una visita a Pueblo Mágico." },
-          { "title": "Visita a Pueblo Mágico", "text": "El siguiente paso, cuando ya tengas una idea clara: venís a conocer el territorio y vivir una muestra de la experiencia en Los Gigantes." }
+          {
+            "title": "Llamada virtual",
+            "text": "Una videollamada para presentarte la propuesta, mostrarte cómo funciona y responder tus preguntas, sin salir de la oficina."
+          },
+          {
+            "title": "Encuentro en Córdoba Capital",
+            "text": "Nos juntamos en Vida Coworking. Ahí también organizamos jornadas informativas para contarte más sobre la experiencia y despejar dudas antes de pensar en una visita a Pueblo Mágico."
+          },
+          {
+            "title": "Visita a Pueblo Mágico",
+            "text": "El siguiente paso, cuando ya tengas una idea clara: venís a conocer el territorio y vivir una muestra de la experiencia en Los Gigantes."
+          }
         ],
         "questions_label": "Antes de presentar la propuesta",
-        "questions": ["¿Cómo es el lugar y cómo se llega?", "¿Qué van a hacer los colaboradores?", "¿Qué nivel de exigencia física tiene?", "¿Cómo se organiza la plantación?", "¿Qué pasa si cambia el clima?", "¿Cómo se adapta a nuestros objetivos?"],
+        "questions": [
+          "¿Cómo es el lugar y cómo se llega?",
+          "¿Qué van a hacer los colaboradores?",
+          "¿Qué nivel de exigencia física tiene?",
+          "¿Cómo se organiza la plantación?",
+          "¿Qué pasa si cambia el clima?",
+          "¿Cómo se adapta a nuestros objetivos?"
+        ],
         "audience_title": "Jornadas de Presentación en Pueblo Mágico, dirigidas a:",
-        "audience_items": ["Responsables de Sustentabilidad y RSE", "Directores y responsables de RRHH", "Cultura y Personas", "Líderes de programas de voluntariado", "Mandos medios y decisores de organizaciones"],
+        "audience_items": [
+          "Responsables de Sustentabilidad y RSE",
+          "Directores y responsables de RRHH",
+          "Cultura y Personas",
+          "Líderes de programas de voluntariado",
+          "Mandos medios y decisores de organizaciones"
+        ],
         "group_note": "Encuentros con cupos reducidos: al menos 8 referentes de distintas organizaciones por jornada.",
-        "includes": ["Recorrer Pueblo Mágico y sus instalaciones", "Visitar las zonas de intervención", "Vivir una pequeña experiencia de muestra", "Conocer al equipo y almorzar en el espacio", "Conversar sobre posibles programas", "Despejar dudas operativas y estratégicas"],
+        "includes": [
+          "Recorrer Pueblo Mágico y sus instalaciones",
+          "Visitar las zonas de intervención",
+          "Vivir una pequeña experiencia de muestra",
+          "Conocer al equipo y almorzar en el espacio",
+          "Conversar sobre posibles programas",
+          "Despejar dudas operativas y estratégicas"
+        ],
         "closing": "Antes de invitar a todo tu equipo, elegí la forma que te resulte más simple para dar el primer paso: videollamada, en Córdoba Capital, o viniendo a conocer Pueblo Mágico.",
         "cta": "Quiero coordinar un primer encuentro"
       },
@@ -2231,24 +2793,57 @@
         "title": "Programas a medida",
         "subtitle": "No todas las organizaciones necesitan lo mismo. Por eso no partimos de un paquete cerrado.",
         "steps": [
-          { "num": "1", "title": "Objetivo", "text": "Entendemos qué quiere conseguir la organización." },
-          { "num": "2", "title": "Participantes", "text": "Definimos cantidad, perfiles, áreas y niveles de responsabilidad." },
-          { "num": "3", "title": "Programa", "text": "Seleccionamos intervención, actividades, duración y recursos." },
-          { "num": "4", "title": "Indicadores", "text": "Acordamos qué tiene sentido registrar." },
-          { "num": "5", "title": "Implementación", "text": "Realizamos la experiencia en Pueblo Mágico." },
-          { "num": "6", "title": "Documentación", "text": "Cuando corresponde, entregamos registro e información sobre lo realizado." }
+          {
+            "num": "1",
+            "title": "Objetivo",
+            "text": "Entendemos qué quiere conseguir la organización."
+          },
+          {
+            "num": "2",
+            "title": "Participantes",
+            "text": "Definimos cantidad, perfiles, áreas y niveles de responsabilidad."
+          },
+          {
+            "num": "3",
+            "title": "Programa",
+            "text": "Seleccionamos intervención, actividades, duración y recursos."
+          },
+          {
+            "num": "4",
+            "title": "Indicadores",
+            "text": "Acordamos qué tiene sentido registrar."
+          },
+          {
+            "num": "5",
+            "title": "Implementación",
+            "text": "Realizamos la experiencia en Pueblo Mágico."
+          },
+          {
+            "num": "6",
+            "title": "Documentación",
+            "text": "Cuando corresponde, entregamos registro e información sobre lo realizado."
+          }
         ]
       },
       "formatos": {
         "tag": "Jornadas privadas y exclusivas",
         "title": "Una experiencia solo para tu organización",
         "items": [
-          { "title": "Jornada corporativa", "text": "Una experiencia de un día. Ideal para voluntariado, restauración, integración y primeras experiencias institucionales.",
-            "price": "Desde $35.000 por persona" },
-          { "title": "Jornada + noche", "text": "Más inmersiva: permite incorporar convivencia, fogón, naturaleza y actividades complementarias.",
-            "price": "Desde $75.000 por persona" },
-          { "title": "Programa de varios días", "text": "Para equipos que buscan profundizar en liderazgo, cultura, coordinación y estrategia.",
-            "price": "A consultar" }
+          {
+            "title": "Jornada corporativa",
+            "text": "Una experiencia de un día. Ideal para voluntariado, restauración, integración y primeras experiencias institucionales.",
+            "price": "Desde $35.000 por persona"
+          },
+          {
+            "title": "Jornada + noche",
+            "text": "Más inmersiva: permite incorporar convivencia, fogón, naturaleza y actividades complementarias.",
+            "price": "Desde $75.000 por persona"
+          },
+          {
+            "title": "Programa de varios días",
+            "text": "Para equipos que buscan profundizar en liderazgo, cultura, coordinación y estrategia.",
+            "price": "A consultar"
+          }
         ],
         "note": "Cada jornada es exclusiva para tu equipo y se diseña según los objetivos de tu organización.",
         "more_title": "Otras formas de sumarse",
@@ -2334,18 +2929,34 @@
           "name": "Federico T.",
           "role": "Director, Colegio Racing Club de Córdoba"
         },
-        "items": ["Alojamiento", "Gastronomía", "Espacios comunes y senderos", "Especialistas y facilitadores", "Experiencia logística", "Diseño de experiencias a medida"],
+        "items": [
+          "Alojamiento",
+          "Gastronomía",
+          "Espacios comunes y senderos",
+          "Especialistas y facilitadores",
+          "Experiencia logística",
+          "Diseño de experiencias a medida"
+        ],
         "text3": "No somos nuevos recibiendo grupos ni trabajando con instituciones. Lo nuevo es poner esa experiencia al servicio de los objetivos de sustentabilidad y participación de las empresas."
       },
       "red": {
         "title": "Una propuesta construida en red",
         "subtitle": "La regeneración territorial requiere colaboración. Cada programa puede articular diferentes capacidades.",
         "partners": [
-          { "name": "Pueblo Mágico", "text": "Territorio, infraestructura, hospitalidad, experiencia, regeneración y operación de las jornadas." },
-          { "name": "Fundación para el Desarrollo Sostenible", "text": "Marco institucional y administrativo para programas de voluntariado: planificación, administración de fondos de patrocinadores, facturación y rendición de cuentas." },
-          { "name": "Apoidea", "text": "Vinculación con empresas, reuniones de diagnóstico, desarrollo de propuestas particulares y otros aspectos de asesoría y comercialización." }
+          {
+            "name": "Pueblo Mágico",
+            "text": "Territorio, infraestructura, hospitalidad, experiencia, regeneración y operación de las jornadas."
+          },
+          {
+            "name": "Fundación para el Desarrollo Sostenible",
+            "text": "Marco institucional y administrativo para programas de voluntariado: planificación, administración de fondos de patrocinadores, facturación y rendición de cuentas."
+          },
+          {
+            "name": "Apoidea",
+            "text": "Vinculación con empresas, reuniones de diagnóstico, desarrollo de propuestas particulares y otros aspectos de asesoría y comercialización."
+          }
         ],
-      "benchmark": "La lógica coincide con cómo las empresas más grandes estructuran sus programas de impacto: colaboración con organizaciones, involucramiento de empleados y proyectos ambientales conectados con una estrategia más amplia."
+        "benchmark": "La lógica coincide con cómo las empresas más grandes estructuran sus programas de impacto: colaboración con organizaciones, involucramiento de empleados y proyectos ambientales conectados con una estrategia más amplia."
       },
       "faq": {
         "title": "Preguntas frecuentes",
@@ -2386,8 +2997,16 @@
       },
       "empezar": {
         "title": "¿Por dónde querés empezar?",
-        "option1": { "title": "Ya tengo una iniciativa en mente", "text": "Contanos qué quiere lograr tu organización y diseñamos una propuesta.", "cta": "Quiero diseñar un programa" },
-        "option2": { "title": "Primero quiero conocer Pueblo Mágico", "text": "Participá de una Jornada de Presentación, conocé el territorio, viví una muestra de la experiencia y evaluá si tiene sentido para tu equipo.", "cta": "Quiero recibir invitación" }
+        "option1": {
+          "title": "Ya tengo una iniciativa en mente",
+          "text": "Contanos qué quiere lograr tu organización y diseñamos una propuesta.",
+          "cta": "Quiero diseñar un programa"
+        },
+        "option2": {
+          "title": "Primero quiero conocer Pueblo Mágico",
+          "text": "Participá de una Jornada de Presentación, conocé el territorio, viví una muestra de la experiencia y evaluá si tiene sentido para tu equipo.",
+          "cta": "Quiero recibir invitación"
+        }
       },
       "cta_final": {
         "title": "Que la sustentabilidad deje de ser solamente un compromiso escrito",
@@ -2772,26 +3391,93 @@
       "title": "Allied environmental organizations",
       "note": "We've signed a partnership agreement with Acción Ambiental. Bosques de Agua and Acción Serrana bring technical knowledge and local expertise depending on each intervention.",
       "items": [
-        {"name":"Acción Ambiental","url":"https://accionambiental.org.ar/","logo":"/uploads/aliados/accion-ambiental.png","text":"Environmental conservation: outreach, education and environmental action in the province of Córdoba."},
-        {"name":"Bosques de Agua","url":"https://bosquesdeagua.ar/","logo":"/uploads/aliados/bosques-de-agua.webp","text":"Restoring the high-altitude native forest and the watersheds of the Sierras Grandes."},
-        {"name":"Acción Serrana","url":"https://www.accionserrana.com/","logo":"/uploads/aliados/accion-serrana.png","text":"Regenerating high-altitude forests and their water sources together with local communities."},
-        {"name":"Consciencia Nativa","text":"Supplies the native trees for the reforestation campaign."}
+        {
+          "name": "Acción Ambiental",
+          "url": "https://accionambiental.org.ar/",
+          "logo": "/uploads/aliados/accion-ambiental.png",
+          "text": "Environmental conservation: outreach, education and environmental action in the province of Córdoba."
+        },
+        {
+          "name": "Bosques de Agua",
+          "url": "https://bosquesdeagua.ar/",
+          "logo": "/uploads/aliados/bosques-de-agua.webp",
+          "text": "Restoring the high-altitude native forest and the watersheds of the Sierras Grandes."
+        },
+        {
+          "name": "Acción Serrana",
+          "url": "https://www.accionserrana.com/",
+          "logo": "/uploads/aliados/accion-serrana.png",
+          "text": "Regenerating high-altitude forests and their water sources together with local communities."
+        },
+        {
+          "name": "Consciencia Nativa",
+          "text": "Supplies the native trees for the reforestation campaign."
+        }
       ]
     },
     "practicas": {
       "title": "Regeneration is also part of daily operations",
       "items": [
-        {"title":"Nearly 100% solar energy","text":"The generator only runs in emergencies or on very cloudy days."},
-        {"title":"Dry toilets","text":"They neither use nor pollute water: we protect the headwaters of the mountain streams."},
-        {"title":"Compost","text":"Organic and dry-toilet waste returns to the soil as fertilizer."}
+        {
+          "title": "Nearly 100% solar energy",
+          "text": "The generator only runs in emergencies or on very cloudy days."
+        },
+        {
+          "title": "Dry toilets",
+          "text": "They neither use nor pollute water: we protect the headwaters of the mountain streams."
+        },
+        {
+          "title": "Compost",
+          "text": "Organic and dry-toilet waste returns to the soil as fertilizer."
+        }
       ]
     },
     "booking": {
       "months": [
-        { "label": "October", "short": "Oct" }, { "label": "November", "short": "Nov" }, { "label": "December", "short": "Dec" }, { "label": "January", "short": "Jan" }, { "label": "February", "short": "Feb" }
+        {
+          "label": "October",
+          "short": "Oct"
+        },
+        {
+          "label": "November",
+          "short": "Nov"
+        },
+        {
+          "label": "December",
+          "short": "Dec"
+        },
+        {
+          "label": "January",
+          "short": "Jan"
+        },
+        {
+          "label": "February",
+          "short": "Feb"
+        }
       ],
-      "dayNames": ["M", "T", "W", "T", "F", "S", "S"],
-      "monthAbbr": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      "dayNames": [
+        "M",
+        "T",
+        "W",
+        "T",
+        "F",
+        "S",
+        "S"
+      ],
+      "monthAbbr": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ],
       "selectDates": "Select your dates",
       "arrival": "Arrival",
       "departure": "Departure",
@@ -2812,7 +3498,15 @@
       "roomType": "Room type",
       "sharedRoom": "Shared",
       "privateRoom": "Private",
-      "mealPlan": "Meals", "mealBreakfast": "With breakfast", "mealFullBoard": "Full board", "mealBreakfastNote": "Accommodation + breakfast. Lunch or dinner can be added (+USD 15 each).", "mealFullBoardNote": "Breakfast, lunch and dinner included — fixed total price per person/night.", "weekendNote": "🌙 Friday and Saturday nights are booked on full board only: those nights include breakfast, lunch and dinner.", "weekendRegimenSuffix": " (Friday and Saturday nights on full board)", "nightsAt": "{nights} at {precio}", "privateDomoNote": "Private dome: 2 to 7 people (USD 35 per person/night with breakfast)",
+      "mealPlan": "Meals",
+      "mealBreakfast": "With breakfast",
+      "mealFullBoard": "Full board",
+      "mealBreakfastNote": "Accommodation + breakfast. Lunch or dinner can be added (+USD 15 each).",
+      "mealFullBoardNote": "Breakfast, lunch and dinner included — fixed total price per person/night.",
+      "weekendNote": "🌙 Friday and Saturday nights are booked on full board only: those nights include breakfast, lunch and dinner.",
+      "weekendRegimenSuffix": " (Friday and Saturday nights on full board)",
+      "nightsAt": "{nights} at {precio}",
+      "privateDomoNote": "Private dome: 2 to 7 people (USD 35 per person/night with breakfast)",
       "retiroNote": "🗓️ On weekends the domes may host retreats or events — ask us about availability: we'll confirm on WhatsApp before finalizing the booking.",
       "unavailableForDates": "That option has no availability for the dates you picked — try different dates.",
       "capacityExceeded": "The {tipo} has room for up to {max} people — for bigger groups, message us on WhatsApp.",
@@ -2841,12 +3535,36 @@
       "title": "What we are working on now",
       "intro": "What we already do is visible: 25,000+ native trees planted, 200 hectares cared for, nearly 100% solar energy and dry toilets. Now we are building the tools so that this impact can be verified from the outside.",
       "items": [
-        { "status": "Being implemented", "title": "Geo-referenced record of every tree", "text": "Every planting will be recorded with GPS point, species, quantity, date, photo, zone and who planted it (company, school or volunteers). We are implementing it for the 2026–2027 planting season, which starts with the November workdays, and we are mapping the areas already reforested." },
-        { "status": "In progress", "title": "Public satellite monitoring", "text": "We are registering our restoration areas on Restor, an open scientific platform with satellite imagery, so companies and donors can follow how the land evolves." },
-        { "status": "In talks", "title": "University validation", "text": "We are working on agreements with the National University of Córdoba (UNC) and Universidad Empresarial Siglo 21 to measure the survival of planted trees every year." },
-        { "status": "Applying", "title": "Voluntary conservation of the 200 ha", "text": "We are applying to join the Argentine Network of Private Nature Reserves and Fundación Vida Silvestre's Wildlife Refuges program." },
-        { "status": "Under review", "title": "Native Forest Law", "text": "We are reviewing with Córdoba's Environment Secretariat the inclusion of our native tabaquillo forest in the Payment for Environmental Services program (Law 26,331)." },
-        { "status": "Ongoing", "title": "Impact assessment", "text": "We are completing Sistema B's B Impact Assessment to measure and improve how we manage energy, waste, water, team and community." }
+        {
+          "status": "Being implemented",
+          "title": "Geo-referenced record of every tree",
+          "text": "Every planting will be recorded with GPS point, species, quantity, date, photo, zone and who planted it (company, school or volunteers). We are implementing it for the 2026–2027 planting season, which starts with the November workdays, and we are mapping the areas already reforested."
+        },
+        {
+          "status": "In progress",
+          "title": "Public satellite monitoring",
+          "text": "We are registering our restoration areas on Restor, an open scientific platform with satellite imagery, so companies and donors can follow how the land evolves."
+        },
+        {
+          "status": "In talks",
+          "title": "University validation",
+          "text": "We are working on agreements with the National University of Córdoba (UNC) and Universidad Empresarial Siglo 21 to measure the survival of planted trees every year."
+        },
+        {
+          "status": "Applying",
+          "title": "Voluntary conservation of the 200 ha",
+          "text": "We are applying to join the Argentine Network of Private Nature Reserves and Fundación Vida Silvestre's Wildlife Refuges program."
+        },
+        {
+          "status": "Under review",
+          "title": "Native Forest Law",
+          "text": "We are reviewing with Córdoba's Environment Secretariat the inclusion of our native tabaquillo forest in the Payment for Environmental Services program (Law 26,331)."
+        },
+        {
+          "status": "Ongoing",
+          "title": "Impact assessment",
+          "text": "We are completing Sistema B's B Impact Assessment to measure and improve how we manage energy, waste, water, team and community."
+        }
       ],
       "closing": "We will share each step as it happens."
     },
@@ -2916,9 +3634,27 @@
         "title": "Roots for the mountain's future",
         "description": "This new goal continues sustained restoration work alongside environmental organizations in the region. The native trees for this campaign are purchased from Consciencia Nativa.",
         "stats": [
-          { "value": "+25,000", "label": "native trees planted", "description": "The accumulated work behind this new stage.", "href": "#maps", "action": "View restored areas" },
-          { "value": "+10,000", "label": "new trees", "description": "The planting goal supported by this campaign.", "href": "#maps", "action": "Explore planned areas" },
-          { "value": "Community", "label": "in action", "description": "Organizations, volunteers and people united for the mountains.", "href": "/voluntariado#convocatorias", "action": "Join as a volunteer" }
+          {
+            "value": "+25,000",
+            "label": "native trees planted",
+            "description": "The accumulated work behind this new stage.",
+            "href": "#maps",
+            "action": "View restored areas"
+          },
+          {
+            "value": "+10,000",
+            "label": "new trees",
+            "description": "The planting goal supported by this campaign.",
+            "href": "#maps",
+            "action": "Explore planned areas"
+          },
+          {
+            "value": "Community",
+            "label": "in action",
+            "description": "Organizations, volunteers and people united for the mountains.",
+            "href": "/voluntariado#convocatorias",
+            "action": "Join as a volunteer"
+          }
         ]
       },
       "funding": {
@@ -2981,16 +3717,52 @@
             "description": "Most of the trees are already at the project. While down-payment fundraising continues, selection and counting are under way before initial care begins.",
             "plannedDate": "September 30, 2026",
             "steps": [
-              { "title": "Fund the down payment", "status": "Fundraising in progress", "state": "active" },
-              { "title": "Receive the baby trees", "status": "Most received", "state": "completed" },
-              { "title": "Selection and count", "status": "In progress", "state": "active" },
-              { "title": "Sanitisation, pruning and initial nutrition", "status": "Next task", "state": "upcoming" }
+              {
+                "title": "Fund the down payment",
+                "status": "Fundraising in progress",
+                "state": "active"
+              },
+              {
+                "title": "Receive the baby trees",
+                "status": "Most received",
+                "state": "completed"
+              },
+              {
+                "title": "Selection and count",
+                "status": "In progress",
+                "state": "active"
+              },
+              {
+                "title": "Sanitisation, pruning and initial nutrition",
+                "status": "Next task",
+                "state": "upcoming"
+              }
             ],
             "photos": [
-              { "src": "/uploads/reforestacion/arboles-recibidos-04.webp", "alt": "Close-up of received native baby trees", "caption": "Trees awaiting sanitisation, pruning and initial nutrition.", "type": "image" },
-              { "src": "/uploads/reforestacion/arboles-recibidos-video.mov", "alt": "Video of the native trees that have arrived at the project", "caption": "Video record of the trees already at the site.", "type": "video" },
-              { "src": "/uploads/reforestacion/arboles-recibidos-video-03.mp4", "alt": "Video showing progress in selecting the native trees", "caption": "Progress in the tree selection and organization process.", "type": "video" },
-              { "src": "/uploads/reforestacion/arboles-recibidos-video-02.mp4", "alt": "Video of the work with the native trees received for phase one", "caption": "A new record of the condition and care of the trees received.", "type": "video" }
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-04.webp",
+                "alt": "Close-up of received native baby trees",
+                "caption": "Trees awaiting sanitisation, pruning and initial nutrition.",
+                "type": "image"
+              },
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-video.mov",
+                "alt": "Video of the native trees that have arrived at the project",
+                "caption": "Video record of the trees already at the site.",
+                "type": "video"
+              },
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-video-03.mp4",
+                "alt": "Video showing progress in selecting the native trees",
+                "caption": "Progress in the tree selection and organization process.",
+                "type": "video"
+              },
+              {
+                "src": "/uploads/reforestacion/arboles-recibidos-video-02.mp4",
+                "alt": "Video of the work with the native trees received for phase one",
+                "caption": "A new record of the condition and care of the trees received.",
+                "type": "video"
+              }
             ]
           },
           {
@@ -3001,10 +3773,26 @@
             "plannedDate": "Before Rain Season",
             "note": "These images are conceptual alternatives, not final construction drawings. The final solution will be determined by the site, required capacity, costs, maintenance and technical validation.",
             "steps": [
-              { "title": "Identify the location", "status": "Pending", "state": "upcoming" },
-              { "title": "Define the concrete design", "status": "Pending", "state": "upcoming" },
-              { "title": "Source materials, primarily local", "status": "Pending", "state": "upcoming" },
-              { "title": "Build the nursery", "status": "Pending", "state": "upcoming" }
+              {
+                "title": "Identify the location",
+                "status": "Pending",
+                "state": "upcoming"
+              },
+              {
+                "title": "Define the concrete design",
+                "status": "Pending",
+                "state": "upcoming"
+              },
+              {
+                "title": "Source materials, primarily local",
+                "status": "Pending",
+                "state": "upcoming"
+              },
+              {
+                "title": "Build the nursery",
+                "status": "Pending",
+                "state": "upcoming"
+              }
             ],
             "photos": [
               {
@@ -3054,10 +3842,22 @@
         "title": "From seedling to long-term field care",
         "description": "Funds will support the stages required to move planting forward and sustain it. We will publish updates as the project progresses.",
         "items": [
-          { "title": "Native seedlings", "description": "Producing or sourcing appropriate specimens for each environment." },
-          { "title": "Preparation and protection", "description": "Materials and field work to prepare the site and protect each planting." },
-          { "title": "Planting and logistics", "description": "Tools, transportation and work days in the mountains." },
-          { "title": "Care and monitoring", "description": "Watering, monitoring and replacement when conditions require it." }
+          {
+            "title": "Native seedlings",
+            "description": "Producing or sourcing appropriate specimens for each environment."
+          },
+          {
+            "title": "Preparation and protection",
+            "description": "Materials and field work to prepare the site and protect each planting."
+          },
+          {
+            "title": "Planting and logistics",
+            "description": "Tools, transportation and work days in the mountains."
+          },
+          {
+            "title": "Care and monitoring",
+            "description": "Watering, monitoring and replacement when conditions require it."
+          }
         ]
       },
       "community": {
@@ -3076,7 +3876,11 @@
         "eyebrow": "Hands on the land",
         "title": "Join our reforestation days",
         "description": "Two weekends are confirmed to move native-tree planting forward and share community work with camping in the mountains.",
-        "items": ["Tree care and preparation", "Planting and protection days", "Learning and community work in the field"],
+        "items": [
+          "Tree care and preparation",
+          "Planting and protection days",
+          "Learning and community work in the field"
+        ],
         "cta": "Apply as a volunteer",
         "scheduleEyebrow": "Action calendar",
         "scheduleTitle": "Upcoming reforestation days",
@@ -3092,8 +3896,20 @@
         "title": "Where the forest grows",
         "description": "These maps show the previously reforested area and the sector identified for the next planting of 10,000 native trees.",
         "areas": [
-          { "status": "Completed reforestation", "title": "Reforested area · 9.42 ha", "description": "The sector where reforestation work has already taken place within Pueblo Mágico's land.", "image": "/uploads/reforestacion/mapa-area-reforestada-9-42ha.webp", "imageAlt": "Aerial map of the 9.42-hectare reforested area at Pueblo Mágico" },
-          { "status": "Next intervention", "title": "The next 10,000 trees", "description": "The sector identified for the next reforestation stage with 10,000 native trees.", "image": "/uploads/reforestacion/mapa-proxima-reforestacion-10000-arboles.webp", "imageAlt": "Aerial map of the area planned for 10,000 native trees" }
+          {
+            "status": "Completed reforestation",
+            "title": "Reforested area · 9.42 ha",
+            "description": "The sector where reforestation work has already taken place within Pueblo Mágico's land.",
+            "image": "/uploads/reforestacion/mapa-area-reforestada-9-42ha.webp",
+            "imageAlt": "Aerial map of the 9.42-hectare reforested area at Pueblo Mágico"
+          },
+          {
+            "status": "Next intervention",
+            "title": "The next 10,000 trees",
+            "description": "The sector identified for the next reforestation stage with 10,000 native trees.",
+            "image": "/uploads/reforestacion/mapa-proxima-reforestacion-10000-arboles.webp",
+            "imageAlt": "Aerial map of the area planned for 10,000 native trees"
+          }
         ],
         "note": "The historical 9.42 ha area comes from the December 2023 Wayra Marka report. The next intervention sector was identified by the Pueblo Mágico team and may be refined during technical planning."
       },
@@ -3102,9 +3918,18 @@
         "title": "Companies regenerating the land",
         "description": "Companies and their teams can turn sustainability goals into tangible action together with Pueblo Mágico.",
         "items": [
-          { "title": "Fund a project phase", "description": "Support tree acquisition, the nursery, logistics or a complete phase of the project." },
-          { "title": "Corporate volunteering", "description": "Create hands-on days in the field that connect teams with environmental restoration." },
-          { "title": "Long-term partnerships", "description": "Design an impact, monitoring and communications program suited to the organisation's goals." }
+          {
+            "title": "Fund a project phase",
+            "description": "Support tree acquisition, the nursery, logistics or a complete phase of the project."
+          },
+          {
+            "title": "Corporate volunteering",
+            "description": "Create hands-on days in the field that connect teams with environmental restoration."
+          },
+          {
+            "title": "Long-term partnerships",
+            "description": "Design an impact, monitoring and communications program suited to the organisation's goals."
+          }
         ],
         "cta": "Explore our corporate programs",
         "contactCta": "Contact us directly",
@@ -3248,7 +4073,7 @@
           "100% of what you pay comes back as a voucher for any experience or stay at Pueblo Mágico.",
           "Voucher valid for 6 months."
         ],
-                "stepsTitle": "How to get it",
+        "stepsTitle": "How to get it",
         "steps": [
           "Transfer USD 20 or USD 35 using the available contribution method.",
           "Send us the receipt on WhatsApp.",
@@ -3322,7 +4147,11 @@
         "legalNote": "Voluntary contribution to the reforestation campaign. The solidarity voucher and free contributions fund the same campaign. Keep your transfer receipt. Do not send funds to any detail marked as a sample.",
         "treePrice": "Each native tree costs USD 1.",
         "amountsTitle": "Choose an amount",
-        "amounts": [10,20,50],
+        "amounts": [
+          10,
+          20,
+          50
+        ],
         "treesLabel": "{trees} trees",
         "otherAmount": "Other amount"
       },
@@ -3346,7 +4175,7 @@
       "personalizeStay": "CUSTOMIZE YOUR STAY",
       "coworkingBadge": "Coworking & Coliving",
       "card_extra_text": "You can also just book accommodation if you wish — from USD 15/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
-      "btn": "Book my spot", 
+      "btn": "Book my spot",
       "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
       "cards": [
         {
@@ -3438,17 +4267,50 @@
         "pageTitle": "Volunteering",
         "parent": "About us",
         "sections": [
-          { "id": "programa", "label": "The program" },
-          { "id": "modalidades", "label": "Ways to join" },
-          { "id": "intercambio", "label": "Exchange" },
-          { "id": "areas", "label": "Areas" },
-          { "id": "un-dia", "label": "A day at Mágico" },
-          { "id": "organizacion", "label": "Organization" },
-          { "id": "convivencia", "label": "Community life" },
-          { "id": "testimonios-voluntarios", "label": "Testimonials" },
-          { "id": "como-sumarte", "label": "How to join" },
-          { "id": "convocatorias", "label": "Open calls" },
-          { "id": "preguntas", "label": "Questions" }
+          {
+            "id": "programa",
+            "label": "The program"
+          },
+          {
+            "id": "modalidades",
+            "label": "Ways to join"
+          },
+          {
+            "id": "intercambio",
+            "label": "Exchange"
+          },
+          {
+            "id": "areas",
+            "label": "Areas"
+          },
+          {
+            "id": "un-dia",
+            "label": "A day at Mágico"
+          },
+          {
+            "id": "organizacion",
+            "label": "Organization"
+          },
+          {
+            "id": "convivencia",
+            "label": "Community life"
+          },
+          {
+            "id": "testimonios-voluntarios",
+            "label": "Testimonials"
+          },
+          {
+            "id": "como-sumarte",
+            "label": "How to join"
+          },
+          {
+            "id": "convocatorias",
+            "label": "Open calls"
+          },
+          {
+            "id": "preguntas",
+            "label": "Questions"
+          }
         ]
       },
       "hero": {
@@ -3480,11 +4342,31 @@
           "title": "Other ways to take part"
         },
         "items": [
-          { "tag": "2 to 4 weeks", "title": "Hummingbird", "description": "A first immersion in community life. Participate in one or more areas, share the daily rhythm and discover the project from within." },
-          { "tag": "1 to 3 months", "title": "Bee", "description": "A deeper commitment with continuity, sustained responsibilities and the possibility of supporting a particular area or project." },
-          { "tag": "Specific dates", "title": "Events and retreats", "description": "Support with cooking, hospitality, space preparation, cleaning and logistics before, during and after an experience." },
-          { "tag": "One day", "title": "Open community days", "description": "Reforestation, gardening, composting, art or maintenance days for nearby residents and people who want to discover the project." },
-          { "tag": "Tailored", "title": "Special projects", "description": "On-site or digital proposals aligned with Pueblo Mágico, reviewed with the team before they begin." }
+          {
+            "tag": "2 to 4 weeks",
+            "title": "Hummingbird",
+            "description": "A first immersion in community life. Participate in one or more areas, share the daily rhythm and discover the project from within."
+          },
+          {
+            "tag": "1 to 3 months",
+            "title": "Bee",
+            "description": "A deeper commitment with continuity, sustained responsibilities and the possibility of supporting a particular area or project."
+          },
+          {
+            "tag": "Specific dates",
+            "title": "Events and retreats",
+            "description": "Support with cooking, hospitality, space preparation, cleaning and logistics before, during and after an experience."
+          },
+          {
+            "tag": "One day",
+            "title": "Open community days",
+            "description": "Reforestation, gardening, composting, art or maintenance days for nearby residents and people who want to discover the project."
+          },
+          {
+            "tag": "Tailored",
+            "title": "Special projects",
+            "description": "On-site or digital proposals aligned with Pueblo Mágico, reviewed with the team before they begin."
+          }
         ]
       },
       "exchange": {
@@ -3492,8 +4374,26 @@
         "title": "Give, receive and live with presence",
         "description": "The general reference is approximately six hours of participation per day, six days per week. The rhythm is discussed and adapted to the weather, events, the needs of the place and the wellbeing of the group.",
         "columns": [
-          { "title": "What you contribute", "items": ["Presence, commitment and responsibility", "A willingness to learn and collaborate", "Care for the place and the community", "Active participation in agreed responsibilities", "Flexibility and clear communication"] },
-          { "title": "What you receive", "items": ["Shared accommodation or camping, subject to availability", "Food and shared daily life", "Practical learning across different areas", "Deep contact with nature", "Community experience and integration spaces"] }
+          {
+            "title": "What you contribute",
+            "items": [
+              "Presence, commitment and responsibility",
+              "A willingness to learn and collaborate",
+              "Care for the place and the community",
+              "Active participation in agreed responsibilities",
+              "Flexibility and clear communication"
+            ]
+          },
+          {
+            "title": "What you receive",
+            "items": [
+              "Shared accommodation or camping, subject to availability",
+              "Food and shared daily life",
+              "Practical learning across different areas",
+              "Deep contact with nature",
+              "Community experience and integration spaces"
+            ]
+          }
         ],
         "note": "To help cover the costs of the space, we suggest a weekly contribution. It is optional and discussed according to each person's possibilities. The current amount and specific conditions are shared in writing before each stay is confirmed."
       },
@@ -3502,13 +4402,69 @@
         "title": "Daily life can transform us too",
         "description": "Tasks change with the season, weather, guests and project priorities. These are the main areas where you can contribute.",
         "items": [
-          { "title": "Kitchen and food", "description": "We care for food as a central part of the experience.", "tasks": ["Preparing and serving meals", "Cleaning, organisation and stock", "Planning with the kitchen lead"] },
-          { "title": "Hospitality", "description": "We prepare and sustain welcoming spaces for those who arrive.", "tasks": ["Rooms, domes and bathrooms", "Reception and shared spaces", "Support with arrivals, departures and events"] },
-          { "title": "Garden and syntropy", "description": "We learn to produce food while respecting natural cycles.", "tasks": ["Sowing, watering and harvesting", "Compost, soil and nursery", "Regenerative agriculture and food forest"] },
-          { "title": "Reforestation", "description": "We support the recovery of native forests in the Sierras.", "tasks": ["Seeds and propagation", "Planting, watering and protection", "Monitoring and community days"] },
-          { "title": "Maintenance", "description": "We care for the infrastructure that makes life here possible.", "tasks": ["Firewood, gardens and paths", "Tools and materials", "Simple repairs and preventive maintenance"] },
-          { "title": "Art and creativity", "description": "Beauty and expression also build community.", "tasks": ["Painting and signage", "Decorative or functional objects", "Previously agreed interventions"] },
-          { "title": "Sustainability", "description": "We seek to use resources with awareness and consistency.", "tasks": ["Waste separation", "Composting and resource optimisation", "Appropriate technologies and practices"] }
+          {
+            "title": "Kitchen and food",
+            "description": "We care for food as a central part of the experience.",
+            "tasks": [
+              "Preparing and serving meals",
+              "Cleaning, organisation and stock",
+              "Planning with the kitchen lead"
+            ]
+          },
+          {
+            "title": "Hospitality",
+            "description": "We prepare and sustain welcoming spaces for those who arrive.",
+            "tasks": [
+              "Rooms, domes and bathrooms",
+              "Reception and shared spaces",
+              "Support with arrivals, departures and events"
+            ]
+          },
+          {
+            "title": "Garden and syntropy",
+            "description": "We learn to produce food while respecting natural cycles.",
+            "tasks": [
+              "Sowing, watering and harvesting",
+              "Compost, soil and nursery",
+              "Regenerative agriculture and food forest"
+            ]
+          },
+          {
+            "title": "Reforestation",
+            "description": "We support the recovery of native forests in the Sierras.",
+            "tasks": [
+              "Seeds and propagation",
+              "Planting, watering and protection",
+              "Monitoring and community days"
+            ]
+          },
+          {
+            "title": "Maintenance",
+            "description": "We care for the infrastructure that makes life here possible.",
+            "tasks": [
+              "Firewood, gardens and paths",
+              "Tools and materials",
+              "Simple repairs and preventive maintenance"
+            ]
+          },
+          {
+            "title": "Art and creativity",
+            "description": "Beauty and expression also build community.",
+            "tasks": [
+              "Painting and signage",
+              "Decorative or functional objects",
+              "Previously agreed interventions"
+            ]
+          },
+          {
+            "title": "Sustainability",
+            "description": "We seek to use resources with awareness and consistency.",
+            "tasks": [
+              "Waste separation",
+              "Composting and resource optimisation",
+              "Appropriate technologies and practices"
+            ]
+          }
         ],
         "safety": "Safety comes first. Technical or higher-risk tasks — electricity, heights, machinery and load-bearing structures — require proven experience and competent supervision; they are not part of general volunteering."
       },
@@ -3517,10 +4473,26 @@
         "title": "A clear foundation, an organic rhythm",
         "description": "No two days are the same. Some are intense and others lighter. This structure helps us stay organised without losing listening, rest or enjoyment.",
         "items": [
-          { "time": "Morning", "title": "Presence and connection", "description": "Personal time, shared breakfast and a short check-in to identify what the day needs and distribute responsibilities." },
-          { "time": "Main block", "title": "The central task", "description": "The main contribution happens in the morning, as a team or individually, with a clear priority and support." },
-          { "time": "Midday", "title": "Food and rest", "description": "Shared lunch, a real pause and time to rest, visit the river, walk or simply be." },
-          { "time": "Afternoon and evening", "title": "Flexibility and integration", "description": "Closing pending work or lighter tasks, a short check-out and an evening open to rest, music, fire and spontaneous gatherings." }
+          {
+            "time": "Morning",
+            "title": "Presence and connection",
+            "description": "Personal time, shared breakfast and a short check-in to identify what the day needs and distribute responsibilities."
+          },
+          {
+            "time": "Main block",
+            "title": "The central task",
+            "description": "The main contribution happens in the morning, as a team or individually, with a clear priority and support."
+          },
+          {
+            "time": "Midday",
+            "title": "Food and rest",
+            "description": "Shared lunch, a real pause and time to rest, visit the river, walk or simply be."
+          },
+          {
+            "time": "Afternoon and evening",
+            "title": "Flexibility and integration",
+            "description": "Closing pending work or lighter tasks, a short check-out and an evening open to rest, music, fire and spontaneous gatherings."
+          }
         ]
       },
       "organization": {
@@ -3528,10 +4500,22 @@
         "title": "Clarity before control",
         "description": "We do not work through a rigid hierarchy. There are, however, area leads and coordinators who care for priorities, safety and agreements. Autonomy always comes with responsibility.",
         "steps": [
-          { "title": "Main activity", "description": "The focus that needs to happen that day." },
-          { "title": "Top three", "description": "Three important tasks that sustain the place." },
-          { "title": "Open board", "description": "Improvements and optional tasks for proactive contribution." },
-          { "title": "Rotating roles", "description": "Coordination, order and kitchen so everyone learns and no one burns out." }
+          {
+            "title": "Main activity",
+            "description": "The focus that needs to happen that day."
+          },
+          {
+            "title": "Top three",
+            "description": "Three important tasks that sustain the place."
+          },
+          {
+            "title": "Open board",
+            "description": "Improvements and optional tasks for proactive contribution."
+          },
+          {
+            "title": "Rotating roles",
+            "description": "Coordination, order and kitchen so everyone learns and no one burns out."
+          }
         ],
         "imageAltOne": "Community food preparation",
         "imageAltTwo": "Tools for maintenance tasks"
@@ -3541,10 +4525,22 @@
         "title": "Community is built every day",
         "description": "The experience depends not only on what we do, but on where it comes from and how we do it.",
         "items": [
-          { "title": "Respect", "description": "For people, time, spaces and individual and collective processes." },
-          { "title": "Communication", "description": "Clear, direct, non-violent and open to discussing what needs attention." },
-          { "title": "Autonomy", "description": "Each person cares for themselves and recognises how their actions affect the group." },
-          { "title": "Interdependence", "description": "We share responsibilities, ask for help and care for collective wellbeing." }
+          {
+            "title": "Respect",
+            "description": "For people, time, spaces and individual and collective processes."
+          },
+          {
+            "title": "Communication",
+            "description": "Clear, direct, non-violent and open to discussing what needs attention."
+          },
+          {
+            "title": "Autonomy",
+            "description": "Each person cares for themselves and recognises how their actions affect the group."
+          },
+          {
+            "title": "Interdependence",
+            "description": "We share responsibilities, ask for help and care for collective wellbeing."
+          }
         ],
         "note": "Talking circles are a community practice for listening and adjusting agreements. They do not replace professional support, emergency protocols or a confidential channel for situations involving violence, harassment or safety."
       },
@@ -3559,12 +4555,30 @@
         "title": "From intention to encounter",
         "description": "We want every arrival to be thoughtful and expectations to be clear on both sides. Applying does not automatically confirm a place or accommodation.",
         "steps": [
-          { "title": "Choose a format", "description": "Tell us your dates, interests and whether you are looking for a specific opportunity or a general stay." },
-          { "title": "Share your motivation", "description": "We want to know your experience, gifts, what you hope to learn and how you approach community life." },
-          { "title": "Let's talk", "description": "We review availability and, where appropriate, arrange a conversation before making a decision." },
-          { "title": "Confirmation", "description": "If the fit is right, we agree on role, dates, accommodation, meals, contribution, arrival and community guidelines." },
-          { "title": "Arrival and integration", "description": "You receive an orientation, meet the responsible people and begin to enter the rhythm of the place." },
-          { "title": "Closing", "description": "At the end, we share learnings and feedback to care for both the participant and the project." }
+          {
+            "title": "Choose a format",
+            "description": "Tell us your dates, interests and whether you are looking for a specific opportunity or a general stay."
+          },
+          {
+            "title": "Share your motivation",
+            "description": "We want to know your experience, gifts, what you hope to learn and how you approach community life."
+          },
+          {
+            "title": "Let's talk",
+            "description": "We review availability and, where appropriate, arrange a conversation before making a decision."
+          },
+          {
+            "title": "Confirmation",
+            "description": "If the fit is right, we agree on role, dates, accommodation, meals, contribution, arrival and community guidelines."
+          },
+          {
+            "title": "Arrival and integration",
+            "description": "You receive an orientation, meet the responsible people and begin to enter the rhythm of the place."
+          },
+          {
+            "title": "Closing",
+            "description": "At the end, we share learnings and feedback to care for both the participant and the project."
+          }
         ]
       },
       "calendar": {
@@ -3583,12 +4597,30 @@
         "eyebrow": "Before you come",
         "title": "Frequently asked questions",
         "items": [
-          { "question": "Is Programa Semilla for me?", "answer": "It is for people with a genuine desire to get involved, learn and collaborate. Community life requires presence, flexibility, responsibility and the ability to live in a natural mountain environment. It is not intended as budget accommodation or a passive holiday." },
-          { "question": "How long can I stay?", "answer": "Hummingbird offers stays of 2 to 4 weeks and Bee commitments of 1 to 3 months. Community days and events have specific dates. Every stay depends on availability, a prior conversation and confirmation." },
-          { "question": "What does the exchange include?", "answer": "Depending on the opportunity, it may include shared accommodation or camping, food and participation in community life. Before confirming, we will share the exact conditions, what you need to bring and any current suggested contribution." },
-          { "question": "Can I choose only one area?", "answer": "You can express preferences and contribute specific skills. At the same time, community life includes shared essential tasks such as order, cooking and caring for spaces. The final role is discussed according to your interests and the real needs of the moment." },
-          { "question": "Do I need previous experience?", "answer": "Not for every task. We value a willingness to learn. Technical activities, special tools and higher-risk tasks are assigned only with appropriate experience and supervision." },
-          { "question": "How do I get there and what should I bring?", "answer": "Pueblo Mágico is in a mountain environment. Once confirmed, we share arrival instructions and an updated list for the season, accommodation and activity. You should always bring suitable clothing, sturdy footwear, personal medication and hygiene products." }
+          {
+            "question": "Is Programa Semilla for me?",
+            "answer": "It is for people with a genuine desire to get involved, learn and collaborate. Community life requires presence, flexibility, responsibility and the ability to live in a natural mountain environment. It is not intended as budget accommodation or a passive holiday."
+          },
+          {
+            "question": "How long can I stay?",
+            "answer": "Hummingbird offers stays of 2 to 4 weeks and Bee commitments of 1 to 3 months. Community days and events have specific dates. Every stay depends on availability, a prior conversation and confirmation."
+          },
+          {
+            "question": "What does the exchange include?",
+            "answer": "Depending on the opportunity, it may include shared accommodation or camping, food and participation in community life. Before confirming, we will share the exact conditions, what you need to bring and any current suggested contribution."
+          },
+          {
+            "question": "Can I choose only one area?",
+            "answer": "You can express preferences and contribute specific skills. At the same time, community life includes shared essential tasks such as order, cooking and caring for spaces. The final role is discussed according to your interests and the real needs of the moment."
+          },
+          {
+            "question": "Do I need previous experience?",
+            "answer": "Not for every task. We value a willingness to learn. Technical activities, special tools and higher-risk tasks are assigned only with appropriate experience and supervision."
+          },
+          {
+            "question": "How do I get there and what should I bring?",
+            "answer": "Pueblo Mágico is in a mountain environment. Once confirmed, we share arrival instructions and an updated list for the season, accommodation and activity. You should always bring suitable clothing, sturdy footwear, personal medication and hygiene products."
+          }
         ]
       },
       "finalCta": {
@@ -3645,7 +4677,7 @@
     "about": {
       "tag": "Our Essence",
       "title": "Returning to the origin <br /><span class='text-gold italic'>true luxury.</span>",
-      "p1": "Pueblo Mágico is much more than a place; it is an experience to inhabit with all senses, where nature sets the pace. Located in the heart of the Sierras Grandes, we have been building this space for over 25 years. Today, it is an international refuge that has welcomed travelers from all over the world, being a home for rest, connection and Good Living, in harmony with nature and community life.", 
+      "p1": "Pueblo Mágico is much more than a place; it is an experience to inhabit with all senses, where nature sets the pace. Located in the heart of the Sierras Grandes, we have been building this space for over 25 years. Today, it is an international refuge that has welcomed travelers from all over the world, being a home for rest, connection and Good Living, in harmony with nature and community life.",
       "p2": "We combine genuine collaboration, wellness and a regenerative approach in every action we take. Every tree planted and every dish served tells a story of love, care and respect for the Earth and the ecosystem that sustains us.",
       "link": "Our way of Being and Doing",
       "image": "/uploads/dji_0074.webp",
@@ -3722,6 +4754,17 @@
           "link": "/festival-raiz-sonora",
           "pdfLink": "",
           "isVolunariado": true
+        },
+        {
+          "date": "NOVEMBER 6–8, 2026",
+          "startDate": "2026-11-06",
+          "endDate": "2026-11-08",
+          "title": "BROTE · Women's Circle · Spring Gathering",
+          "desc": "A three-day women's gathering to reconnect with spring through singing, dance, fire ceremony, walks by the river, an offering to the water and connection with nature in Los Gigantes, Córdoba. Landing page in Spanish.",
+          "btn": "Explore the gathering",
+          "image": "/uploads/brote/brote-primavera.svg",
+          "link": "/brote-ronda-de-mujeres",
+          "pdfLink": ""
         },
         {
           "date": "NOV 7-8, 2026",
@@ -3903,7 +4946,7 @@
     "pillars": [
       {
         "id": 1,
-        "title": "Regeneration", 
+        "title": "Regeneration",
         "subtitle": "Over 25,000 native trees planted and cared for. Concrete actions to restore the ecosystem and sow new possible futures."
       },
       {
@@ -3979,28 +5022,58 @@
         "faq": "FAQ"
       },
       "exploreLinks": [
-        { "label": "Stays & Glamping", "href": "/estadia" },
-        { "label": "Coliving", "href": "/coliving" }
+        {
+          "label": "Stays & Glamping",
+          "href": "/estadia"
+        },
+        {
+          "label": "Coliving",
+          "href": "/coliving"
+        }
       ],
       "projectLinks": [
-        { "label": "Our pillars", "href": "#pilares" },
-        { "label": "Reforestation", "href": "/reforestacion" },
-        { "label": "Volunteering", "href": "/voluntariado" }
+        {
+          "label": "Our pillars",
+          "href": "#pilares"
+        },
+        {
+          "label": "Reforestation",
+          "href": "/reforestacion"
+        },
+        {
+          "label": "Volunteering",
+          "href": "/voluntariado"
+        }
       ],
       "experienceGroups": [
         {
           "title": "Dated experiences",
           "links": [
-            { "label": "Killa Raymi", "href": "/killa-raymi" },
-            { "label": "Achala Viva", "href": "/achala-viva" }
+            {
+              "label": "Killa Raymi",
+              "href": "/killa-raymi"
+            },
+            {
+              "label": "Achala Viva",
+              "href": "/achala-viva"
+            }
           ]
         },
         {
           "title": "Groups & institutions",
           "links": [
-            { "label": "Group Retreats", "href": "#retiros" },
-            { "label": "Green Classrooms", "href": "/escuelas" },
-            { "label": "Companies", "href": "/empresas" }
+            {
+              "label": "Group Retreats",
+              "href": "#retiros"
+            },
+            {
+              "label": "Green Classrooms",
+              "href": "/escuelas"
+            },
+            {
+              "label": "Companies",
+              "href": "/empresas"
+            }
           ]
         }
       ],
@@ -4068,12 +5141,27 @@
         "kids_title": "Children's rates",
         "kids_subtitle": "Little ones are always welcome.",
         "kids": [
-          { "rango": "0 to 3 years", "desc": "Free", "note": "if not occupying a bed" },
-          { "rango": "0 to 3 years", "desc": "Adult rate", "note": "if occupying a bed" },
-          { "rango": "4 years or more", "desc": "Adult rate" }
+          {
+            "rango": "0 to 3 years",
+            "desc": "Free",
+            "note": "if not occupying a bed"
+          },
+          {
+            "rango": "0 to 3 years",
+            "desc": "Adult rate",
+            "note": "if occupying a bed"
+          },
+          {
+            "rango": "4 years or more",
+            "desc": "Adult rate"
+          }
         ],
-        "editions": ["NEXT EDITION"],
-        "spots": ["LAST SPOTS!"],
+        "editions": [
+          "NEXT EDITION"
+        ],
+        "spots": [
+          "LAST SPOTS!"
+        ],
         "includes": {
           "title": "What's included?",
           "items": [
@@ -4821,16 +5909,32 @@
         "wa_query_programa": "Hi! I'd like to design a corporate volunteering / CSR program with Pueblo Mágico for my organization.",
         "wa_query_jornada": "Hi! I'd like to set up a first meeting (virtual call, in Córdoba Capital, or at Pueblo Mágico) to learn about the proposal for organizations.",
         "stats": [
-          { "value": "+25,000", "label": "trees planted" },
-          { "value": "+200", "label": "hectares cared for" },
-          { "value": "+25 years", "label": "in Los Gigantes" }
+          {
+            "value": "+25,000",
+            "label": "trees planted"
+          },
+          {
+            "value": "+200",
+            "label": "hectares cared for"
+          },
+          {
+            "value": "+25 years",
+            "label": "in Los Gigantes"
+          }
         ]
       },
       "problema": {
         "tag": "The challenge",
         "title": "From commitments to action",
         "intro": "Many organizations already have sustainability policies, CSR programs, volunteering or environmental goals. The challenge is usually turning those commitments into actions that are, at the same time:",
-        "items": ["Concrete and visible", "Participatory", "Connected to the land", "Valuable for employees", "Documentable", "Adaptable to the organization's goals"],
+        "items": [
+          "Concrete and visible",
+          "Participatory",
+          "Connected to the land",
+          "Valuable for employees",
+          "Documentable",
+          "Adaptable to the organization's goals"
+        ],
         "closing1": "Pueblo Mágico works as territory, infrastructure and platform to design those experiences in the Sierras Grandes.",
         "closing2": "We're not looking to run an isolated environmental activity. We want your organization to join a regeneration process that already exists.",
         "hr_note": {
@@ -4844,15 +5948,30 @@
         "items": [
           {
             "title": "Restoration & biodiversity",
-            "items": ["Planting native species", "Restoring ecosystems and highland woodlands", "Conservation and environmental education", "Knowledge of the land"]
+            "items": [
+              "Planting native species",
+              "Restoring ecosystems and highland woodlands",
+              "Conservation and environmental education",
+              "Knowledge of the land"
+            ]
           },
           {
             "title": "Corporate volunteering",
-            "items": ["Sustainability and CSR programs", "Social investment and corporate volunteering", "Active employee participation", "Environmental awareness"]
+            "items": [
+              "Sustainability and CSR programs",
+              "Social investment and corporate volunteering",
+              "Active employee participation",
+              "Environmental awareness"
+            ]
           },
           {
             "title": "Team experience",
-            "items": ["Collaboration and integration", "Leadership and cross-team coordination", "Communication and culture", "Shared purpose"]
+            "items": [
+              "Collaboration and integration",
+              "Leadership and cross-team coordination",
+              "Communication and culture",
+              "Shared purpose"
+            ]
           }
         ],
         "note": "The team experience doesn't replace the environmental goal. It strengthens it."
@@ -4865,12 +5984,36 @@
         "title": "What a day can look like",
         "subtitle": "Each program is tailor-made, but it usually includes these moments.",
         "steps": [
-          { "num": "01", "title": "Arrival on site", "text": "Reception, introduction to the place and context for the intervention: which ecosystem they're visiting, what problem is being addressed and why their participation matters." },
-          { "num": "02", "title": "Environmental action", "text": "Planting, restoration or another intervention, adapted to the number of participants, the season, plant availability and technical requirements." },
-          { "num": "03", "title": "Understanding the impact", "text": "It's not just \"planting a tree\": we want participants to understand what they're doing, how that ecosystem works and what restoration process they're part of." },
-          { "num": "04", "title": "Sharing", "text": "Food, nature, walks and moments of connection." },
-          { "num": "05", "title": "Integrating", "text": "When the organization needs it, we add activities designed to build team capabilities." },
-          { "num": "06", "title": "Documenting", "text": "Recording agreed indicators: participants, volunteer hours, trees planted, photo material and other data relevant to the organization." }
+          {
+            "num": "01",
+            "title": "Arrival on site",
+            "text": "Reception, introduction to the place and context for the intervention: which ecosystem they're visiting, what problem is being addressed and why their participation matters."
+          },
+          {
+            "num": "02",
+            "title": "Environmental action",
+            "text": "Planting, restoration or another intervention, adapted to the number of participants, the season, plant availability and technical requirements."
+          },
+          {
+            "num": "03",
+            "title": "Understanding the impact",
+            "text": "It's not just \"planting a tree\": we want participants to understand what they're doing, how that ecosystem works and what restoration process they're part of."
+          },
+          {
+            "num": "04",
+            "title": "Sharing",
+            "text": "Food, nature, walks and moments of connection."
+          },
+          {
+            "num": "05",
+            "title": "Integrating",
+            "text": "When the organization needs it, we add activities designed to build team capabilities."
+          },
+          {
+            "num": "06",
+            "title": "Documenting",
+            "text": "Recording agreed indicators: participants, volunteer hours, trees planted, photo material and other data relevant to the organization."
+          }
         ],
         "benchmark": "Large companies structure their volunteering programs around actions, participation and indicators. Globant, for example, reported 2,787 volunteers and 34,073 hours dedicated to community and environmental initiatives in 2025.",
         "cta_lead": "Can you picture this day with your team?"
@@ -4880,9 +6023,18 @@
         "title": "The chance to join a process that already exists",
         "text": "Environmental regeneration has been part of Pueblo Mágico long before this corporate proposal.",
         "stats": [
-          { "value": "+25,000", "label": "trees planted and cared for" },
-          { "value": "+200", "label": "hectares cared for" },
-          { "value": "+25", "label": "years of track record in Los Gigantes" }
+          {
+            "value": "+25,000",
+            "label": "trees planted and cared for"
+          },
+          {
+            "value": "+200",
+            "label": "hectares cared for"
+          },
+          {
+            "value": "+25",
+            "label": "years of track record in Los Gigantes"
+          }
         ]
       },
       "bienestar": {
@@ -4978,16 +6130,45 @@
         "intro": "We know that before presenting an initiative internally, plenty of questions come up. And you don't need to travel to the mountains to start answering them.",
         "modalidades_title": "Three ways to take the first step",
         "modalidades": [
-          { "title": "Virtual call", "text": "A video call to walk you through the proposal, show you how it works, and answer your questions, without leaving the office." },
-          { "title": "Meeting in Córdoba Capital", "text": "We meet at Vida Coworking. We also run info sessions there to tell you more about the experience and clear up doubts before thinking about a visit to Pueblo Mágico." },
-          { "title": "Visit to Pueblo Mágico", "text": "The next step, once you already have a clear picture: come see the land and live a sample of the experience in Los Gigantes." }
+          {
+            "title": "Virtual call",
+            "text": "A video call to walk you through the proposal, show you how it works, and answer your questions, without leaving the office."
+          },
+          {
+            "title": "Meeting in Córdoba Capital",
+            "text": "We meet at Vida Coworking. We also run info sessions there to tell you more about the experience and clear up doubts before thinking about a visit to Pueblo Mágico."
+          },
+          {
+            "title": "Visit to Pueblo Mágico",
+            "text": "The next step, once you already have a clear picture: come see the land and live a sample of the experience in Los Gigantes."
+          }
         ],
         "questions_label": "Before you pitch it internally",
-        "questions": ["What's the place like, and how do you get there?", "What will employees actually do?", "How physically demanding is it?", "How is the planting organized?", "What happens if the weather changes?", "How does it adapt to our goals?"],
+        "questions": [
+          "What's the place like, and how do you get there?",
+          "What will employees actually do?",
+          "How physically demanding is it?",
+          "How is the planting organized?",
+          "What happens if the weather changes?",
+          "How does it adapt to our goals?"
+        ],
         "audience_title": "Preview Days at Pueblo Mágico, for:",
-        "audience_items": ["Sustainability and CSR managers", "HR directors and managers", "Culture and People teams", "Volunteering program leaders", "Mid-level managers and decision-makers"],
+        "audience_items": [
+          "Sustainability and CSR managers",
+          "HR directors and managers",
+          "Culture and People teams",
+          "Volunteering program leaders",
+          "Mid-level managers and decision-makers"
+        ],
         "group_note": "Small-group sessions: at least 8 representatives from different organizations per day.",
-        "includes": ["Touring Pueblo Mágico and its facilities", "Visiting the intervention areas", "Living a small sample of the experience", "Meeting the team and having lunch on site", "Talking through possible programs", "Clearing up operational and strategic doubts"],
+        "includes": [
+          "Touring Pueblo Mágico and its facilities",
+          "Visiting the intervention areas",
+          "Living a small sample of the experience",
+          "Meeting the team and having lunch on site",
+          "Talking through possible programs",
+          "Clearing up operational and strategic doubts"
+        ],
         "closing": "Before inviting your whole team, pick whichever feels simplest for a first step: a video call, meeting in Córdoba Capital, or coming to see Pueblo Mágico.",
         "cta": "I want to set up a first meeting"
       },
@@ -4995,24 +6176,57 @@
         "title": "Tailor-made programs",
         "subtitle": "Not every organization needs the same thing. That's why we don't start from a fixed package.",
         "steps": [
-          { "num": "1", "title": "Goal", "text": "We understand what the organization wants to achieve." },
-          { "num": "2", "title": "Participants", "text": "We define number of people, profiles, areas and levels of responsibility." },
-          { "num": "3", "title": "Program", "text": "We select the intervention, activities, duration and resources." },
-          { "num": "4", "title": "Indicators", "text": "We agree on what's worth measuring." },
-          { "num": "5", "title": "Implementation", "text": "We run the experience at Pueblo Mágico." },
-          { "num": "6", "title": "Documentation", "text": "When relevant, we deliver a record and information about what was done." }
+          {
+            "num": "1",
+            "title": "Goal",
+            "text": "We understand what the organization wants to achieve."
+          },
+          {
+            "num": "2",
+            "title": "Participants",
+            "text": "We define number of people, profiles, areas and levels of responsibility."
+          },
+          {
+            "num": "3",
+            "title": "Program",
+            "text": "We select the intervention, activities, duration and resources."
+          },
+          {
+            "num": "4",
+            "title": "Indicators",
+            "text": "We agree on what's worth measuring."
+          },
+          {
+            "num": "5",
+            "title": "Implementation",
+            "text": "We run the experience at Pueblo Mágico."
+          },
+          {
+            "num": "6",
+            "title": "Documentation",
+            "text": "When relevant, we deliver a record and information about what was done."
+          }
         ]
       },
       "formatos": {
         "tag": "Private, exclusive days",
         "title": "An experience just for your organization",
         "items": [
-          { "title": "Corporate day", "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences.",
-            "price": "From USD 25 per person" },
-          { "title": "Day + overnight", "text": "More immersive: adds shared living, a bonfire, nature and complementary activities.",
-            "price": "From USD 50 per person" },
-          { "title": "Multi-day program", "text": "For teams looking to go deeper on leadership, culture, coordination and strategy.",
-            "price": "On request" }
+          {
+            "title": "Corporate day",
+            "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences.",
+            "price": "From USD 25 per person"
+          },
+          {
+            "title": "Day + overnight",
+            "text": "More immersive: adds shared living, a bonfire, nature and complementary activities.",
+            "price": "From USD 50 per person"
+          },
+          {
+            "title": "Multi-day program",
+            "text": "For teams looking to go deeper on leadership, culture, coordination and strategy.",
+            "price": "On request"
+          }
         ],
         "note": "Each day is exclusive to your team and designed around your organization's goals.",
         "more_title": "Other ways to join",
@@ -5098,18 +6312,34 @@
           "name": "Federico T.",
           "role": "Director, Colegio Racing Club de Córdoba"
         },
-        "items": ["Accommodation", "Food service", "Common areas and trails", "Specialists and facilitators", "Logistics experience", "Tailor-made experience design"],
+        "items": [
+          "Accommodation",
+          "Food service",
+          "Common areas and trails",
+          "Specialists and facilitators",
+          "Logistics experience",
+          "Tailor-made experience design"
+        ],
         "text3": "We're not new to hosting groups or working with institutions. What's new is putting that experience at the service of companies' sustainability and participation goals."
       },
       "red": {
         "title": "A proposal built as a network",
         "subtitle": "Regenerating a territory requires collaboration. Each program can bring different capabilities together.",
         "partners": [
-          { "name": "Pueblo Mágico", "text": "Territory, infrastructure, hospitality, experience, regeneration and day-to-day operations." },
-          { "name": "Fundación para el Desarrollo Sostenible", "text": "Institutional and administrative framework for volunteering programs: planning, sponsor fund management, invoicing and accountability." },
-          { "name": "Apoidea", "text": "Business outreach, diagnostic meetings, development of tailored proposals and other advisory and sales aspects." }
+          {
+            "name": "Pueblo Mágico",
+            "text": "Territory, infrastructure, hospitality, experience, regeneration and day-to-day operations."
+          },
+          {
+            "name": "Fundación para el Desarrollo Sostenible",
+            "text": "Institutional and administrative framework for volunteering programs: planning, sponsor fund management, invoicing and accountability."
+          },
+          {
+            "name": "Apoidea",
+            "text": "Business outreach, diagnostic meetings, development of tailored proposals and other advisory and sales aspects."
+          }
         ],
-      "benchmark": "This mirrors how the largest companies structure their impact programs: collaborating with organizations, engaging employees, and connecting environmental projects to a broader strategy."
+        "benchmark": "This mirrors how the largest companies structure their impact programs: collaborating with organizations, engaging employees, and connecting environmental projects to a broader strategy."
       },
       "faq": {
         "title": "Frequently asked questions",
@@ -5150,8 +6380,16 @@
       },
       "empezar": {
         "title": "Where would you like to start?",
-        "option1": { "title": "I already have an initiative in mind", "text": "Tell us what your organization wants to achieve and we'll design a proposal.", "cta": "I want to design a program" },
-        "option2": { "title": "I want to get to know Pueblo Mágico first", "text": "Join a Preview Day, see the site, live a sample of the experience and judge for yourself whether it makes sense for your team.", "cta": "I want to be invited" }
+        "option1": {
+          "title": "I already have an initiative in mind",
+          "text": "Tell us what your organization wants to achieve and we'll design a proposal.",
+          "cta": "I want to design a program"
+        },
+        "option2": {
+          "title": "I want to get to know Pueblo Mágico first",
+          "text": "Join a Preview Day, see the site, live a sample of the experience and judge for yourself whether it makes sense for your team.",
+          "cta": "I want to be invited"
+        }
       },
       "cta_final": {
         "title": "Let sustainability stop being just a written commitment",
