@@ -189,7 +189,7 @@ const Brote: React.FC = () => {
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-sm italic text-[#715257]">Y más experiencias para descubrir juntas. El PDF no establece horarios detallados.</p>
+            <p className="mt-6 text-sm italic text-[#715257]">Y más experiencias para descubrir juntas. Consultá los horarios y la organización de cada actividad.</p>
           </div>
         </section>
 
@@ -230,7 +230,7 @@ const Brote: React.FC = () => {
             </div>
             <div className="mt-8 flex items-start gap-3 rounded-xl border border-[#b96b69]/20 bg-white/60 p-5 text-sm leading-relaxed">
               <Check size={22} className="shrink-0 text-[#a64064]" aria-hidden="true" />
-              <p><strong>Todas las opciones se señan con el 50%.</strong> El material no detalla servicios incluidos, horarios ni condiciones de cancelación; consultalos antes de señar. Precios expresados en pesos argentinos.</p>
+              <p><strong>Todas las opciones se señan con el 50%.</strong> Consultá qué incluye cada modalidad, los horarios y las condiciones de cancelación antes de señar. Precios expresados en pesos argentinos.</p>
             </div>
           </div>
         </section>
