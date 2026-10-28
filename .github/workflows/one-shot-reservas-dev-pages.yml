@@ -1,0 +1,79 @@
+name: Provision Reservas DEV Pages project (one-time)
+
+# Dedicated one-time branch. No production deployment, D1 migration, or code push.
+on:
+  push:
+    branches:
+      - ops/provision-reservas-dev-pages-pueblo-magico
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provision-reservas-dev-pages-pueblo-magico
+  cancel-in-progress: false
+
+jobs:
+  create-dev-pages:
+    name: Verify and provision only magico-reservas-dev-pueblo-magico
+    if: github.repository == 'pueblo-magico/magico-web'
+    runs-on: ubuntu-24.04
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TARGET_PROJECT: magico-reservas-dev-pueblo-magico
+    steps:
+      - name: Setup Node 24 for Wrangler CLI
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Check Cloudflare credentials exist
+        run: |
+          set -euo pipefail
+          if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
+            echo "::error::Cloudflare account/token secrets are unavailable in this repository."
+            exit 1
+          fi
+
+      - name: List Pages projects before any write
+        id: existing
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.151.2 pages project list --json > "$RUNNER_TEMP/pages-projects.json"
+          node - "$RUNNER_TEMP/pages-projects.json" <<'NODE'
+          const fs = require("node:fs");
+          const data = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const projects = Array.isArray(data) ? data
+            : Array.isArray(data.result) ? data.result
+            : Array.isArray(data.projects) ? data.projects : null;
+          if (!projects) throw new Error("Unexpected Pages JSON; refusing to create project");
+          const matches = projects.filter(p => p && p.name === "magico-reservas-dev-pueblo-magico");
+          if (matches.length > 1) throw new Error("Duplicate project name in Pages inventory");
+          const exists = matches.length === 1;
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, "exists=" + exists + "\n");
+          console.log(exists ? "Target project already exists" : "Target project not found, creation authorized");
+          NODE
+
+      - name: Create ONLY the requested empty Pages project
+        if: steps.existing.outputs.exists == 'false'
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.151.2 pages project create \
+            magico-reservas-dev-pueblo-magico --production-branch=main
+
+      - name: Independently verify exact Cloudflare Pages project exists
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.151.2 pages project list --json > "$RUNNER_TEMP/pages-projects-after.json"
+          node - "$RUNNER_TEMP/pages-projects-after.json" <<'NODE'
+          const fs = require("node:fs");
+          const data = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const projects = Array.isArray(data) ? data
+            : Array.isArray(data.result) ? data.result
+            : Array.isArray(data.projects) ? data.projects : null;
+          if (!projects || projects.filter(p => p && p.name === "magico-reservas-dev-pueblo-magico").length !== 1) {
+            throw new Error("Target Pages project could not be verified");
+          }
+          console.log("Confirmed Cloudflare Pages project: magico-reservas-dev-pueblo-magico");
+          NODE
