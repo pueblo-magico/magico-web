@@ -180,7 +180,7 @@ const faqs = [
   {
     Icon: Ticket,
     question: '¿Qué incluye la entrada general?',
-    answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, cuatro artistas, ocho horas de música, el Jam de AcroYoga, el fogón y las propuestas abiertas. No incluye comidas, bebidas, estacionamiento, alojamiento ni experiencias con inscripción propia.',
+    answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, cinco artistas, diez horas de música, el Jam de AcroYoga, el fogón y las propuestas abiertas. No incluye comidas, bebidas, estacionamiento, alojamiento ni experiencias con inscripción propia.',
   },
   {
     Icon: Utensils,
@@ -341,6 +341,7 @@ const ArtistCard = ({ artist, index }: { artist: FestivalArtist; index: number }
       </div>
       <div className="flex flex-1 flex-col border-t p-6" style={{ borderColor: `${accent}3D`, background: `linear-gradient(145deg, ${surface}, ${glow}38)` }}>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>{artist.style}</p>
+        <p className="mt-2 text-xs font-semibold" style={{ color: `${ink}B8` }}>Sábado · {artist.setTime}</p>
         {'credit' in artist && artist.credit && <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: `${ink}8F` }}>{artist.credit}</p>}
         <p className="mt-4 text-sm leading-relaxed" style={{ color: `${ink}B8` }}>{artist.bio}</p>
         {'sourceUrl' in artist && artist.sourceUrl && (
@@ -677,7 +678,7 @@ const FestivalOctubre: React.FC = () => {
 
             <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
               {[
-                { Icon: Music2, title: 'Música en vivo', text: 'Cuatro artistas y ocho horas de house, trance, música orgánica y tambores.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
+                { Icon: Music2, title: 'Música en vivo', text: 'Cinco artistas y diez horas de house, trance, música orgánica y tambores.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
                 { Icon: Leaf, title: 'Naturaleza', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86] text-white' },
                 { Icon: UsersRound, title: 'Movimiento y conexión', text: 'Jam de AcroYoga, fogón y espacios para celebrar, jugar y conocer gente nueva.', shell: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067] text-white' },
               ].map(({ Icon, title, text, shell, icon }) => (
@@ -712,7 +713,7 @@ const FestivalOctubre: React.FC = () => {
             <div className="mx-auto mb-12 max-w-3xl text-center" data-reveal>
               <Eyebrow light>Artistas confirmados</Eyebrow>
               <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-6xl">El pulso de Raíz Sonora.</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cinco artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
 
               <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
                 <div className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FF5A1F] text-[#004B43] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
@@ -728,7 +729,7 @@ const FestivalOctubre: React.FC = () => {
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Sábado 31/10/2026</p>
                   <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Jornada central</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/65">Cuatro artistas, ocho horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.</p>
+                  <p className="mt-2 text-sm leading-relaxed text-white/65">Cinco artistas, diez horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.</p>
                 </div>
               </article>
 
@@ -756,7 +757,7 @@ const FestivalOctubre: React.FC = () => {
                 <ArtistCard key={artist.name} artist={artist} index={index} />
               ))}
             </HorizontalCardRail>
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 text-center text-sm text-white/55">La programación horaria completa se publicará en las redes de Pueblo Mágico.</div>
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-5 text-center text-sm text-white/55">Cinco sets consecutivos, sin pausas, desde las 14:00 hasta la medianoche.</div>
           </div>
         </section>
 
@@ -768,7 +769,7 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-4xl leading-tight serif-title md:text-5xl">Horarios de la jornada</h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[#003630]/65 md:text-base">Las puertas quedan abiertas durante toda la jornada: llegá a la hora que mejor te funcione.</p>
             </div>
-            <div className="mt-10 grid gap-4 md:grid-cols-2" data-reveal data-delay="1">
+            <div className="mt-10 grid gap-4 lg:grid-cols-[minmax(250px,.75fr)_1.25fr]" data-reveal data-delay="1">
               <article className="rounded-[1.75rem] border border-[#008C86]/25 bg-[#E2F5EE] p-7 shadow-[0_16px_38px_rgba(31,41,34,0.07)] md:p-8">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#008C86] text-white"><Clock3 size={19} aria-hidden="true" /></span>
                 <p className="mt-6 text-4xl text-[#003630] serif-title">10:00</p>
@@ -776,10 +777,23 @@ const FestivalOctubre: React.FC = () => {
                 <p className="mt-3 text-sm leading-relaxed text-[#003630]/65">Llegá cuando quieras y empezá a disfrutar del lugar a tu ritmo.</p>
               </article>
               <article className="rounded-[1.75rem] border border-[#FF5A1F]/25 bg-[#FFE3D2] p-7 shadow-[0_16px_38px_rgba(72,42,60,0.07)] md:p-8">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FF5A1F] text-white"><Music2 size={19} aria-hidden="true" /></span>
-                <p className="mt-6 text-4xl text-[#003630] serif-title">14:00</p>
-                <h3 className="mt-2 text-lg font-bold text-[#003630]">Comienzan los artistas en vivo</h3>
-                <p className="mt-3 text-sm leading-relaxed text-[#003630]/65">La programación musical en vivo empieza el sábado a las 14:00.</p>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FF5A1F] text-white"><Music2 size={19} aria-hidden="true" /></span>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#003630]">Sets en vivo</h3>
+                    <p className="text-sm text-[#003630]/65">14:00–00:00 · cinco sets de dos horas, sin pausas</p>
+                  </div>
+                </div>
+                <ol className="mt-6 divide-y divide-[#003630]/10">
+                  {FESTIVAL_OCTUBRE.artists.map(artist => (
+                    <li key={artist.name} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                      <span className="w-[6.75rem] shrink-0 text-sm font-bold tabular-nums text-[#B84B36]">{artist.setTime}</span>
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-[#FF5A1F]" aria-hidden="true" />
+                      <span className="min-w-0 font-semibold text-[#003630]">{artist.name}</span>
+                      <span className="ml-auto hidden text-xs text-[#003630]/55 sm:inline">{artist.style.split(' · ').slice(1).join(' · ')}</span>
+                    </li>
+                  ))}
+                </ol>
               </article>
             </div>
           </div>
