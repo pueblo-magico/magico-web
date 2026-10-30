@@ -22,12 +22,13 @@ test('communicates cash and card totals without an interest-free claim', () => {
   assert.match(pageSource, /Tarjeta: \{option\.cardTotal\} total/);
 });
 
-test('publishes the confirmed four-act schedule', () => {
+test('publishes the confirmed five-act schedule', () => {
   for (const expected of [
-    "time: '14:00–16:00', name: 'Stefanotherock'",
-    "time: '16:00–18:00', name: 'Fede W Salas'",
-    "time: '18:00–20:00', name: 'Mationix'",
-    "time: '20:00–22:00', name: 'Maurión'",
+    "time: '14:00–16:00', name: 'Anrea Leia'",
+    "time: '16:00–18:00', name: 'Stefanotherock'",
+    "time: '18:00–20:00', name: 'Fede W Salas'",
+    "time: '20:00–22:00', name: 'Mationix'",
+    "time: '22:00–00:00', name: 'Maurión'",
   ]) {
     assert.ok(pageSource.includes(expected), `schedule contains ${expected}`);
   }

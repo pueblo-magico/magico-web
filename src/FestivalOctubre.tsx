@@ -181,7 +181,7 @@ const faqs = [
   {
     Icon: Ticket,
     question: '¿Qué incluye la entrada general?',
-    answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, cuatro artistas, ocho horas de música, el Jam de AcroYoga, el fogón y las propuestas abiertas. No incluye comidas, bebidas, alojamiento ni experiencias con inscripción propia.',
+    answer: 'El Pase por el Día cuesta AR$ 35.000 por persona e incluye la jornada central del sábado, cinco artistas, diez horas de música, el Jam de AcroYoga, el fogón y las propuestas abiertas. No incluye comidas, bebidas, alojamiento ni experiencias con inscripción propia.',
   },
   {
     Icon: Utensils,
@@ -347,6 +347,7 @@ const ArtistCard = ({ artist, index }: { artist: FestivalArtist; index: number }
       </div>
       <div className="flex flex-1 flex-col border-t p-6" style={{ borderColor: `${accent}3D`, background: `linear-gradient(145deg, ${surface}, ${glow}38)` }}>
         <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>{artist.style}</p>
+        <p className="mt-2 text-xs font-semibold" style={{ color: `${ink}B8` }}>Sábado · {artist.setTime}</p>
         {'credit' in artist && artist.credit && <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: `${ink}8F` }}>{artist.credit}</p>}
         <p className="mt-4 text-sm leading-relaxed" style={{ color: `${ink}B8` }}>{artist.bio}</p>
         {'sourceUrl' in artist && artist.sourceUrl && (
@@ -634,7 +635,7 @@ const FestivalOctubre: React.FC = () => {
                 <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/35 px-4 py-2 backdrop-blur-sm">Sábado 31/10/2026</span>
                 <span className="rounded-full border border-[#FFD166]/40 bg-[#003A34]/35 px-4 py-2 backdrop-blur-sm">Los Gigantes · Córdoba</span>
               </div>
-              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#FFD166] md:text-xs">4 artistas · 8 horas · un viaje sonoro</p>
+              <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#FFD166] md:text-xs">5 artistas · 10 horas · un viaje sonoro</p>
               <h1 className="text-[4.25rem] leading-[0.76] tracking-[-0.065em] text-[#FFF8EA] [text-shadow:0_8px_35px_rgba(0,30,27,.55)] serif-title sm:text-8xl md:text-9xl lg:text-[9.5rem]"><span className="block">RAÍZ</span><span className="block">SONORA</span></h1>
               <p className="mx-auto mt-6 max-w-full text-xl leading-tight text-[#FFE28A] [text-shadow:0_3px_12px_rgba(0,0,0,0.95),0_1px_2px_rgba(0,0,0,0.95)] serif-title md:text-3xl">Movimiento · Conexión · Naturaleza</p>
               <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/80 md:text-lg">
@@ -686,7 +687,7 @@ const FestivalOctubre: React.FC = () => {
 
             <div className="mt-14 grid gap-4 md:grid-cols-3" data-reveal data-delay="1">
               {[
-                { Icon: Music2, title: 'Un viaje sonoro', text: 'Cuatro artistas y ocho horas de música para acompañar el movimiento del día al fuego de la noche.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
+                { Icon: Music2, title: 'Un viaje sonoro', text: 'Cinco artistas y diez horas de música para acompañar el movimiento del día al fuego de la noche.', shell: 'border-[#FF5A1F]/25 bg-[#FFF0D5]', icon: 'bg-[#FF5A1F] text-white' },
                 { Icon: Leaf, title: 'Naturaleza', text: 'Río, senderos y montaña forman parte de la experiencia y nos invitan a cambiar de ritmo.', shell: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86] text-white' },
                 { Icon: UsersRound, title: 'Movimiento y conexión', text: 'Jam de AcroYoga, fogón y espacios para celebrar, jugar y conocer gente nueva.', shell: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067] text-white' },
               ].map(({ Icon, title, text, shell, icon }) => (
@@ -735,7 +736,7 @@ const FestivalOctubre: React.FC = () => {
             <div className="mx-auto mb-12 max-w-3xl text-center" data-reveal>
               <Eyebrow light>Artistas confirmados</Eyebrow>
               <h2 className="text-4xl leading-tight text-[#FFF8EA] serif-title md:text-6xl">El pulso de Raíz Sonora.</h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cuatro artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
+              <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/55 md:text-base">Cinco artistas confirmados para celebrar integrando música y naturaleza. La música acompaña el viaje desde el movimiento del día hasta el fuego de la noche.</p>
 
               <article className="mx-auto mt-7 max-w-2xl rounded-[1.75rem] border border-[#FFD166]/25 bg-white/[0.06] p-5 text-left backdrop-blur-sm md:flex md:items-center md:gap-5 md:p-6">
                 <div className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FF5A1F] text-[#004B43] md:mb-0"><Moon size={21} aria-hidden="true" /></div>
@@ -751,7 +752,7 @@ const FestivalOctubre: React.FC = () => {
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFD166]">Sábado 31/10/2026</p>
                   <h3 className="mt-2 text-2xl text-[#FFF8EA] serif-title md:text-3xl">Jornada central</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/65">Cuatro artistas, ocho horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.</p>
+                  <p className="mt-2 text-sm leading-relaxed text-white/65">Cinco artistas, diez horas de música, Jam de AcroYoga, fogón y propuestas abiertas en el corazón de la montaña.</p>
                 </div>
               </article>
 
@@ -779,7 +780,7 @@ const FestivalOctubre: React.FC = () => {
                 <ArtistCard key={artist.name} artist={artist} index={index} />
               ))}
             </HorizontalCardRail>
-            <div className="mt-6 rounded-2xl border border-[#FFD166]/20 bg-white/[0.06] px-6 py-5 text-center text-sm text-white/70">Cuatro live sets consecutivos de dos horas, de 14:00 a 22:00. Después, el encuentro sigue con movimiento, naturaleza, conexión y yoga.</div>
+            <div className="mt-6 rounded-2xl border border-[#FFD166]/20 bg-white/[0.06] px-6 py-5 text-center text-sm text-white/70">Cinco sets consecutivos de dos horas, de 14:00 a 00:00. Después, el encuentro sigue con movimiento, naturaleza, conexión y yoga.</div>
           </div>
         </section>
 
@@ -791,7 +792,7 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-4xl leading-tight serif-title md:text-5xl">Horarios de la jornada</h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-[#003630]/65 md:text-base">Las puertas quedan abiertas durante toda la jornada: llegá a la hora que mejor te funcione.</p>
             </div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5" data-reveal data-delay="1">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" data-reveal data-delay="1">
               <article className="rounded-[1.75rem] border border-[#008C86]/25 bg-[#E2F5EE] p-7 shadow-[0_16px_38px_rgba(31,41,34,0.07)] md:p-8">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#008C86] text-white"><Clock3 size={19} aria-hidden="true" /></span>
                 <p className="mt-6 text-4xl text-[#003630] serif-title">10:00</p>
@@ -799,10 +800,11 @@ const FestivalOctubre: React.FC = () => {
                 <p className="mt-3 text-sm leading-relaxed text-[#003630]/65">Llegá con tiempo y empezá a disfrutar del lugar a tu ritmo.</p>
               </article>
               {[
-                { time: '14:00–16:00', name: 'Stefanotherock', style: 'Afro house', tone: 'border-[#FF5A1F]/25 bg-[#FFE3D2]', icon: 'bg-[#FF5A1F]' },
-                { time: '16:00–18:00', name: 'Fede W Salas', style: 'Organic techno · solarpunk', tone: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86]' },
-                { time: '18:00–20:00', name: 'Mationix', style: 'Progressive tribal organic house', tone: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067]' },
-                { time: '20:00–22:00', name: 'Maurión', style: 'Techno ritual', tone: 'border-[#FF9F1C]/30 bg-[#FFF1C7]', icon: 'bg-[#FF9F1C]' },
+                { time: '14:00–16:00', name: 'Anrea Leia', style: 'Organic tribal', tone: 'border-[#FF9F1C]/30 bg-[#FFF1C7]', icon: 'bg-[#FF9F1C]' },
+                { time: '16:00–18:00', name: 'Stefanotherock', style: 'Afro house', tone: 'border-[#FF5A1F]/25 bg-[#FFE3D2]', icon: 'bg-[#FF5A1F]' },
+                { time: '18:00–20:00', name: 'Fede W Salas', style: 'Organic techno · solarpunk', tone: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86]' },
+                { time: '20:00–22:00', name: 'Mationix', style: 'Progressive tribal organic house', tone: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067]' },
+                { time: '22:00–00:00', name: 'Maurión', style: 'Techno ritual', tone: 'border-[#FF9F1C]/30 bg-[#FFF1C7]', icon: 'bg-[#FF9F1C]' },
               ].map(({ time, name, style, tone, icon }) => (
                 <article key={name} className={`rounded-[1.75rem] border p-7 shadow-[0_16px_38px_rgba(72,42,60,0.07)] md:p-8 ${tone}`}>
                   <span className={`flex h-11 w-11 items-center justify-center rounded-full text-white ${icon}`}><Music2 size={19} aria-hidden="true" /></span>
@@ -811,11 +813,11 @@ const FestivalOctubre: React.FC = () => {
                   <p className="mt-3 text-sm leading-relaxed text-[#003630]/65">{style}</p>
                 </article>
               ))}
-              <article className="rounded-[1.75rem] border border-[#004B43]/20 bg-[#004B43] p-7 text-white shadow-[0_16px_38px_rgba(31,41,34,0.12)] md:p-8 lg:col-span-5">
+              <article className="rounded-[1.75rem] border border-[#004B43]/20 bg-[#004B43] p-7 text-white shadow-[0_16px_38px_rgba(31,41,34,0.12)] md:p-8 lg:col-span-3 xl:col-span-6">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFD166] text-[#004B43]"><Waves size={19} aria-hidden="true" /></span>
-                <p className="mt-6 text-3xl text-[#FFF8EA] serif-title">Desde las 22:00 · final abierto</p>
+                <p className="mt-6 text-3xl text-[#FFF8EA] serif-title">Desde las 00:00 · final abierto</p>
                 <h3 className="mt-2 text-lg font-bold">Movimiento, naturaleza, conexión y yoga</h3>
-                <p className="mt-3 text-sm leading-relaxed text-white/65">Los cuatro live sets suceden sin pausas entre artistas. Después, la noche continúa al ritmo del encuentro.</p>
+                <p className="mt-3 text-sm leading-relaxed text-white/65">Los cinco sets suceden sin pausas entre artistas. Después, la noche continúa al ritmo del encuentro.</p>
               </article>
             </div>
           </div>
@@ -883,7 +885,7 @@ const FestivalOctubre: React.FC = () => {
             <div className="mx-auto mb-7 grid max-w-4xl gap-3 rounded-[1.75rem] border border-[#004B43]/12 bg-[#E2F5EE] p-5 text-left sm:grid-cols-2 md:p-6" data-reveal>
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#004B43]">Todos los accesos incluyen</p>
-                <p className="mt-2 text-sm leading-relaxed text-[#16423D]/70">Jornada central del sábado, cuatro artistas, ocho horas de música, Jam de AcroYoga, fogón y acceso a los espacios generales.</p>
+                <p className="mt-2 text-sm leading-relaxed text-[#16423D]/70">Jornada central del sábado, cinco artistas, diez horas de música, Jam de AcroYoga, fogón y acceso a los espacios generales.</p>
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#004B43]">Se reserva por separado</p>
