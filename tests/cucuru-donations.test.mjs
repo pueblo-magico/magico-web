@@ -8,6 +8,7 @@ import {
   normalizarCollectionCucuru,
 } from '../functions/_lib/cucuruDonations.ts';
 import { procesarWebhookCucuru } from '../functions/api/v1/integrations/cucuru.ts';
+import { consultarResumenAportes } from '../functions/api/v1/reforestacion/aportes/resumen.ts';
 
 const SECRET = 'secreto-cucuru-de-prueba-seguro';
 const COLLECTOR = 'collector-reforestacion';
@@ -142,6 +143,26 @@ test('registra un aporte una sola vez frente a redeliveries idénticas', async (
     sqlite.prepare('SELECT amount_cents FROM reforestacion_aportes').get().amount_cents,
     1_500_050,
   );
+  sqlite.close();
+});
+
+test('suma los aportes confirmados y cuenta cada Collection una sola vez', async () => {
+  const sqlite = createDatabase();
+  const env = environment(sqlite);
+
+  await procesarWebhookCucuru(request(payload()), env);
+  await procesarWebhookCucuru(request(payload()), env);
+  await procesarWebhookCucuru(request(payload({
+    collection_id: 'collection-donation-2',
+    collection_trace_id: 'trace-donation-2',
+    amount: '25000',
+  })), env);
+
+  assert.deepEqual(await consultarResumenAportes(env.DB), {
+    amountCents: 4_000_050,
+    donationsCount: 2,
+    currency: 'ARS',
+  });
   sqlite.close();
 });
 

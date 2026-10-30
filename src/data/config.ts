@@ -45,7 +45,9 @@ export const REFORESTATION_CONTRIBUTION = {
     isSample: false,
   },
   raisedAmount: Number(import.meta.env.VITE_REFORESTATION_RAISED_AMOUNT ?? 230000),
-  raisedAmountUsd: Number(import.meta.env.VITE_REFORESTATION_RAISED_AMOUNT_USD ?? 150),
+  // Tipo de cambio operativo para mostrar el progreso en inglés. Se mantiene
+  // configurable hasta definir qué cotización pública (oficial/MEP/otra) usar.
+  arsPerUsd: Number(import.meta.env.VITE_REFORESTATION_ARS_PER_USD ?? 1500),
   // Cantidad real de personas que ya aportaron (rifa + aporte libre). Con 0 no se muestra.
   donorsCount: Number(import.meta.env.VITE_REFORESTATION_DONORS_COUNT ?? 0),
   // Fecha límite de la seña (Fase 1). Después de esta fecha la cuenta regresiva se oculta.
