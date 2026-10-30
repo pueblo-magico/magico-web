@@ -24,7 +24,7 @@ test('communicates cash and card totals without an interest-free claim', () => {
 
 test('publishes the confirmed five-act schedule', () => {
   for (const expected of [
-    "time: '14:00–16:00', name: 'Anrea Leia'",
+    "time: '14:00–16:00', name: 'Andrea Leia'",
     "time: '16:00–18:00', name: 'Stefanotherock'",
     "time: '18:00–20:00', name: 'Fede W Salas'",
     "time: '20:00–22:00', name: 'Mationix'",
