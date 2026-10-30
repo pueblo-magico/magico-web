@@ -1,5 +1,9 @@
 node_modules
 
+# Local Vite environment values
+.env.local
+.env.*.local
+
 # Local Netlify folder
 .netlify
 
