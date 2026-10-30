@@ -40,11 +40,11 @@ export const FESTIVAL_OCTUBRE = {
   },
   artists: [
     {
-      name: 'Anrea Leia',
+      name: 'Andrea Leia',
       style: 'DJ set · organic tribal',
       bio: 'Un set de organic tribal donde percusiones orgánicas y texturas electrónicas se encuentran en un recorrido para mover el cuerpo y conectar con el pulso del paisaje.',
       image: '/uploads/atardeser/artist-anrea-leia.jpg',
-      imageAlt: 'Anrea Leia tocando un DJ set en vivo',
+      imageAlt: 'Andrea Leia tocando un DJ set en vivo',
       sourceUrl: 'https://www.instagram.com/shamballa.farm/',
       sourceLabel: 'Instagram',
       setTime: '14:00–16:00',

@@ -800,7 +800,7 @@ const FestivalOctubre: React.FC = () => {
                 <p className="mt-3 text-sm leading-relaxed text-[#003630]/65">Llegá con tiempo y empezá a disfrutar del lugar a tu ritmo.</p>
               </article>
               {[
-                { time: '14:00–16:00', name: 'Anrea Leia', style: 'Organic tribal', tone: 'border-[#FF9F1C]/30 bg-[#FFF1C7]', icon: 'bg-[#FF9F1C]' },
+                { time: '14:00–16:00', name: 'Andrea Leia', style: 'Organic tribal', tone: 'border-[#FF9F1C]/30 bg-[#FFF1C7]', icon: 'bg-[#FF9F1C]' },
                 { time: '16:00–18:00', name: 'Stefanotherock', style: 'Afro house', tone: 'border-[#FF5A1F]/25 bg-[#FFE3D2]', icon: 'bg-[#FF5A1F]' },
                 { time: '18:00–20:00', name: 'Fede W Salas', style: 'Organic techno · solarpunk', tone: 'border-[#008C86]/25 bg-[#E2F5EE]', icon: 'bg-[#008C86]' },
                 { time: '20:00–22:00', name: 'Mationix', style: 'Progressive tribal organic house', tone: 'border-[#E40067]/25 bg-[#FFE3EF]', icon: 'bg-[#E40067]' },
