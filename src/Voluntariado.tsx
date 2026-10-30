@@ -32,6 +32,7 @@ import { PageSectionNav } from '../components/PageSectionNav';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SITE_URL } from './data/config';
 import { ROUTES } from './routes';
+import { shouldShowUpcomingEvent } from './utils/eventCalendar';
 
 const areaIcons = [UtensilsCrossed, Home, Sprout, TreePine, Hammer, Palette, Recycle];
 const modalityIcons = [Sparkles, HeartHandshake, CalendarDays, Sun, CircleDot];
@@ -41,7 +42,9 @@ const faqIcons = [Sprout, Clock3, Home, CircleDot, Hammer, Mountain];
 const Voluntariado: React.FC = () => {
   const { t, language } = useLanguage();
   const content = (t as any).volunteerPage;
-  const volunteerEvents = ((t as any).events?.cards || []).filter((event: any) => event.isVolunariado === true);
+  const volunteerEvents = ((t as any).events?.cards || []).filter((event: any) => (
+    event.isVolunariado === true && shouldShowUpcomingEvent(event)
+  ));
   const volunteerReviews = (t as any).volunteer?.testimonials || [];
   const volunteerImage = (t as any).volunteer.image as string;
   const [openFaq, setOpenFaq] = useState<number | null>(0);

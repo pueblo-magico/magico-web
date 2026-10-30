@@ -944,14 +944,26 @@
           "isVolunariado": true
         },
         {
-          "date": "SÁBADO 31 DE OCTUBRE DE 2026",
-          "startDate": "2026-10-31",
-          "endDate": "2026-10-31",
+          "date": "30 OCTUBRE · 1 NOVIEMBRE 2026",
+          "startDate": "2026-10-30",
+          "endDate": "2026-11-01",
           "title": "Raíz Sonora · Música, naturaleza y encuentro",
-          "desc": "Una tribu de artistas y un día entero de música en la montaña. Jam de AcroYoga, fogón y opciones para vivir el día o todo el fin de semana. Desde AR$ 35.000.",
+          "desc": "Buscamos 4 voluntarios/as para acompañar todo el fin de semana, principalmente en actividades para niñas y niños y en cocina. Incluye alojamiento y comidas; la participación en el festival depende de las responsabilidades acordadas. Se puede coordinar llegada anticipada o una estadía más larga.",
           "btn": "Conocer el festival",
           "image": "/uploads/atardeser/raizsonoracard.png",
-          "link": "/festival-RAÍZ-SONORA",
+          "link": "/festival-raiz-sonora",
+          "pdfLink": "",
+          "isVolunariado": true
+        },
+        {
+          "date": "6–8 NOVIEMBRE 2026",
+          "startDate": "2026-11-06",
+          "endDate": "2026-11-08",
+          "title": "BROTE · Ronda de Mujeres · Ciclo Primavera",
+          "desc": "Tres días para conectar con la primavera y con lo que quiere brotar: círculo de mujeres, canto, danza, ceremonia de fuego, caminatas al río, ofrenda al agua y naturaleza en Los Gigantes, Córdoba.",
+          "btn": "Conocer el encuentro",
+          "image": "/uploads/brote/brote-primavera.svg",
+          "link": "/brote-ronda-de-mujeres",
           "pdfLink": ""
         },
         {
@@ -3711,14 +3723,26 @@
           "isVolunariado": true
         },
         {
-          "date": "SATURDAY, OCTOBER 31, 2026",
-          "startDate": "2026-10-31",
-          "endDate": "2026-10-31",
+          "date": "OCTOBER 30 · NOVEMBER 1, 2026",
+          "startDate": "2026-10-30",
+          "endDate": "2026-11-01",
           "title": "Raíz Sonora · Music, nature and connection",
-          "desc": "A tribe of artists and a full day of music in the mountains. AcroYoga Jam, bonfire and options for the day or the entire weekend. From USD 25.",
+          "desc": "We are looking for 4 volunteers for the full weekend, mainly supporting activities for children and kitchen work. Accommodation and meals are included; festival participation depends on the agreed responsibilities. Earlier arrival or a longer stay can be arranged.",
           "btn": "Discover the festival",
           "image": "/uploads/atardeser/raiz-sonora-hero-v1.webp",
-          "link": "/festival-RAÍZ-SONORA",
+          "link": "/festival-raiz-sonora",
+          "pdfLink": "",
+          "isVolunariado": true
+        },
+        {
+          "date": "NOVEMBER 6–8, 2026",
+          "startDate": "2026-11-06",
+          "endDate": "2026-11-08",
+          "title": "BROTE · Women's Circle · Spring Gathering",
+          "desc": "A three-day women's gathering to reconnect with spring through singing, dance, fire ceremony, walks by the river, an offering to the water and connection with nature in Los Gigantes, Córdoba. Landing page in Spanish.",
+          "btn": "Explore the gathering",
+          "image": "/uploads/brote/brote-primavera.svg",
+          "link": "/brote-ronda-de-mujeres",
           "pdfLink": ""
         },
         {
