@@ -60,6 +60,17 @@ type CopyField = 'alias' | 'cbu' | 'iban' | 'bic' | 'usdc' | 'btc' | 'eth';
 type ContributionMethod = 'argentina' | 'sepa' | 'crypto';
 type CryptoAsset = 'USDC' | 'BTC' | 'ETH';
 type CryptoQrDetails = { asset: CryptoAsset; address: string; network: string };
+type CucuruDonationSummary = {
+  amountCents: number;
+  donationsCount: number;
+  currency: 'ARS';
+};
+
+const EMPTY_CUCURU_SUMMARY: CucuruDonationSummary = {
+  amountCents: 0,
+  donationsCount: 0,
+  currency: 'ARS',
+};
 
 const CryptoAssetIcon = ({ asset, size = 44 }: { asset: CryptoAsset; size?: number }) => {
   if (asset === 'ETH') {
@@ -113,7 +124,40 @@ const Reforestacion: React.FC = () => {
   const [showSticky, setShowSticky] = useState(false);
   const [cryptoQr, setCryptoQr] = useState<CryptoQrDetails | null>(null);
   const [expandedGallery, setExpandedGallery] = useState<ExpandedGallery | null>(null);
+  const [cucuruSummary, setCucuruSummary] = useState<CucuruDonationSummary>(EMPTY_CUCURU_SUMMARY);
   const galleryTouchStartX = useRef<number | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch('/api/v1/reforestacion/aportes/resumen', {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+      .then(async response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(summary => {
+        if (
+          summary?.currency !== 'ARS'
+          || !Number.isSafeInteger(summary.amountCents)
+          || summary.amountCents < 0
+          || !Number.isSafeInteger(summary.donationsCount)
+          || summary.donationsCount < 0
+        ) {
+          throw new Error('Resumen de aportes inválido.');
+        }
+        setCucuruSummary(summary as CucuruDonationSummary);
+      })
+      .catch(error => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.warn('No se pudo cargar el total actualizado de aportes.', error);
+      });
+
+    return () => controller.abort();
+  }, []);
+
   const hasAlias = Boolean(REFORESTATION_CONTRIBUTION.alias);
   const hasSepa = Boolean(
     REFORESTATION_CONTRIBUTION.sepa.accountHolder
@@ -126,15 +170,23 @@ const Reforestacion: React.FC = () => {
     || REFORESTATION_CONTRIBUTION.crypto.eth.address,
   );
   const phaseOneGoal = 1_500_000;
-  const raisedAmount = Number.isFinite(REFORESTATION_CONTRIBUTION.raisedAmount)
+  const baseRaisedAmount = Number.isFinite(REFORESTATION_CONTRIBUTION.raisedAmount)
     ? Math.max(0, REFORESTATION_CONTRIBUTION.raisedAmount)
     : 0;
+  const raisedAmount = baseRaisedAmount + (cucuruSummary.amountCents / 100);
   const progressPercentage = Math.min(100, (raisedAmount / phaseOneGoal) * 100);
   const displayedPercentage = Math.round((raisedAmount / phaseOneGoal) * 100);
-  const displayedRaisedAmount = language === 'en'
-    ? Math.max(0, REFORESTATION_CONTRIBUTION.raisedAmountUsd)
-    : raisedAmount;
-  const displayedPhaseOneGoal = language === 'en' ? 1_000 : phaseOneGoal;
+  const arsPerUsd = Number.isFinite(REFORESTATION_CONTRIBUTION.arsPerUsd)
+    && REFORESTATION_CONTRIBUTION.arsPerUsd > 0
+    ? REFORESTATION_CONTRIBUTION.arsPerUsd
+    : 1500;
+  const displayedRaisedAmount = language === 'en' ? raisedAmount / arsPerUsd : raisedAmount;
+  const displayedPhaseOneGoal = language === 'en' ? phaseOneGoal / arsPerUsd : phaseOneGoal;
+  const progressCurrencyFormatter = new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
+    style: 'currency',
+    currency: language === 'en' ? 'USD' : 'ARS',
+    maximumFractionDigits: 0,
+  });
   const currencyFormatter = new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
     style: 'currency',
     currency: language === 'es' ? 'ARS' : 'USD',
@@ -155,7 +207,11 @@ const Reforestacion: React.FC = () => {
   const voucherWhatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(content.voucher.whatsappMessage)}`;
   const giftWhatsappUrl = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(content.gift.whatsappMessage)}`;
   const shareWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(content.share.message.replace('{url}', SITE_URL + ROUTES.REFORESTACION))}`;
-  const { treePrice, donorsCount } = REFORESTATION_CONTRIBUTION;
+  const { treePrice } = REFORESTATION_CONTRIBUTION;
+  const baseDonorsCount = Number.isFinite(REFORESTATION_CONTRIBUTION.donorsCount)
+    ? Math.max(0, Math.floor(REFORESTATION_CONTRIBUTION.donorsCount))
+    : 0;
+  const donorsCount = baseDonorsCount + cucuruSummary.donationsCount;
   const displayedTreePrice = language === 'en' ? 1 : treePrice;
   const formatTrees = (amount: number) => String(Math.floor(amount / displayedTreePrice));
   // Días hasta la fecha límite de la seña (inclusive). null = vencida: no se muestra.
@@ -495,10 +551,10 @@ const Reforestacion: React.FC = () => {
             <div className="mb-8 max-w-xl rounded-2xl border border-white/15 bg-[#071d14]/45 p-4 backdrop-blur-sm md:p-5">
               <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-white">
                 <p>
-                  <span className="font-serif text-2xl md:text-3xl">{currencyFormatter.format(displayedRaisedAmount)}</span>{' '}
+                  <span className="font-serif text-2xl md:text-3xl">{progressCurrencyFormatter.format(displayedRaisedAmount)}</span>{' '}
                   <span className="text-sm text-white/70">{content.hero.raisedLabel}</span>
                 </p>
-                <p className="text-sm font-semibold text-gold">{displayedPercentage}% {content.hero.ofGoal} {currencyFormatter.format(displayedPhaseOneGoal)}</p>
+                <p className="text-sm font-semibold text-gold">{displayedPercentage}% {content.hero.ofGoal} {progressCurrencyFormatter.format(displayedPhaseOneGoal)}</p>
               </div>
               <div className="h-2.5 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-label={content.funding.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, displayedPercentage)}>
                 <div className="h-full rounded-full bg-gold" style={{ width: `${Math.max(3, progressPercentage)}%` }} />
@@ -789,8 +845,8 @@ const Reforestacion: React.FC = () => {
                 </div>
                 <div>
                   <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-brand">
-                    <p><span className="font-serif text-3xl md:text-4xl">{currencyFormatter.format(displayedRaisedAmount)}</span> <span className="text-sm text-gray-500">{content.funding.currentLabel.toLowerCase()}</span></p>
-                    <p className="text-sm font-semibold">{displayedPercentage}% · {currencyFormatter.format(displayedPhaseOneGoal)}</p>
+                    <p><span className="font-serif text-3xl md:text-4xl">{progressCurrencyFormatter.format(displayedRaisedAmount)}</span> <span className="text-sm text-gray-500">{content.funding.currentLabel.toLowerCase()}</span></p>
+                    <p className="text-sm font-semibold">{displayedPercentage}% · {progressCurrencyFormatter.format(displayedPhaseOneGoal)}</p>
                   </div>
                   <div className="h-4 overflow-hidden rounded-full bg-brand/10" role="progressbar" aria-label={content.funding.progressLabel} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, displayedPercentage)}>
                     <div className="flex h-full min-w-[2.5rem] items-center justify-center rounded-full bg-gradient-to-r from-[#d6a91e] to-gold text-[10px] font-bold text-white transition-[width] duration-700" style={{ width: `${Math.max(4, progressPercentage)}%` }}>
@@ -1120,7 +1176,7 @@ const Reforestacion: React.FC = () => {
           </div>
         </section>
 
-        <ReforestacionTransparencia raised={currencyFormatter.format(displayedRaisedAmount)} />
+        <ReforestacionTransparencia raised={progressCurrencyFormatter.format(displayedRaisedAmount)} />
 
         <section className="bg-brand px-6 py-12 text-white md:py-14">
           <div data-reveal>
