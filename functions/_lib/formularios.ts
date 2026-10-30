@@ -56,10 +56,10 @@ export async function dominioRecibeMail(email: string): Promise<boolean> {
   }
 }
 
-export async function enviarMail(env: any, to: string[], subject: string, html: string, replyTo?: string) {
-  if (!env.RESEND_API_KEY || to.length === 0) return;
+export async function enviarMail(env: any, to: string[], subject: string, html: string, replyTo?: string): Promise<boolean> {
+  if (!env.RESEND_API_KEY || to.length === 0) return false;
   try {
-    await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -68,7 +68,10 @@ export async function enviarMail(env: any, to: string[], subject: string, html: 
         ...(replyTo ? { reply_to: replyTo } : {}),
       }),
     });
-  } catch { /* best-effort: el registro ya quedó en D1 */ }
+    return response.ok;
+  } catch {
+    return false; // best-effort: el registro ya quedó en D1
+  }
 }
 
 export const destinatariosAviso = (env: any): string[] =>
