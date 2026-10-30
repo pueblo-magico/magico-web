@@ -1158,6 +1158,12 @@ const Reforestacion: React.FC = () => {
             <div className="space-y-3">
               {content.faq.items.map((item: { q: string; a: string }, index: number) => {
                 const open = openFaq === index;
+                // La FAQ debe respetar la disponibilidad real de SEPA en el build desplegado.
+                const answer = (REFORESTATION_CONTRIBUTION.sepa.isSample || !hasSepa) && /SEPA/i.test(item.a)
+                  ? language === 'es'
+                    ? 'La transferencia SEPA todavía no está habilitada. Si querés aportar desde el exterior, consultá las opciones cripto disponibles en esta página o escribinos por WhatsApp para coordinar una alternativa. Verificá siempre los datos antes de transferir.'
+                    : 'SEPA transfers are not enabled yet. If you are contributing from abroad, check the crypto options available on this page or contact us on WhatsApp to arrange an alternative. Always verify the payment details before transferring.'
+                  : item.a;
                 return (
                   <div key={item.q} className="overflow-hidden rounded-2xl border border-brand/10 bg-white">
                     <h3>
@@ -1173,7 +1179,7 @@ const Reforestacion: React.FC = () => {
                       </button>
                     </h3>
                     <div id={`faq-${index}`} hidden={!open} className="px-5 pb-5 font-light leading-relaxed text-gray-600 md:px-6">
-                      {item.a}
+                      {answer}
                     </div>
                   </div>
                 );
