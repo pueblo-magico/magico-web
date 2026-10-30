@@ -5,6 +5,7 @@ compatibility_date = "2026-08-01"
 [vars]
 CUCURU_WEBHOOK_HEADER_NAME = "X-Cucuru-Webhook-Secret"
 CUCURU_DONATIONS_CURRENCY = "ARS"
+CUCURU_DONATIONS_ACCOUNT = "magico.reforestacion"
 
 [[d1_databases]]
 binding = "DB"
