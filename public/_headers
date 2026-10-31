@@ -36,3 +36,9 @@
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store
   Referrer-Policy: no-referrer
+
+# Separate unlisted proposal for Escuela N.º 729, including URL variants.
+/aulas-verdes-729-salvador-mazza*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
