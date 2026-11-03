@@ -964,7 +964,8 @@
           "btn": "Conocer el encuentro",
           "image": "/uploads/brote/brote-primavera.svg",
           "link": "/brote-ronda-de-mujeres",
-          "pdfLink": ""
+          "pdfLink": "",
+          "showInMainEvents": false
         },
         {
           "date": "7-8 NOVIEMBRE 2026",
@@ -3743,7 +3744,8 @@
           "btn": "Explore the gathering",
           "image": "/uploads/brote/brote-primavera.svg",
           "link": "/brote-ronda-de-mujeres",
-          "pdfLink": ""
+          "pdfLink": "",
+          "showInMainEvents": false
         },
         {
           "date": "NOV 7-8, 2026",
