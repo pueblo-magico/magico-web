@@ -46,6 +46,31 @@ jobs:
           VITE_REFORESTATION_SEPA_BANK: ${{ vars.VITE_REFORESTATION_SEPA_BANK }}
           VITE_REFORESTATION_SEPA_CURRENCY: ${{ vars.VITE_REFORESTATION_SEPA_CURRENCY }}
 
+      - name: Start built-site preview for visual QA
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/magico-preview.log 2>&1 &
+          echo $! > /tmp/magico-preview.pid
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/magico-preview.log
+          exit 1
+
+      - name: Visual layout QA
+        run: npm run test:visual
+
+      - name: Upload visual QA evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: visual-qa-pr-${{ github.event.pull_request.number }}
+          path: outputs/visual-qa
+          if-no-files-found: ignore
+          retention-days: 14
+
       # GitHub intentionally withholds repository secrets from forked pull
       # requests. Those PRs still run the complete build above, but cannot deploy.
       - name: Deploy Cloudflare Pages preview
@@ -102,3 +127,4 @@ jobs:
             } else {
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
             }
+
