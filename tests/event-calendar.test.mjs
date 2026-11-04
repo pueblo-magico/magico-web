@@ -68,3 +68,38 @@ test('Achala Viva stays routable but is hidden from the main calendar', () => {
     assert.equal(shouldShowMainCalendarEvent(card, '2026-11-04'), false);
   }
 });
+
+test('Reset Vital and Fly Fishing keep their destinations but stay out of the agenda', () => {
+  const expectedDestinations = new Map([
+    ['Reset Vital', '/estadia'],
+    ['Córdoba Fly Fishing Adventure', '/cordoba-fly-fishing'],
+  ]);
+
+  for (const language of ['es', 'en']) {
+    for (const [title, destination] of expectedDestinations) {
+      const card = translations[language].events.cards.find((event) => event.title === title);
+
+      assert.ok(card);
+      assert.equal(card.link, destination);
+      assert.equal(card.showInMainEvents, false);
+      assert.equal(shouldShowMainCalendarEvent(card, '2026-11-04'), false);
+    }
+  }
+});
+
+test('the December peyote ceremony is dated and opens its WhatsApp contact', () => {
+  const expectedTitles = {
+    es: 'Ceremonia tradicional de peyote',
+    en: 'Traditional peyote ceremony',
+  };
+
+  for (const language of ['es', 'en']) {
+    const card = translations[language].events.cards.find((event) => event.title === expectedTitles[language]);
+
+    assert.ok(card);
+    assert.equal(card.startDate, '2026-12-03');
+    assert.equal(card.endDate, '2026-12-03');
+    assert.match(card.link, /^https:\/\/wa\.me\/529843234048\?text=/);
+    assert.equal(shouldShowMainCalendarEvent(card, '2026-11-04'), true);
+  }
+});
