@@ -982,6 +982,50 @@
           "showInMainEvents": false
         },
         {
+          "date": "8 NOVIEMBRE 2026",
+          "startDate": "2026-11-08",
+          "endDate": "2026-11-08",
+          "title": "Ceremonia de Temazcal",
+          "desc": "Experiencia ancestral de conexión y transformación física, mental, emocional y espiritual en la montaña.",
+          "btn": "Consultar y reservar",
+          "image": "/uploads/temazcal.webp",
+          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20consultar%20y%20reservar%20mi%20lugar%20para%20la%20Ceremonia%20de%20Temazcal%20del%208%20de%20noviembre%20de%202026%20en%20Pueblo%20M%C3%A1gico.",
+          "showInExperienceCatalog": false
+        },
+        {
+          "date": "9 NOVIEMBRE 2026",
+          "startDate": "2026-11-09",
+          "endDate": "2026-11-09",
+          "title": "Trekking guiado · Cerro La Cruz",
+          "desc": "Una jornada para caminar Los Gigantes con guía, ascender al Cerro La Cruz y encontrarse con la inmensidad de la montaña a otro ritmo.",
+          "btn": "Consultar y reservar",
+          "image": "/uploads/img_6948.webp",
+          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20consultar%20y%20reservar%20mi%20lugar%20para%20el%20trekking%20guiado%20al%20Cerro%20La%20Cruz%20del%209%20de%20noviembre%20de%202026.",
+          "showInExperienceCatalog": false
+        },
+        {
+          "date": "13–15 NOVIEMBRE 2026",
+          "startDate": "2026-11-13",
+          "endDate": "2026-11-15",
+          "title": "Retiro Mujer Diamante",
+          "desc": "Tres días para honrar el llamado interior, volver al cuerpo y compartir un encuentro entre mujeres, domos, tierra y cielo abierto en Los Gigantes.",
+          "btn": "Recibir información",
+          "image": "/uploads/Ciclo Femenino/Mujeres meditando en circulo acostadas.jpeg",
+          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20recibir%20informaci%C3%B3n%20y%20reservar%20mi%20lugar%20para%20el%20Retiro%20Mujer%20Diamante%20del%2013%20al%2015%20de%20noviembre%20de%202026%20en%20Los%20Gigantes.",
+          "showInExperienceCatalog": false
+        },
+        {
+          "date": "27–29 NOVIEMBRE 2026",
+          "startDate": "2026-11-27",
+          "endDate": "2026-11-29",
+          "title": "El Despertar del Colibrí",
+          "desc": "Un encuentro de hombres entre fuego, montaña y silencio para habitar el cuerpo, la emoción y la palabra. Círculos, caminatas conscientes, inmersión en agua fría, rituales y Temazcal.",
+          "btn": "Recibir información",
+          "image": "/uploads/sunset-rio-fogon-real.webp",
+          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20recibir%20informaci%C3%B3n%20y%20reservar%20mi%20lugar%20para%20El%20Despertar%20del%20Colibr%C3%AD%20del%2027%20al%2029%20de%20noviembre%20de%202026.",
+          "showInExperienceCatalog": false
+        },
+        {
           "date": "5-6 DICIEMBRE 2026",
           "startDate": "2026-12-05",
           "endDate": "2026-12-06",
@@ -996,6 +1040,17 @@
           "showInMainEvents": false
         },
         {
+          "date": "5–8 DICIEMBRE 2026",
+          "startDate": "2026-12-05",
+          "endDate": "2026-12-08",
+          "title": "Agus Nasuti · The Viaje",
+          "desc": "Una experiencia de transformación guiada por Agus Nasuti para recordar la sabiduría femenina, escuchar la propia verdad y volver al cuerpo, la intuición y la vida compartida.",
+          "btn": "Recibir información",
+          "image": "/uploads/events/agus-nasuti-the-viaje.jpg",
+          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20recibir%20informaci%C3%B3n%20y%20reservar%20mi%20lugar%20para%20la%20experiencia%20de%20Agus%20Nasuti%20%C2%B7%20The%20Viaje%2C%20del%205%20al%208%20de%20diciembre%20de%202026.",
+          "showInExperienceCatalog": false
+        },
+        {
           "date": "PRÓXIMA FECHA",
           "title": "Achala Viva",
           "desc": "Una exploración guiada que incluye astroturismo, avistaje de aves y fotografía de naturaleza.",
@@ -1004,14 +1059,6 @@
           "image": "/uploads/img_6948.webp",
           "link": "/achala-viva",
           "pdfLink": ""
-        },
-        {
-          "date": "1er y 3er finde de cada mes",
-          "title": "Ceremonia de Temazcal",
-          "desc": "Experiencia ancestral de conexión y transformación física, mental, emocional & espiritual.",
-          "btn": "Consultar",
-          "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20reservar%20mi%20lugar%20para%20uno%20de%20los%20Pr%C3%B3ximos%20Encuentros.%20%F0%9F%93%85"
         },
         {
           "date": "SIEMPRE DISPONIBLE",
@@ -3762,6 +3809,50 @@
           "showInMainEvents": false
         },
         {
+          "date": "NOVEMBER 8, 2026",
+          "startDate": "2026-11-08",
+          "endDate": "2026-11-08",
+          "title": "Temazcal Ceremony",
+          "desc": "An ancestral experience of physical, mental, emotional and spiritual connection and transformation in the mountains.",
+          "btn": "Inquire and reserve",
+          "image": "/uploads/temazcal.webp",
+          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20the%20Temazcal%20Ceremony%20on%20November%208%2C%202026%20at%20Pueblo%20M%C3%A1gico.",
+          "showInExperienceCatalog": false
+        },
+        {
+          "date": "NOVEMBER 9, 2026",
+          "startDate": "2026-11-09",
+          "endDate": "2026-11-09",
+          "title": "Guided Trek · Cerro La Cruz",
+          "desc": "A guided day hike through Los Gigantes to Cerro La Cruz, taking in the scale and silence of the mountains at a slower pace.",
+          "btn": "Inquire and reserve",
+          "image": "/uploads/img_6948.webp",
+          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20the%20guided%20Cerro%20La%20Cruz%20trek%20on%20November%209%2C%202026.",
+          "showInExperienceCatalog": false
+        },
+        {
+          "date": "NOVEMBER 13–15, 2026",
+          "startDate": "2026-11-13",
+          "endDate": "2026-11-15",
+          "title": "Mujer Diamante Retreat",
+          "desc": "Three days to honor the inner call, return to the body and gather among women, domes, earth and open skies in Los Gigantes.",
+          "btn": "Request information",
+          "image": "/uploads/Ciclo Femenino/Mujeres meditando en circulo acostadas.jpeg",
+          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20the%20Mujer%20Diamante%20Retreat%2C%20November%2013%E2%80%9315%2C%202026%20in%20Los%20Gigantes.",
+          "showInExperienceCatalog": false
+        },
+        {
+          "date": "NOVEMBER 27–29, 2026",
+          "startDate": "2026-11-27",
+          "endDate": "2026-11-29",
+          "title": "El Despertar del Colibrí",
+          "desc": "A men's gathering among fire, mountains and silence to inhabit the body, emotion and spoken word through circles, mindful walks, cold-water immersion, ritual and Temazcal.",
+          "btn": "Request information",
+          "image": "/uploads/sunset-rio-fogon-real.webp",
+          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20El%20Despertar%20del%20Colibr%C3%AD%2C%20November%2027%E2%80%9329%2C%202026.",
+          "showInExperienceCatalog": false
+        },
+        {
           "date": "DEC 5-6, 2026",
           "startDate": "2026-12-05",
           "endDate": "2026-12-06",
@@ -3776,6 +3867,17 @@
           "showInMainEvents": false
         },
         {
+          "date": "DECEMBER 5–8, 2026",
+          "startDate": "2026-12-05",
+          "endDate": "2026-12-08",
+          "title": "Agus Nasuti · The Viaje",
+          "desc": "A transformational experience guided by Agus Nasuti to reconnect with feminine wisdom, inner truth, the body, intuition and shared experience.",
+          "btn": "Request information",
+          "image": "/uploads/events/agus-nasuti-the-viaje.jpg",
+          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20Agus%20Nasuti%20%C2%B7%20The%20Viaje%2C%20December%205%E2%80%938%2C%202026.",
+          "showInExperienceCatalog": false
+        },
+        {
           "date": "NEXT DATE",
           "title": "Achala Viva",
           "desc": "A guided exploration including stargazing, birdwatching and nature photography.",
@@ -3784,14 +3886,6 @@
           "image": "/uploads/img_6948.webp",
           "link": "/achala-viva",
           "pdfLink": ""
-        },
-        {
-          "date": "1st & 3rd weekend of every month",
-          "title": "Temazcal Ceremony",
-          "desc": "Ancestral experience of physical, mental, emotional & spiritual connection and transformation.",
-          "btn": "Inquire",
-          "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20reservar%20mi%20lugar%20para%20uno%20de%20los%20Pr%C3%B3ximos%20Encuentros.%20%F0%9F%93%85"
         },
         {
           "date": "ALWAYS AVAILABLE",
