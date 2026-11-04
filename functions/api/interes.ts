@@ -32,7 +32,7 @@ const EVENTOS: Record<string, Evento> = {
   'sunset-y-rio': {
     nombre: 'Sunset y Río',
     fecha: 'viernes 30 de octubre al domingo 1 de noviembre',
-    lugar: 'Pueblo Mágico · Los Gigantes, Córdoba (a 90 km de Córdoba)',
+    lugar: 'Pueblo Mágico · Los Gigantes, Córdoba (aprox. 100 km desde Córdoba Capital)',
     path: '/sunset-y-rio',
   },
 };

@@ -9,11 +9,12 @@ export const WhatsAppButton: React.FC = () => {
       href={t.contact.values.whatsapp}
       target="_blank"
       rel="noreferrer"
-      className="fixed right-4 bottom-4 z-40 w-12 h-12 bg-[#25D366] rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform duration-300 group"
+      data-whatsapp-button
+      className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] right-2 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] opacity-90 shadow-xl transition-[transform,opacity] duration-300 hover:scale-110 hover:opacity-100 sm:bottom-4 sm:right-4 sm:h-12 sm:w-12"
       aria-label={t.ui.contactWhatsapp}
     >
       <svg
-        className="w-6 h-6 text-white"
+        className="h-5 w-5 text-white sm:h-6 sm:w-6"
         fill="currentColor"
         viewBox="0 0 24 24"
       >
@@ -22,3 +23,4 @@ export const WhatsAppButton: React.FC = () => {
     </a>
   );
 };
+

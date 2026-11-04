@@ -10,7 +10,7 @@ const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }
   if (!data) return null;
 
   return (
-    <a href={data.link}
+    <a href={data.link} data-journey-event="hero_stay_cta"
       style={{ display: 'flex', alignItems: 'center', gap: compact ? 6 : 8, background: 'rgba(212,175,55,0.2)', border: '1px solid rgba(212,175,55,0.4)', borderRadius: 999, padding: compact ? '5px 12px' : '6px 14px', textDecoration: 'none' }}>
       <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#D4AF37', flexShrink: 0 }} />
       <span style={{ color: 'rgba(255,255,255,0.95)', fontSize: compact ? 11 : 12, fontWeight: 700, letterSpacing: compact ? '0.2em' : '0.25em', textTransform: 'uppercase' }}>{data.label}</span>
@@ -109,7 +109,7 @@ export const HeroNuevo: React.FC = () => {
               <span style={{ color: 'rgba(255,255,255,0.90)', fontSize: 11, fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>{colivingBadge.label}</span>
             </a>
           )}
-          <a href={(t.hero as any).retreatLink}
+          <a href={(t.hero as any).retreatLink} data-journey-event="hero_to_experiences"
             style={{ color: 'rgba(255,255,255,0.50)', fontSize: 12, fontWeight: 600, textDecoration: 'none', letterSpacing: '0.04em' }}>
             {t.hero.btnRetreat} ↗
           </a>
@@ -176,12 +176,12 @@ export const HeroNuevo: React.FC = () => {
 
           {/* Links secundarios */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', alignItems: 'center' }}>
-            <a href={t.hero.bookLink as string}
+            <a href={t.hero.bookLink as string} data-journey-event="hero_to_stay"
               style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, textDecoration: 'none', letterSpacing: '0.04em' }}>
               {t.hero.btnBook} ↗
             </a>
             <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 12 }}>·</span>
-            <a href={(t.hero as any).retreatLink}
+            <a href={(t.hero as any).retreatLink} data-journey-event="hero_to_experiences"
               style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, textDecoration: 'none', letterSpacing: '0.04em' }}>
               {t.hero.btnRetreat} ↗
             </a>

@@ -3,9 +3,10 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Calendar, ArrowRight, Tag } from 'lucide-react';
 import { HorizontalCardRail } from './HorizontalCardRail';
 import { shouldShowMainCalendarEvent } from '../src/utils/eventCalendar';
+import { ROUTES } from '../src/routes';
 
 export const SectionEventos: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const mainEvents = t.events.cards.filter((card: any) => shouldShowMainCalendarEvent(card));
 
   return (
@@ -64,6 +65,7 @@ export const SectionEventos: React.FC = () => {
                 <div className="flex flex-wrap items-center justify-start pt-4 border-t border-brand/5 mt-auto gap-3">
                 <a
                   href={card.link}
+                  data-journey-event="home_experience_detail"
                   {...(/^https?:/.test(card.link) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     className="px-4 py-2 bg-brand text-white text-[10px] md:text-xs font-bold uppercase tracking-widest rounded-full hover:bg-gold transition-colors shadow-sm whitespace-nowrap flex-grow text-center sm:flex-grow-0"
                 >
@@ -87,6 +89,12 @@ export const SectionEventos: React.FC = () => {
             </div>
           ))}
         </HorizontalCardRail>
+        <div className="mt-10 text-center">
+          <a href={ROUTES.EXPERIENCIAS} data-journey-event="home_to_experience_calendar" className="inline-flex items-center gap-2 rounded-full border border-brand px-6 py-3 text-xs font-bold uppercase tracking-widest text-brand transition hover:bg-brand hover:text-white">
+            {(t.events as any).viewAll || (language === 'en' ? 'See all experiences' : 'Ver todas las experiencias')}
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
       </div>
     </section>
   );

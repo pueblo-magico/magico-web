@@ -630,7 +630,7 @@ const PropuestaNicoGrupe: React.FC = () => {
                   'Pensión completa — Alimentación Natural & Regenerativa',
                   'Salón panorámico, explanadas abiertas y fogón',
                   'Senderos en la Montaña · Río · Cielos limpios',
-                  'A solo 90 km de Córdoba Capital',
+                  'A aproximadamente 100 km de Córdoba Capital',
                 ].map(item => (
                   <li key={item} className="flex items-start gap-3 text-white/65 text-sm leading-relaxed">
                     <span className="text-gold flex-shrink-0 mt-0.5">—</span>

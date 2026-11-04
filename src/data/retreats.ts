@@ -122,7 +122,7 @@ export function getEstadiaPrices(language: PricingLanguage): typeof ESTADIA_PRIC
 
 export const COLIVING_PRICES = {
   currency: 'ARS',
-  precioPorNocheInvierno: 50000, // temporada de invierno — estadías cortas, a la carta
+  precioPorNocheReferencia: 50000, // referencia para estadías cortas; confirmar tarifa vigente
   formatos: [
     { noches: 10, precio: 350000, label: '10 noches', desc: 'Un proceso más profundo, ideal para integrar hábitos' },
     { noches: 20, precio: 420000, label: '20 noches', desc: 'Estadía extendida para instalar un ritmo y una rutina real de trabajo' },
@@ -137,7 +137,7 @@ export const COLIVING_PRICES = {
 
 export const COLIVING_PRICES_USD: typeof COLIVING_PRICES = {
   currency: 'USD',
-  precioPorNocheInvierno: 35,
+  precioPorNocheReferencia: 35,
   formatos: [
     { noches: 10, precio: 240, label: '10 nights', desc: 'A deeper process, ideal for integrating habits' },
     { noches: 20, precio: 280, label: '20 nights', desc: 'An extended stay for establishing a real work rhythm and routine' },

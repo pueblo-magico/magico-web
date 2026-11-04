@@ -572,7 +572,7 @@
     "experiences": {
       "tag": "En Mágico",
       "title": "Diseñá tu <span class='italic text-gold'>Experiencia</span>",
-      "intro_p1": "En Pueblo Mágico, <strong class='text-brand font-medium'>lo básico es extraordinario</strong>. Tu estadía siempre incluye <strong class='text-[#8B6914] font-medium'>Alojamiento, Pensión Completa y la experiencia Reset Vital</strong>. Descubrí la calma profunda de habitar la montaña durante la semana, el ritmo perfecto para el enfoque, la creatividad y la presencia.",
+      "intro_p1": "En Pueblo Mágico, <strong class='text-brand font-medium'>lo básico es extraordinario</strong>. La tarifa base incluye <strong class='text-[#8B6914] font-medium'>alojamiento, desayuno y la guía Reset Vital</strong>. Almuerzo, cena o pensión completa se suman según la opción y las fechas.",
       "intro_p2": "Ya recibimos viajeros de todo el mundo. Somos el destino ideal para quienes buscan un <b>Coworking con alma</b> o un retiro personal autoguiado: el <b>Reset Vital</b>.",
       "badge_accommodation": "Alojamiento", 
       "personalizeStay": "PERSONALIZÁ TU ESTADÍA",
@@ -916,7 +916,7 @@
     },
     "location": {
       "title": "El viaje es parte <br />de la <span class='text-gold italic'>experiencia.</span>",
-      "description": "A solo 100 km de Córdoba Capital, el camino se transforma mientras te acercás al macizo Los Gigantes. Es accesible para cualquier vehículo.",
+      "description": "A aproximadamente 100 km de Córdoba Capital, el camino se transforma mientras te acercás al macizo Los Gigantes. El tramo final es de ripio y es accesible para vehículos particulares en condiciones normales.",
       "btnMap": "Ver en Mapa",
       "btnTransfer": "Coordinar Traslado",
       "image": "/uploads/img_6948.webp",
@@ -927,8 +927,9 @@
     },
     "events": {
       "tag": "Calendario",
-      "title": "Próximos Encuentros",
+      "title": "Experiencias disponibles",
       "btnPdf": "+ Info",
+      "viewAll": "Ver todas las experiencias",
       "link": "",
       "cards": [
         {
@@ -948,12 +949,11 @@
           "startDate": "2026-10-30",
           "endDate": "2026-11-01",
           "title": "Raíz Sonora · Música, naturaleza y encuentro",
-          "desc": "Buscamos 4 voluntarios/as para acompañar todo el fin de semana, principalmente en actividades para niñas y niños y en cocina. Incluye alojamiento y comidas; la participación en el festival depende de las responsabilidades acordadas. Se puede coordinar llegada anticipada o una estadía más larga.",
+          "desc": "Un encuentro de música, movimiento y naturaleza en Pueblo Mágico. La fecha 2026 ya finalizó; conservamos la página como archivo de la experiencia.",
           "btn": "Conocer el festival",
           "image": "/uploads/atardeser/raizsonoracard.png",
           "link": "/festival-raiz-sonora",
-          "pdfLink": "",
-          "isVolunariado": true
+          "pdfLink": ""
         },
         {
           "date": "6–8 NOVIEMBRE 2026",
@@ -965,7 +965,8 @@
           "image": "/uploads/brote/brote-primavera.svg",
           "link": "/brote-ronda-de-mujeres",
           "pdfLink": "",
-          "showInMainEvents": false
+          "showInMainEvents": false,
+          "showInExperienceCatalog": false
         },
         {
           "date": "7-8 NOVIEMBRE 2026",
@@ -1065,9 +1066,9 @@
           "date": "SIEMPRE DISPONIBLE",
           "title": "Reset Vital",
           "desc": "Tu retiro autoguiado incluido en toda estadía. Una guía PDF con meditaciones, journaling, caminatas conscientes y rituales simples para reconectar a tu propio ritmo. Sin horarios, sin obligaciones. Reservá tu estadía y llevate la experiencia.",
-          "btn": "Ver Estadías",
+          "btn": "Conocer Reset Vital",
           "image": "/uploads/WhatsApp Image 2025-09-29 at 2.46.36 PM (1).jpeg",
-          "link": "/estadia"
+          "link": "/reset-vital"
         },
         {
           "date": "SIEMPRE DISPONIBLE",
@@ -1076,16 +1077,27 @@
           "btn": "Ver más",
           "image": "/uploads/flyfishing-hero.jpg",
           "link": "/cordoba-fly-fishing"
+        },
+        {
+          "date": "25-27 SEPTIEMBRE 2026",
+          "startDate": "2026-09-25",
+          "endDate": "2026-09-27",
+          "title": "Killa Raymi — Archivo",
+          "desc": "Archivo de Primavera en la Montaña, una celebración de música, comunidad y territorio realizada en septiembre de 2026.",
+          "btn": "Ver archivo",
+          "image": "/uploads/killa-raymi-hero-desktop.webp",
+          "link": "/killa-raymi",
+          "showInMainEvents": false
         }
       ]
     },
     "hero": {
-      "title": "Te invita a Ser",
-      "titleSub": "Ecolodge de montaña en Córdoba, Argentina",
-      "subtitle": "Comunidad y Filosofía del Buen Vivir. Ecolodge de montaña: energía solar, baños secos y compost. Co-living para emprendedores, artistas y creadores.",
+      "title": "Un refugio en las Sierras",
+      "titleSub": "para descansar, reconectar y volver a vos",
+      "subtitle": "Estadías, experiencias y comunidad en un ecolodge de montaña que cuida el territorio.",
       "tag": "LOS GIGANTES · SIERRAS GRANDES · CÓRDOBA",
-      "btnBook": "AGENDA DE ACTIVIDADES",
-      "btnRetreat": "ORGANIZAR RETIRO",
+      "btnBook": "VER ESTADÍAS",
+      "btnRetreat": "EXPLORAR EXPERIENCIAS",
       "linkComoLlegar": "¿Cómo llegar?",
       "stats_years": "+25.000 Árboles Plantados",
       "stats_trees": "Huéspedes de +20 Países",
@@ -1098,8 +1110,8 @@
         "/uploads/hero(2).webp",
         "/uploads/hero(3).webp"
       ],
-      "bookLink": "#eventos",
-      "retreatLink": "/organizamos-tu-experiencia",
+      "bookLink": "/estadia",
+      "retreatLink": "/experiencias",
       "colivingBadge": {
         "label": "CO-LIVING · ESTADÍAS LARGAS",
         "link": "/coliving"
@@ -1118,83 +1130,67 @@
     "menu": {
       "items": [
         {
-          "label": "Nosotros",
-          "href": "#nosotros",
-          "submenuEyebrow": "Conocé Pueblo Mágico",
+          "label": "Estadías",
+          "href": "/estadia",
+          "submenuEyebrow": "Quedate en la montaña",
           "submenu": [
             {
-              "label": "Filosofía",
-              "href": "#nosotros",
-              "description": "Nuestra mirada y propósito",
-              "icon": "leaf"
-            },
-            {
-              "label": "Nuestros Pilares",
-              "href": "#pilares",
-              "description": "Los valores que nos guían",
-              "icon": "community"
-            },
-            {
-              "label": "Voluntariados",
-              "href": "/voluntariado",
-              "description": "Sumate a la comunidad",
-              "icon": "sprout"
-            },
-            {
-              "label": "Reforestación",
-              "href": "/reforestacion",
-              "description": "Regenerar el bosque nativo",
-              "icon": "trees"
-            }
-          ]
-        }, 
-        {
-          "label": "Experiencias",
-          "href": "#experiencias",
-          "submenuEyebrow": "Viví Pueblo Mágico",
-          "submenu": [
-            {
-              "label": "Estadías & Glamping",
+              "label": "Ecolodge & Glamping",
               "href": "/estadia",
-              "description": "Hospedaje consciente en la montaña",
+              "description": "Camping, Refugio de Piedra y domos",
               "icon": "stay"
             },
             {
               "label": "Coliving",
               "href": "/coliving",
-              "description": "Viví y trabajá en comunidad",
+              "description": "Estadías largas y trabajo remoto",
               "icon": "home"
+            },
+            {
+              "label": "Reset Vital",
+              "href": "/reset-vital",
+              "description": "Retiro personal autoguiado",
+              "icon": "spark"
             }
           ],
-          "viewAllLink": {
-            "label": "Ver todas las experiencias",
-            "href": "#eventos"
-          }
+          "viewAllLink": { "label": "Comparar alojamientos", "href": "/estadia" }
         },
         {
-          "label": "Testimonios",
-          "href": "#testimonios"
+          "label": "Experiencias",
+          "href": "/experiencias",
+          "submenuEyebrow": "Agenda y propuestas",
+          "submenu": [
+            {
+              "label": "Bienestar & Retiros",
+              "href": "/experiencias?categoria=wellbeing",
+              "description": "Descanso, prácticas y reconexión",
+              "icon": "spark"
+            },
+            {
+              "label": "Naturaleza & Aventura",
+              "href": "/experiencias?categoria=nature",
+              "description": "Montaña y experiencias guiadas",
+              "icon": "trees"
+            }
+          ],
+          "viewAllLink": { "label": "Ver agenda completa", "href": "/experiencias" }
         },
         {
-          "label": "Agenda",
-          "href": "#eventos"
+          "label": "Grupos & Retiros",
+          "href": "/grupos-y-retiros"
         },
         {
-          "label": "Escuelas",
-          "href": "/escuelas"
+          "label": "Nuestro Proyecto",
+          "href": "/nuestro-proyecto"
         },
         {
-          "label": "Empresas",
-          "href": "/empresas"
-        },
-        {
-          "label": "Ubicación",
-          "href": "#como-llegar"
+          "label": "Cómo llegar",
+          "href": "/como-llegar"
         }
       ],
-      "book": "RESERVAR",
+      "book": "VER ESTADÍAS",
       "lang": "ENGLISH",
-      "bookLink": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20una%20experiencia%20en%20Pueblo%20M%C3%A1gico.%20%E2%9C%A8"
+      "bookLink": "/estadia"
     },
     "pillars": [
       {
@@ -1274,12 +1270,9 @@
         "privacy": "Políticas de Privacidad",
         "faq": "Preguntas Frecuentes"
       },
-      "exploreLinks": [
-        { "label": "Estadías & Glamping", "href": "/estadia" },
-        { "label": "Coliving", "href": "/coliving" }
-      ],
+      "exploreLinks": [],
       "projectLinks": [
-        { "label": "Nuestros pilares", "href": "#pilares" },
+        { "label": "Nuestro proyecto", "href": "/nuestro-proyecto" },
         { "label": "Reforestación", "href": "/reforestacion" },
         { "label": "Voluntariado", "href": "/voluntariado" }
       ],
@@ -1287,14 +1280,14 @@
         {
           "title": "Experiencias con fecha",
           "links": [
-            { "label": "Killa Raymi", "href": "/killa-raymi" },
-            { "label": "Achala Viva", "href": "/achala-viva" }
+            { "label": "Agenda completa", "href": "/experiencias" },
+            { "label": "Archivo de experiencias", "href": "/experiencias?categoria=past" }
           ]
         },
         {
           "title": "Para grupos e instituciones",
           "links": [
-            { "label": "Retiros Grupales", "href": "#retiros" },
+            { "label": "Retiros Grupales", "href": "/grupos-y-retiros" },
             { "label": "Aulas Verdes", "href": "/escuelas" },
             { "label": "Empresas", "href": "/empresas" }
           ]
@@ -3400,7 +3393,7 @@
     "experiences": {
       "tag": "Mágico Experience",
       "title": "Design your stay",
-      "intro_p1": "At Pueblo Mágico, <strong class='text-brand font-medium'>the basics are extraordinary</strong>. Your stay always includes <strong class='text-[#8B6914] font-medium'>Accommodation, Full Board, and the Reset Vital experience</strong>. Discover the deep calm of inhabiting the mountain during the week, the perfect pace for focus, creativity, and presence.",
+      "intro_p1": "At Pueblo Mágico, <strong class='text-brand font-medium'>the basics are extraordinary</strong>. The base rate includes <strong class='text-[#8B6914] font-medium'>accommodation, breakfast and the Reset Vital guide</strong>. Lunch, dinner or full board are added depending on the option and dates.",
       "intro_p2": "We have already hosted travelers from all over the world. We are the ideal destination for those seeking a <b>Coworking with soul</b> or a self-guided personal retreat: the <b>Reset Vital</b>.",
       "badge_accommodation": "Accommodation",
       "personalizeStay": "CUSTOMIZE YOUR STAY",
@@ -3744,7 +3737,7 @@
     },
     "location": {
       "title": "The journey is part <br />of the <span class='text-gold italic'>experience.</span>",
-      "description": "Just 100 km from Córdoba Capital, the road transforms as you approach the Los Gigantes. It is accessible for any vehicle.",
+      "description": "Approximately 100 km from Córdoba Capital, the road changes as you approach Los Gigantes. The final stretch is gravel and is normally accessible by passenger vehicles.",
       "btnMap": "View on Map",
       "btnTransfer": "Coordinate Transfer",
       "image": "/uploads/img_6948.webp",
@@ -3755,8 +3748,9 @@
     },
     "events": {
       "tag": "Calendar",
-      "title": "Upcoming Gatherings",
+      "title": "Available experiences",
       "btnPdf": "+ Info",
+      "viewAll": "See all experiences",
       "link": "",
       "cards": [
         {
@@ -3776,12 +3770,11 @@
           "startDate": "2026-10-30",
           "endDate": "2026-11-01",
           "title": "Raíz Sonora · Music, nature and connection",
-          "desc": "We are looking for 4 volunteers for the full weekend, mainly supporting activities for children and kitchen work. Accommodation and meals are included; festival participation depends on the agreed responsibilities. Earlier arrival or a longer stay can be arranged.",
+          "desc": "A gathering of music, movement and nature at Pueblo Mágico. The 2026 date has ended; the page remains available as an experience archive.",
           "btn": "Discover the festival",
           "image": "/uploads/atardeser/raiz-sonora-hero-v1.webp",
           "link": "/festival-raiz-sonora",
-          "pdfLink": "",
-          "isVolunariado": true
+          "pdfLink": ""
         },
         {
           "date": "NOVEMBER 6–8, 2026",
@@ -3793,7 +3786,8 @@
           "image": "/uploads/brote/brote-primavera.svg",
           "link": "/brote-ronda-de-mujeres",
           "pdfLink": "",
-          "showInMainEvents": false
+          "showInMainEvents": false,
+          "showInExperienceCatalog": false
         },
         {
           "date": "NOV 7-8, 2026",
@@ -3803,7 +3797,7 @@
           "desc": "A weekend of community action in the mountains to plant and protect 1,000 native trees. The call includes camping; schedules, requirements and conditions are confirmed during the application process.",
           "btn": "View the event",
           "image": "/uploads/reforestacion/comunidad-atardecer.webp",
-          "link": "/reforestacion#volunteering",
+          "link": "/reforestacion#voluntariado",
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
@@ -3862,7 +3856,7 @@
           "desc": "Two days of community action in the mountains to plant and protect 1,000 native trees. The call includes camping; schedules, requirements and conditions are confirmed during the application process.",
           "btn": "View the event",
           "image": "/uploads/reforestacion/mapa-proxima-reforestacion-10000-arboles.webp",
-          "link": "/reforestacion#volunteering",
+          "link": "/reforestacion#voluntariado",
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
@@ -3893,9 +3887,9 @@
           "date": "ALWAYS AVAILABLE",
           "title": "Reset Vital",
           "desc": "Your self-guided retreat included in every stay. A PDF guide with meditations, journaling, mindful walks and simple rituals to reconnect at your own pace. No schedules, no obligations.",
-          "btn": "See Stays",
+          "btn": "Discover Reset Vital",
           "image": "/uploads/WhatsApp Image 2025-09-29 at 2.46.36 PM (1).jpeg",
-          "link": "/estadia"
+          "link": "/reset-vital"
         },
         {
           "date": "ALWAYS AVAILABLE",
@@ -3904,16 +3898,27 @@
           "btn": "See more",
           "image": "/uploads/flyfishing-hero.jpg",
           "link": "/cordoba-fly-fishing"
+        },
+        {
+          "date": "SEPTEMBER 25-27, 2026",
+          "startDate": "2026-09-25",
+          "endDate": "2026-09-27",
+          "title": "Killa Raymi — Archive",
+          "desc": "Archive of Spring in the Mountains, a celebration of music, community and territory held in September 2026.",
+          "btn": "View archive",
+          "image": "/uploads/killa-raymi-hero-desktop.webp",
+          "link": "/killa-raymi",
+          "showInMainEvents": false
         }
       ]
     },
     "hero": {
-      "title": "Invites You to Be",
-      "titleSub": "Mountain ecolodge in Córdoba, Argentina",
-      "subtitle": "Community and Philosophy of Buen Vivir. Mountain ecolodge: solar power, dry toilets and composting. Co-living for entrepreneurs, artists and creators.",
+      "title": "A refuge in the Sierras",
+      "titleSub": "to rest, reconnect and return to yourself",
+      "subtitle": "Stays, experiences and community in a mountain ecolodge that cares for the land.",
       "tag": "LOS GIGANTES · SIERRAS GRANDES · CÓRDOBA",
-      "btnBook": "ACTIVITY CALENDAR",
-      "btnRetreat": "ORGANIZE RETREAT",
+      "btnBook": "SEE STAYS",
+      "btnRetreat": "EXPLORE EXPERIENCES",
       "linkComoLlegar": "How to get here?",
       "stats_years": "+25,000 Trees Planted",
       "stats_trees": "Guests from +20 Countries",
@@ -3926,8 +3931,8 @@
         "/uploads/hero(2).webp",
         "/uploads/hero(3).webp"
       ],
-      "bookLink": "#eventos",
-      "retreatLink": "/organizamos-tu-experiencia",
+      "bookLink": "/estadia",
+      "retreatLink": "/experiencias",
       "colivingBadge": {
         "label": "CO-LIVING · LONG STAYS",
         "link": "/coliving"
@@ -3946,79 +3951,67 @@
     "menu": {
       "items": [
         {
-          "label": "About Us",
-          "href": "#nosotros",
-          "submenuEyebrow": "Discover Pueblo Mágico",
+          "label": "Stays",
+          "href": "/estadia",
+          "submenuEyebrow": "Stay in the mountains",
           "submenu": [
             {
-              "label": "Philosophy",
-              "href": "#nosotros",
-              "description": "Our perspective and purpose",
-              "icon": "leaf"
-            },
-            {
-              "label": "Our Pillars",
-              "href": "#pilares",
-              "description": "The values that guide us",
-              "icon": "community"
-            },
-            {
-              "label": "Volunteering",
-              "href": "/voluntariado",
-              "description": "Join the community",
-              "icon": "sprout"
-            },
-            {
-              "label": "Reforestation",
-              "href": "/reforestacion",
-              "description": "Regenerating the native forest",
-              "icon": "trees"
-            }
-          ]
-        },
-        {
-          "label": "Experiencias",
-          "href": "#experiencias",
-          "submenuEyebrow": "Experience Pueblo Mágico",
-          "submenu": [
-            {
-              "label": "Stays & Glamping",
+              "label": "Ecolodge & Glamping",
               "href": "/estadia",
-              "description": "Conscious mountain accommodation",
+              "description": "Camping, Stone Lodge and domes",
               "icon": "stay"
             },
             {
               "label": "Coliving",
               "href": "/coliving",
-              "description": "Live and work in community",
+              "description": "Longer stays and remote work",
               "icon": "home"
+            },
+            {
+              "label": "Reset Vital",
+              "href": "/reset-vital",
+              "description": "Self-guided personal retreat",
+              "icon": "spark"
             }
           ],
-          "viewAllLink": {
-            "label": "See all experiences",
-            "href": "#eventos"
-          }
+          "viewAllLink": { "label": "Compare accommodation", "href": "/estadia" }
         },
         {
-          "label": "Testimonials",
-          "href": "#testimonios"
+          "label": "Experiences",
+          "href": "/experiencias",
+          "submenuEyebrow": "Calendar and offerings",
+          "submenu": [
+            {
+              "label": "Wellbeing & Retreats",
+              "href": "/experiencias?categoria=wellbeing",
+              "description": "Rest, practices and reconnection",
+              "icon": "spark"
+            },
+            {
+              "label": "Nature & Adventure",
+              "href": "/experiencias?categoria=nature",
+              "description": "Mountains and guided experiences",
+              "icon": "trees"
+            }
+          ],
+          "viewAllLink": { "label": "See full calendar", "href": "/experiencias" }
         },
         {
-          "label": "Agenda",
-          "href": "#eventos"
+          "label": "Groups & Retreats",
+          "href": "/grupos-y-retiros"
         },
         {
-          "label": "Companies",
-          "href": "/empresas"
+          "label": "Our Project",
+          "href": "/nuestro-proyecto"
         },
         {
-          "label": "Location",
-          "href": "#como-llegar"
+          "label": "Getting here",
+          "href": "/como-llegar"
         }
       ],
-      "book": "BOOK NOW",
+      "book": "SEE STAYS",
       "lang": "ESPAÑOL",
-      "bookLink": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20una%20experiencia%20en%20Pueblo%20M%C3%A1gico.%20%E2%9C%A8"
+      "bookLink": "/estadia"
     },
     "pillars": [
       {
@@ -4098,12 +4091,9 @@
         "privacy": "Privacy Policy",
         "faq": "FAQ"
       },
-      "exploreLinks": [
-        { "label": "Stays & Glamping", "href": "/estadia" },
-        { "label": "Coliving", "href": "/coliving" }
-      ],
+      "exploreLinks": [],
       "projectLinks": [
-        { "label": "Our pillars", "href": "#pilares" },
+        { "label": "Our project", "href": "/nuestro-proyecto" },
         { "label": "Reforestation", "href": "/reforestacion" },
         { "label": "Volunteering", "href": "/voluntariado" }
       ],
@@ -4111,14 +4101,14 @@
         {
           "title": "Dated experiences",
           "links": [
-            { "label": "Killa Raymi", "href": "/killa-raymi" },
-            { "label": "Achala Viva", "href": "/achala-viva" }
+            { "label": "Full calendar", "href": "/experiencias" },
+            { "label": "Experience archive", "href": "/experiencias?categoria=past" }
           ]
         },
         {
           "title": "Groups & institutions",
           "links": [
-            { "label": "Group Retreats", "href": "#retiros" },
+            { "label": "Group Retreats", "href": "/grupos-y-retiros" },
             { "label": "Green Classrooms", "href": "/escuelas" },
             { "label": "Companies", "href": "/empresas" }
           ]

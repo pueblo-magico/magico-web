@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "test:cloudflare-cleanup": "node --test tests/cloudflare/cleanup-pages-preview.test.mjs",
     "test:cucuru": "node --test tests/cucuru-donations.test.mjs",
-    "test:pricing-localization": "node --test tests/pricing-localization.test.mjs"
+    "test:pricing-localization": "node --test tests/pricing-localization.test.mjs",
+    "test:visual": "node scripts/visual-qa.mjs"
   },
   "dependencies": {
     "@contentsquare/tag-sdk": "^1.1.0",
@@ -48,3 +49,4 @@
     "vite-plugin-pwa": "^1.2.0"
   }
 }
+
