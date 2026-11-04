@@ -17,7 +17,6 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { ROUTES } from '../src/routes';
-import { PageSectionNav } from './PageSectionNav';
 
 const submenuIcons: Record<string, LucideIcon> = {
   leaf: Leaf,
@@ -40,13 +39,15 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
   const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState<string>('');
   const [isMobile, setIsMobile] = useState(false);
-  const [hasAutoSubNavigation, setHasAutoSubNavigation] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
   const location = useLocation();
 
   const isHomePage = location.pathname === ROUTES.HOME;
-  const useAutoSubNavigation = !isHomePage && !subNavigation && location.pathname !== ROUTES.ADMIN_RESERVAS;
-  const hasSubNavigation = Boolean(subNavigation || (useAutoSubNavigation && hasAutoSubNavigation));
+  // Keep the global navigation a single, predictable row on every route.
+  // Long-page section navigation must be passed explicitly and rendered as a
+  // deliberate page feature; auto-discovery made the header switch between
+  // one and two rows depending on how many sections a page happened to have.
+  const hasSubNavigation = Boolean(subNavigation);
   const useSolidHeader = isScrolled || isMobileMenuOpen;
   const showSubNavigation = Boolean(hasSubNavigation && isScrolled && !isMobileMenuOpen);
 
@@ -389,20 +390,13 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
           </button>
         </div>
       </div>
-      {(subNavigation || useAutoSubNavigation) && (
+      {subNavigation && (
         <div
           className={`grid w-full min-w-0 max-w-full overflow-visible transition-[grid-template-rows,opacity,border-color] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${showSubNavigation ? 'grid-rows-[1fr] border-t border-brand/10 opacity-100' : 'pointer-events-none grid-rows-[0fr] border-t border-transparent opacity-0'}`}
           aria-hidden={!showSubNavigation}
         >
           <div className="min-h-0 min-w-0 max-w-full overflow-visible">
-            {subNavigation || (
-              <PageSectionNav
-                autoDiscover
-                locale={language}
-                minimumSections={5}
-                onAvailabilityChange={setHasAutoSubNavigation}
-              />
-            )}
+            {subNavigation}
           </div>
         </div>
       )}

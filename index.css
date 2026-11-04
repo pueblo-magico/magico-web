@@ -34,11 +34,11 @@ body {
     color: #1A1A1A;
 }
 
-/* ── Scroll reveal (global) ── */
+/* �� Scroll reveal (global) �� */
 [data-reveal] {
   opacity: 0;
   transform: translateY(22px);
-  /* Promote to compositor layer BEFORE the animation starts — prevents the
+  /* Promote to compositor layer BEFORE the animation starts - prevents the
      browser from doing a full repaint on every animation frame (major cause
      of scroll jank on Mac/Safari with many simultaneous fade-ins). */
   will-change: opacity, transform;
@@ -48,7 +48,7 @@ body {
 [data-reveal].visible {
   opacity: 1;
   transform: translateY(0);
-  /* Release the compositor layer once the element has settled — avoids
+  /* Release the compositor layer once the element has settled - avoids
      keeping hundreds of layers in GPU memory after all reveals are done. */
   will-change: auto;
 }
@@ -61,7 +61,7 @@ body {
   [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; will-change: auto !important; }
 }
 
-/* ── Typography & Brand Colors ── */
+/* �� Typography & Brand Colors �� */
 * { font-family: 'Jost', sans-serif; }
 h1, h2, h3, h4, .serif-title { font-family: 'Gilda Display', serif; }
 
@@ -70,7 +70,7 @@ h1, h2, h3, h4, .serif-title { font-family: 'Gilda Display', serif; }
 .brand-gold { color: #D4AF37; }
 .bg-brand-gold { background-color: #D4AF37; }
 
-/* ── Buttons ── */
+/* �� Buttons �� */
 .btn-gold {
   background: linear-gradient(135deg, #D4AF37 0%, #E5C158 100%);
   color: #005333;
@@ -165,7 +165,7 @@ h1, h2, h3, h4, .serif-title { font-family: 'Gilda Display', serif; }
   }
 }
 
-/* ── UI Components ── */
+/* �� UI Components �� */
 .card-hover {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -215,3 +215,10 @@ h1, h2, h3, h4, .serif-title { font-family: 'Gilda Display', serif; }
     display: none !important;
   }
 }
+body[data-cookie-banner-visible='true'] [data-whatsapp-button] {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.9);
+}
+
+
