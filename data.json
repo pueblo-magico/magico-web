@@ -979,7 +979,7 @@
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "8 NOVIEMBRE 2026",
@@ -1027,6 +1027,17 @@
           "showInExperienceCatalog": false
         },
         {
+          "date": "3 DICIEMBRE 2026 · 20 HS",
+          "startDate": "2026-12-03",
+          "endDate": "2026-12-03",
+          "title": "Ceremonia tradicional de peyote",
+          "desc": "Encuentro nocturno al aire libre guiado por el mara’akame wixárika Águila Blanca, Jefe de Jicareros, por primera vez fuera de México. Cupos reducidos; consultas y reservas por WhatsApp.",
+          "btn": "Consultar y reservar",
+          "image": "/uploads/sunset-rio-fogon-real.webp",
+          "link": "https://wa.me/529843234048?text=Hola%21%20Quiero%20consultar%20y%20reservar%20mi%20lugar%20para%20la%20Ceremonia%20tradicional%20de%20peyote%20del%203%20de%20diciembre%20de%202026%20en%20Los%20Gigantes%2C%20C%C3%B3rdoba.",
+          "showInExperienceCatalog": false
+        },
+        {
           "date": "5-6 DICIEMBRE 2026",
           "startDate": "2026-12-05",
           "endDate": "2026-12-06",
@@ -1038,7 +1049,7 @@
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "5–8 DICIEMBRE 2026",
@@ -1059,7 +1070,8 @@
           "tag": "PRONTO",
           "image": "/uploads/img_6948.webp",
           "link": "/achala-viva",
-          "pdfLink": ""
+          "pdfLink": "",
+          "showInMainEvents": false
         },
         {
           "date": "SIEMPRE DISPONIBLE",
@@ -1067,7 +1079,8 @@
           "desc": "Tu retiro autoguiado incluido en toda estadía. Una guía PDF con meditaciones, journaling, caminatas conscientes y rituales simples para reconectar a tu propio ritmo. Sin horarios, sin obligaciones. Reservá tu estadía y llevate la experiencia.",
           "btn": "Ver Estadías",
           "image": "/uploads/WhatsApp Image 2025-09-29 at 2.46.36 PM (1).jpeg",
-          "link": "/estadia"
+          "link": "/estadia",
+          "showInMainEvents": false
         },
         {
           "date": "SIEMPRE DISPONIBLE",
@@ -1075,7 +1088,8 @@
           "desc": "Pesca con mosca guiada en los arroyos de montaña de las Sierras de Córdoba. Salidas de día completo o 2 noches en domos geodésicos, en alianza con Pointer Outfitters.",
           "btn": "Ver más",
           "image": "/uploads/flyfishing-hero.jpg",
-          "link": "/cordoba-fly-fishing"
+          "link": "/cordoba-fly-fishing",
+          "showInMainEvents": false
         }
       ]
     },
@@ -3803,11 +3817,11 @@
           "desc": "A weekend of community action in the mountains to plant and protect 1,000 native trees. The call includes camping; schedules, requirements and conditions are confirmed during the application process.",
           "btn": "View the event",
           "image": "/uploads/reforestacion/comunidad-atardecer.webp",
-          "link": "/reforestacion#volunteering",
+          "link": "/reforestacion#voluntariado",
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "NOVEMBER 8, 2026",
@@ -3855,6 +3869,17 @@
           "showInExperienceCatalog": false
         },
         {
+          "date": "DECEMBER 3, 2026 · 8 PM",
+          "startDate": "2026-12-03",
+          "endDate": "2026-12-03",
+          "title": "Traditional peyote ceremony",
+          "desc": "An overnight outdoor gathering guided by Wixárika mara’akame Águila Blanca, Head of Jicareros, for the first time outside Mexico. Limited places; enquiries and booking via WhatsApp.",
+          "btn": "Inquire and reserve",
+          "image": "/uploads/sunset-rio-fogon-real.webp",
+          "link": "https://wa.me/529843234048?text=Hi%21%20I%27d%20like%20information%20and%20to%20reserve%20my%20place%20for%20the%20traditional%20peyote%20ceremony%20on%20December%203%2C%202026%20in%20Los%20Gigantes%2C%20C%C3%B3rdoba.",
+          "showInExperienceCatalog": false
+        },
+        {
           "date": "DEC 5-6, 2026",
           "startDate": "2026-12-05",
           "endDate": "2026-12-06",
@@ -3862,11 +3887,11 @@
           "desc": "Two days of community action in the mountains to plant and protect 1,000 native trees. The call includes camping; schedules, requirements and conditions are confirmed during the application process.",
           "btn": "View the event",
           "image": "/uploads/reforestacion/mapa-proxima-reforestacion-10000-arboles.webp",
-          "link": "/reforestacion#volunteering",
+          "link": "/reforestacion#voluntariado",
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "DECEMBER 5–8, 2026",
@@ -3887,7 +3912,8 @@
           "tag": "SOON",
           "image": "/uploads/img_6948.webp",
           "link": "/achala-viva",
-          "pdfLink": ""
+          "pdfLink": "",
+          "showInMainEvents": false
         },
         {
           "date": "ALWAYS AVAILABLE",
@@ -3895,7 +3921,8 @@
           "desc": "Your self-guided retreat included in every stay. A PDF guide with meditations, journaling, mindful walks and simple rituals to reconnect at your own pace. No schedules, no obligations.",
           "btn": "See Stays",
           "image": "/uploads/WhatsApp Image 2025-09-29 at 2.46.36 PM (1).jpeg",
-          "link": "/estadia"
+          "link": "/estadia",
+          "showInMainEvents": false
         },
         {
           "date": "ALWAYS AVAILABLE",
@@ -3903,7 +3930,8 @@
           "desc": "Guided fly fishing in the mountain streams of the Sierras de Córdoba. Full-day outings or a 2-night stay in geodesic domes, in partnership with Pointer Outfitters.",
           "btn": "See more",
           "image": "/uploads/flyfishing-hero.jpg",
-          "link": "/cordoba-fly-fishing"
+          "link": "/cordoba-fly-fishing",
+          "showInMainEvents": false
         }
       ]
     },
