@@ -99,6 +99,7 @@ test('the December peyote ceremony is dated and opens its WhatsApp contact', () 
     assert.ok(card);
     assert.equal(card.startDate, '2026-12-03');
     assert.equal(card.endDate, '2026-12-03');
+    assert.equal(card.image, '/uploads/sunset-rio-fogon-real.webp');
     assert.match(card.link, /^https:\/\/wa\.me\/529843234048\?text=/);
     assert.equal(shouldShowMainCalendarEvent(card, '2026-11-04'), true);
   }
