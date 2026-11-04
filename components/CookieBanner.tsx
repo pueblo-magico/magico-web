@@ -39,9 +39,9 @@ export const CookieBanner: React.FC = () => {
     <div
       role="dialog"
       aria-label={t.cookieBanner.title}
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-6 md:max-w-[380px] z-[100] animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out"
+      className="fixed bottom-2 left-2 right-2 z-[100] animate-in fade-in slide-in-from-bottom-8 duration-500 ease-out md:bottom-6 md:left-auto md:right-6 md:max-w-[380px]"
     >
-      <div className="bg-white/80 backdrop-blur-md border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-6 relative overflow-hidden group">
+      <div className="group relative max-h-[calc(100vh-1rem)] overflow-y-auto rounded-2xl border border-white/20 bg-white/90 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-md md:p-6">
         {/* Subtle background glow */}
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-gold/5 rounded-full blur-2xl group-hover:bg-gold/10 transition-colors duration-500" />
         
@@ -55,8 +55,8 @@ export const CookieBanner: React.FC = () => {
           </svg>
         </button>
 
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-10 h-10 bg-brand/5 rounded-full flex items-center justify-center text-xl">
+        <div className="flex items-start gap-3 md:gap-4">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-brand/5 text-lg md:h-10 md:w-10 md:text-xl">
             🍃
           </div>
           <div className="flex-1 pt-1">

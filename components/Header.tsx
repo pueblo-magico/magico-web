@@ -256,7 +256,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
         <nav
           className={`
             fixed top-0 left-0 w-full h-screen bg-white pt-[100px] pb-10 px-8
-            flex flex-col overflow-y-auto transition-all duration-400 z-[1100]
+            flex flex-col overflow-y-auto transition-[opacity,visibility] duration-200 z-[1100]
             lg:static lg:h-auto lg:w-auto lg:bg-transparent lg:p-0 lg:flex-row lg:opacity-100 lg:visible lg:overflow-visible
             ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible lg:opacity-100 lg:visible'}
           `}

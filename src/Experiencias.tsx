@@ -104,7 +104,9 @@ export default function Experiencias() {
                       ))}
                     </div>
                     <h2 className="font-serif text-2xl text-brand">{card.title}</h2>
-                    <p className="mt-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gold"><CalendarDays className="h-4 w-4" />{card.date}</p>
+                    {card.status !== 'on-request' && card.date && (
+                      <p className="mt-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gold"><CalendarDays className="h-4 w-4" />{card.date}</p>
+                    )}
                     <p className="mt-4 flex-1 text-sm leading-relaxed text-dark/65">{card.desc}</p>
                     <a href={card.link} data-journey-event="experience_catalog_detail" className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold hover:text-brand">
                       {card.status === 'past' ? (language === 'es' ? 'Ver archivo' : 'View archive') : card.btn}
