@@ -100,7 +100,36 @@ test('the December peyote ceremony is dated and opens its WhatsApp contact', () 
     assert.equal(card.startDate, '2026-12-03');
     assert.equal(card.endDate, '2026-12-03');
     assert.equal(card.image, '/uploads/sunset-rio-fogon-real.webp');
+    assert.equal(card.statusLabel, language === 'es' ? 'CUPOS LIMITADOS' : 'LIMITED PLACES');
+    assert.equal(card.labels.length, 2);
     assert.match(card.link, /^https:\/\/wa\.me\/529843234048\?text=/);
     assert.equal(shouldShowMainCalendarEvent(card, '2026-11-04'), true);
+  }
+});
+
+test('El Despertar del Colibrí uses the official artwork and limited-place messaging', () => {
+  for (const language of ['es', 'en']) {
+    const card = translations[language].events.cards.find((event) => event.title === 'El Despertar del Colibrí');
+
+    assert.ok(card);
+    assert.equal(card.statusLabel, language === 'es' ? 'CUPOS LIMITADOS' : 'LIMITED PLACES');
+    assert.equal(card.image, '/uploads/events/el-despertar-del-colibri-oficial.png');
+    assert.equal(card.imageFit, 'contain');
+    assert.match(card.desc, /Acan de Fuego/);
+    assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
+  }
+});
+
+test('every visible upcoming event has a status and two thematic labels', () => {
+  for (const language of ['es', 'en']) {
+    const cards = translations[language].events.cards.filter((card) => (
+      shouldShowMainCalendarEvent(card, '2026-11-04')
+    ));
+
+    assert.ok(cards.length > 0);
+    for (const card of cards) {
+      assert.ok(card.statusLabel, `${language}: ${card.title} is missing a status label`);
+      assert.equal(card.labels?.length, 2, `${language}: ${card.title} needs exactly two thematic labels`);
+    }
   }
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Calendar, ArrowRight, Tag } from 'lucide-react';
+import { ArrowRight, CalendarDays } from 'lucide-react';
 import { HorizontalCardRail } from './HorizontalCardRail';
 import { shouldShowMainCalendarEvent } from '../src/utils/eventCalendar';
 
@@ -20,71 +20,75 @@ export const SectionEventos: React.FC = () => {
           </h2>
         </div>
         <HorizontalCardRail previousLabel={t.ui.prev} nextLabel={t.ui.next} desktopGridClassName="md:grid-cols-3">
-          {mainEvents.map((card: any, index: number) => (
-            <div
-              key={index}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-brand/5 flex flex-col h-full group"
+          {mainEvents.map((card: any) => (
+            <article
+              key={`${card.link}-${card.title}`}
+              className="group flex h-full w-full flex-col overflow-hidden rounded-[28px] border border-brand/10 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
-              {/* Imagen con Overlay de Fecha */}
               <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
                 <img 
                   src={card.image || "https://images.pexels.com/photos/3077882/pexels-photo-3077882.jpeg"} 
                   alt={card.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className={`h-full w-full transition-transform duration-700 group-hover:scale-105 ${card.imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
                   style={{ objectPosition: card.imagePosition || 'center' }}
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
-                
-                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-xl shadow-lg flex items-start gap-2 z-10 max-w-[calc(100%-2rem)]">
-                  <Calendar className="w-3 h-3 text-gold mt-0.5 flex-shrink-0" />
-                  <span className="text-[9px] md:text-[10px] font-bold tracking-wider text-brand uppercase whitespace-pre-line leading-tight">
-                    {card.date}
+                <div className="absolute left-5 top-5 z-10 max-w-[calc(100%-2.5rem)] rounded-full bg-white/95 px-4 py-2 shadow-md backdrop-blur-sm">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-brand">
+                    {card.statusLabel || card.date}
                   </span>
                 </div>
-                {card.price && (
-                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-xl shadow-lg flex items-center gap-1.5 z-10">
-                    <Tag className="w-3 h-3 text-gold flex-shrink-0" />
-                    <span className="text-[9px] md:text-[10px] font-bold tracking-wider text-brand uppercase whitespace-nowrap">
-                      {card.price}
-                    </span>
-                  </div>
-                )}
               </div>
               
-              <div className="p-6 md:p-8 flex flex-col flex-grow">
-                <h3 className="text-xl md:text-2xl font-serif text-brand mb-3 leading-tight group-hover:text-gold transition-colors">
+              <div className="flex flex-grow flex-col p-6 md:p-8">
+                {card.labels?.length > 0 && (
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {card.labels.map((label: string) => (
+                      <span key={label} className="rounded-full bg-brand/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-brand/65">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <h3 className="font-serif text-2xl leading-tight text-brand transition-colors group-hover:text-gold md:text-[28px]">
                   {card.title}
                 </h3>
+
+                {card.date && (
+                  <p className="mt-3 flex items-start gap-2 text-xs font-bold uppercase tracking-[0.08em] text-gold">
+                    <CalendarDays className="mt-px h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                    <span className="whitespace-pre-line">{card.date}</span>
+                  </p>
+                )}
                 
-                <p className="text-dark/70 text-sm leading-relaxed mb-6 line-clamp-4 flex-grow whitespace-pre-line">
+                <p className="mt-5 line-clamp-5 flex-grow whitespace-pre-line text-sm leading-7 text-dark/65">
                   {card.desc}
                 </p>
                 
-                <div className="flex flex-wrap items-center justify-start pt-4 border-t border-brand/5 mt-auto gap-3">
                 <a
                   href={card.link}
                   {...(/^https?:/.test(card.link) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    className="px-4 py-2 bg-brand text-white text-[10px] md:text-xs font-bold uppercase tracking-widest rounded-full hover:bg-gold transition-colors shadow-sm whitespace-nowrap flex-grow text-center sm:flex-grow-0"
+                  className="mt-7 inline-flex items-center gap-3 self-start text-xs font-bold uppercase tracking-[0.18em] text-gold transition-colors hover:text-brand"
                 >
                   {card.btn}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </a>
                 {card.pdfLink && (
                   <a 
                     href={card.pdfLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 text-brand/60 hover:text-brand font-bold text-[10px] md:text-xs uppercase tracking-widest transition-colors group/pdf whitespace-nowrap flex-grow sm:flex-grow-0"
+                    className="mt-4 inline-flex items-center gap-2 self-start text-[10px] font-bold uppercase tracking-widest text-brand/60 transition-colors hover:text-brand md:text-xs"
                   >
-                      <span className="border-b border-transparent group-hover/pdf:border-brand transition-[border-color]">
+                    <span>
                     {(t.events as any).btnPdf || "+ Info"}
-                      </span>
-                      <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
+                    </span>
+                    <ArrowRight className="h-3 w-3 md:h-4 md:w-4" aria-hidden="true" />
                   </a>
                 )}
-                </div>
               </div>
-            </div>
+            </article>
           ))}
         </HorizontalCardRail>
       </div>
