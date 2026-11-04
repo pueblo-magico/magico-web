@@ -1059,7 +1059,8 @@
           "tag": "PRONTO",
           "image": "/uploads/img_6948.webp",
           "link": "/achala-viva",
-          "pdfLink": ""
+          "pdfLink": "",
+          "showInMainEvents": false
         },
         {
           "date": "SIEMPRE DISPONIBLE",
@@ -3887,7 +3888,8 @@
           "tag": "SOON",
           "image": "/uploads/img_6948.webp",
           "link": "/achala-viva",
-          "pdfLink": ""
+          "pdfLink": "",
+          "showInMainEvents": false
         },
         {
           "date": "ALWAYS AVAILABLE",

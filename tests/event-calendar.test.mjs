@@ -57,3 +57,14 @@ test('upcoming reforestation weekends stay visible and link to volunteering', ()
     }
   }
 });
+
+test('Achala Viva stays routable but is hidden from the main calendar', () => {
+  for (const language of ['es', 'en']) {
+    const card = translations[language].events.cards.find((event) => event.title === 'Achala Viva');
+
+    assert.ok(card);
+    assert.equal(card.link, '/achala-viva');
+    assert.equal(card.showInMainEvents, false);
+    assert.equal(shouldShowMainCalendarEvent(card, '2026-11-04'), false);
+  }
+});
