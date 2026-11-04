@@ -29,7 +29,7 @@ export const SectionEventos: React.FC = () => {
                 <img 
                   src={card.image || "https://images.pexels.com/photos/3077882/pexels-photo-3077882.jpeg"} 
                   alt={card.title} 
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className={`h-full w-full transition-transform duration-700 group-hover:scale-105 ${card.imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
                   style={{ objectPosition: card.imagePosition || 'center' }}
                   loading="lazy"
                 />
