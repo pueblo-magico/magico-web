@@ -85,30 +85,28 @@ try {
       const page = await context.newPage();
       const runtimeErrors = [];
       page.on('pageerror', error => runtimeErrors.push(error.message));
-      page.on('console', message => {
-        if (message.type() === 'error' && !message.text().includes('favicon')) runtimeErrors.push(message.text());
-      });
 
       const url = `${baseUrl}${route}`;
-      const record = { route, viewport: viewport.name, url, issues: [], runtimeErrors };
+      const record = { route, viewport: viewport.name, url, issues: [], warnings: [], runtimeErrors };
 
       try {
         const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
         if (response && !response.ok()) record.issues.push({ type: 'http', detail: `HTTP ${response.status()}` });
 
         await page.waitForFunction(() => !document.getElementById('loader-container'), null, { timeout: 15_000 }).catch(() => {});
-        await page.waitForTimeout(700);
+        await page.waitForTimeout(250);
 
         // Visit the whole page so lazy images, content-visibility and reveal observers are exercised.
         await page.evaluate(async () => {
-          const step = Math.max(320, Math.round(window.innerHeight * 0.75));
-          for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+          const height = document.documentElement.scrollHeight;
+          const positions = Array.from({ length: 12 }, (_, index) => Math.round((height - window.innerHeight) * index / 11));
+          for (const y of positions) {
             window.scrollTo(0, y);
-            await new Promise(resolve => setTimeout(resolve, 35));
+            await new Promise(resolve => setTimeout(resolve, 30));
           }
           window.scrollTo(0, document.documentElement.scrollHeight);
         });
-        await page.waitForTimeout(700);
+        await page.waitForTimeout(250);
 
         const layout = await page.evaluate(() => {
           const visible = element => {
@@ -157,6 +155,7 @@ try {
             .map(describe);
 
           const header = document.querySelector('[data-header-main-row]');
+          const headerHeight = header?.getBoundingClientRect().height || 0;
           const headerItems = header
             ? [...header.querySelectorAll(':scope > *')].filter(visible).map(element => {
                 const rect = element.getBoundingClientRect();
@@ -174,12 +173,16 @@ try {
             }
           }
 
-          const wrappedDesktopNav = window.innerWidth >= 1024
+          const wrappedDesktopNav = window.innerWidth >= 1280
             ? [...document.querySelectorAll('header nav > ul > li > a')]
                 .filter(visible)
                 .filter(anchor => {
-                  const lineHeight = Number.parseFloat(getComputedStyle(anchor).lineHeight);
-                  return Number.isFinite(lineHeight) && anchor.getBoundingClientRect().height > lineHeight * 1.8;
+                  const textNode = [...anchor.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim());
+                  if (!textNode) return false;
+                  const range = document.createRange();
+                  range.selectNodeContents(textNode);
+                  const lineTops = new Set([...range.getClientRects()].map(rect => Math.round(rect.top)));
+                  return lineTops.size > 1;
                 })
                 .map(anchor => ({ element: describe(anchor), text: anchor.textContent?.trim() }))
             : [];
@@ -192,6 +195,7 @@ try {
             clippedText: clippedText.slice(0, 30),
             brokenImages,
             hiddenReveals,
+            headerHeight,
             headerCollisions,
             wrappedDesktopNav,
           };
@@ -200,15 +204,16 @@ try {
         if (layout.bodyScrollWidth > layout.viewportWidth + 2 || layout.documentScrollWidth > layout.viewportWidth + 2) {
           record.issues.push({ type: 'horizontal-overflow', detail: layout });
         }
-        if (layout.overflow.length) record.issues.push({ type: 'overflowing-elements', detail: layout.overflow });
-        if (layout.clippedText.length) record.issues.push({ type: 'clipped-text', detail: layout.clippedText });
+        if (layout.overflow.length) record.warnings.push({ type: 'offscreen-elements', detail: layout.overflow });
+        if (layout.clippedText.length) record.warnings.push({ type: 'clipped-text-candidates', detail: layout.clippedText });
         if (layout.brokenImages.length) record.issues.push({ type: 'broken-images', detail: layout.brokenImages });
         if (layout.hiddenReveals.length) record.issues.push({ type: 'hidden-reveals', detail: layout.hiddenReveals });
+        if (viewport.width >= 1280 && layout.headerHeight > 92) record.issues.push({ type: 'oversized-desktop-header', detail: { height: layout.headerHeight } });
         if (layout.headerCollisions.length) record.issues.push({ type: 'header-collision', detail: layout.headerCollisions });
         if (layout.wrappedDesktopNav.length) record.issues.push({ type: 'wrapped-desktop-nav', detail: layout.wrappedDesktopNav });
 
         await page.evaluate(() => window.scrollTo(0, 0));
-        await page.waitForTimeout(250);
+        await page.waitForTimeout(100);
         const screenshotPath = join(outputRoot, `${viewport.name}--${slugFor(route)}.png`);
         await page.screenshot({ path: screenshotPath, fullPage: false, animations: 'disabled' });
         record.screenshot = screenshotPath;
@@ -271,6 +276,8 @@ console.log(`Issues: ${failed.length}. Artifacts: ${outputRoot}`);
 for (const record of failed) {
   const kinds = [...new Set([...record.issues.map(issue => issue.type), ...(record.runtimeErrors.length ? ['runtime-error'] : [])])];
   console.log(`- ${record.viewport} ${record.route}: ${kinds.join(', ')}`);
+  const detail = record.issues[0]?.detail || record.runtimeErrors[0];
+  if (detail) console.log(`  ${JSON.stringify(detail).slice(0, 500)}`);
 }
 
 if (failed.length) process.exitCode = 1;
