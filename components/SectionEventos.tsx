@@ -31,6 +31,7 @@ export const SectionEventos: React.FC = () => {
                   src={card.image || "https://images.pexels.com/photos/3077882/pexels-photo-3077882.jpeg"} 
                   alt={card.title} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  style={{ objectPosition: card.imagePosition || 'center' }}
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
