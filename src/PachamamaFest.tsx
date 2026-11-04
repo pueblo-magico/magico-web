@@ -130,7 +130,7 @@ const FAQS = [
   },
   {
     q: '¿Cómo llego al lugar?',
-    a: 'Pueblo Mágico queda en Los Gigantes, Córdoba — a 90 km de Córdoba Capital. Acceso para todo tipo de vehículos. Consultanos y te mandamos el mapa.',
+    a: 'Pueblo Mágico queda en Los Gigantes, Córdoba, a aproximadamente 100 km de Córdoba Capital. El tramo final es de ripio; consultanos por el estado del camino y te mandamos el mapa.',
   },
   {
     q: '¿Tienen opciones para dietas o alergias?',
@@ -531,7 +531,7 @@ const PachamamaFest: React.FC = () => {
               <ul className="space-y-3">
                 {[
                   'Sierras Grandes de Córdoba · Los Gigantes',
-                  'A 90 km de Córdoba Capital',
+                  'A aproximadamente 100 km de Córdoba Capital',
                   'Acceso para todo tipo de vehículos',
                   'Salones, espacios abiertos, fogón y senderos',
                   '200 hectáreas de reserva natural',

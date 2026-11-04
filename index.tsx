@@ -6,6 +6,7 @@ import { injectContentsquareScript } from '@contentsquare/tag-sdk';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PWAInstallBanner } from './components/PWAInstallBanner';
 import { UpdateBanner } from './components/UpdateBanner';
+import { JourneyAnalytics } from './components/JourneyAnalytics';
 import './src/i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Main from './Main';
@@ -19,6 +20,10 @@ import CicloVitalFemenino from './src/CicloVitalFemenino';
 import { ROUTES } from './src/routes.js';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
+const Experiencias = lazy(() => import('./src/Experiencias'));
+const GruposRetiros = lazy(() => import('./src/GruposRetiros'));
+const NuestroProyecto = lazy(() => import('./src/NuestroProyecto'));
+const ComoLlegar = lazy(() => import('./src/ComoLlegar'));
 const AulaVerdeTravel360 = lazy(() => import('./src/AulaVerdeTravel360'));
 const OrganizamosTuExperiencia = lazy(() => import('./src/OrganizamosTuExperiencia'));
 const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
@@ -90,11 +95,16 @@ root.render(
       <LanguageProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <JourneyAnalytics />
           <UpdateBanner />
           <PWAInstallBanner />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Main />} />
+              <Route path={ROUTES.EXPERIENCIAS} element={<Experiencias />} />
+              <Route path={ROUTES.GRUPOS_RETIROS} element={<GruposRetiros />} />
+              <Route path={ROUTES.NUESTRO_PROYECTO} element={<NuestroProyecto />} />
+              <Route path={ROUTES.COMO_LLEGAR} element={<ComoLlegar />} />
               <Route path="/reset-vital" element={<ResetVitalApp />} />
               <Route path="/familion" element={<Familion />} />
               <Route path="/gondorbows" element={<Gondorbows />} />

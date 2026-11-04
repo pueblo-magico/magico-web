@@ -718,7 +718,7 @@ const OrganizamosTuExperiencia: React.FC = () => {
                   'Pensión completa — Gastronomía natural y regenerativa',
                   'Salón panorámico, explanadas y fogón',
                   'Senderos · Río · Cielos limpios · 200 ha de reserva',
-                  'A 90 km de Córdoba Capital — acceso para todo vehículo',
+                  'A aproximadamente 100 km de Córdoba Capital — tramo final de ripio',
                 ].map(item => (
                   <li key={item} className="flex items-start gap-3 text-white/65 text-sm leading-relaxed">
                     <span className="flex-shrink-0 mt-0.5" style={{ color: C.gold }}>—</span>

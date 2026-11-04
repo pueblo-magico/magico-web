@@ -616,7 +616,7 @@ const PropuestaCalmaYoga: React.FC = () => {
                   'Pensión completa — Alimentación Natural & Regenerativa',
                   'Salón panorámico, explanadas abiertas, espacios comunes y comedor',
                   'Senderos en la Montaña · Fogón · Accesos al Río · Cielos limpios',
-                  'A solo 90 km de Córdoba Capital - Acceso para todo tipo de vehiculos',
+                  'A aproximadamente 100 km de Córdoba Capital - tramo final de ripio',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-white/65 text-sm leading-relaxed">
                     <span className="text-gold flex-shrink-0 mt-0.5">—</span>

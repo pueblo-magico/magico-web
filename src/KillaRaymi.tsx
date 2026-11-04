@@ -496,7 +496,7 @@ const KillaRaymi: React.FC = () => {
               <ul className="space-y-3">
                 {[
                   'Sierras Grandes de Córdoba · Los Gigantes',
-                  'A 90 km de Córdoba Capital',
+                  'A aproximadamente 100 km de Córdoba Capital',
                   'Acceso para todo tipo de vehículos',
                   'Salones, espacios abiertos, fogón y senderos',
                   '200 hectáreas de reserva natural',

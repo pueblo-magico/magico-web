@@ -261,11 +261,12 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
             ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible lg:opacity-100 lg:visible'}
           `}
         >
-          <ul className="flex flex-col lg:flex-row items-center gap-0 lg:gap-[45px] w-full lg:w-auto">
+          <ul className="flex flex-col lg:flex-row items-center gap-0 lg:gap-7 w-full lg:w-auto">
             {t.menu.items.map((item: any, index: number) => (
               <li key={index} className="relative group w-full lg:w-auto text-center lg:text-left">
                 <a
                   href={item.href.startsWith('#') && !isHomePage ? ROUTES.HOME + item.href : item.href}
+                  aria-current={isMenuItemActive(item) ? 'page' : undefined}
                   onClick={(e) => handleNavClick(e, item.href, !!item.submenu, index)}
                   className={`
                     relative flex items-center justify-center lg:justify-start gap-1.5 py-3.5 lg:py-2.5
@@ -347,8 +348,8 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
             <li className="hidden lg:block pl-4 border-l border-white/20">
                <a 
                  href={t.menu.bookLink} 
-                 target="_blank"
-                 rel="noopener noreferrer"
+                 data-journey-event="header_to_stay"
+                 {...(/^https?:/.test(t.menu.bookLink) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                  onClick={(e) => handleNavClick(e, t.menu.bookLink, false, -1)}
                  className={`text-xs font-bold px-5 py-2 rounded-full transition-all shadow-lg ${useSolidHeader ? 'bg-brand text-white hover:bg-gold' : 'bg-white text-brand hover:bg-gold hover:text-white'}`}
                >

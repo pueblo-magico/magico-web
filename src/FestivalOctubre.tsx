@@ -851,7 +851,7 @@ const FestivalOctubre: React.FC = () => {
               <h2 className="text-4xl leading-tight serif-title md:text-6xl">Pueblo Mágico,<br />Los Gigantes.</h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#16423D]/70 md:text-lg">Un ecolodge de montaña en las Sierras Grandes de Córdoba. Un espacio que ya respira lo que propone Raíz Sonora: naturaleza, comunidad y presencia.</p>
               <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left text-sm text-[#16423D]/65 sm:grid-cols-2">
-                {['A 90 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón', 'Tramo final por camino de ripio en buen estado'].map(item => (
+                {['A aproximadamente 100 km de Córdoba Capital', '200 hectáreas de reserva natural', 'Río, senderos y espacios abiertos', 'Alojamiento, camping y fogón', 'Tramo final por camino de ripio; consultar estado antes de viajar'].map(item => (
                   <li key={item} className="flex items-start gap-3"><Check size={16} className="mt-0.5 shrink-0 text-[#B85A3D]" aria-hidden="true" />{item}</li>
                 ))}
               </ul>

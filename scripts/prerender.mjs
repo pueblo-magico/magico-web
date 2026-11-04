@@ -16,9 +16,37 @@ export const ROUTES = [
   {
     path: '/',
     title: 'Pueblo Mágico — Ecolodge de Montaña · Los Gigantes, Córdoba',
-    description: 'Ecolodge de montaña en las Sierras Grandes de Córdoba: Refugio de Piedra, domos geodésicos y camping. Retiros, co-living y voluntariados. Energía solar, baños secos y compost.',
+    description: 'Pueblo Mágico es un refugio y ecolodge en Los Gigantes, Córdoba. Explorá estadías, experiencias, retiros y un proyecto regenerativo que cuida el territorio.',
     image: 'https://experienciamagico.com/uploads/img_6948.webp',
     canonical: 'https://experienciamagico.com/',
+  },
+  {
+    path: '/experiencias',
+    title: 'Experiencias y agenda | Pueblo Magico',
+    description: 'Bienestar, naturaleza, musica y regeneracion en Los Gigantes, Cordoba. Consulta fechas y estados reales de cada experiencia.',
+    image: 'https://experienciamagico.com/uploads/yoga_salon.webp',
+    canonical: 'https://experienciamagico.com/experiencias',
+  },
+  {
+    path: '/grupos-y-retiros',
+    title: 'Grupos y retiros | Pueblo Magico',
+    description: 'Propuestas para facilitadores, escuelas, empresas y comunidades en las Sierras Grandes de Cordoba.',
+    image: 'https://experienciamagico.com/uploads/atardeser/comunidad.jpeg',
+    canonical: 'https://experienciamagico.com/grupos-y-retiros',
+  },
+  {
+    path: '/nuestro-proyecto',
+    title: 'Nuestro proyecto regenerativo | Pueblo Magico',
+    description: 'Conoce la historia, los pilares y el trabajo territorial de Pueblo Magico en las Sierras Grandes de Cordoba.',
+    image: 'https://experienciamagico.com/uploads/dji_0074.webp',
+    canonical: 'https://experienciamagico.com/nuestro-proyecto',
+  },
+  {
+    path: '/como-llegar',
+    title: 'Como llegar y preguntas frecuentes | Pueblo Magico',
+    description: 'Camino, transporte, clima, conectividad y respuestas practicas para preparar tu visita a Pueblo Magico.',
+    image: 'https://experienciamagico.com/uploads/campoentero.webp',
+    canonical: 'https://experienciamagico.com/como-llegar',
   },
   {
     path: '/familion',
@@ -114,7 +142,7 @@ export const ROUTES = [
   {
     path: '/sunset-y-rio',
     title: 'Sunset y Río — en la montaña · 30 oct al 1 nov · Los Gigantes | Pueblo Mágico',
-    description: 'Un sábado de río, el sol cayendo con música y un fogón con guitarreada a la noche. A 90 km de Córdoba. Vení con tus amigos o venite solo o sola.',
+    description: 'Un sábado de río, el sol cayendo con música y un fogón con guitarreada a la noche. A aproximadamente 100 km de Córdoba. Vení con tus amigos o venite solo o sola.',
     image: 'https://experienciamagico.com/uploads/atardeser/celebracion-grupal.jpeg',
     canonical: 'https://experienciamagico.com/sunset-y-rio',
   },

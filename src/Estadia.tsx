@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
 import { BookingWidget } from '../components/BookingWidget';
+import { BookingReassurance } from '../components/BookingReassurance';
 import {
   Bed, ForkKnife, Leaf, WifiHigh, Tree, UsersThree,
   CheckCircle, ArrowRight, Sun, Mountains, Campfire,
@@ -788,7 +789,7 @@ const FAQS = [
   {
     Icon: MapPinIcon,
     q: '¿Cómo llego?',
-    a: 'El paraje está a unos 90-100 km de Córdoba Capital: 1 h desde Tanti y 1:30 h desde Villa Carlos Paz por la Ruta Provincial 28, con acceso para todo tipo de vehículos. También podemos coordinar traslado desde la ciudad.',
+    a: 'El paraje está a aproximadamente 100 km de Córdoba Capital. El tramo final es de ripio; en condiciones normales llegan vehículos particulares. Consultanos por el estado del camino y por opciones de traslado antes de viajar.',
   },
   {
     Icon: ClockIcon,
@@ -1055,6 +1056,11 @@ const Estadia: React.FC = () => {
           <Hero />
           <Inclusiones />
           <Alojamientos />
+          <section className="bg-bone px-6 pb-16">
+            <div className="mx-auto max-w-4xl">
+              <BookingReassurance showCta={false} />
+            </div>
+          </section>
           <SectionRegeneracion />
           <EscaleraDeValor />
           <HorariosPension />
@@ -1064,7 +1070,7 @@ const Estadia: React.FC = () => {
             <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, fontFamily: 'Georgia, serif', fontWeight: 400, marginBottom: 12 }}>
               ¿Tenés dudas? Escribinos y te respondemos en menos de 24 horas.
             </p>
-            <a href={WA_ESTADIA} target="_blank" rel="noopener noreferrer"
+            <a href={WA_ESTADIA} target="_blank" rel="noopener noreferrer" data-journey-event="stay_to_whatsapp_inquiry"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#25D366', color: 'white', borderRadius: 999, padding: '10px 24px', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none' }}>
               💬 Consultar por WhatsApp
             </a>

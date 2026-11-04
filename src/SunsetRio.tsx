@@ -435,7 +435,7 @@ const SunsetRio: React.FC = () => {
       body: (
         <>
           <p className="mb-3">
-            Pueblo Mágico, un refugio vivo en Los Gigantes, a 90 km de Córdoba. Llega cualquier auto. Dormís en cama, en habitación compartida o domo, o en carpa en la zona de camping (30% OFF).
+            Pueblo Mágico, un refugio vivo en Los Gigantes, a aproximadamente 100 km de Córdoba Capital. El tramo final es de ripio. Dormís en cama, en habitación compartida o domo, o en carpa en la zona de camping (30% OFF).
           </p>
           <p className="mb-5">
             El 10% de cada entrada va a la reforestación y restauración de las Sierras Grandes de Córdoba: árboles nativos plantados en las mismas hectáreas que vas a recorrer.
@@ -476,7 +476,7 @@ const SunsetRio: React.FC = () => {
             { q: '¿Hay que caminar mucho?', a: 'No. La caminata más larga es de unos 20 minutos, tranqui. Y el domingo podés ir al río en auto y caminar solo 5 minutos. Si preferís, también te podés quedar en el Mágico.' },
             { q: '¿Puedo llegar el viernes o quedarme hasta el lunes?', a: 'Sí. Con el finde completo elegís tus dos noches: viernes y sábado, o sábado y domingo.' },
             { q: '¿A qué hora llego y a qué hora me voy?', a: 'Llegás el sábado desde las 10. El domingo la salida es libre: recomendamos desde las 18 para volver con luz.' },
-            { q: '¿Puedo volver el sábado a la noche?', a: 'Sí, pero son 90 km de ruta de montaña de noche. Si te quedás, dormís acá y el domingo hay otro río.' },
+            { q: '¿Puedo volver el sábado a la noche?', a: 'Sí, pero son aproximadamente 100 km hasta Córdoba Capital y parte del recorrido es camino de montaña. Si te quedás, dormís acá y el domingo hay otro río.' },
             { q: '¿Tengo que hacer el breathwork y el ice bath?', a: 'No, son opcionales. Si querés, mientras tanto te quedás con un mate o descansando. Si tenés alguna condición de salud (corazón, presión alta, epilepsia, embarazo), avisanos antes.' },
             { q: '¿Hay baño?', a: 'Sí, en el refugio.' },
             { q: '¿Cómo llego?', a: 'En auto. Si no tenés, avisanos y te conectamos con alguien que va.' },
@@ -538,7 +538,7 @@ const SunsetRio: React.FC = () => {
             Sunset <span style={{ color: '#F4A261' }}>y</span> Río
           </h1>
           <p className="text-white/80 text-base md:text-xl leading-relaxed max-w-md mt-4 mb-7 md:mb-9">
-            Río de día, atardecer con música y fogón a la noche. A 90 km de Córdoba.
+            Río de día, atardecer con música y fogón a la noche. A aproximadamente 100 km de Córdoba Capital.
           </p>
 
           <a href="#fecha" className="btn-gold text-sm py-4 px-8 inline-block self-start">

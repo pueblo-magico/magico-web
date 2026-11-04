@@ -4,6 +4,10 @@
 
 export const ROUTES = {
   HOME: '/',
+  EXPERIENCIAS: '/experiencias',
+  GRUPOS_RETIROS: '/grupos-y-retiros',
+  NUESTRO_PROYECTO: '/nuestro-proyecto',
+  COMO_LLEGAR: '/como-llegar',
   ESTADIA: '/estadia',
   FAMILION: '/familion',
   ACHALA_VIVA: '/achala-viva',

@@ -147,7 +147,7 @@ const CIENCIA = [
   {
     icon: <Sparkle className="w-6 h-6" weight="duotone" />,
     dato: '+47% creatividad',
-    texto: 'Un estudio de UC Berkeley encontró que, tras días de inmersión en naturaleza, las personas resuelven un 47% más problemas creativos.',
+    texto: 'Pasar tiempo sostenido en la naturaleza puede favorecer el descanso atencional y abrir espacio para nuevas ideas. Lo presentamos como una experiencia posible, no como una promesa terapéutica.',
   },
   {
     icon: <Moon className="w-6 h-6" weight="duotone" />,
@@ -178,7 +178,7 @@ const PorQueFunciona: React.FC = () => (
         ))}
       </div>
       <p className="text-center text-dark/30 text-[11px] mt-8">
-        Basado en investigación de psicología ambiental — Kaplan (Teoría de la Restauración Atencional) y Piff et al. (UC Berkeley).
+        Inspirado en investigación de psicología ambiental sobre restauración atencional. Los efectos varían según cada persona y contexto.
       </p>
     </div>
   </section>
@@ -483,7 +483,8 @@ const Formatos: React.FC = () => {
         <div className="inline-flex items-center gap-2 bg-bone border border-brand/10 rounded-full px-5 py-2.5">
           <Sun className="w-4 h-4 text-gold flex-shrink-0" weight="duotone" />
           <p className="text-brand text-sm">
-            <strong className="font-bold">{money(prices.precioPorNocheInvierno)}</strong> la noche — precio de temporada de invierno, a la carta
+            <strong className="font-bold">{money(prices.precioPorNocheReferencia)}</strong>{' '}
+            {language === 'es' ? 'la noche — referencia para estadías cortas; confirmamos la tarifa vigente al consultar' : 'per night — short-stay reference; we confirm the current rate when you inquire'}
           </p>
         </div>
       </div>

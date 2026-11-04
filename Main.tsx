@@ -2,18 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { Header } from './components/Header';
 import { HeroNuevo } from './components/HeroNuevo';
-import { SectionNosotros } from './components/SectionNosotros';
-import { SectionPilares } from './components/SectionPilares';
-import { SectionVideo } from './components/SectionVideo';
-import { SectionExperiencias } from './components/SectionExperiencias';
-import { SectionNichos } from './components/SectionNichos';
 import { SectionTestimonios } from './components/SectionTestimonios';
 import { SectionEventos } from './components/SectionEventos';
 import { SectionComoLlegar } from './components/SectionComoLlegar';
 import { SectionContacto } from './components/SectionContacto';
 import { SectionInclusiones } from './components/SectionInclusiones';
-import { SectionParaQuien } from './components/SectionParaQuien';
 import { SectionFAQ } from './components/SectionFAQ';
+import { SectionJourneyRoutes } from './components/SectionJourneyRoutes';
+import { SectionRegenerativeDifference } from './components/SectionRegenerativeDifference';
+import { BookingReassurance } from './components/BookingReassurance';
 import { Footer } from './components/Footer';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { CookieBanner } from './components/CookieBanner';
@@ -41,7 +38,7 @@ const Main: React.FC = () => {
 
   useEffect(() => {
     const TITLE = 'Pueblo Mágico — Ecolodge de Montaña · Los Gigantes, Córdoba';
-    const DESC  = 'Ecolodge de montaña en las Sierras Grandes de Córdoba: Refugio de Piedra, domos geodésicos y camping. Retiros, co-living y voluntariados. Energía solar, baños secos y compost.';
+    const DESC  = 'Pueblo Mágico es un refugio y ecolodge en Los Gigantes, Córdoba. Explorá estadías, experiencias, retiros y un proyecto regenerativo que cuida el territorio.';
     const URL   = SITE_URL + ROUTES.HOME;
     const IMG   = `${SITE_URL}/uploads/img_6948.webp`;
     const prevTitle = document.title;
@@ -158,30 +155,14 @@ const Main: React.FC = () => {
       <Header />
       <main>
         <HeroNuevo />
-        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px', isolation: 'isolate' }}><SectionParaQuien /></div>
-        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 800px', isolation: 'isolate' }}><SectionExperiencias /></div>
-        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px', isolation: 'isolate' }}><SectionInclusiones /></div>
-
-        {/* CTA puente → /estadia */}
-        <div style={{ background: '#005333', padding: '28px 24px', textAlign: 'center' }}>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 8 }}>
-            ¿Querés hospedarte?
-          </p>
-          <p style={{ color: 'white', fontSize: 18, fontFamily: 'Georgia, serif', fontWeight: 400, marginBottom: 16 }}>
-            Mirá todos los alojamientos, precios detallados y el retiro Reset Vital incluido
-          </p>
-          <a href="/estadia"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#D4AF37', color: 'white', borderRadius: 999, padding: '12px 28px', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none' }}>
-            Ver estadías & glamping →
-          </a>
-        </div>
-
+        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 760px', isolation: 'isolate' }}><SectionJourneyRoutes /></div>
         <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 600px', isolation: 'isolate' }}><SectionEventos /></div>
+        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 520px', isolation: 'isolate' }}><SectionInclusiones /></div>
+        <section className="bg-white py-10">
+          <div className="mx-auto max-w-4xl px-6"><BookingReassurance /></div>
+        </section>
+        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 650px', isolation: 'isolate' }}><SectionRegenerativeDifference /></div>
         <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px', isolation: 'isolate' }}><SectionTestimonios /></div>
-        <SectionNosotros />
-        <SectionPilares />
-        <SectionVideo />
-        <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px', isolation: 'isolate' }}><SectionNichos /></div>
         <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px', isolation: 'isolate' }}><SectionComoLlegar /></div>
         <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 500px', isolation: 'isolate' }}><SectionFAQ /></div>
         <div style={{ contentVisibility: 'auto', containIntrinsicSize: '0 600px', isolation: 'isolate' }}><SectionContacto /></div>

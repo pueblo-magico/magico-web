@@ -7,13 +7,78 @@ import { ROUTES } from '../src/routes';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const location = useLocation();
   const isHomePage = location.pathname === ROUTES.HOME;
+  const contextualLinks = (() => {
+    const es = language === 'es';
+    const link = (href: string, esLabel: string, enLabel: string) => ({ href, label: es ? esLabel : enLabel });
+    const path = location.pathname;
+
+    if (path === ROUTES.ESTADIA) return [
+      link(ROUTES.EXPERIENCIAS, 'Sumar una experiencia', 'Add an experience'),
+      link('/reset-vital', 'Conocer Reset Vital', 'Discover Reset Vital'),
+      link(ROUTES.COMO_LLEGAR, 'Preparar el viaje', 'Prepare your trip'),
+    ];
+    if (path === ROUTES.COLIVING) return [
+      link('/reset-vital', 'Conocer Reset Vital', 'Discover Reset Vital'),
+      link(ROUTES.EXPERIENCIAS, 'Explorar experiencias', 'Explore experiences'),
+      link(ROUTES.NUESTRO_PROYECTO, 'Conocer el proyecto', 'Meet the project'),
+    ];
+    if (path === ROUTES.RAIZ_SONORA) return [
+      link(ROUTES.REFORESTACION, 'Conocer la reforestaci�n', 'Discover reforestation'),
+      link(ROUTES.ESTADIA, 'Ver opciones de estad�a', 'See stay options'),
+    ];
+    if (path === ROUTES.BROTE) return [
+      link(ROUTES.COMO_LLEGAR, 'C�mo llegar y qu� traer', 'How to get here and what to bring'),
+      link(ROUTES.ESTADIA, 'Ver opciones de estad�a', 'See stay options'),
+    ];
+    if ([ROUTES.ACHALA_VIVA, ROUTES.FLY_FISHING, ROUTES.ORGANIZA_EXPERIENCIA].includes(path)) return [
+      link(ROUTES.ESTADIA, 'Ver opciones de estad�a', 'See stay options'),
+      link(ROUTES.EXPERIENCIAS, 'Explorar la agenda completa', 'Explore the full calendar'),
+    ];
+    if (path === ROUTES.ESCUELAS) return [
+      link(ROUTES.NUESTRO_PROYECTO, 'Conocer el proyecto', 'Meet the project'),
+      link(ROUTES.GRUPOS_RETIROS, 'Ver propuestas para grupos', 'See group offerings'),
+    ];
+    if (path === ROUTES.EMPRESAS) return [
+      link(ROUTES.REFORESTACION, 'Conocer la reforestaci�n', 'Discover reforestation'),
+      link(ROUTES.GRUPOS_RETIROS, 'Ver propuestas para grupos', 'See group offerings'),
+    ];
+    if (path === ROUTES.REFORESTACION) return [
+      link(ROUTES.ESTADIA, 'Vincular la visita con una estad�a', 'Pair your visit with a stay'),
+      link(ROUTES.VOLUNTARIADO, 'Conocer Programa Semilla', 'Discover Programa Semilla'),
+    ];
+    return [];
+  })();
 
   return (
     <footer className="bg-white text-gray-800 py-16 md:py-24 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-6">
+        {contextualLinks.length > 0 && (
+          <div className="mb-16 rounded-[24px] border border-brand/10 bg-[#F8F5EE] p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-8">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-brand/55">
+                {language === 'es' ? 'Siguiente paso' : 'Next step'}
+              </p>
+              <h2 className="mt-2 font-serif text-2xl text-brand">
+                {language === 'es' ? 'Seguí explorando tu recorrido' : 'Keep exploring your journey'}
+              </h2>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3 md:mt-0 md:justify-end">
+              {contextualLinks.map(item => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  data-journey-event="detail_contextual_next_step"
+                  className="rounded-full border border-brand/20 bg-white px-5 py-2.5 text-xs font-bold text-brand transition hover:border-gold hover:text-gold"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-16">
           
           {/* Brand Column */}
