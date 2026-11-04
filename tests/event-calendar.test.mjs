@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 import {
@@ -6,6 +7,8 @@ import {
   shouldShowMainCalendarEvent,
   shouldShowUpcomingEvent,
 } from '../src/utils/eventCalendar.ts';
+
+const translations = JSON.parse(readFileSync(new URL('../data.json', import.meta.url), 'utf8'));
 
 test('calendar hides events only after their final day', () => {
   const today = '2026-10-21';
@@ -40,4 +43,17 @@ test('upcoming-event checks do not inherit homepage visibility', () => {
 test('calendar day uses the event location timezone', () => {
   assert.equal(getEventCalendarDateKey(new Date('2026-10-21T02:30:00.000Z')), '2026-10-20');
   assert.equal(getEventCalendarDateKey(new Date('2026-10-21T03:30:00.000Z')), '2026-10-21');
+});
+
+test('upcoming reforestation weekends stay visible and link to volunteering', () => {
+  for (const language of ['es', 'en']) {
+    const cards = translations[language].events.cards.filter((card) => card.isReforestacion);
+
+    assert.equal(cards.length, 2);
+    for (const card of cards) {
+      assert.equal(card.showInMainEvents, true);
+      assert.equal(card.link, '/reforestacion#voluntariado');
+      assert.equal(shouldShowMainCalendarEvent(card, '2026-11-04'), true);
+    }
+  }
 });

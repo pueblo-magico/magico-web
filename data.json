@@ -979,7 +979,7 @@
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "8 NOVIEMBRE 2026",
@@ -1038,7 +1038,7 @@
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "5–8 DICIEMBRE 2026",
@@ -3803,11 +3803,11 @@
           "desc": "A weekend of community action in the mountains to plant and protect 1,000 native trees. The call includes camping; schedules, requirements and conditions are confirmed during the application process.",
           "btn": "View the event",
           "image": "/uploads/reforestacion/comunidad-atardecer.webp",
-          "link": "/reforestacion#volunteering",
+          "link": "/reforestacion#voluntariado",
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "NOVEMBER 8, 2026",
@@ -3862,11 +3862,11 @@
           "desc": "Two days of community action in the mountains to plant and protect 1,000 native trees. The call includes camping; schedules, requirements and conditions are confirmed during the application process.",
           "btn": "View the event",
           "image": "/uploads/reforestacion/mapa-proxima-reforestacion-10000-arboles.webp",
-          "link": "/reforestacion#volunteering",
+          "link": "/reforestacion#voluntariado",
           "pdfLink": "",
           "isVolunariado": true,
           "isReforestacion": true,
-          "showInMainEvents": false
+          "showInMainEvents": true
         },
         {
           "date": "DECEMBER 5–8, 2026",
