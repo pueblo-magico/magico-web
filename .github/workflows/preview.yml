@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened]
 
 concurrency:
-  group: cloudflare-pages-preview-${{ github.event.pull_request.number }}
+  group: cloudflare-pages-preview-v2-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:

@@ -9,7 +9,7 @@ on:
 # Share the preview workflow's concurrency group so closing a PR cancels any
 # deployment that is still running before cleanup begins.
 concurrency:
-  group: cloudflare-pages-preview-${{ github.event.pull_request.number }}
+  group: cloudflare-pages-preview-v2-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -38,3 +38,4 @@ jobs:
           CLOUDFLARE_PROJECT_NAME: pueblo-magico-web
           CLOUDFLARE_PREVIEW_BRANCH: pr-${{ github.event.pull_request.number }}
         run: node scripts/cloudflare/cleanup-pages-preview.mjs
+
