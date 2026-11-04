@@ -84,7 +84,19 @@ try {
     for (const route of routes) {
       const page = await context.newPage();
       const runtimeErrors = [];
-      page.on('pageerror', error => runtimeErrors.push(error.message));
+      const ignoredThirdPartyErrors = [];
+      page.on('pageerror', error => {
+        const message = error.message;
+        // Contentsquare deliberately throws when its tag detects an existing
+        // instance in the same browser context. It does not affect rendering,
+        // navigation or interaction, so keep it visible in the report without
+        // turning an otherwise clean visual run red.
+        if (/^Contentsquare tag \d+ skipped: another Contentsquare tag already runs$/.test(message)) {
+          ignoredThirdPartyErrors.push(message);
+          return;
+        }
+        runtimeErrors.push(message);
+      });
 
       const url = `${baseUrl}${route}`;
       const record = { route, viewport: viewport.name, url, issues: [], warnings: [], runtimeErrors };
@@ -95,6 +107,12 @@ try {
 
         await page.waitForFunction(() => !document.getElementById('loader-container'), null, { timeout: 15_000 }).catch(() => {});
         await page.waitForTimeout(250);
+        if (ignoredThirdPartyErrors.length) {
+          record.warnings.push({
+            type: 'ignored-third-party-error',
+            detail: [...new Set(ignoredThirdPartyErrors)],
+          });
+        }
 
         // Visit the whole page so lazy images, content-visibility and reveal observers are exercised.
         await page.evaluate(async () => {
