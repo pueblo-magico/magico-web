@@ -116,7 +116,7 @@ test('El Despertar del Colibrí uses the official artwork and limited-place mess
     assert.equal(card.image, '/uploads/events/el-despertar-del-colibri-oficial.png');
     assert.equal(card.imageFit, 'contain');
     assert.match(card.desc, /Acan de Fuego/);
-    assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
+    assert.equal(card.link, '/el-despertar-del-colibri');
   }
 });
 

@@ -33,6 +33,7 @@ const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
 const Reforestacion = lazy(() => import('./src/Reforestacion'));
 const Despertar = lazy(() => import('./src/Despertar'));
+const DespertarDelColibri = lazy(() => import('./src/DespertarDelColibri'));
 const PropuestaNicoGrupe = lazy(() => import('./src/PropuestaNicoGrupe'));
 const ResetVitalApp = lazy(() => import('./ResetVital.jsx'));
 const Estadia = lazy(() => import('./src/Estadia'));
@@ -121,6 +122,7 @@ root.render(
               <Route path="/voluntariado" element={<Voluntariado />} />
               <Route path="/reforestacion" element={<Reforestacion />} />
               <Route path="/despertar" element={<Despertar />} />
+              <Route path={ROUTES.DESPERTAR_COLIBRI} element={<DespertarDelColibri />} />
               {/* Campañas de invierno 2026 terminadas — redirigen a la estadía actual */}
               <Route path="/winter-camp" element={<Navigate to="/estadia" replace />} />
               <Route path="/winter-redirection" element={<Navigate to="/estadia" replace />} />

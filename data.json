@@ -1033,7 +1033,7 @@
           "btn": "Recibir información",
           "image": "/uploads/events/el-despertar-del-colibri-oficial.png",
           "imageFit": "contain",
-          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20recibir%20informaci%C3%B3n%20y%20reservar%20mi%20lugar%20para%20El%20Despertar%20del%20Colibr%C3%AD%20del%2027%20al%2029%20de%20noviembre%20de%202026.",
+          "link": "/el-despertar-del-colibri",
           "showInExperienceCatalog": false
         },
         {
@@ -3891,7 +3891,7 @@
           "btn": "Request information",
           "image": "/uploads/events/el-despertar-del-colibri-oficial.png",
           "imageFit": "contain",
-          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20El%20Despertar%20del%20Colibr%C3%AD%2C%20November%2027%E2%80%9329%2C%202026.",
+          "link": "/el-despertar-del-colibri",
           "showInExperienceCatalog": false
         },
         {
