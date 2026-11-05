@@ -230,7 +230,7 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <VueloDelCondorVivencia />
+        <VueloDelCondorVivencia reveal={false} />
 
         <section className="px-5 py-20 text-center text-white md:px-10 md:py-28" style={{ background: COLORS.forestDark }}>
           <div className="mx-auto max-w-3xl">
