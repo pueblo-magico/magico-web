@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -76,6 +76,14 @@ const FAQS = [
   ['¿Qué necesito llevar?', 'Al confirmar tu lugar te enviaremos la lista de preparación, horarios, recomendaciones y todo lo necesario para llegar a la experiencia.'],
 ];
 
+const NAV_ITEMS = [
+  { id: 'propuesta', label: 'El llamado' },
+  { id: 'experiencia', label: 'Experiencia' },
+  { id: 'lugar', label: 'El lugar' },
+  { id: 'equipo', label: 'Equipo' },
+  { id: 'preguntas', label: 'Preguntas' },
+] as const;
+
 const WhatsAppButton: React.FC<{ label: string; secondary?: boolean }> = ({ label, secondary = false }) => (
   <a
     href={WHATSAPP_URL}
@@ -89,6 +97,8 @@ const WhatsAppButton: React.FC<{ label: string; secondary?: boolean }> = ({ labe
 );
 
 const DespertarDelColibri: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<(typeof NAV_ITEMS)[number]['id']>('propuesta');
+
   useEffect(() => {
     const previousTitle = document.title;
     document.title = 'El Despertar del Colibrí — Encuentro de Hombres · Pueblo Mágico';
@@ -145,8 +155,52 @@ const DespertarDelColibri: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'smooth';
+
+    const sections = NAV_ITEMS
+      .map(({ id }) => document.getElementById(id))
+      .filter((section): section is HTMLElement => Boolean(section));
+    let frame = 0;
+
+    const updateActiveSection = () => {
+      frame = 0;
+      const readingLine = Math.min(window.innerHeight * 0.42, 380);
+      let current = NAV_ITEMS[0].id;
+
+      sections.forEach((section) => {
+        if (section.getBoundingClientRect().top <= readingLine) {
+          current = section.id as (typeof NAV_ITEMS)[number]['id'];
+        }
+      });
+
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8) {
+        current = NAV_ITEMS[NAV_ITEMS.length - 1].id;
+      }
+
+      setActiveSection(current);
+    };
+
+    const requestUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    updateActiveSection();
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    window.addEventListener('resize', requestUpdate);
+
+    return () => {
+      root.style.scrollBehavior = previousScrollBehavior;
+      window.removeEventListener('scroll', requestUpdate);
+      window.removeEventListener('resize', requestUpdate);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return (
-    <div className="overflow-x-hidden" style={{ background: COLORS.cream, color: COLORS.ink }}>
+    <div className="overflow-x-clip" style={{ background: COLORS.cream, color: COLORS.ink }}>
       <a href="#contenido-colibri" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-white focus:px-5 focus:py-3 focus:text-[#082f25]">
         Saltar al contenido
       </a>
@@ -162,11 +216,19 @@ const DespertarDelColibri: React.FC = () => {
           </a>
         </div>
         <nav aria-label="Secciones del encuentro" className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-5 gap-y-2 px-5 pb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-white/70 md:gap-x-9 md:px-9 md:text-[11px]">
-          <a href="#propuesta" className="transition hover:text-[#f2ce69]">El llamado</a>
-          <a href="#experiencia" className="transition hover:text-[#f2ce69]">Experiencia</a>
-          <a href="#lugar" className="transition hover:text-[#f2ce69]">El lugar</a>
-          <a href="#equipo" className="transition hover:text-[#f2ce69]">Equipo</a>
-          <a href="#preguntas" className="transition hover:text-[#f2ce69]">Preguntas</a>
+          {NAV_ITEMS.map(({ id, label }) => {
+            const isActive = activeSection === id;
+            return (
+              <a
+                key={id}
+                href={`#${id}`}
+                aria-current={isActive ? 'location' : undefined}
+                className={`relative pb-1 transition after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left after:rounded-full after:bg-[#d6a72f] after:transition-transform ${isActive ? 'text-[#f2ce69] after:scale-x-100' : 'hover:text-[#f2ce69] after:scale-x-0'}`}
+              >
+                {label}
+              </a>
+            );
+          })}
         </nav>
       </header>
 
