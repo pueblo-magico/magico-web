@@ -9,6 +9,8 @@ import {
 } from '../src/utils/eventCalendar.ts';
 
 const translations = JSON.parse(readFileSync(new URL('../data.json', import.meta.url), 'utf8'));
+const prerenderSource = readFileSync(new URL('../scripts/prerender.mjs', import.meta.url), 'utf8');
+const colibriSource = readFileSync(new URL('../src/DespertarDelColibri.tsx', import.meta.url), 'utf8');
 
 test('calendar hides events only after their final day', () => {
   const today = '2026-10-21';
@@ -107,17 +109,24 @@ test('the December peyote ceremony is dated and opens its WhatsApp contact', () 
   }
 });
 
-test('El Despertar del Colibrí uses the official artwork and limited-place messaging', () => {
+test('El Despertar del Colibrí uses its landing hero and complete social metadata', () => {
   for (const language of ['es', 'en']) {
     const card = translations[language].events.cards.find((event) => event.title === 'El Despertar del Colibrí');
 
     assert.ok(card);
     assert.equal(card.statusLabel, language === 'es' ? 'CUPOS LIMITADOS' : 'LIMITED PLACES');
-    assert.equal(card.image, '/uploads/events/el-despertar-del-colibri-oficial.png');
-    assert.equal(card.imageFit, 'contain');
+    assert.equal(card.image, '/uploads/events/colibri/hero-colibri-wide.webp');
+    assert.equal(card.imageFit, 'cover');
     assert.match(card.desc, /Acan de Fuego/);
     assert.equal(card.link, '/el-despertar-del-colibri');
   }
+
+  assert.match(prerenderSource, /image: 'https:\/\/experienciamagico\.com\/uploads\/events\/colibri\/hero-colibri-og\.jpg'/);
+  assert.match(prerenderSource, /imageWidth: 1200/);
+  assert.match(prerenderSource, /imageHeight: 630/);
+  assert.match(prerenderSource, /canonical: 'https:\/\/experienciamagico\.com\/el-despertar-del-colibri'/);
+  assert.match(colibriSource, /image: \['https:\/\/experienciamagico\.com\/uploads\/events\/colibri\/hero-colibri-og\.jpg'\]/);
+  assert.match(colibriSource, /url: 'https:\/\/experienciamagico\.com\/el-despertar-del-colibri'/);
 });
 
 test('every visible upcoming event has a status and two thematic labels', () => {

@@ -146,7 +146,8 @@ const DespertarDelColibri: React.FC = () => {
       endDate: '2026-11-29',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       eventStatus: 'https://schema.org/EventScheduled',
-      image: ['https://experienciamagico.com/uploads/events/el-despertar-del-colibri-oficial.png'],
+      image: ['https://experienciamagico.com/uploads/events/colibri/hero-colibri-og.jpg'],
+      url: 'https://experienciamagico.com/el-despertar-del-colibri',
       description,
       location: {
         '@type': 'Place',
