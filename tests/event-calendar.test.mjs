@@ -127,6 +127,10 @@ test('El Despertar del Colibrí uses its landing hero and complete social metada
   assert.match(prerenderSource, /canonical: 'https:\/\/experienciamagico\.com\/el-despertar-del-colibri'/);
   assert.match(colibriSource, /image: \['https:\/\/experienciamagico\.com\/uploads\/events\/colibri\/hero-colibri-og\.jpg'\]/);
   assert.match(colibriSource, /url: 'https:\/\/experienciamagico\.com\/el-despertar-del-colibri'/);
+  assert.match(colibriSource, /<VueloDelCondorVivencia reveal=\{false\} \/>/);
+  assert.match(colibriSource, /Una Comunidad con Propósito/);
+  assert.match(colibriSource, /Contención y profundidad/);
+  assert.doesNotMatch(colibriSource, /Ocho puertas hacia una experiencia compartida/);
 });
 
 test('every visible upcoming event has a status and two thematic labels', () => {

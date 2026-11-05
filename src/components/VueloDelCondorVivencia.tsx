@@ -10,13 +10,17 @@ const VIVENCIA_ICONS = [
   SpeakerHigh, Mountains, ForkKnife, EyeSlash
 ];
 
-const VueloDelCondorVivencia: React.FC = () => {
+type VueloDelCondorVivenciaProps = {
+  reveal?: boolean;
+};
+
+const VueloDelCondorVivencia: React.FC<VueloDelCondorVivenciaProps> = ({ reveal = true }) => {
   const { t } = useLanguage();
 
   return (
     <section className="py-20 md:py-32 px-6 bg-white relative">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl md:text-5xl serif-title brand-green text-center mb-16 md:mb-24" data-reveal>
+        <h2 className="text-3xl md:text-5xl serif-title brand-green text-center mb-16 md:mb-24" data-reveal={reveal ? '' : undefined}>
           {t.vuelo_condor.vivencia.title}
         </h2>
         
@@ -27,8 +31,8 @@ const VueloDelCondorVivencia: React.FC = () => {
               <div 
                 key={i} 
                 className="flex flex-col items-center text-center group"
-                data-reveal
-                data-delay={String(i * 100)}
+                data-reveal={reveal ? '' : undefined}
+                data-delay={reveal ? String(i * 100) : undefined}
               >
                 <div className="mb-6 relative">
                   <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-slate-50 flex items-center justify-center text-brand-green border border-slate-100 group-hover:bg-brand-green/5 group-hover:border-brand-green/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm">

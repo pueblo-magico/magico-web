@@ -4,23 +4,16 @@ import {
   BedDouble,
   CalendarDays,
   Flame,
-  Footprints,
   Heart,
   Instagram,
-  Leaf,
   MapPin,
-  MessageCircle,
-  Moon,
-  Mountain,
-  Sparkles,
-  Sunrise,
   Users,
   Utensils,
-  Waves,
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { HorizontalCardRail } from '../components/HorizontalCardRail';
+import VueloDelCondorVivencia from './components/VueloDelCondorVivencia';
 import { img } from './lib/img';
 import { WA_MAGICO } from './data/config';
 
@@ -38,17 +31,6 @@ const WHATSAPP_MESSAGE = encodeURIComponent(
   'Hola, quiero recibir información actualizada y reservar mi lugar para El Despertar del Colibrí, del 27 al 29 de noviembre de 2026 en Pueblo Mágico.',
 );
 const WHATSAPP_URL = `https://wa.me/${WA_MAGICO}?text=${WHATSAPP_MESSAGE}`;
-
-const EXPERIENCES = [
-  { Icon: MessageCircle, title: 'Círculos de palabra', text: 'Encuentros entre hombres para escuchar, compartir y habitar la palabra con verdad.' },
-  { Icon: Sparkles, title: 'Meditaciones y rituales', text: 'Prácticas para detener el ruido, volver al cuerpo y abrir espacio a lo nuevo.' },
-  { Icon: Footprints, title: 'Caminatas conscientes', text: 'La montaña como territorio de presencia, movimiento y conexión.' },
-  { Icon: Waves, title: 'Inmersión en agua fría', text: 'Una práctica corporal de atención, voluntad y vitalidad.' },
-  { Icon: Flame, title: 'Círculos de fuego', text: 'El fuego como centro del encuentro, la escucha y la transformación.' },
-  { Icon: Sunrise, title: 'Ceremonia de Temazcal', text: 'Un espacio ceremonial de calor, silencio, depuración e integración.' },
-  { Icon: Leaf, title: 'Naturaleza viva', text: 'Tiempo para reconectar con el ritmo natural de Los Gigantes.' },
-  { Icon: Moon, title: 'Silencio y escucha', text: 'Momentos de intimidad para dejar caer corazas y reconocer lo esencial.' },
-];
 
 const TEAM = [
   {
@@ -248,23 +230,19 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
-          <div className="mx-auto max-w-6xl">
-            <div className="mx-auto mb-12 max-w-3xl text-center">
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Lo que vas a vivir</p>
-              <h2 className="font-serif text-4xl md:text-6xl" style={{ color: COLORS.forest }}>Ocho puertas hacia una experiencia compartida</h2>
-              <p className="mx-auto mt-5 max-w-2xl leading-7 text-[#5c6a64]">No se trata de cumplir actividades, sino de atravesar un proceso sostenido por la tribu, el rito, el cuerpo y la naturaleza.</p>
-            </div>
+        <VueloDelCondorVivencia reveal={false} />
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {EXPERIENCES.map(({ Icon, title, text }) => (
-                <article key={title} className="rounded-[24px] border border-[#07583f]/10 bg-white p-6 shadow-sm">
-                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-full bg-[#07583f]/10"><Icon className="h-5 w-5" style={{ color: COLORS.forest }} /></div>
-                  <h3 className="font-serif text-xl" style={{ color: COLORS.forest }}>{title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-[#66736e]">{text}</p>
-                </article>
-              ))}
-            </div>
+        <section className="px-5 py-20 text-center text-white md:px-10 md:py-28" style={{ background: COLORS.forestDark }}>
+          <div className="mx-auto max-w-3xl">
+            <p className="mb-6 text-[10px] font-bold uppercase tracking-[0.35em] text-[#d6a72f]/80">Contención y profundidad</p>
+            <h2 className="font-serif text-4xl text-[#e6bf55] md:text-5xl">Una Comunidad con Propósito</h2>
+            <p className="mx-auto mt-7 text-base font-light leading-8 text-white/80 md:text-xl">
+              Caminamos juntos en este viaje sagrado, conformando una tribu basada en el respeto, la confianza y el cuidado para explorar la Filosofía del Buen Vivir.
+            </p>
+            <div className="mx-auto my-7 h-px w-10 bg-[#d6a72f]/35" />
+            <p className="font-serif text-base italic leading-8 text-white/65 md:text-lg">
+              Una experiencia compartida que trasciende lo ordinario y crea vínculos que perduran en el tiempo.
+            </p>
           </div>
         </section>
 
