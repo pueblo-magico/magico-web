@@ -82,6 +82,7 @@ const NAV_ITEMS = [
   { id: 'experiencia', label: 'Experiencia' },
   { id: 'para-quien', label: 'Para quién' },
   { id: 'lugar', label: 'El lugar' },
+  { id: 'inversion', label: 'Inversión' },
   { id: 'equipo', label: 'Equipo' },
   { id: 'testimonios', label: 'Testimonios' },
   { id: 'preguntas', label: 'Preguntas' },
@@ -96,6 +97,19 @@ const AUDIENCE_ITEMS = [
 
 const TESTIMONIAL_SHORTS = ['xyNHRu_6_FA', 'XkX8N6mrwdE', '-UKDsZbUoTE', 'TIRMapTAo0k', '1mKkxzO8vWM'];
 
+const PRICE_OPTIONS = [
+  { key: 'minimo', label: 'Aporte mínimo', amount: 465000, note: 'Para quien necesita que el valor no sea la barrera.', suggested: false },
+  { key: 'retiro', label: 'Valor del retiro', amount: 495000, note: 'El valor real de sostener este espacio.', suggested: true },
+  { key: 'fraterno', label: 'Aporte fraterno', amount: 525000, note: 'Para quien puede sostener también el lugar de otro hermano.', suggested: false },
+] as const;
+
+const PRICE_INCLUDES = [
+  'Alojamiento en habitaciones compartidas',
+  'Alimentación completa',
+  'Todas las actividades y ceremonias del fin de semana',
+];
+
+const formatArs = (amount: number) => `$${Math.round(amount).toLocaleString('es-AR')}`;
 const WhatsAppButton: React.FC<{ label: string; secondary?: boolean }> = ({ label, secondary = false }) => (
   <a
     href={WHATSAPP_URL}
@@ -415,7 +429,43 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section id="equipo" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
+        <section id="inversion" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto mb-12 max-w-2xl text-center">
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Inversión</p>
+              <h2 className="font-serif text-4xl md:text-6xl" style={{ color: COLORS.forest }}>Valores por persona</h2>
+              <p className="mx-auto mt-5 max-w-xl leading-7 text-[#5d6c66]">Flexibilidad en formas de pago. El lugar se reserva con una seña; si necesitás otra modalidad, la conversamos antes.</p>
+            </div>
+
+            <div className="grid items-stretch gap-5 md:grid-cols-3">
+              {PRICE_OPTIONS.map(option => (
+                <article
+                  key={option.key}
+                  className={`relative flex h-full flex-col rounded-[26px] border p-7 md:p-8 ${option.suggested ? 'border-[#8a351e] bg-[#8a351e]/[0.04] shadow-[0_14px_40px_rgba(138,53,30,0.12)]' : 'border-[#07583f]/10 bg-white'}`}
+                >
+                  {option.suggested && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#8a351e] px-4 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-white">Valor sugerido</span>
+                  )}
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: COLORS.clay }}>{option.label}</p>
+                  <p className="mt-2 font-serif text-4xl" style={{ color: COLORS.forest }}>{formatArs(option.amount)}</p>
+                  <p className="mt-3 min-h-12 text-sm leading-6 text-[#66736e]">{option.note}</p>
+                  <ul className="mt-6 flex-1 space-y-3 border-t border-[#07583f]/10 pt-6">
+                    {PRICE_INCLUDES.map(item => (
+                      <li key={item} className="flex items-start gap-3 text-sm leading-6 text-[#51615a]"><Check className="mt-1 h-4 w-4 shrink-0 text-[#8a351e]" aria-hidden="true" />{item}</li>
+                    ))}
+                  </ul>
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#07583f] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#082f25]">
+                    Reservar mi lugar <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                </article>
+              ))}
+            </div>
+
+            <p className="mt-8 flex items-center justify-center gap-2 text-center text-xs font-bold uppercase tracking-[0.16em]" style={{ color: COLORS.clay }}><Flame className="h-4 w-4" aria-hidden="true" /> Cupos muy limitados</p>
+          </div>
+        </section>
+
+        <section id="equipo" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto mb-12 max-w-3xl text-center">
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Quiénes acompañan</p>
