@@ -32,6 +32,7 @@ const ROUTE_PATHS = [
   '/ciclo-vital-femenino',
   '/reset-vital',
   '/despertar',
+  '/el-despertar-del-colibri',
   '/propuesta/nico-grupe',
 ];
 

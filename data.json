@@ -1031,9 +1031,9 @@
           "labels": ["ENCUENTRO", "HOMBRES"],
           "desc": "Una invitación a reconectar con la alegría, la sensibilidad y la sabiduría del corazón; soltar corazas, transformar heridas y recuperar la liviandad y el disfrute de vivir. Un encuentro entre hombres para compartir, recordar y despertar la esencia a través de la palabra, el cuerpo y el ritual. Facilita el Equipo Acan de Fuego junto a invitados especiales.",
           "btn": "Recibir información",
-          "image": "/uploads/events/el-despertar-del-colibri-oficial.png",
-          "imageFit": "contain",
-          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20recibir%20informaci%C3%B3n%20y%20reservar%20mi%20lugar%20para%20El%20Despertar%20del%20Colibr%C3%AD%20del%2027%20al%2029%20de%20noviembre%20de%202026.",
+          "image": "/uploads/events/colibri/hero-colibri-wide.webp",
+          "imageFit": "cover",
+          "link": "/el-despertar-del-colibri",
           "showInExperienceCatalog": false
         },
         {
@@ -3889,9 +3889,9 @@
           "labels": ["GATHERING", "MEN"],
           "desc": "An invitation to reconnect with joy, sensitivity and the wisdom of the heart; to release our armor, transform wounds and recover lightness and the pleasure of being alive. A gathering for men to share, remember and awaken their essence through word, body and ritual. Facilitated by Equipo Acan de Fuego with special guests.",
           "btn": "Request information",
-          "image": "/uploads/events/el-despertar-del-colibri-oficial.png",
-          "imageFit": "contain",
-          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20El%20Despertar%20del%20Colibr%C3%AD%2C%20November%2027%E2%80%9329%2C%202026.",
+          "image": "/uploads/events/colibri/hero-colibri-wide.webp",
+          "imageFit": "cover",
+          "link": "/el-despertar-del-colibri",
           "showInExperienceCatalog": false
         },
         {

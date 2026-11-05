@@ -19,6 +19,7 @@ export const ROUTES = {
   PACHAMAMA_FEST: '/pachamama-fest',
   PROPUESTA_NICO_GRUPE: '/propuesta/nico-grupe',
   DESPERTAR: '/despertar',
+  DESPERTAR_COLIBRI: '/el-despertar-del-colibri',
   COLIVING: '/coliving',
   CICLO_VITAL_FEMENINO: '/ciclo-vital-femenino',
   KILLA_RAYMI: '/killa-raymi',

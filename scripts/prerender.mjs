@@ -136,6 +136,16 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/festival-raiz-sonora',
   },
   {
+    path: '/el-despertar-del-colibri',
+    title: 'El Despertar del Colibrí — Encuentro de Hombres · Los Gigantes | Pueblo Mágico',
+    description: 'Encuentro de hombres en la montaña: palabra, cuerpo, ritual, fuego, Temazcal y naturaleza. 27 al 29 de noviembre de 2026 en Los Gigantes, Córdoba.',
+    image: 'https://experienciamagico.com/uploads/events/colibri/hero-colibri-og.jpg',
+    imageWidth: 1200,
+    imageHeight: 630,
+    imageAlt: 'El Despertar del Colibrí · Encuentro de hombres en la montaña en Pueblo Mágico',
+    canonical: 'https://experienciamagico.com/el-despertar-del-colibri',
+  },
+  {
     path: '/empresas',
     title: 'Empresas — Voluntariado Corporativo & RSE en las Sierras · Los Gigantes, Córdoba | Pueblo Mágico',
     description: 'Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +25.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria.',
