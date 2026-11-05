@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BedDouble,
   CalendarDays,
-  Check,
   Flame,
   Footprints,
   Heart,
@@ -71,9 +70,9 @@ const TEAM = [
 
 const FAQS = [
   ['¿A quién está dirigido?', 'A hombres que quieran mirarse con honestidad, abrirse al vínculo con otros, trabajar su energía masculina y reconectar con la naturaleza viva. No hay edad límite; sí hace falta apertura y presencia.'],
-  ['¿Qué incluye la experiencia?', 'Alojamiento en habitaciones compartidas, alimentación completa y todas las actividades y ceremonias del encuentro.'],
+  ['¿Cómo funcionan los aportes?', 'Los tres aportes incluyen la misma experiencia completa. Elegí el valor posible para vos: aporte mínimo, valor real del retiro o aporte fraterno para ayudar a sostener el lugar de otro hermano.'],
   ['¿Dónde se realiza?', 'En Pueblo Mágico, un ecolodge de montaña ubicado en Los Gigantes, Sierras Grandes de Córdoba.'],
-  ['¿Cómo reservo mi lugar?', 'Los cupos son limitados y el lugar se confirma con una seña. Escribinos por WhatsApp para recibir el valor actualizado, los medios de pago y los próximos pasos.'],
+  ['¿Cómo reservo mi lugar?', 'Elegí el aporte que mejor se ajuste a tu posibilidad, escribinos por WhatsApp y confirmá tu lugar con una seña. Allí recibirás los medios de pago y los próximos pasos.'],
   ['¿Qué necesito llevar?', 'Al confirmar tu lugar te enviaremos la lista de preparación, horarios, recomendaciones y todo lo necesario para llegar a la experiencia.'],
 ];
 
@@ -92,13 +91,8 @@ const PRICE_OPTIONS = [
   { key: 'fraterno', label: 'Aporte fraterno', amount: 525000, note: 'Para quien puede sostener también el lugar de otro hermano.', suggested: false },
 ] as const;
 
-const PRICE_INCLUDES = [
-  'Alojamiento en habitaciones compartidas',
-  'Alimentación completa',
-  'Todas las actividades y ceremonias del fin de semana',
-];
-
 const formatArs = (amount: number) => `$${Math.round(amount).toLocaleString('es-AR')}`;
+const priceWhatsAppUrl = (label: string, amount: number) => `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(`Hola, quiero reservar mi lugar para El Despertar del Colibrí con la opción ${label} de ${formatArs(amount)}. ¿Cómo confirmo la seña?`)}`;
 const WhatsAppButton: React.FC<{ label: string; secondary?: boolean }> = ({ label, secondary = false }) => (
   <a
     href={WHATSAPP_URL}
@@ -311,11 +305,12 @@ const DespertarDelColibri: React.FC = () => {
         </section>
 
         <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: '#efe6d8' }}>
-          <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2">
-            <div className="rounded-[30px] bg-white p-8 md:p-10">
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto mb-12 max-w-3xl text-center">
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>La experiencia incluye</p>
-              <h2 className="font-serif text-4xl" style={{ color: COLORS.forest }}>Todo lo necesario para entrar al proceso</h2>
-              <ul className="mt-8 space-y-5">
+              <h2 className="font-serif text-4xl md:text-6xl" style={{ color: COLORS.forest }}>Todo lo necesario para entrar al proceso</h2>
+            </div>
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   [BedDouble, 'Alojamiento', 'Habitaciones compartidas dentro de Pueblo Mágico.'],
                   [Utensils, 'Alimentación completa', 'Comidas durante los tres días del encuentro.'],
@@ -323,22 +318,9 @@ const DespertarDelColibri: React.FC = () => {
                   [Users, 'Acompañamiento', 'Equipo Acan de Fuego e invitados especiales.'],
                 ].map(([Icon, title, text]) => {
                   const ItemIcon = Icon as React.ElementType;
-                  return <li key={title as string} className="flex gap-4"><span className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#07583f]/10"><ItemIcon className="h-5 w-5" style={{ color: COLORS.forest }} /></span><div><strong className="block" style={{ color: COLORS.forest }}>{title as string}</strong><span className="text-sm leading-6 text-[#66736e]">{text as string}</span></div></li>;
+                  return <li key={title as string} className="rounded-[24px] bg-white p-6 shadow-sm"><span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#07583f]/10"><ItemIcon className="h-5 w-5" style={{ color: COLORS.forest }} /></span><strong className="mt-5 block font-serif text-xl font-normal" style={{ color: COLORS.forest }}>{title as string}</strong><span className="mt-2 block text-sm leading-6 text-[#66736e]">{text as string}</span></li>;
                 })}
-              </ul>
-            </div>
-
-            <div className="flex flex-col justify-between rounded-[30px] p-8 text-white md:p-10" style={{ background: COLORS.forestDark }}>
-              <div>
-                <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#e6bf55]">Inversión y reserva</p>
-                <h2 className="font-serif text-4xl">Pedí los valores actualizados</h2>
-                <p className="mt-5 leading-7 text-white/70">Consultá la inversión vigente, los medios de pago y la disponibilidad para esta edición directamente por WhatsApp.</p>
-                <div className="mt-7 space-y-3 text-sm text-white/75">
-                  {['Cupos limitados', 'La reserva se confirma con una seña', 'Información y acompañamiento antes de llegar'].map(item => <p key={item} className="flex items-center gap-3"><Check className="h-4 w-4 text-[#d6a72f]" />{item}</p>)}
-                </div>
-              </div>
-              <div className="mt-10"><WhatsAppButton label="Consultar valores y reservar" /></div>
-            </div>
+            </ul>
           </div>
         </section>
 
@@ -348,6 +330,7 @@ const DespertarDelColibri: React.FC = () => {
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Inversión</p>
               <h2 className="font-serif text-4xl md:text-6xl" style={{ color: COLORS.forest }}>Valores por persona</h2>
               <p className="mx-auto mt-5 max-w-xl leading-7 text-[#5d6c66]">Flexibilidad en formas de pago. El lugar se reserva con una seña; si necesitás otra modalidad, la conversamos antes.</p>
+              <p className="mx-auto mt-5 rounded-full bg-[#07583f]/[0.07] px-5 py-3 text-sm font-semibold text-[#07583f]">Los tres aportes incluyen la misma experiencia completa.</p>
             </div>
 
             <div className="grid items-stretch gap-5 md:grid-cols-3">
@@ -361,13 +344,8 @@ const DespertarDelColibri: React.FC = () => {
                   )}
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: COLORS.clay }}>{option.label}</p>
                   <p className="mt-2 font-serif text-4xl" style={{ color: COLORS.forest }}>{formatArs(option.amount)}</p>
-                  <p className="mt-3 min-h-12 text-sm leading-6 text-[#66736e]">{option.note}</p>
-                  <ul className="mt-6 flex-1 space-y-3 border-t border-[#07583f]/10 pt-6">
-                    {PRICE_INCLUDES.map(item => (
-                      <li key={item} className="flex items-start gap-3 text-sm leading-6 text-[#51615a]"><Check className="mt-1 h-4 w-4 shrink-0 text-[#8a351e]" aria-hidden="true" />{item}</li>
-                    ))}
-                  </ul>
-                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#07583f] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#082f25]">
+                  <p className="mt-3 flex-1 text-sm leading-6 text-[#66736e]">{option.note}</p>
+                  <a href={priceWhatsAppUrl(option.label, option.amount)} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#07583f] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:-translate-y-0.5 hover:bg-[#082f25]">
                     Reservar mi lugar <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </a>
                 </article>
@@ -403,7 +381,6 @@ const DespertarDelColibri: React.FC = () => {
                 </article>
               ))}
             </div>
-            <p className="mt-8 text-center text-sm font-bold uppercase tracking-[0.16em]" style={{ color: COLORS.clay }}>Facilita Equipo Acan de Fuego + invitados especiales</p>
           </div>
         </section>
 
