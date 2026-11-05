@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BedDouble,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
+import { HorizontalCardRail } from '../components/HorizontalCardRail';
 import { img } from './lib/img';
 import { WA_MAGICO } from './data/config';
 
@@ -76,6 +77,14 @@ const FAQS = [
   ['¿Qué necesito llevar?', 'Al confirmar tu lugar te enviaremos la lista de preparación, horarios, recomendaciones y todo lo necesario para llegar a la experiencia.'],
 ];
 
+const AUDIENCE_ITEMS = [
+  'Buscadores espirituales en proceso de transformación.',
+  'Hombres que sienten el llamado a conectar con su propia ancestralidad',
+  'Quienes necesiten un espacio de silencio y reconexión profunda.',
+  'Caminantes que disfrutan de la naturaleza en su estado más puro.',
+];
+
+const TESTIMONIAL_SHORTS = ['xyNHRu_6_FA', 'XkX8N6mrwdE', '-UKDsZbUoTE', 'TIRMapTAo0k', '1mKkxzO8vWM'];
 const WhatsAppButton: React.FC<{ label: string; secondary?: boolean }> = ({ label, secondary = false }) => (
   <a
     href={WHATSAPP_URL}
@@ -88,7 +97,22 @@ const WhatsAppButton: React.FC<{ label: string; secondary?: boolean }> = ({ labe
   </a>
 );
 
+const FloatingWhatsApp: React.FC<{ visibleOnMobile: boolean }> = ({ visibleOnMobile }) => (
+  <a
+    href={WHATSAPP_URL}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl transition-all hover:scale-110 md:pointer-events-auto md:translate-y-0 md:opacity-100 ${visibleOnMobile ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'}`}
+    aria-label="Consultar por WhatsApp sobre El Despertar del Colibrí"
+  >
+    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+    </svg>
+  </a>
+);
+
 const DespertarDelColibri: React.FC = () => {
+  const [showFloatingWhatsapp, setShowFloatingWhatsapp] = useState(false);
   useEffect(() => {
     const previousTitle = document.title;
     document.title = 'El Despertar del Colibrí — Encuentro de Hombres · Pueblo Mágico';
@@ -145,12 +169,18 @@ const DespertarDelColibri: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const updateFloatingWhatsapp = () => setShowFloatingWhatsapp(window.scrollY > 600);
+    updateFloatingWhatsapp();
+    window.addEventListener('scroll', updateFloatingWhatsapp, { passive: true });
+    return () => window.removeEventListener('scroll', updateFloatingWhatsapp);
+  }, []);
   return (
     <div className="overflow-x-hidden" style={{ background: COLORS.cream, color: COLORS.ink }}>
       <Header />
 
       <main>
-        <section className="relative isolate flex min-h-[780px] items-center overflow-hidden px-5 pb-16 pt-28 text-white md:min-h-[760px] md:px-10 md:pb-24 md:pt-36">
+        <section className="relative isolate flex min-h-[780px] items-center justify-center overflow-hidden px-5 py-20 text-center text-white md:min-h-[760px] md:px-10 md:py-28">
           <img
             src="/uploads/events/colibri/hero-colibri-wide.webp"
             alt=""
@@ -158,32 +188,33 @@ const DespertarDelColibri: React.FC = () => {
             width="1672"
             height="941"
             fetchPriority="high"
-            className="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_center] md:object-center"
+            className="absolute inset-0 -z-20 h-full w-full object-cover object-[68%_center] md:object-center"
           />
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,28,22,0.97)_0%,rgba(4,28,22,0.89)_35%,rgba(4,28,22,0.44)_62%,rgba(4,28,22,0.12)_100%)] md:bg-[linear-gradient(90deg,rgba(4,28,22,0.95)_0%,rgba(4,28,22,0.82)_38%,rgba(4,28,22,0.28)_64%,rgba(4,28,22,0.08)_100%)]" />
+          <div className="absolute inset-0 -z-10 bg-[#061f19]/60 md:bg-[#061f19]/54" />
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,rgba(4,28,22,0.08)_0%,rgba(4,28,22,0.68)_100%)]" />
           <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-[#082f25]/85 to-transparent" />
 
           <div className="relative mx-auto w-full max-w-6xl">
-            <div className="max-w-2xl">
-              <div className="mb-7 flex flex-wrap gap-2">
+            <div className="mx-auto max-w-5xl">
+              <div className="mb-7 flex flex-wrap justify-center gap-2">
                 <span className="rounded-full border border-white/20 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/80">27–29 noviembre 2026</span>
                 <span className="rounded-full border border-[#d6a72f]/40 bg-[#d6a72f]/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2ce69]">Cupos limitados</span>
               </div>
 
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.32em] text-[#d6a72f]">Encuentro de hombres en la montaña</p>
-              <h1 className="max-w-3xl font-serif text-5xl leading-[0.92] text-white sm:text-6xl md:text-8xl">
-                El Despertar<br />del Colibrí
+              <h1 className="font-serif text-[clamp(3.6rem,9vw,8rem)] leading-[0.9] text-white">
+                El Despertar del Colibrí
               </h1>
-              <p className="mt-7 max-w-2xl text-lg leading-8 text-white/75 md:text-xl">
+              <p className="mt-6 font-serif text-2xl leading-tight text-white md:text-4xl">Encuentro de hombres en la montaña</p>
+              <p className="mx-auto mt-7 max-w-3xl text-base leading-8 text-white/80 md:text-xl">
                 Una invitación a reconectar con la alegría, la sensibilidad y la sabiduría del corazón. Soltar corazas, transformar heridas y recuperar la liviandad y el disfrute de vivir.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm text-white/70">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-sm text-white/80">
                 <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#d6a72f]" /> 27, 28 y 29 de noviembre</span>
                 <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#d6a72f]" /> Pueblo Mágico · Los Gigantes</span>
               </div>
 
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
                 <WhatsAppButton label="Quiero recibir información" />
                 <a href="#propuesta" className="inline-flex items-center justify-center rounded-full border border-white/25 px-7 py-4 text-xs font-bold uppercase tracking-[0.16em] text-white/80 transition hover:bg-white/10">Conocer la propuesta</a>
               </div>
@@ -228,17 +259,23 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 text-white md:px-10 md:py-28" style={{ background: COLORS.forest }}>
-          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
-            <div>
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#e6bf55]">¿Para quién es?</p>
-              <h2 className="font-serif text-4xl leading-tight md:text-6xl">Para hombres dispuestos a mirarse de verdad</h2>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-white/70">Para quienes quieran abrirse al vínculo con otros, trabajar su energía masculina y reconectar con la naturaleza viva.</p>
-              <div className="mt-8 flex flex-wrap gap-2">
-                {['Sin edad límite', 'Con apertura', 'Con presencia', 'Con verdad'].map(label => <span key={label} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white/75">{label}</span>)}
+        <section id="para-quien" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: '#f4f3ef' }}>
+          <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_450px] lg:gap-20">
+            <div className="order-2 lg:order-1">
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.gold }}>¿Para quién es este viaje?</p>
+              <h2 className="font-serif text-4xl leading-tight md:text-6xl" style={{ color: COLORS.forest }}>Buscamos caminantes dispuestos a abrir el corazón y recibir la medicina de la montaña.</h2>
+              <div className="mt-10">
+                {AUDIENCE_ITEMS.map((item, index) => (
+                  <div key={item} className="group flex items-start gap-5 border-b border-[#07583f]/10 py-5 last:border-0">
+                    <span className="w-8 shrink-0 text-right font-serif text-2xl text-[#d6a72f]/60 transition group-hover:text-[#d6a72f]">{String(index + 1).padStart(2, '0')}</span>
+                    <p className="text-base font-light leading-7 text-[#394a43] md:text-lg">{item}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <img src={img('/uploads/events/colibri/circulo-hombres.jpg', 1000)} alt="Círculo de hombres compartiendo" className="aspect-[16/10] w-full rounded-[30px] object-cover shadow-2xl" loading="lazy" />
+            <div className="order-1 lg:order-2">
+              <img src={img('/uploads/events/colibri/circulo-hombres.jpg', 1000)} alt="Círculo de hombres compartiendo" className="aspect-[4/5] w-full rounded-[40px] object-cover shadow-2xl lg:rotate-2" loading="lazy" />
+            </div>
           </div>
         </section>
 
@@ -294,10 +331,9 @@ const DespertarDelColibri: React.FC = () => {
         <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto mb-12 max-w-3xl text-center">
-              <img src="/uploads/acan-de-fuego-logo.png" alt="Acan de Fuego" className="mx-auto mb-6 h-24 w-auto object-contain" loading="lazy" />
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Quiénes acompañan</p>
               <h2 className="font-serif text-4xl md:text-6xl" style={{ color: COLORS.forest }}>Acan de Fuego</h2>
-              <p className="mx-auto mt-5 max-w-3xl leading-7 text-[#5d6c66]">Un círculo de hombres nacido del deseo de habitar lo masculino de forma más consciente y auténtica. Una propuesta que honra la tribu, el rito, el cuerpo, la emoción y el Ser.</p>
+              <p className="mx-auto mt-5 max-w-3xl leading-7 text-[#5d6c66]">Acan de Fuego es una Comunidad de hombres que nace del anhelo profundo de habitar lo masculino de forma más consciente y auténtica. Somos tres compañeros de camino que sentimos el llamado a compartirnos en espacios sagrados donde los hombres podamos mirarnos, acompañarnos y transformarnos. Con diferentes trayectorias y herramientas, co-creamos experiencias que honran la tribu, el rito, el cuerpo, la emoción y el Ser, con la Filosofía del Buen Vivir como bandera.</p>
               <a
                 href="https://www.instagram.com/acan_del_fuego/"
                 target="_blank"
@@ -321,7 +357,50 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
+        <section className="relative overflow-hidden px-5 py-20 text-white md:px-10 md:py-24" style={{ background: COLORS.forestDark }}>
+          <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#d6a72f]/10 blur-3xl" />
+          <div className="relative mx-auto max-w-5xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#e6bf55]">Detrás del encuentro</p>
+            <h2 className="mt-4 font-serif text-4xl md:text-5xl">Una coproducción de</h2>
+            <div className="mt-12 grid items-stretch gap-5 sm:grid-cols-3">
+              {[
+                { name: 'Kintu Producciones', image: '/uploads/vuelo-condor/PRODUCCIONES.png' },
+                { name: 'Acan de Fuego', image: '/uploads/vuelo-condor/Logo Acan.png' },
+                { name: 'Pueblo Mágico', image: '/uploads/pueblo_magico_logo_marron.svg' },
+              ].map(partner => (
+                <article key={partner.name} className="flex min-h-40 items-center justify-center rounded-[24px] border border-white/15 bg-white/5 p-7 backdrop-blur-sm">
+                  <img src={partner.image} alt={partner.name} className="max-h-20 w-auto max-w-full object-contain brightness-0 invert" loading="lazy" />
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="testimonios" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: '#f4f3ef' }}>
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto mb-10 max-w-2xl text-center">
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.gold }}>Experiencias en video</p>
+              <h2 className="font-serif text-4xl md:text-6xl" style={{ color: COLORS.forest }}>Voces del Camino</h2>
+              <p className="mx-auto mt-4 max-w-xl leading-7 text-[#66736e]">Escuchá los relatos de quienes ya recorrieron experiencias transformadoras con nosotros.</p>
+            </div>
+            <HorizontalCardRail previousLabel="Testimonio anterior" nextLabel="Testimonio siguiente" desktopGridClassName="md:grid-cols-3 lg:grid-cols-5" mobileItemClassName="w-[72vw]" gapClassName="gap-4">
+              {TESTIMONIAL_SHORTS.map((id, index) => (
+                <div key={id} className="relative aspect-[9/16] overflow-hidden rounded-2xl border border-white/10 bg-black shadow-lg">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${id}`}
+                    title={`Testimonio El Despertar del Colibrí ${index + 1}`}
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+              ))}
+            </HorizontalCardRail>
+          </div>
+        </section>
+
+        <section id="preguntas" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
           <div className="mx-auto max-w-4xl">
             <div className="mb-10 text-center">
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Preguntas frecuentes</p>
@@ -352,6 +431,7 @@ const DespertarDelColibri: React.FC = () => {
       </main>
 
       <Footer />
+      <FloatingWhatsApp visibleOnMobile={showFloatingWhatsapp} />
     </div>
   );
 };
