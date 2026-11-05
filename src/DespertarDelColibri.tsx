@@ -7,6 +7,7 @@ import {
   Flame,
   Footprints,
   Heart,
+  Instagram,
   Leaf,
   MapPin,
   MessageCircle,
@@ -295,6 +296,14 @@ const DespertarDelColibri: React.FC = () => {
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Quiénes acompañan</p>
               <h2 className="font-serif text-4xl md:text-6xl" style={{ color: COLORS.forest }}>Acan de Fuego</h2>
               <p className="mx-auto mt-5 max-w-3xl leading-7 text-[#5d6c66]">Un círculo de hombres nacido del deseo de habitar lo masculino de forma más consciente y auténtica. Una propuesta que honra la tribu, el rito, el cuerpo, la emoción y el Ser.</p>
+              <a
+                href="https://www.instagram.com/acan_del_fuego/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#07583f]/20 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#07583f] transition hover:border-[#07583f] hover:bg-[#07583f] hover:text-white"
+              >
+                <Instagram className="h-4 w-4" aria-hidden="true" /> @acan_del_fuego
+              </a>
             </div>
 
             <div className="grid gap-5 md:grid-cols-3">
