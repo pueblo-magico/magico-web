@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {
+  ArrowLeft,
   ArrowRight,
   BedDouble,
   CalendarDays,
@@ -18,7 +19,6 @@ import {
   Utensils,
   Waves,
 } from 'lucide-react';
-import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { img } from './lib/img';
 import { WA_MAGICO } from './data/config';
@@ -146,14 +146,45 @@ const DespertarDelColibri: React.FC = () => {
 
   return (
     <div className="overflow-x-hidden" style={{ background: COLORS.cream, color: COLORS.ink }}>
-      <Header />
+      <a href="#contenido-colibri" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-white focus:px-5 focus:py-3 focus:text-[#082f25]">
+        Saltar al contenido
+      </a>
 
-      <main>
-        <section className="relative overflow-hidden px-5 pb-16 pt-28 md:px-10 md:pb-24 md:pt-36" style={{ background: COLORS.forestDark }}>
-          <div className="absolute -left-24 top-20 h-72 w-72 rounded-full border border-[#d6a72f]/20" />
-          <div className="absolute -right-28 bottom-0 h-96 w-96 rounded-full border border-white/10" />
-          <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.7fr] lg:gap-16">
-            <div>
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071d18]/95 text-white shadow-lg backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 md:px-9">
+          <a href="/" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/85 transition hover:text-[#f2ce69]" aria-label="Volver al inicio de Pueblo Mágico">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Pueblo Mágico
+          </a>
+          <span className="hidden font-serif text-lg text-[#f2ce69] md:block">El Despertar del Colibrí</span>
+          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#d6a72f]/60 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2ce69] transition hover:bg-[#d6a72f] hover:text-[#082f25]">
+            Reservar
+          </a>
+        </div>
+        <nav aria-label="Secciones del encuentro" className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-5 gap-y-2 px-5 pb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-white/70 md:gap-x-9 md:px-9 md:text-[11px]">
+          <a href="#propuesta" className="transition hover:text-[#f2ce69]">El llamado</a>
+          <a href="#experiencia" className="transition hover:text-[#f2ce69]">Experiencia</a>
+          <a href="#lugar" className="transition hover:text-[#f2ce69]">El lugar</a>
+          <a href="#equipo" className="transition hover:text-[#f2ce69]">Equipo</a>
+          <a href="#preguntas" className="transition hover:text-[#f2ce69]">Preguntas</a>
+        </nav>
+      </header>
+
+      <main id="contenido-colibri">
+        <section className="relative isolate flex min-h-[780px] items-center overflow-hidden px-5 py-20 text-white md:min-h-[760px] md:px-10 md:py-28">
+          <img
+            src="/uploads/events/colibri/hero-colibri-wide.webp"
+            alt=""
+            aria-hidden="true"
+            width="1672"
+            height="941"
+            fetchPriority="high"
+            className="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_center] md:object-center"
+          />
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(4,28,22,0.97)_0%,rgba(4,28,22,0.89)_35%,rgba(4,28,22,0.44)_62%,rgba(4,28,22,0.12)_100%)] md:bg-[linear-gradient(90deg,rgba(4,28,22,0.95)_0%,rgba(4,28,22,0.82)_38%,rgba(4,28,22,0.28)_64%,rgba(4,28,22,0.08)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-[#082f25]/85 to-transparent" />
+
+          <div className="relative mx-auto w-full max-w-7xl">
+            <div className="max-w-2xl">
               <div className="mb-7 flex flex-wrap gap-2">
                 <span className="rounded-full border border-white/20 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/80">27–29 noviembre 2026</span>
                 <span className="rounded-full border border-[#d6a72f]/40 bg-[#d6a72f]/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#f2ce69]">Cupos limitados</span>
@@ -177,18 +208,10 @@ const DespertarDelColibri: React.FC = () => {
                 <a href="#propuesta" className="inline-flex items-center justify-center rounded-full border border-white/25 px-7 py-4 text-xs font-bold uppercase tracking-[0.16em] text-white/80 transition hover:bg-white/10">Conocer la propuesta</a>
               </div>
             </div>
-
-            <div className="mx-auto w-full max-w-md overflow-hidden rounded-[32px] border border-white/20 bg-white/5 p-3 shadow-2xl">
-              <img
-                src="/uploads/events/el-despertar-del-colibri-oficial.png"
-                alt="Flyer oficial de El Despertar del Colibrí"
-                className="aspect-square w-full rounded-[24px] object-cover"
-              />
-            </div>
           </div>
         </section>
 
-        <section id="propuesta" className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
+        <section id="propuesta" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
           <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div className="overflow-hidden rounded-[30px]">
               <img src={img('/uploads/events/colibri/encuentro-hombres.jpg', 900)} alt="Encuentro de hombres en círculo" className="aspect-[4/5] w-full object-cover" loading="lazy" />
@@ -205,7 +228,7 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
+        <section id="experiencia" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto mb-12 max-w-3xl text-center">
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Lo que vas a vivir</p>
@@ -239,7 +262,7 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
+        <section id="lugar" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
           <div className="mx-auto max-w-6xl">
             <div className="mb-12 grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
               <div>
@@ -288,7 +311,7 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
+        <section id="equipo" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.paper }}>
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto mb-12 max-w-3xl text-center">
               <img src="/uploads/acan-de-fuego-logo.png" alt="Acan de Fuego" className="mx-auto mb-6 h-24 w-auto object-contain" loading="lazy" />
@@ -310,7 +333,7 @@ const DespertarDelColibri: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
+        <section id="preguntas" className="scroll-mt-28 px-5 py-20 md:px-10 md:py-28" style={{ background: COLORS.cream }}>
           <div className="mx-auto max-w-4xl">
             <div className="mb-10 text-center">
               <p className="mb-4 text-xs font-bold uppercase tracking-[0.3em]" style={{ color: COLORS.clay }}>Preguntas frecuentes</p>
