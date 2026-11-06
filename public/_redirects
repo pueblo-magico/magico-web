@@ -18,8 +18,12 @@
 /festival-atardeser    /festival-raiz-sonora    301
 /festival-31-octubre    /festival-raiz-sonora    301
 
-# Nombre corregido de la propuesta privada para 360 Travel
-/aulas-verdes-travel-360    /aulas-verdes-360-travel    301
+# Propuestas personalizadas: nueva jerarquía privada y aliases históricos.
+/aulas-verdes-360-travel    /presupuesto/aulas-verdes-360-travel    301
+/aulas-verdes-travel-360    /presupuesto/aulas-verdes-360-travel    301
+/aulas-verdes-729-salvador-mazza    /presupuesto/aulas-verdes-729-salvador-mazza    301
+/propuesta/calma-magico    /presupuesto/calma-magico    301
+/propuesta/nico-grupe    /presupuesto/nico-grupe    301
 
 # SPA fallback SOLO para las rutas client-only que no están prerenderizadas
 # (todo lo demás ya tiene su propio dist/<ruta>.html real — ver
@@ -37,4 +41,3 @@
 # y un archivo real siempre tiene prioridad sobre _redirects en Cloudflare Pages.
 /reset-vital    /app-shell/   200
 /despertar    /app-shell/   200
-/propuesta/nico-grupe    /app-shell/   200

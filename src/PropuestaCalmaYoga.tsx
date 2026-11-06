@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { usePrivateProposalMeta } from './hooks/usePrivateProposalMeta';
 import { img } from './lib/img';
 import { WA_MAGICO } from './data/config';
 
@@ -171,6 +172,7 @@ const ESPACIO_IMGS = [
 ];
 
 const PropuestaCalmaYoga: React.FC = () => {
+  usePrivateProposalMeta(`Calma Mágica — Una propuesta para ${PROSPECT.comunidad}`);
   const [expiresAt] = useState(() => {
     const d = new Date();
     d.setHours(d.getHours() + 72);
@@ -178,8 +180,6 @@ const PropuestaCalmaYoga: React.FC = () => {
   });
 
   useEffect(() => {
-    document.title = `Calma Mágica — Una propuesta para ${PROSPECT.comunidad}`;
-
     const obs = new IntersectionObserver(
       (entries) => entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }

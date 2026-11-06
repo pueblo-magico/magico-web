@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ArrowDown, ArrowRight, MapPin, Mountain, Users, Leaf, BookOpen, Compass, Home, Utensils, Check, Plus } from 'lucide-react';
 import { WA_MAGICO } from './data/config';
+import { usePrivateProposalMeta } from './hooks/usePrivateProposalMeta';
 import './AulaVerdeTravel360.css';
 import './AulaVerdeSalvadorMazza.css';
 
@@ -14,16 +15,7 @@ const program = { name: 'Investigar y crear', duration: '5 días · 4 noches', p
 const photo = (name: string) => `/uploads/Aula%20Verde/${name}.jpg`;
 
 export default function AulaVerdeSalvadorMazza() {
-  useEffect(() => {
-    const title = document.title;
-    document.title = 'Aula Verde · Escuela N.º 729 Dr. Salvador Mazza';
-    const existing = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
-    const previous = existing?.content;
-    const meta = existing || document.createElement('meta');
-    meta.name = 'robots'; meta.content = 'noindex, nofollow, noarchive, nosnippet';
-    if (!existing) document.head.appendChild(meta);
-    return () => { document.title = title; if (existing) existing.content = previous || ''; else meta.remove(); };
-  }, []);
+  usePrivateProposalMeta('Aula Verde · Escuela N.º 729 Dr. Salvador Mazza');
   const consult = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('Hola, somos de la Escuela N.º 729 "Dr. Salvador Mazza". Queremos coordinar la propuesta de Aula Verde para 50 estudiantes, 5 días y 4 noches, en octubre o noviembre de 2027. Valor por estudiante: ARS 230.000. Fechas tentativas: ')}`;
   return <div className="av360 av729">
     <a className="av-skip" href="#contenido">Ir al contenido</a>
