@@ -18,6 +18,7 @@ import { WhatsAppButton } from '../components/WhatsAppButton';
 import { CookieBanner } from '../components/CookieBanner';
 import { img } from './lib/img';
 import { WA_MAGICO } from './data/config';
+import { usePrivateProposalMeta } from './hooks/usePrivateProposalMeta';
 
 const COLORS = {
   green: '#005333',
@@ -115,30 +116,8 @@ const ValidityNotice: React.FC = () => {
   );
 };
 
-function usePrivateProposalMeta(proposal: Proposal) {
-  useEffect(() => {
-    document.title = `Propuesta para ${proposal.name} · Pueblo Mágico`;
-    document.querySelectorAll('link[rel="canonical"], meta[property^="og:"], meta[name^="twitter:"], script[type="application/ld+json"]').forEach((node) => node.remove());
-
-    const setMeta = (name: string, content: string) => {
-      let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.name = name;
-        document.head.appendChild(meta);
-      }
-      meta.content = content;
-    };
-
-    setMeta('robots', 'noindex, nofollow, noarchive, nosnippet');
-    setMeta('googlebot', 'noindex, nofollow, noarchive, nosnippet');
-    setMeta('referrer', 'no-referrer');
-    document.querySelector('meta[name="description"]')?.remove();
-  }, [proposal]);
-}
-
 const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) => {
-  usePrivateProposalMeta(proposal);
+  usePrivateProposalMeta(`Propuesta para ${proposal.name} · Pueblo Mágico`);
 
   const whatsappHref = useMemo(() => {
     const message = encodeURIComponent(`Hola Pueblo Mágico, soy ${proposal.name}. Quiero conversar sobre la propuesta de retiro de ${proposal.month}.`);

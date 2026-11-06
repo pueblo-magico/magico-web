@@ -77,13 +77,6 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/el-vuelo-del-condor',
   },
   {
-    path: '/propuesta/calma-magico',
-    title: 'Calma Salvaje — Una propuesta de Pueblo Mágico para Calma Yoga',
-    description: 'Retiro residencial de yoga en las Sierras Grandes de Córdoba. 3 días, hasta 30 personas. Pueblo Mágico + Calma Yoga.',
-    image: 'https://experienciamagico.com/uploads/campoentero.webp',
-    canonical: 'https://experienciamagico.com/propuesta/calma-magico',
-  },
-  {
     path: '/inti-raymi',
     title: 'Inti Raymi — Celebración del Solsticio de Invierno · 20 y 21 de Junio | Pueblo Mágico',
     description: 'Dos días para celebrar el renacimiento de la luz. Temazcal, fuego, danza, canto y naturaleza en las Sierras Grandes de Córdoba. 20 y 21 de junio.',
@@ -222,10 +215,10 @@ console.log('\nPhase 1: Meta tag injection...');
 const template = readFileSync(join(DIST, 'index.html'), 'utf-8');
 // Dedicated noindex documents exist before JavaScript runs, without public SEO metadata.
 for (const proposal of PRIVATE_PROPOSALS) {
-  const file = join(DIST, `${proposal.path.slice(1)}.html`);
-  mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, privateProposalShell(template, proposal.title));
-  console.log(`  ✓ private proposal: ${proposal.path}`);
+  const output = join(DIST, `${proposal.path.slice(1)}.html`);
+  mkdirSync(dirname(output), { recursive: true });
+  writeFileSync(output, privateProposalShell(template, proposal.title));
+  console.log(`  ✓ ${proposal.path} (propuesta privada)`);
 }
 
 // Fallback nativo de Cloudflare Pages para rutas desconocidas: si existe un
@@ -236,7 +229,7 @@ for (const proposal of PRIVATE_PROPOSALS) {
 writeFileSync(join(DIST, '404.html'), template);
 console.log('  ✓ 404.html (fallback SPA nativo)');
 
-// Shell para las 3 rutas client-only (reset-vital, despertar, propuesta/nico-grupe)
+// Shell para las 2 rutas client-only (reset-vital y despertar)
 // referenciadas desde _redirects. IMPORTANTE: va en una carpeta con su propio
 // index.html (como cualquier ruta prerenderizada), NO como un archivo .html
 // suelto — Cloudflare Pages normaliza automáticamente cualquier destino que

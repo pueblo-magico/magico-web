@@ -20,6 +20,7 @@ import { ROUTES } from './src/routes.js';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
 const AulaVerdeTravel360 = lazy(() => import('./src/AulaVerdeTravel360'));
+const AulaVerdeSalvadorMazza = lazy(() => import('./src/AulaVerdeSalvadorMazza'));
 const OrganizamosTuExperiencia = lazy(() => import('./src/OrganizamosTuExperiencia'));
 const OrganizaTuRetiro = lazy(() => import('./src/OrganizaTuRetiro'));
 const PresupuestoRetiro = lazy(() => import('./src/PresupuestoRetiro'));
@@ -45,7 +46,17 @@ const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelReservas = lazy(() => import('./src/PanelReservas'));
 
-if (!['/aulas-verdes-360-travel', '/aulas-verdes-travel-360'].some(path => window.location.pathname.startsWith(path))) {
+const PRIVATE_PROPOSAL_PREFIXES = [
+  '/presupuesto/',
+  '/presupuestos/',
+  '/aulas-verdes-360-travel',
+  '/aulas-verdes-travel-360',
+  '/aulas-verdes-729-salvador-mazza',
+  '/propuesta/calma-magico',
+  '/propuesta/nico-grupe',
+];
+
+if (!PRIVATE_PROPOSAL_PREFIXES.some(path => window.location.pathname.startsWith(path))) {
   injectContentsquareScript({ clientId: '91718b26f9ef8' });
 }
 
@@ -102,12 +113,16 @@ root.render(
               <Route path="/familion" element={<Familion />} />
               <Route path="/gondorbows" element={<Gondorbows />} />
               <Route path="/escuelas" element={<AulaVerde />} />
-              <Route path="/aulas-verdes-360-travel" element={<AulaVerdeTravel360 />} />
-              <Route path="/aulas-verdes-travel-360" element={<Navigate to="/aulas-verdes-360-travel" replace />} />
+              <Route path={ROUTES.PRESUPUESTO_360_TRAVEL} element={<AulaVerdeTravel360 />} />
+              <Route path={ROUTES.PRESUPUESTO_SALVADOR_MAZZA} element={<AulaVerdeSalvadorMazza />} />
+              <Route path="/aulas-verdes-360-travel" element={<Navigate to={ROUTES.PRESUPUESTO_360_TRAVEL} replace />} />
+              <Route path="/aulas-verdes-travel-360" element={<Navigate to={ROUTES.PRESUPUESTO_360_TRAVEL} replace />} />
+              <Route path="/aulas-verdes-729-salvador-mazza" element={<Navigate to={ROUTES.PRESUPUESTO_SALVADOR_MAZZA} replace />} />
               <Route path="/achala-viva" element={<AchalaViva />} />
               <Route path="/el-vuelo-del-condor" element={<VueloDelCondor />} />
               <Route path="/ciclo-vital-femenino" element={<CicloVitalFemenino />} />
-              <Route path="/propuesta/calma-magico" element={<PropuestaCalmaYoga />} />
+              <Route path={ROUTES.PRESUPUESTO_CALMA_YOGA} element={<PropuestaCalmaYoga />} />
+              <Route path="/propuesta/calma-magico" element={<Navigate to={ROUTES.PRESUPUESTO_CALMA_YOGA} replace />} />
               <Route path="/organizamos-tu-experiencia" element={<OrganizamosTuExperiencia />} />
               <Route path={ROUTES.ORGANIZA_TU_RETIRO} element={<OrganizaTuRetiro />} />
               <Route path={ROUTES.PRESUPUESTO_RETIRO} element={<PresupuestoRetiro />} />
@@ -130,7 +145,8 @@ root.render(
               {/* Campañas de invierno 2026 terminadas — redirigen a la estadía actual */}
               <Route path="/winter-camp" element={<Navigate to="/estadia" replace />} />
               <Route path="/winter-redirection" element={<Navigate to="/estadia" replace />} />
-              <Route path="/propuesta/nico-grupe" element={<PropuestaNicoGrupe />} />
+              <Route path={ROUTES.PRESUPUESTO_NICO_GRUPE} element={<PropuestaNicoGrupe />} />
+              <Route path="/propuesta/nico-grupe" element={<Navigate to={ROUTES.PRESUPUESTO_NICO_GRUPE} replace />} />
               <Route path="/estadia" element={<Estadia />} />
               <Route path="/coliving" element={<Coliving />} />
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
