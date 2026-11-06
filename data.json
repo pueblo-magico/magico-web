@@ -1194,6 +1194,12 @@
               "href": "/coliving",
               "description": "Viví y trabajá en comunidad",
               "icon": "home"
+            },
+            {
+              "label": "Mi retiro",
+              "href": "/organiza-tu-retiro",
+              "description": "Organizá tu retiro en la montaña",
+              "icon": "community"
             }
           ],
           "viewAllLink": {
@@ -4052,6 +4058,12 @@
               "href": "/coliving",
               "description": "Live and work in community",
               "icon": "home"
+            },
+            {
+              "label": "My retreat",
+              "href": "/organiza-tu-retiro",
+              "description": "Organize your retreat in the mountains",
+              "icon": "community"
             }
           ],
           "viewAllLink": {
