@@ -9,6 +9,7 @@ import { UpdateBanner } from './components/UpdateBanner';
 import './src/i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Main from './Main';
+import '@pueblo-magico/react-ui/styles.css';
 import './index.css';
 import Familion from './src/Familion';
 import Gondorbows from './src/Gondorbows';

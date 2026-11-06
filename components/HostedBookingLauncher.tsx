@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, CalendarCheck, CheckCircle, ShieldCheck } from '@phosphor-icons/react';
+import { buttonVariants } from '@pueblo-magico/react-ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { RESERVAS_PUBLIC_URL } from '../src/data/config';
 
@@ -69,11 +70,13 @@ export const HostedBookingLauncher: React.FC<HostedBookingLauncherProps> = ({
       )}
       <a
         href={RESERVAS_PUBLIC_URL}
+        className={buttonVariants({ shape: 'pill', size: 'lg', variant: 'accent' })}
         style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
-          minHeight: 48, padding: '0 20px', borderRadius: 999, background: '#D4AF37',
-          color: '#173127', fontSize: 12, fontWeight: 800, letterSpacing: '0.08em',
-          textTransform: 'uppercase', textDecoration: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.16)',
+          width: '100%',
+          fontSize: 12,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          textDecoration: 'none',
         }}
       >
         {copy.button}

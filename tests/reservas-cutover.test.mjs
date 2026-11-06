@@ -12,6 +12,8 @@ test('customer and admin entry points use standalone Reservas', () => {
   const hero = read('components/HeroNuevo.tsx');
   const inclusions = read('components/SectionInclusiones.tsx');
   const stay = read('src/Estadia.tsx');
+  const launcher = read('components/HostedBookingLauncher.tsx');
+  const packageJson = JSON.parse(read('package.json'));
 
   assert.match(config, /https:\/\/reservas\.experienciamagico\.com/);
   assert.match(redirects, /\/reservar\s+https:\/\/reservas\.experienciamagico\.com\/reservar\?paso=fechas\s+302/);
@@ -23,6 +25,9 @@ test('customer and admin entry points use standalone Reservas', () => {
   assert.doesNotMatch(hero, /BookingWidget/);
   assert.doesNotMatch(stay, /BookingWidget|ESTADIA_PRICES|makesOffer/);
   assert.doesNotMatch(inclusions, /getEstadiaPrices|formatPrice/);
+  assert.equal(packageJson.dependencies['@pueblo-magico/react-ui'], '0.7.0');
+  assert.match(index, /@pueblo-magico\/react-ui\/styles\.css/);
+  assert.match(launcher, /buttonVariants/);
 });
 
 test('legacy reservation endpoints fail closed but unrelated APIs continue', async () => {
