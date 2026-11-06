@@ -25,6 +25,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://experienciamagico.com/temazcal</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://experienciamagico.com/empresas</loc>
     <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>

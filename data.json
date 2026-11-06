@@ -991,9 +991,11 @@
           "title": "Ceremonia de Temazcal",
           "labels": ["CEREMONIA", "BIENESTAR"],
           "desc": "Experiencia ancestral de conexión y transformación física, mental, emocional y espiritual en la montaña.",
-          "btn": "Consultar y reservar",
+          "btn": "Conocer el Temazcal",
           "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20consultar%20y%20reservar%20mi%20lugar%20para%20la%20Ceremonia%20de%20Temazcal%20del%208%20de%20noviembre%20de%202026%20en%20Pueblo%20M%C3%A1gico.",
+          "link": "/temazcal",
+          "contactLink": "https://wa.me/5493516765820?text=Hola!%20Quiero%20consultar%20y%20reservar%20mi%20lugar%20para%20la%20Ceremonia%20de%20Temazcal%20del%208%20de%20noviembre%20de%202026%20en%20Pueblo%20M%C3%A1gico.",
+          "isTemazcal": true,
           "showInExperienceCatalog": false
         },
         {
@@ -1034,6 +1036,7 @@
           "image": "/uploads/events/colibri/hero-colibri-wide.webp",
           "imageFit": "cover",
           "link": "/el-despertar-del-colibri",
+          "relatedToTemazcal": true,
           "showInExperienceCatalog": false
         },
         {
@@ -3855,9 +3858,11 @@
           "title": "Temazcal Ceremony",
           "labels": ["CEREMONY", "WELLBEING"],
           "desc": "An ancestral experience of physical, mental, emotional and spiritual connection and transformation in the mountains.",
-          "btn": "Inquire and reserve",
+          "btn": "Learn about Temazcal",
           "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20the%20Temazcal%20Ceremony%20on%20November%208%2C%202026%20at%20Pueblo%20M%C3%A1gico.",
+          "link": "/temazcal",
+          "contactLink": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20the%20Temazcal%20Ceremony%20on%20November%208%2C%202026%20at%20Pueblo%20M%C3%A1gico.",
+          "isTemazcal": true,
           "showInExperienceCatalog": false
         },
         {
@@ -3898,6 +3903,7 @@
           "image": "/uploads/events/colibri/hero-colibri-wide.webp",
           "imageFit": "cover",
           "link": "/el-despertar-del-colibri",
+          "relatedToTemazcal": true,
           "showInExperienceCatalog": false
         },
         {
