@@ -185,12 +185,12 @@ const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) =
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-white/90 backdrop-blur-sm">
                 <MapPin size={14} aria-hidden="true" /> Pueblo Mágico · Los Gigantes
               </div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em]" style={{ color: COLORS.gold }}>Propuesta integral para {proposal.name}</p>
-              <h1 className="serif-title mt-4 text-5xl leading-[0.98] text-white md:text-7xl lg:text-8xl">
-                Una experiencia transformadora <span className="block" style={{ color: COLORS.gold }}>en la montaña.</span>
+              <p className="text-xs font-bold uppercase tracking-[0.28em]" style={{ color: COLORS.gold }}>Tu propuesta integral en la montaña</p>
+              <h1 className="serif-title mt-4 text-4xl leading-[1.02] text-white sm:text-5xl md:text-6xl lg:text-7xl">
+                {proposal.name}, esta experiencia <span className="block" style={{ color: COLORS.gold }}>fue pensada para vos y tu grupo.</span>
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/80 md:text-xl">
-                Una propuesta all inclusive de 2 noches y 3 días para co-diseñar un encuentro que integra naturaleza, aventura y profundidad.
+                Queremos que puedas enfocarte en lo esencial: facilitar, compartir y vivir un encuentro all inclusive de 2 noches y 3 días que integra naturaleza, aventura y profundidad. Nosotros nos ocupamos del resto.
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
                 <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline max-w-full text-[11px] font-semibold sm:text-sm">

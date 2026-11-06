@@ -34,6 +34,9 @@ test('private proposal route is wired and the public retreat CTA requests a quot
 });
 
 test('proposal reflects the supplied all-inclusive scope', () => {
+  assert.match(page, /\{proposal\.name\}, esta experiencia/);
+  assert.match(page, /fue pensada para vos y tu grupo/);
+
   for (const expected of [
     '2 desayunos',
     '2 almuerzos',
