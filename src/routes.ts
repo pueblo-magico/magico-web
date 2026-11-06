@@ -16,6 +16,7 @@ export const ROUTES = {
   PROPUESTA_CALMA_YOGA: '/propuesta/calma-magico',
   ORGANIZA_EXPERIENCIA: '/organizamos-tu-experiencia',
   ORGANIZA_TU_RETIRO: '/organiza-tu-retiro',
+  PRESUPUESTO_RETIRO: '/presupuestos/:proposalId',
   INTI_RAYMI: '/inti-raymi',
   PACHAMAMA_FEST: '/pachamama-fest',
   PROPUESTA_NICO_GRUPE: '/propuesta/nico-grupe',

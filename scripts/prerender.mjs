@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, createReadStream, s
 import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
-import { PRIVATE_PROPOSAL_PATH, privateProposalShell } from './private-proposal.mjs';
+import { PRIVATE_PROPOSALS, privateProposalShell } from './private-proposal.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.PRERENDER_DIST || join(__dirname, '..', 'dist');
@@ -220,8 +220,13 @@ function htmlFileFor(route) {
 // ─── Phase 1: Meta tag injection (fast, no browser needed) ───────────────────
 console.log('\nPhase 1: Meta tag injection...');
 const template = readFileSync(join(DIST, 'index.html'), 'utf-8');
-// A dedicated noindex document exists before JavaScript runs, without public SEO metadata.
-writeFileSync(join(DIST, `${PRIVATE_PROPOSAL_PATH.slice(1)}.html`), privateProposalShell(template));
+// Dedicated noindex documents exist before JavaScript runs, without public SEO metadata.
+for (const proposal of PRIVATE_PROPOSALS) {
+  const file = join(DIST, `${proposal.path.slice(1)}.html`);
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, privateProposalShell(template, proposal.title));
+  console.log(`  ✓ private proposal: ${proposal.path}`);
+}
 
 // Fallback nativo de Cloudflare Pages para rutas desconocidas: si existe un
 // 404.html en la raíz del output, lo sirve para cualquier ruta no encontrada —

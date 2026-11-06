@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { privateProposalShell, PRIVATE_PROPOSAL_PATH } from '../scripts/private-proposal.mjs';
+import { privateProposalShell, PRIVATE_PROPOSAL_PATH, PRIVATE_PROPOSALS } from '../scripts/private-proposal.mjs';
 
 test('proposal HTML excludes public SEO and has noindex without JavaScript', () => {
   const input = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
@@ -13,6 +13,21 @@ test('proposal HTML excludes public SEO and has noindex without JavaScript', () 
   assert.doesNotMatch(html, /rel="canonical"|property="og:|name="description"|application\/ld\+json/);
   assert.match(html, /id="root"/);
   assert.match(html, /index\.tsx/);
+});
+
+test('personalized retreat proposals receive private shells and stay unlisted', () => {
+  const input = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const headers = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8');
+
+  for (const proposal of PRIVATE_PROPOSALS.filter(({ path }) => path.startsWith('/presupuestos/'))) {
+    const html = privateProposalShell(input, proposal.title);
+    assert.match(html, new RegExp(`<title>${proposal.title}<\\/title>`));
+    assert.match(html, /name="robots" content="noindex, nofollow, noarchive, nosnippet"/);
+    assert.ok(headers.includes('/presupuestos/*\n  X-Robots-Tag: noindex'));
+    for (const file of ['public/sitemap.xml', 'components/Header.tsx', 'components/Footer.tsx']) {
+      assert.ok(!readFileSync(new URL(`../${file}`, import.meta.url), 'utf8').includes(proposal.path));
+    }
+  }
 });
 
 test('server directives cover URL variants and proposal remains outside discovery', () => {
