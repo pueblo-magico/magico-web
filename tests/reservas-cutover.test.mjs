@@ -31,17 +31,20 @@ test('customer and admin entry points use standalone Reservas', () => {
   assert.match(launcher, /buttonVariants/);
 });
 
-test('stay page keeps configured tariffs and shared accessible accordions', () => {
+test('stay page reads the published Reservas plan and keeps shared accessible accordions', () => {
   const stay = read('src/Estadia.tsx');
+  const pricing = read('src/data/reservasPricing.ts');
 
-  assert.match(stay, /getEstadiaPrices/);
-  assert.match(stay, /formatPrice/);
-  assert.match(stay, /Precio por persona \/ noche/);
+  assert.match(stay, /useReservasPricing/);
+  assert.match(stay, /Tarifas vigentes de Reservas/);
   assert.match(stay, /Consultar fechas y precio/);
   assert.match(stay, /href=\{RESERVAS_PUBLIC_URL\}/);
+  assert.match(pricing, /\/api\/v1\/public\/precios/);
+  assert.match(pricing, /isPricingSummary/);
   assert.match(stay, /AccordionMediaHeader/);
   assert.match(stay, /<Accordion/);
   assert.match(stay, /buttonVariants/);
+  assert.doesNotMatch(stay, /getEstadiaPrices|ESTADIA_PRICES/);
   assert.doesNotMatch(stay, /openIdx|activeIndex|setActiveIndex/);
 });
 

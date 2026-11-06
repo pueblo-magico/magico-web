@@ -15,7 +15,12 @@ import {
   ForkKnifeIcon, PawPrintIcon, WheelchairIcon
 } from '@phosphor-icons/react';
 import { RESERVAS_PUBLIC_URL, WA_MAGICO, SITE_URL } from './data/config';
-import { formatPrice, getEstadiaPrices, type PricingLanguage } from './data/retreats';
+import {
+  type ReservasAccommodationType,
+  type ReservasBookingMode,
+  type ReservasPublicPriceRule,
+} from './data/reservasPricing';
+import { useReservasPricing } from './hooks/useReservasPricing';
 import { ROUTES } from './routes';
 
 const WA = (msg: string) =>
@@ -115,37 +120,44 @@ const Inclusiones: React.FC = () => {
   );
 };
 
-// ── Tabla de tarifas: con desayuno vs. pensión completa ──────────────────────
-const getPreciosTabla = (language: PricingLanguage) => {
-  const prices = getEstadiaPrices(language);
-  const finde = prices.pensionFinde;
+const ACCOMMODATION_LABELS: Record<ReservasAccommodationType, string> = {
+  domo: 'Domo geodésico',
+  refugio: 'Refugio de Piedra',
+  camping: 'Camping',
+};
 
-  return [
-    {
-      label: 'Camping',
-      nota: 'Traé tu carpa · ¿sin comidas? consultanos',
-      desayuno: prices.carpaDesde,
-      pension: prices.pensionCompletaCarpa,
-      finde: formatPrice(finde.carpa, language),
-      destacado: false,
-    },
-    {
-      label: 'Refugio de Piedra o domo compartido',
-      nota: 'Camas individuales',
-      desayuno: prices.ecoRefugioDesde,
-      pension: prices.pensionCompletaEcoRefugio,
-      finde: formatPrice(finde.ecoRefugio, language),
-      destacado: false,
-    },
-    {
-      label: 'Domo privado',
-      nota: 'De 2 a 7 personas · parejas, familias o grupos',
-      desayuno: prices.domoPrivado,
-      pension: prices.pensionCompletaDomoPrivado,
-      finde: `${formatPrice(finde.domoPrivadoDosNoches, language)} c/u si son las 2 noches · ${formatPrice(finde.domoPrivadoUnaNoche, language)} si es 1 sola`,
-      destacado: true,
-    },
-  ];
+const MODE_LABELS: Record<ReservasBookingMode, string> = {
+  cualquiera: 'Modalidad disponible',
+  compartida: 'Compartida',
+  privada: 'Privada',
+  camping: 'Camping',
+};
+
+const formatReservasMoney = (centavos: number, currency: string, language: 'es' | 'en') =>
+  new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(centavos / 100);
+
+const formatRate = (
+  rule: ReservasPublicPriceRule,
+  currency: string,
+  language: 'es' | 'en',
+  additionalPerPerson = 0,
+) => {
+  if (rule.base_calculo === 'persona_noche') {
+    return {
+      primary: `${formatReservasMoney(rule.importe_centavos + additionalPerPerson, currency, language)}/persona`,
+      secondary: null,
+    };
+  }
+  return {
+    primary: `${formatReservasMoney(rule.importe_centavos, currency, language)}/unidad`,
+    secondary: additionalPerPerson > 0
+      ? `+ ${formatReservasMoney(additionalPerPerson, currency, language)}/persona`
+      : null,
+  };
 };
 
 // ── Alojamientos ─────────────────────────────────────────────────────────────
@@ -184,8 +196,17 @@ const getAlojamientos = () => [
 
 const Alojamientos: React.FC = () => {
   const { language } = useLanguage();
-  const prices = getEstadiaPrices(language);
-  const preciosTabla = getPreciosTabla(language);
+  const { data: pricing, error: pricingError, loaded: pricingLoaded } = useReservasPricing();
+  const pricingRows = pricing?.opciones.flatMap(option => option.tarifas.map(rule => ({
+    ...rule,
+    tipo: option.tipo_alojamiento,
+    modalidadNombre: option.nombres_modalidades?.[rule.modalidad] || MODE_LABELS[rule.modalidad],
+  }))) || [];
+  const fullBoardAdditional = pricing?.alimentacion.pension_completa?.adicional_por_persona_noche_centavos || 0;
+  const lunchPrice = pricing?.alimentacion.pension_completa?.precio_almuerzo_centavos ??
+    pricing?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
+  const dinnerPrice = pricing?.alimentacion.pension_completa?.precio_cena_centavos ??
+    pricing?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
   const alojamientos = getAlojamientos();
   const alojamientoItems = alojamientos.map((aloj, i) => ({
     id: `alojamiento-${i}`,
@@ -264,47 +285,69 @@ const Alojamientos: React.FC = () => {
               </p>
             </div>
 
-            {/* Los importes se muestran desde la configuración editorial; Reservas confirma el total según fechas. */}
+            {/* Fuente de verdad: plan público versionado de Reservas. */}
             <div className="bg-white rounded-2xl p-5 border border-gold/30 shadow-sm">
               <div className="flex items-center gap-2 mb-1">
                 <CurrencyCircleDollar className="w-5 h-5 text-gold flex-shrink-0" weight="duotone" />
-                <p className="text-brand font-serif text-lg">Tarifas y disponibilidad en tiempo real</p>
+                <p className="text-brand font-serif text-lg">Tarifas vigentes de Reservas</p>
               </div>
               <p className="text-dark/60 text-sm leading-relaxed mt-2 mb-3">
-                Reservas verifica las fechas, el alojamiento disponible, las comidas y el precio final antes de pedirte tus datos. El desayuno está incluido; podés elegir pensión completa cuando esté disponible.
+                Los importes se consultan al plan publicado en Reservas. La disponibilidad y el precio final se verifican para tus fechas antes de pedirte tus datos.
               </p>
 
               <Badge className="mb-3" size="sm" variant="accent">
-                Precio por persona / noche · domingo a jueves
+                {pricing
+                  ? `Plan publicado v${pricing.plan.version} · ${pricing.fecha_referencia}`
+                  : pricingLoaded ? 'Precio final disponible al consultar fechas' : 'Consultando plan publicado…'}
               </Badge>
 
-              <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_5.5rem] sm:grid-cols-[minmax(0,1fr)_6rem_6rem] gap-x-2 sm:gap-x-3 items-end px-1 mb-1.5">
+              <div className="hidden sm:grid sm:grid-cols-[minmax(0,1fr)_9rem_10rem] gap-x-3 items-end px-1 mb-1.5">
                 <span />
                 <span className="text-dark/40 text-[9px] sm:text-[10px] uppercase tracking-wide sm:tracking-widest text-center">Con desayuno</span>
                 <span className="text-gold text-[9px] sm:text-[10px] uppercase tracking-wide sm:tracking-widest font-bold text-center">Pensión completa</span>
               </div>
 
-              {preciosTabla.map((row) => (
-                <div key={row.label} className={`bg-bone rounded-xl px-3 sm:px-4 py-3 border mb-2 ${row.destacado ? 'border-gold/40' : 'border-brand/10'}`}>
-                  <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_5.5rem] sm:grid-cols-[minmax(0,1fr)_6rem_6rem] gap-x-2 sm:gap-x-3 items-center">
+              {!pricingLoaded && <p className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">Cargando tarifas vigentes…</p>}
+              {pricingLoaded && (pricingError || pricingRows.length === 0) && (
+                <p role="status" className="rounded-xl bg-bone px-4 py-4 text-sm text-dark/60">
+                  No pudimos mostrar tarifas publicadas ahora. Consultá tus fechas para recibir disponibilidad y precio final.
+                </p>
+              )}
+
+              {pricingRows.map((row, index) => (
+                <div key={`${row.tipo}-${row.modalidad}-${row.ocupacion_min}-${row.ocupacion_max}-${index}`} className={`bg-bone rounded-xl px-3 sm:px-4 py-3 border mb-2 ${row.modalidad === 'privada' ? 'border-gold/40' : 'border-brand/10'}`}>
+                  <div className="sm:grid sm:grid-cols-[minmax(0,1fr)_9rem_10rem] sm:gap-x-3 sm:items-center">
                     <div className="min-w-0">
-                      <p className="text-brand text-sm font-semibold leading-tight">{row.label}</p>
-                      <p className="text-dark/45 text-[11px] mt-0.5 leading-snug">{row.nota}</p>
+                      <p className="text-brand text-sm font-semibold leading-tight">{ACCOMMODATION_LABELS[row.tipo]}</p>
+                      <p className="text-dark/45 text-[11px] mt-0.5 leading-snug">{row.modalidadNombre} · {row.ocupacion_min}–{row.ocupacion_max} personas</p>
                     </div>
-                    <p className="text-brand text-base sm:text-lg font-serif text-center">{formatPrice(row.desayuno, language)}</p>
-                    <p className="text-gold text-base sm:text-lg font-serif text-center">{formatPrice(row.pension, language)}</p>
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-t border-brand/10 pt-3 sm:contents">
+                      {[{
+                        label: 'Con desayuno',
+                        color: 'text-brand',
+                        value: formatRate(row, pricing!.plan.moneda, language),
+                      }, {
+                        label: 'Pensión completa',
+                        color: 'text-gold',
+                        value: formatRate(row, pricing!.plan.moneda, language, fullBoardAdditional),
+                      }].map(price => (
+                        <div key={price.label} className={`min-w-0 text-center ${price.color}`}>
+                          <span className="block text-[9px] font-bold uppercase tracking-wide sm:hidden">{price.label}</span>
+                          <span className="mt-1 block whitespace-nowrap font-serif text-sm sm:mt-0 sm:text-base">{price.value.primary}</span>
+                          {price.value.secondary && <span className="mt-0.5 block whitespace-nowrap text-[10px] font-semibold sm:text-[11px]">{price.value.secondary}</span>}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-dark/60 text-[11px] mt-2 pt-2 border-t border-brand/10">
-                    <strong className="text-brand font-semibold">Viernes y sábado</strong> (pensión completa): {row.finde}
-                  </p>
                 </div>
               ))}
 
-              <p className="text-dark/50 text-xs leading-relaxed mt-3 mb-4">
-                <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. Podés sumar almuerzo o cena a +{formatPrice(prices.almuerzo, language)} c/u.<br />
-                <strong className="text-gold">Pensión completa:</strong> alojamiento + desayuno, almuerzo y cena, precio total cerrado.<br />
-                <strong className="text-brand">Fin de semana:</strong> las noches de viernes y sábado se reservan solo con pensión completa.
-              </p>
+              {pricing && <p className="text-dark/50 text-xs leading-relaxed mt-3 mb-4">
+                <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. {lunchPrice > 0 || dinnerPrice > 0
+                  ? <>Podés sumar {lunchPrice === dinnerPrice ? <>almuerzo o cena a +{formatReservasMoney(lunchPrice, pricing.plan.moneda, language)} c/u.</> : <>almuerzo a +{formatReservasMoney(lunchPrice, pricing.plan.moneda, language)} y cena a +{formatReservasMoney(dinnerPrice, pricing.plan.moneda, language)}.</>}</>
+                  : 'Consultá las comidas opcionales al reservar.'}<br />
+                <strong className="text-gold">Pensión completa:</strong> alojamiento + desayuno, almuerzo y cena. El total final depende de las fechas, la ocupación y la modalidad elegida.
+              </p>}
 
               <a
                 href={RESERVAS_PUBLIC_URL}
