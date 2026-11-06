@@ -80,6 +80,11 @@ const ADDITIONAL_EXPERIENCES = [
 
 const PACKAGE_OPTIONS = [
   {
+    duration: '2 noches / 3 días',
+    price: '$300.000',
+    meals: ['2 desayunos', '2 almuerzos', '2 cenas', 'Brunch permanente'],
+  },
+  {
     duration: '3 noches / 4 días',
     price: '$400.000',
     meals: ['3 desayunos', '3 almuerzos', '3 cenas', 'Brunch permanente'],
@@ -196,7 +201,7 @@ const OrganizaTuRetiro: React.FC = () => {
               </a>
               <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-white/75">
                 <span>15 a 30 personas</span>
-                <span>3 o 4 noches</span>
+                <span>2 a 4 noches</span>
                 <span>All inclusive</span>
               </div>
             </div>
@@ -239,11 +244,11 @@ const OrganizaTuRetiro: React.FC = () => {
                 Elegí el tiempo que necesita tu grupo
               </h2>
               <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed" style={{ color: COLORS.muted }}>
-                Dos formatos para grupos de 15 a 30 personas. El valor incluye alojamiento, pensión completa y la experiencia integral.
+                Tres formatos para grupos de 15 a 30 personas. El valor incluye alojamiento, pensión completa y la experiencia integral.
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {PACKAGE_OPTIONS.map((option, index) => (
                 <article
                   key={option.duration}
@@ -279,6 +284,27 @@ const OrganizaTuRetiro: React.FC = () => {
             <p className="mt-6 text-center text-xs leading-relaxed" style={{ color: COLORS.muted }} data-reveal>
               Cocina casera, abundante y equilibrada. Adaptamos el menú a restricciones alimentarias informadas previamente.
             </p>
+
+            <div
+              className="mx-auto mt-8 flex max-w-3xl flex-col gap-4 rounded-2xl border bg-white p-6 text-left shadow-sm sm:flex-row sm:items-start"
+              style={{ borderColor: 'rgba(0,83,51,0.16)' }}
+              data-reveal
+            >
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: 'rgba(0,83,51,0.08)', color: COLORS.green }}
+              >
+                <ShieldCheck size={20} aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: COLORS.green }}>
+                  Condiciones de la propuesta
+                </p>
+                <p className="mt-2 text-sm leading-relaxed" style={{ color: COLORS.muted }}>
+                  Los valores son válidos para retiros con un mínimo de 15 participantes. El acuerdo se confirma y la fecha queda reservada una vez acreditada la seña acordada.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
