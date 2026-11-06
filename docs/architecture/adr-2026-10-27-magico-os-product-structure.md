@@ -1,6 +1,6 @@
 # ADR local — Sitio público de Pueblo y transición a Reservas standalone
 
-- **Estado:** Límites aceptados a nivel de arquitectura; las integraciones conservan gates propios.
+- **Estado:** Cutover Pueblo Mágico activado; Reservas standalone es la única autoridad operativa.
 - **Fecha:** 2026-10-27
 - **Repositorio:** magico-web
 - **Masterplan:** [THE MAGICO OS MASTERPLAN](https://experienciamagico.atlassian.net/wiki/spaces/VD/pages/54263809/THE+MAGICO+OS+MASTERPLAN).
@@ -17,6 +17,16 @@ Hay writers legacy en magico-web. Antes de apagar rutas o redirigir APIs: comple
 ## Implementación y dependencias
 
 [WRESERV-29](https://experienciamagico.atlassian.net/browse/WRESERV-29), [WRESERV-54](https://experienciamagico.atlassian.net/browse/WRESERV-54) y [runbook writer cutover](https://github.com/pueblo-magico/magico-reservas/blob/codex/production-mvp-launch/docs/architecture/magico-web-writer-cutover.md) son puertas operativas, no Done por documentación.
+
+## Cutover Pueblo Mágico — 2026-11-06
+
+- Checkout público canónico: `https://reservas.experienciamagico.com/reservar?paso=fechas`.
+- Administración canónica: `https://reservas.experienciamagico.com/admin`.
+- `magico-web` conserva contenido, SEO y consultas editoriales; enlaza al checkout hospedado y no cotiza ni crea reservas.
+- Las rutas legacy de disponibilidad, cotización, creación, pagos, iCal y administración de reservas responden `410 reservas_cutover`.
+- Formularios generales, inscripciones editoriales y la integración Cucuru de reforestación permanecen activas porque no escriben en Reservas.
+- La administración de formularios e interesados del sitio permanece en `/admin/sitio`; no expone las vistas legacy de Reservas.
+- Rollback técnico: revertir este release. Rehabilitar writers requiere antes detener el módulo standalone y reconciliar datos para no crear doble escritura.
 
 ## Precedencia/historia
 

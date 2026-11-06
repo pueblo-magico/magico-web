@@ -242,29 +242,6 @@ mkdirSync(join(DIST, 'app-shell'), { recursive: true });
 writeFileSync(join(DIST, 'app-shell', 'index.html'), template);
 console.log('  ✓ app-shell/index.html (destino de redirects SPA client-only)');
 
-// Shell propio para /admin/reservas: mismo bundle de React, pero con SU
-// PROPIO manifest (nombre, ícono y scope distintos del sitio público) para
-// que "instalar app" desde el dashboard cree un ícono separado de "Reset
-// Vital" — ver public/manifest-reservas.json. Al ser un archivo real en
-// dist/admin/reservas/index.html (mismo patrón que cualquier ruta
-// prerenderizada), Cloudflare Pages lo sirve directo, sin pasar por
-// _redirects.
-// OJO: `vite build` fingerprintea el href original ("/manifest.json") a algo
-// como "/assets/manifest-XXXX.json" — por eso el match es por atributo
-// rel="manifest", no por el href literal.
-const shellReservas = template
-  .replace(/<title>[^<]*<\/title>/, '<title>Reservas — Pueblo Mágico</title>')
-  .replace(/<link rel="manifest" href="[^"]*">/, '<link rel="manifest" href="/manifest-reservas.json">')
-  .replace(/<meta name="apple-mobile-web-app-title" content="[^"]*">/, '<meta name="apple-mobile-web-app-title" content="Reservas">')
-  // iOS "Agregar a inicio" usa este tag, no los íconos del manifest — mismo
-  // ícono con fondo dorado en vez de verde, para diferenciarlo de Reset Vital
-  // de un vistazo en la pantalla de inicio.
-  .replace(/<link rel="apple-touch-icon" href="[^"]*">/, '<link rel="apple-touch-icon" href="/uploads/pwa-192x192-reservas.png">')
-  .replace('</head>', '  <meta name="robots" content="noindex,nofollow" />\n</head>');
-mkdirSync(join(DIST, 'admin', 'reservas'), { recursive: true });
-writeFileSync(join(DIST, 'admin', 'reservas', 'index.html'), shellReservas);
-console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
-
 // ─── Per-route JSON-LD builder ───────────────────────────────────────────────
 function buildJsonLD(route) {
   if (route.path === '/brote-ronda-de-mujeres') {

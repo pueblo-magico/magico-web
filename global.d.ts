@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface ImportMetaEnv {
+  readonly VITE_RESERVAS_BASE_URL?: string;
   readonly VITE_REFORESTATION_ALIAS?: string;
   readonly VITE_REFORESTATION_ACCOUNT_HOLDER?: string;
   readonly VITE_REFORESTATION_CBU?: string;

@@ -10,6 +10,28 @@ export const WA_CICLO_VITAL_FEMENINO = '34621076042';
 
 export const SITE_URL = 'https://experienciamagico.com';
 
+const DEFAULT_RESERVAS_BASE_URL = 'https://reservas.experienciamagico.com';
+
+function reservasBaseUrl(): string {
+  const configuredUrl = import.meta.env.VITE_RESERVAS_BASE_URL?.trim();
+  if (!configuredUrl) return DEFAULT_RESERVAS_BASE_URL;
+
+  try {
+    const url = new URL(configuredUrl);
+    const isLocalDevelopment = ['localhost', '127.0.0.1'].includes(url.hostname);
+    if (url.username || url.password || (url.protocol !== 'https:' && !isLocalDevelopment)) {
+      return DEFAULT_RESERVAS_BASE_URL;
+    }
+    return url.origin;
+  } catch {
+    return DEFAULT_RESERVAS_BASE_URL;
+  }
+}
+
+export const RESERVAS_BASE_URL = reservasBaseUrl();
+export const RESERVAS_PUBLIC_URL = `${RESERVAS_BASE_URL}/reservar?paso=fechas`;
+export const RESERVAS_ADMIN_URL = `${RESERVAS_BASE_URL}/admin`;
+
 // Datos públicos de la campaña de reforestación. Se inyectan en build time y
 // pueden quedar vacíos: la landing deriva a WhatsApp hasta que estén configurados.
 export const REFORESTATION_CONTRIBUTION = {

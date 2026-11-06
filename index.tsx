@@ -17,6 +17,7 @@ import AchalaViva from './src/AchalaViva';
 import VueloDelCondor from './src/VueloDelCondor';
 import CicloVitalFemenino from './src/CicloVitalFemenino';
 import { ROUTES } from './src/routes.js';
+import { RESERVAS_ADMIN_URL, RESERVAS_PUBLIC_URL } from './src/data/config';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
 const AulaVerdeTravel360 = lazy(() => import('./src/AulaVerdeTravel360'));
@@ -42,7 +43,7 @@ const Coliving = lazy(() => import('./src/Coliving'));
 const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
 const NotFound = lazy(() => import('./src/NotFound'));
-const PanelReservas = lazy(() => import('./src/PanelReservas'));
+const PanelSitio = lazy(() => import('./src/PanelReservas'));
 
 if (!['/aulas-verdes-360-travel', '/aulas-verdes-travel-360'].some(path => window.location.pathname.startsWith(path))) {
   injectContentsquareScript({ clientId: '91718b26f9ef8' });
@@ -79,6 +80,13 @@ const PageLoader = () => (
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
+
+const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return <PageLoader />;
+};
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -130,10 +138,13 @@ root.render(
               <Route path="/winter-redirection" element={<Navigate to="/estadia" replace />} />
               <Route path="/propuesta/nico-grupe" element={<PropuestaNicoGrupe />} />
               <Route path="/estadia" element={<Estadia />} />
+              <Route path="/reservar" element={<ExternalRedirect to={RESERVAS_PUBLIC_URL} />} />
+              <Route path="/reservas" element={<ExternalRedirect to={RESERVAS_PUBLIC_URL} />} />
               <Route path="/coliving" element={<Coliving />} />
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
               <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
-              <Route path="/admin/reservas" element={<PanelReservas />} />
+              <Route path="/admin/reservas" element={<ExternalRedirect to={RESERVAS_ADMIN_URL} />} />
+              <Route path="/admin/sitio" element={<PanelSitio siteOnly />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

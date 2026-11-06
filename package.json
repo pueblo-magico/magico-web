@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "test:cloudflare-cleanup": "node --test tests/cloudflare/cleanup-pages-preview.test.mjs",
     "test:cucuru": "node --test tests/cucuru-donations.test.mjs",
-    "test:pricing-localization": "node --test tests/pricing-localization.test.mjs"
+    "test:pricing-localization": "node --test tests/pricing-localization.test.mjs",
+    "test:reservas-cutover": "node --test tests/reservas-cutover.test.mjs"
   },
   "dependencies": {
     "@contentsquare/tag-sdk": "^1.1.0",
