@@ -14,16 +14,18 @@ test('both supplied personalized retreat proposals are present', () => {
   assert.match(page, /300000/);
 });
 
-test('proposal validity starts tomorrow and lasts exactly 30 days', () => {
+test('proposal validity starts tomorrow, lasts exactly 30 days and shows only the valid-through date', () => {
   assert.match(page, /PROPOSAL_VALID_FROM = '2026-11-07T00:00:00-03:00'/);
   assert.match(page, /PROPOSAL_VALID_UNTIL = '2026-12-07T00:00:00-03:00'/);
   assert.equal(
     new Date('2026-12-07T00:00:00-03:00').getTime() - new Date('2026-11-07T00:00:00-03:00').getTime(),
     30 * 24 * 60 * 60 * 1000,
   );
-  assert.match(page, /Propuesta válida por 30 días/);
+  assert.match(page, /Válida hasta el/);
   assert.match(page, /VALIDITY_LABEL/);
-  assert.match(page, /remaining\.seconds/);
+  assert.doesNotMatch(page, /remaining\.seconds/);
+  assert.doesNotMatch(page, /const Countdown/);
+  assert.match(page, /<Header autoSubNavigation=\{false\}/);
 });
 
 test('private proposal route is wired and the public retreat CTA requests a quote', () => {

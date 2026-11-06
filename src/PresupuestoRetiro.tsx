@@ -6,7 +6,6 @@ import {
   CalendarDays,
   Check,
   ChefHat,
-  Clock3,
   HeartHandshake,
   MapPin,
   ShieldCheck,
@@ -41,7 +40,7 @@ const validityFormatter = new Intl.DateTimeFormat('es-AR', {
   timeZone: 'America/Argentina/Cordoba',
 });
 const validityEndInclusive = new Date(new Date(PROPOSAL_VALID_UNTIL).getTime() - 1_000);
-const VALIDITY_LABEL = `Del ${validityFormatter.format(new Date(PROPOSAL_VALID_FROM))} al ${validityFormatter.format(validityEndInclusive)} inclusive`;
+const VALIDITY_LABEL = `Válida hasta el ${validityFormatter.format(validityEndInclusive)} inclusive`;
 
 type Proposal = {
   slug: string;
@@ -85,54 +84,32 @@ const EXTRA_EXPERIENCES = [
   'Otras ceremonias ancestrales',
 ];
 
-function getRemaining(deadline: string) {
-  const total = Math.max(0, new Date(deadline).getTime() - Date.now());
-  return {
-    total,
-    days: Math.floor(total / 86_400_000),
-    hours: Math.floor((total / 3_600_000) % 24),
-    minutes: Math.floor((total / 60_000) % 60),
-    seconds: Math.floor((total / 1_000) % 60),
-  };
-}
-
-const Countdown: React.FC = () => {
-  const [remaining, setRemaining] = useState(() => getRemaining(PROPOSAL_VALID_UNTIL));
+const ValidityNotice: React.FC = () => {
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setRemaining(getRemaining(PROPOSAL_VALID_UNTIL)), 1000);
-    return () => window.clearInterval(timer);
+    const header = document.querySelector<HTMLElement>('header');
+    if (!header) return;
+
+    const updateOffset = () => setHeaderHeight(header.getBoundingClientRect().height);
+    updateOffset();
+    const observer = new ResizeObserver(updateOffset);
+    observer.observe(header);
+    window.addEventListener('resize', updateOffset);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateOffset);
+    };
   }, []);
 
-  const units = [
-    ['Días', remaining.days],
-    ['Horas', remaining.hours],
-    ['Min', remaining.minutes],
-    ['Seg', remaining.seconds],
-  ] as const;
-
   return (
-    <div className="rounded-2xl border border-white/20 bg-[#003D27]/90 px-4 py-4 text-white shadow-2xl backdrop-blur-md md:px-7" aria-live="polite">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <Clock3 className="h-5 w-5 shrink-0" style={{ color: COLORS.gold }} aria-hidden="true" />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/60">Propuesta válida por 30 días</p>
-            <p className="mt-1 text-sm font-semibold">{VALIDITY_LABEL}</p>
-          </div>
-        </div>
-        {remaining.total > 0 ? (
-          <div className="grid grid-cols-4 gap-2" aria-label={`${remaining.days} días, ${remaining.hours} horas, ${remaining.minutes} minutos y ${remaining.seconds} segundos restantes`}>
-            {units.map(([label, value]) => (
-              <div key={label} className="min-w-[54px] rounded-xl bg-white/10 px-2 py-2 text-center">
-                <strong className="block font-serif text-xl leading-none md:text-2xl">{String(value).padStart(2, '0')}</strong>
-                <span className="mt-1 block text-[8px] font-bold uppercase tracking-[0.16em] text-white/55">{label}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em]">Propuesta vencida</p>
-        )}
+    <div className="pointer-events-none fixed inset-x-0 z-[950] px-4" style={{ top: headerHeight }}>
+      <div className="mx-auto flex max-w-6xl justify-center md:justify-end">
+        <p className="pointer-events-auto inline-flex items-center gap-2 rounded-b-xl border border-t-0 border-white/20 bg-[#003D27]/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white shadow-lg backdrop-blur-md md:text-xs">
+          <CalendarDays className="h-3.5 w-3.5 shrink-0" style={{ color: COLORS.gold }} aria-hidden="true" />
+          {VALIDITY_LABEL}
+        </p>
       </div>
     </div>
   );
@@ -172,7 +149,8 @@ const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) =
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: COLORS.cream, color: COLORS.brown }}>
-      <Header />
+      <Header autoSubNavigation={false} />
+      <ValidityNotice />
       <main>
         <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-14 pt-36 md:pb-24 md:pt-44">
           <img src={img('/uploads/dji_0074.webp', 1800)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" className="absolute inset-0 h-full w-full object-cover" loading="eager" />
@@ -180,8 +158,7 @@ const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) =
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/15" />
 
           <div className="relative z-10 mx-auto w-full max-w-6xl px-5 md:px-12">
-            <Countdown />
-            <div className="mt-9 max-w-4xl">
+            <div className="max-w-4xl">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-white/90 backdrop-blur-sm">
                 <MapPin size={14} aria-hidden="true" /> Pueblo Mágico · Los Gigantes
               </div>
