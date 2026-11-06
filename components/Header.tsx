@@ -347,8 +347,6 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
             <li className="hidden lg:block pl-4 border-l border-white/20">
                <a 
                  href={t.menu.bookLink} 
-                 target="_blank"
-                 rel="noopener noreferrer"
                  onClick={(e) => handleNavClick(e, t.menu.bookLink, false, -1)}
                  className={`text-xs font-bold px-5 py-2 rounded-full transition-all shadow-lg ${useSolidHeader ? 'bg-brand text-white hover:bg-gold' : 'bg-white text-brand hover:bg-gold hover:text-white'}`}
                >

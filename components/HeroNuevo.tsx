@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Tree, UsersThree, Mountains } from '@phosphor-icons/react';
-import { BookingWidget, G } from './BookingWidget';
+import { HostedBookingLauncher } from './HostedBookingLauncher';
 
 const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { t } = useLanguage();
@@ -78,22 +78,9 @@ export const HeroNuevo: React.FC = () => {
           <span>{(t.hero as any).stats_land}</span>
         </div>
 
-        {/* Widget compacto */}
+        {/* Acceso compacto al checkout hospedado de Reservas */}
         <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.45)' }}>
-          <div style={{ background: G.green, padding: '11px 16px 9px' }}>
-            <p style={{ fontSize: 10, letterSpacing: '0.35em', textTransform: 'uppercase', fontWeight: 700, color: 'rgba(212,175,55,0.85)', marginBottom: 3 }}>
-              {(t.hero as any).reservationKicker}
-            </p>
-            <p style={{ fontFamily: 'Georgia, serif', fontSize: 15, fontWeight: 400, color: 'white', margin: 0 }}>
-              {(t.hero as any).reservationCta}
-            </p>
-            <p style={{ fontSize: 11, color: 'rgba(212,175,55,0.9)', fontWeight: 600, margin: '4px 0 0' }}>
-              {(t.hero as any).reservationPricing}
-            </p>
-          </div>
-          <div style={{ background: 'rgba(255,255,255,0.97)' }}>
-            <BookingWidget compact />
-          </div>
+          <HostedBookingLauncher compact surface="hero" />
         </div>
 
         {/* Prueba social + links */}
@@ -176,7 +163,7 @@ export const HeroNuevo: React.FC = () => {
 
           {/* Links secundarios */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', alignItems: 'center' }}>
-            <a href={t.hero.bookLink as string}
+            <a href={(t.hero as any).bookLink}
               style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, textDecoration: 'none', letterSpacing: '0.04em' }}>
               {t.hero.btnBook} ↗
             </a>
@@ -188,20 +175,10 @@ export const HeroNuevo: React.FC = () => {
           </div>
         </div>
 
-        {/* Tarjeta flotante de reserva */}
+        {/* Tarjeta flotante hacia el checkout hospedado */}
         <div style={{ width: 370, flexShrink: 0, paddingTop: '5rem', paddingBottom: '5rem', paddingLeft: '1.5rem' }}>
           <div style={{ width: '100%', borderRadius: 22, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.32), 0 4px 16px rgba(0,0,0,0.18)' }}>
-            <div style={{ background: G.green, padding: '18px 20px 16px' }}>
-              <h2 style={{ fontFamily: 'Georgia, serif', fontSize: 21, fontWeight: 400, color: 'white', lineHeight: 1.25, margin: 0 }}>
-                {(t.hero as any).reservationTitle}
-              </h2>
-              <p style={{ fontSize: 12, color: 'rgba(212,175,55,0.9)', fontWeight: 600, margin: '6px 0 0' }}>
-                {(t.hero as any).reservationPricing}
-              </p>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.96)' }}>
-              <BookingWidget />
-            </div>
+            <HostedBookingLauncher surface="hero" />
           </div>
         </div>
 
