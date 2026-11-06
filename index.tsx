@@ -115,6 +115,8 @@ root.render(
               <Route path="/escuelas" element={<AulaVerde />} />
               <Route path={ROUTES.PRESUPUESTO_360_TRAVEL} element={<AulaVerdeTravel360 />} />
               <Route path={ROUTES.PRESUPUESTO_SALVADOR_MAZZA} element={<AulaVerdeSalvadorMazza />} />
+              <Route path="/presupuesto/aulas-verdes-360-travel" element={<Navigate to={ROUTES.PRESUPUESTO_360_TRAVEL} replace />} />
+              <Route path="/presupuesto/aulas-verdes-729-salvador-mazza" element={<Navigate to={ROUTES.PRESUPUESTO_SALVADOR_MAZZA} replace />} />
               <Route path="/aulas-verdes-360-travel" element={<Navigate to={ROUTES.PRESUPUESTO_360_TRAVEL} replace />} />
               <Route path="/aulas-verdes-travel-360" element={<Navigate to={ROUTES.PRESUPUESTO_360_TRAVEL} replace />} />
               <Route path="/aulas-verdes-729-salvador-mazza" element={<Navigate to={ROUTES.PRESUPUESTO_SALVADOR_MAZZA} replace />} />
@@ -122,6 +124,7 @@ root.render(
               <Route path="/el-vuelo-del-condor" element={<VueloDelCondor />} />
               <Route path="/ciclo-vital-femenino" element={<CicloVitalFemenino />} />
               <Route path={ROUTES.PRESUPUESTO_CALMA_YOGA} element={<PropuestaCalmaYoga />} />
+              <Route path="/presupuesto/calma-magico" element={<Navigate to={ROUTES.PRESUPUESTO_CALMA_YOGA} replace />} />
               <Route path="/propuesta/calma-magico" element={<Navigate to={ROUTES.PRESUPUESTO_CALMA_YOGA} replace />} />
               <Route path="/organizamos-tu-experiencia" element={<OrganizamosTuExperiencia />} />
               <Route path={ROUTES.ORGANIZA_TU_RETIRO} element={<OrganizaTuRetiro />} />
@@ -146,6 +149,7 @@ root.render(
               <Route path="/winter-camp" element={<Navigate to="/estadia" replace />} />
               <Route path="/winter-redirection" element={<Navigate to="/estadia" replace />} />
               <Route path={ROUTES.PRESUPUESTO_NICO_GRUPE} element={<PropuestaNicoGrupe />} />
+              <Route path="/presupuesto/nico-grupe" element={<Navigate to={ROUTES.PRESUPUESTO_NICO_GRUPE} replace />} />
               <Route path="/propuesta/nico-grupe" element={<Navigate to={ROUTES.PRESUPUESTO_NICO_GRUPE} replace />} />
               <Route path="/estadia" element={<Estadia />} />
               <Route path="/coliving" element={<Coliving />} />

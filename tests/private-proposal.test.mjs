@@ -13,6 +13,7 @@ test('every personalized budget gets a private HTML shell without public SEO', (
   const template = read('index.html');
 
   for (const proposal of PRIVATE_PROPOSALS) {
+    assert.ok(proposal.path.startsWith('/presupuestos/'), `non-canonical proposal path: ${proposal.path}`);
     const html = privateProposalShell(template, proposal.title);
     assert.ok(html.includes(`<title>${proposal.title}</title>`));
     assert.match(html, /name="robots" content="noindex, nofollow, noarchive, nosnippet"/);
@@ -26,10 +27,11 @@ test('every personalized budget gets a private HTML shell without public SEO', (
 
 test('new and legacy paths receive server-side privacy headers', () => {
   const headers = read('public/_headers');
-  assert.ok(headers.includes('/presupuesto/*\n  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet'));
   assert.ok(headers.includes('/presupuestos/*\n  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet'));
+  assert.ok(headers.includes('/presupuesto/*\n  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet'));
 
   for (const legacyPath of LEGACY_PRIVATE_PROPOSAL_PATHS) {
+    if (legacyPath.startsWith('/presupuesto/')) continue;
     assert.ok(headers.includes(`${legacyPath}*\n  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet`));
   }
 });
@@ -37,11 +39,15 @@ test('new and legacy paths receive server-side privacy headers', () => {
 test('legacy proposal URLs permanently redirect into the presupuesto tree', () => {
   const redirects = read('public/_redirects');
   const expectedRedirects = new Map([
-    ['/aulas-verdes-360-travel', '/presupuesto/aulas-verdes-360-travel'],
-    ['/aulas-verdes-travel-360', '/presupuesto/aulas-verdes-360-travel'],
-    ['/aulas-verdes-729-salvador-mazza', '/presupuesto/aulas-verdes-729-salvador-mazza'],
-    ['/propuesta/calma-magico', '/presupuesto/calma-magico'],
-    ['/propuesta/nico-grupe', '/presupuesto/nico-grupe'],
+    ['/presupuesto/aulas-verdes-360-travel', '/presupuestos/aulas-verdes-360-travel'],
+    ['/presupuesto/aulas-verdes-729-salvador-mazza', '/presupuestos/aulas-verdes-729-salvador-mazza'],
+    ['/presupuesto/calma-magico', '/presupuestos/calma-magico'],
+    ['/presupuesto/nico-grupe', '/presupuestos/nico-grupe'],
+    ['/aulas-verdes-360-travel', '/presupuestos/aulas-verdes-360-travel'],
+    ['/aulas-verdes-travel-360', '/presupuestos/aulas-verdes-360-travel'],
+    ['/aulas-verdes-729-salvador-mazza', '/presupuestos/aulas-verdes-729-salvador-mazza'],
+    ['/propuesta/calma-magico', '/presupuestos/calma-magico'],
+    ['/propuesta/nico-grupe', '/presupuestos/nico-grupe'],
   ]);
 
   for (const [from, to] of expectedRedirects) {
@@ -57,7 +63,7 @@ test('personalized budgets stay outside public discovery and analytics', () => {
   }
 
   const entry = read('index.tsx');
-  assert.match(entry, /'\/presupuesto\/'/);
+  assert.match(entry, /'\/presupuestos\/'/);
   assert.match(entry, /ROUTES\.PRESUPUESTO_RETIRO/);
   for (const legacyPath of LEGACY_PRIVATE_PROPOSAL_PATHS) assert.ok(entry.includes(legacyPath));
 

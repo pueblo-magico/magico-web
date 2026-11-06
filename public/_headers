@@ -25,7 +25,7 @@
 /sw.js
   Cache-Control: no-cache
 
-# All personalized budgets are unlisted and excluded from search results.
+# Singular aliases remain private while redirecting to the canonical plural tree.
 /presupuesto/*
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store
@@ -42,7 +42,7 @@
   Cache-Control: no-store
   Referrer-Policy: no-referrer
 
-# Personalized retreat proposals are unlisted, non-indexable and never cached.
+# All canonical personalized budgets are unlisted, non-indexable and never cached.
 /presupuestos/*
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store

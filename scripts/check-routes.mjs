@@ -23,9 +23,9 @@ const ROUTE_PATHS = [
   '/estadia',
   '/politica-de-privacidad',
   '/el-vuelo-del-condor',
-  '/presupuesto/aulas-verdes-360-travel',
-  '/presupuesto/aulas-verdes-729-salvador-mazza',
-  '/presupuesto/calma-magico',
+  '/presupuestos/aulas-verdes-360-travel',
+  '/presupuestos/aulas-verdes-729-salvador-mazza',
+  '/presupuestos/calma-magico',
   '/presupuestos/cande',
   '/presupuestos/barbi-firmapaz',
   '/inti-raymi',
@@ -37,7 +37,7 @@ const ROUTE_PATHS = [
   '/reset-vital',
   '/despertar',
   '/el-despertar-del-colibri',
-  '/presupuesto/nico-grupe',
+  '/presupuestos/nico-grupe',
 ];
 
 function normalize(pathname) {
