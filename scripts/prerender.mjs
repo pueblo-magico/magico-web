@@ -181,6 +181,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/organizamos-tu-experiencia',
   },
   {
+    path: '/organiza-tu-retiro',
+    title: 'Organizá tu Retiro en Pueblo Mágico | Los Gigantes, Córdoba',
+    description: 'Organizá un retiro all inclusive para 15 a 30 personas en Pueblo Mágico: alojamiento, pensión completa, coordinación, actividades, seguros y equipo anfitrión.',
+    image: 'https://experienciamagico.com/uploads/dji_0074.webp',
+    canonical: 'https://experienciamagico.com/organiza-tu-retiro',
+  },
+  {
     path: '/coliving',
     title: 'Coliving Mágico — Vivir, Trabajar y Reconectar · Los Gigantes, Córdoba | Pueblo Mágico',
     description: 'Coliving en las Sierras de Córdoba para bienestar y estilo de vida. Formatos de 10 y 20 noches, y Pase Libre Mensual a $480.000. Pensión completa, WiFi satelital y Programa Reset Vital incluidos.',
