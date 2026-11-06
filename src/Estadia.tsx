@@ -15,11 +15,8 @@ import {
   ForkKnifeIcon, PawPrintIcon, WheelchairIcon
 } from '@phosphor-icons/react';
 import { RESERVAS_PUBLIC_URL, WA_MAGICO, SITE_URL } from './data/config';
-import {
-  type ReservasAccommodationType,
-  type ReservasBookingMode,
-  type ReservasPublicPriceRule,
-} from './data/reservasPricing';
+import { type ReservasAccommodationType } from './data/reservasPricing';
+import { selectLowestPerPersonRates } from './data/reservasRatePresentation';
 import { useReservasPricing } from './hooks/useReservasPricing';
 import { ROUTES } from './routes';
 
@@ -126,13 +123,6 @@ const ACCOMMODATION_LABELS: Record<ReservasAccommodationType, string> = {
   camping: 'Camping',
 };
 
-const MODE_LABELS: Record<ReservasBookingMode, string> = {
-  cualquiera: 'Modalidad disponible',
-  compartida: 'Compartida',
-  privada: 'Privada',
-  camping: 'Camping',
-};
-
 const formatReservasMoney = (centavos: number, currency: string, language: 'es' | 'en') =>
   new Intl.NumberFormat(language === 'es' ? 'es-AR' : 'en-US', {
     style: 'currency',
@@ -141,24 +131,14 @@ const formatReservasMoney = (centavos: number, currency: string, language: 'es' 
   }).format(centavos / 100);
 
 const formatRate = (
-  rule: ReservasPublicPriceRule,
+  importeCentavos: number,
   currency: string,
   language: 'es' | 'en',
   additionalPerPerson = 0,
-) => {
-  if (rule.base_calculo === 'persona_noche') {
-    return {
-      primary: `${formatReservasMoney(rule.importe_centavos + additionalPerPerson, currency, language)}/persona`,
-      secondary: null,
-    };
-  }
-  return {
-    primary: `${formatReservasMoney(rule.importe_centavos, currency, language)}/unidad`,
-    secondary: additionalPerPerson > 0
-      ? `+ ${formatReservasMoney(additionalPerPerson, currency, language)}/persona`
-      : null,
-  };
-};
+) => ({
+  primary: `Desde ${formatReservasMoney(importeCentavos + additionalPerPerson, currency, language)}`,
+  secondary: 'por persona / noche',
+});
 
 // ── Alojamientos ─────────────────────────────────────────────────────────────
 const getAlojamientos = () => [
@@ -197,11 +177,7 @@ const getAlojamientos = () => [
 const Alojamientos: React.FC = () => {
   const { language } = useLanguage();
   const { data: pricing, error: pricingError, loaded: pricingLoaded } = useReservasPricing();
-  const pricingRows = pricing?.opciones.flatMap(option => option.tarifas.map(rule => ({
-    ...rule,
-    tipo: option.tipo_alojamiento,
-    modalidadNombre: option.nombres_modalidades?.[rule.modalidad] || MODE_LABELS[rule.modalidad],
-  }))) || [];
+  const pricingRows = pricing ? selectLowestPerPersonRates(pricing) : [];
   const fullBoardAdditional = pricing?.alimentacion.pension_completa?.adicional_por_persona_noche_centavos || 0;
   const lunchPrice = pricing?.alimentacion.pension_completa?.precio_almuerzo_centavos ??
     pricing?.alimentacion.pension_completa?.precio_comida_centavos ?? 0;
@@ -314,22 +290,22 @@ const Alojamientos: React.FC = () => {
                 </p>
               )}
 
-              {pricingRows.map((row, index) => (
-                <div key={`${row.tipo}-${row.modalidad}-${row.ocupacion_min}-${row.ocupacion_max}-${index}`} className={`bg-bone rounded-xl px-3 sm:px-4 py-3 border mb-2 ${row.modalidad === 'privada' ? 'border-gold/40' : 'border-brand/10'}`}>
+              {pricingRows.map(row => (
+                <div key={row.tipo} className="bg-bone rounded-xl px-3 sm:px-4 py-3 border border-brand/10 mb-2">
                   <div className="sm:grid sm:grid-cols-[minmax(0,1fr)_9rem_10rem] sm:gap-x-3 sm:items-center">
                     <div className="min-w-0">
                       <p className="text-brand text-sm font-semibold leading-tight">{ACCOMMODATION_LABELS[row.tipo]}</p>
-                      <p className="text-dark/45 text-[11px] mt-0.5 leading-snug">{row.modalidadNombre} · {row.ocupacion_min}–{row.ocupacion_max} personas</p>
+                      <p className="text-dark/45 text-[11px] mt-0.5 leading-snug">Tarifa desde · por persona y noche</p>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 border-t border-brand/10 pt-3 sm:contents">
                       {[{
                         label: 'Con desayuno',
                         color: 'text-brand',
-                        value: formatRate(row, pricing!.plan.moneda, language),
+                        value: formatRate(row.importeCentavos, pricing!.plan.moneda, language),
                       }, {
                         label: 'Pensión completa',
                         color: 'text-gold',
-                        value: formatRate(row, pricing!.plan.moneda, language, fullBoardAdditional),
+                        value: formatRate(row.importeCentavos, pricing!.plan.moneda, language, fullBoardAdditional),
                       }].map(price => (
                         <div key={price.label} className={`min-w-0 text-center ${price.color}`}>
                           <span className="block text-[9px] font-bold uppercase tracking-wide sm:hidden">{price.label}</span>

@@ -36,6 +36,7 @@ test('stay page reads the published Reservas plan and keeps shared accessible ac
   const pricing = read('src/data/reservasPricing.ts');
 
   assert.match(stay, /useReservasPricing/);
+  assert.match(stay, /selectLowestPerPersonRates/);
   assert.match(stay, /Tarifas vigentes de Reservas/);
   assert.match(stay, /Consultar fechas y precio/);
   assert.match(stay, /href=\{RESERVAS_PUBLIC_URL\}/);
