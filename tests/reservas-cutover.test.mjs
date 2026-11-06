@@ -24,11 +24,25 @@ test('customer and admin entry points use standalone Reservas', () => {
   assert.match(hero, /href=\{\(t\.hero as any\)\.bookLink\}/);
   assert.match(stay, /HostedBookingLauncher/);
   assert.doesNotMatch(hero, /BookingWidget/);
-  assert.doesNotMatch(stay, /BookingWidget|ESTADIA_PRICES|makesOffer/);
+  assert.doesNotMatch(stay, /BookingWidget|makesOffer/);
   assert.doesNotMatch(inclusions, /getEstadiaPrices|formatPrice/);
   assert.equal(packageJson.dependencies['@pueblo-magico/react-ui'], '0.7.0');
   assert.match(index, /@pueblo-magico\/react-ui\/styles\.css/);
   assert.match(launcher, /buttonVariants/);
+});
+
+test('stay page keeps configured tariffs and shared accessible accordions', () => {
+  const stay = read('src/Estadia.tsx');
+
+  assert.match(stay, /getEstadiaPrices/);
+  assert.match(stay, /formatPrice/);
+  assert.match(stay, /Precio por persona \/ noche/);
+  assert.match(stay, /Consultar fechas y precio/);
+  assert.match(stay, /href=\{RESERVAS_PUBLIC_URL\}/);
+  assert.match(stay, /AccordionMediaHeader/);
+  assert.match(stay, /<Accordion/);
+  assert.match(stay, /buttonVariants/);
+  assert.doesNotMatch(stay, /openIdx|activeIndex|setActiveIndex/);
 });
 
 test('legacy reservation endpoints fail closed but unrelated APIs continue', async () => {

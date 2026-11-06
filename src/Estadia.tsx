@@ -4,16 +4,18 @@ import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { SectionRegeneracion } from '../components/SectionRegeneracion';
 import { HostedBookingLauncher } from '../components/HostedBookingLauncher';
+import { Accordion, AccordionMediaHeader, Badge, buttonVariants } from '@pueblo-magico/react-ui';
 import {
   Bed, ForkKnife, Leaf, WifiHigh, Tree, UsersThree,
   CheckCircle, ArrowRight, Sun, Mountains, Campfire,
   Laptop, HeartStraight, Compass, ChartLineUp, CurrencyCircleDollar,
-  Star, CaretDown, CaretLeft, CaretRight, WhatsappLogo, Drop, Globe, Towel,
-  CaretDownIcon, HouseIcon, WifiHighIcon, MountainsIcon, MapPinIcon,
+  Star, CaretLeft, CaretRight, WhatsappLogo, Drop, Globe, Towel,
+  HouseIcon, WifiHighIcon, MountainsIcon, MapPinIcon,
   ClockIcon, UsersThreeIcon, CalendarIcon, WhatsappLogoIcon,
   ForkKnifeIcon, PawPrintIcon, WheelchairIcon
 } from '@phosphor-icons/react';
 import { RESERVAS_PUBLIC_URL, WA_MAGICO, SITE_URL } from './data/config';
+import { formatPrice, getEstadiaPrices, type PricingLanguage } from './data/retreats';
 import { ROUTES } from './routes';
 
 const WA = (msg: string) =>
@@ -113,12 +115,44 @@ const Inclusiones: React.FC = () => {
   );
 };
 
+// ── Tabla de tarifas: con desayuno vs. pensión completa ──────────────────────
+const getPreciosTabla = (language: PricingLanguage) => {
+  const prices = getEstadiaPrices(language);
+  const finde = prices.pensionFinde;
+
+  return [
+    {
+      label: 'Camping',
+      nota: 'Traé tu carpa · ¿sin comidas? consultanos',
+      desayuno: prices.carpaDesde,
+      pension: prices.pensionCompletaCarpa,
+      finde: formatPrice(finde.carpa, language),
+      destacado: false,
+    },
+    {
+      label: 'Refugio de Piedra o domo compartido',
+      nota: 'Camas individuales',
+      desayuno: prices.ecoRefugioDesde,
+      pension: prices.pensionCompletaEcoRefugio,
+      finde: formatPrice(finde.ecoRefugio, language),
+      destacado: false,
+    },
+    {
+      label: 'Domo privado',
+      nota: 'De 2 a 7 personas · parejas, familias o grupos',
+      desayuno: prices.domoPrivado,
+      pension: prices.pensionCompletaDomoPrivado,
+      finde: `${formatPrice(finde.domoPrivadoDosNoches, language)} c/u si son las 2 noches · ${formatPrice(finde.domoPrivadoUnaNoche, language)} si es 1 sola`,
+      destacado: true,
+    },
+  ];
+};
+
 // ── Alojamientos ─────────────────────────────────────────────────────────────
 const getAlojamientos = () => [
   {
     name: 'Domo Geodésico',
     tag: 'MÁS SOLICITADO',
-    tagColor: 'bg-gold text-white',
     shortDesc: '7 camas de una plaza · opción compartida o domo privado · desayuno incluido',
     desc: 'Esfera geométrica en plena montaña con ventanas panorámicas al cielo. 7 camas de una plaza. Podés reservar el domo privado para tu pareja, tu familia o tu grupo, desde 2 personas. Si querés cama de dos plazas, pedila al reservar y te confirmamos si la tenemos disponible. Ropa blanca incluida. Baños compartidos a metros del domo.',
     image: '/uploads/domos.webp',
@@ -129,7 +163,6 @@ const getAlojamientos = () => [
   {
     name: 'Refugio de Piedra',
     tag: 'COLIVING',
-    tagColor: 'bg-bone text-brand border border-brand/20',
     shortDesc: 'Casa de piedra · habitaciones compartidas o una entera para tu grupo · desayuno incluido',
     desc: 'La casa de piedra es el corazón de Pueblo Mágico: recepción, salón y comedor, con las habitaciones a pasos. No es un hotel: es una casa grande de montaña para vivir en comunidad. Compartí habitación con otros viajeros o reservá una entera, solo para tu grupo. Baños compartidos.',
     image: '/uploads/habitaciones.webp',
@@ -140,7 +173,6 @@ const getAlojamientos = () => [
   {
     name: 'Camping',
     tag: 'LA MÁS ECONÓMICA',
-    tagColor: 'bg-bone text-brand border border-brand/20',
     shortDesc: 'Bajo las estrellas · duchas calientes · disponibilidad a consultar',
     desc: 'Instalá tu carpa en pleno campo y dormí bajo las estrellas de los Gigantes. Para quienes buscan la experiencia más cruda y auténtica de la montaña, con la puerta de entrada más accesible a Pueblo Mágico. Duchas calientes y baños disponibles. ¿Querés venir sin comidas? Consultanos por esa opción.',
     image: '/uploads/exterior.webp',
@@ -151,8 +183,56 @@ const getAlojamientos = () => [
 ];
 
 const Alojamientos: React.FC = () => {
-  const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const { language } = useLanguage();
+  const prices = getEstadiaPrices(language);
+  const preciosTabla = getPreciosTabla(language);
   const alojamientos = getAlojamientos();
+  const alojamientoItems = alojamientos.map((aloj, i) => ({
+    id: `alojamiento-${i}`,
+    headerLayout: 'media' as const,
+    triggerLabel: `${aloj.name}: mostrar u ocultar detalles`,
+    header: (
+      <AccordionMediaHeader
+        media={<img src={aloj.image} alt="" loading="lazy" />}
+        eyebrow={(
+          <Badge size="sm" variant={i === 0 ? 'accent' : 'neutral'}>
+            {aloj.tag}
+          </Badge>
+        )}
+        heading={aloj.name}
+        description={aloj.shortDesc}
+      />
+    ),
+    content: (
+      <div>
+        <p className="text-dark/65 text-sm leading-relaxed mb-3">{aloj.desc}</p>
+        <ul className="flex flex-wrap gap-2 mb-4">
+          {aloj.details.map((detail) => (
+            <li key={detail}>
+              <Badge className="gap-1.5 normal-case tracking-normal" size="sm" variant="neutral">
+                <CheckCircle className="w-3.5 h-3.5 text-gold flex-shrink-0" weight="duotone" />
+                {detail}
+              </Badge>
+            </li>
+          ))}
+        </ul>
+        <a
+          href={aloj.online ? RESERVAS_PUBLIC_URL : aloj.wa}
+          target={aloj.online ? undefined : '_blank'}
+          rel={aloj.online ? undefined : 'noopener noreferrer'}
+          className={buttonVariants({
+            className: 'w-full uppercase tracking-widest',
+            shape: 'pill',
+            size: 'md',
+            variant: 'primary',
+          })}
+        >
+          {aloj.online ? <CalendarIcon className="w-4 h-4" weight="duotone" /> : <WhatsappLogo className="w-4 h-4" weight="fill" />}
+          {aloj.online ? 'Ver disponibilidad y reservar' : 'Consultar camping por WhatsApp'}
+        </a>
+      </div>
+    ),
+  }));
 
   return (
     <section id="alojamientos" className="py-20 bg-bone">
@@ -167,53 +247,13 @@ const Alojamientos: React.FC = () => {
 
           {/* Acordeón de cards + precios */}
           <div>
-            <div className="space-y-3 mb-5">
-              {alojamientos.map((aloj, i) => (
-                <div key={i}
-                  className="bg-white rounded-2xl border border-brand/5 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow duration-200"
-                  onClick={() => setOpenIdx(openIdx === i ? null : i)}>
-
-                  {/* Fila compacta siempre visible */}
-                  <div className="flex items-stretch">
-                    <div className="w-[130px] flex-shrink-0">
-                      <img src={aloj.image} alt={aloj.name}
-                        className="w-full h-full object-cover"
-                        style={{ minHeight: 88 }} loading="lazy" />
-                    </div>
-                    <div className="flex-1 px-4 py-3 flex items-center justify-between gap-3 min-w-0">
-                      <div className="min-w-0">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mb-1 inline-block ${aloj.tagColor}`}>{aloj.tag}</span>
-                        <h3 className="font-serif text-[17px] text-brand leading-tight">{aloj.name}</h3>
-                        <p className="text-dark/50 text-xs mt-0.5 leading-snug line-clamp-2">{aloj.shortDesc}</p>
-                      </div>
-                      <span className={`w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center bg-bone transition-transform duration-300 ${openIdx === i ? 'rotate-180' : ''}`}>
-                        <CaretDown weight="bold" className="w-3 h-3 text-brand" />
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Contenido expandido */}
-                  {openIdx === i && (
-                    <div className="px-4 pb-4 border-t border-brand/5">
-                      <p className="text-dark/65 text-sm leading-relaxed mt-3 mb-3">{aloj.desc}</p>
-                      <ul className="flex flex-wrap gap-2 mb-4">
-                        {aloj.details.map((d, j) => (
-                          <li key={j} className="flex items-center gap-1.5 text-xs text-dark/60 bg-bone rounded-full px-3 py-1">
-                            <CheckCircle className="w-3.5 h-3.5 text-gold flex-shrink-0" weight="duotone" />
-                            {d}
-                          </li>
-                        ))}
-                      </ul>
-                      <a href={aloj.online ? RESERVAS_PUBLIC_URL : aloj.wa} target={aloj.online ? undefined : '_blank'} rel={aloj.online ? undefined : 'noopener noreferrer'}
-                        className="inline-flex items-center justify-center gap-2 bg-brand text-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gold transition-colors w-full">
-                        {aloj.online ? <CalendarIcon className="w-4 h-4" weight="duotone" /> : <WhatsappLogo className="w-4 h-4" weight="fill" />}
-                        {aloj.online ? 'Ver disponibilidad y reservar' : 'Consultar camping por WhatsApp'}
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <Accordion
+              className="mb-5"
+              defaultExpandedItems={['alojamiento-0']}
+              headingLevel={3}
+              items={alojamientoItems}
+              type="single"
+            />
 
             {/* Nota de disponibilidad privada */}
             <div className="bg-brand/5 border border-brand/10 rounded-2xl px-5 py-4 mb-4 flex gap-3 items-start">
@@ -224,16 +264,57 @@ const Alojamientos: React.FC = () => {
               </p>
             </div>
 
-            {/* La tarifa y la disponibilidad pertenecen al módulo Reservas. */}
+            {/* Los importes se muestran desde la configuración editorial; Reservas confirma el total según fechas. */}
             <div className="bg-white rounded-2xl p-5 border border-gold/30 shadow-sm">
               <div className="flex items-center gap-2 mb-1">
                 <CurrencyCircleDollar className="w-5 h-5 text-gold flex-shrink-0" weight="duotone" />
                 <p className="text-brand font-serif text-lg">Tarifas y disponibilidad en tiempo real</p>
               </div>
-              <p className="text-dark/60 text-sm leading-relaxed mt-2 mb-4">
+              <p className="text-dark/60 text-sm leading-relaxed mt-2 mb-3">
                 Reservas verifica las fechas, el alojamiento disponible, las comidas y el precio final antes de pedirte tus datos. El desayuno está incluido; podés elegir pensión completa cuando esté disponible.
               </p>
-              <a href={RESERVAS_PUBLIC_URL} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-xs font-bold uppercase tracking-widest text-brand transition-colors hover:bg-brand hover:text-white">
+
+              <Badge className="mb-3" size="sm" variant="accent">
+                Precio por persona / noche · domingo a jueves
+              </Badge>
+
+              <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_5.5rem] sm:grid-cols-[minmax(0,1fr)_6rem_6rem] gap-x-2 sm:gap-x-3 items-end px-1 mb-1.5">
+                <span />
+                <span className="text-dark/40 text-[9px] sm:text-[10px] uppercase tracking-wide sm:tracking-widest text-center">Con desayuno</span>
+                <span className="text-gold text-[9px] sm:text-[10px] uppercase tracking-wide sm:tracking-widest font-bold text-center">Pensión completa</span>
+              </div>
+
+              {preciosTabla.map((row) => (
+                <div key={row.label} className={`bg-bone rounded-xl px-3 sm:px-4 py-3 border mb-2 ${row.destacado ? 'border-gold/40' : 'border-brand/10'}`}>
+                  <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_5.5rem] sm:grid-cols-[minmax(0,1fr)_6rem_6rem] gap-x-2 sm:gap-x-3 items-center">
+                    <div className="min-w-0">
+                      <p className="text-brand text-sm font-semibold leading-tight">{row.label}</p>
+                      <p className="text-dark/45 text-[11px] mt-0.5 leading-snug">{row.nota}</p>
+                    </div>
+                    <p className="text-brand text-base sm:text-lg font-serif text-center">{formatPrice(row.desayuno, language)}</p>
+                    <p className="text-gold text-base sm:text-lg font-serif text-center">{formatPrice(row.pension, language)}</p>
+                  </div>
+                  <p className="text-dark/60 text-[11px] mt-2 pt-2 border-t border-brand/10">
+                    <strong className="text-brand font-semibold">Viernes y sábado</strong> (pensión completa): {row.finde}
+                  </p>
+                </div>
+              ))}
+
+              <p className="text-dark/50 text-xs leading-relaxed mt-3 mb-4">
+                <strong className="text-brand">Con desayuno:</strong> alojamiento + desayuno. Podés sumar almuerzo o cena a +{formatPrice(prices.almuerzo, language)} c/u.<br />
+                <strong className="text-gold">Pensión completa:</strong> alojamiento + desayuno, almuerzo y cena, precio total cerrado.<br />
+                <strong className="text-brand">Fin de semana:</strong> las noches de viernes y sábado se reservan solo con pensión completa.
+              </p>
+
+              <a
+                href={RESERVAS_PUBLIC_URL}
+                className={buttonVariants({
+                  className: 'w-full',
+                  shape: 'pill',
+                  size: 'md',
+                  variant: 'accent',
+                })}
+              >
                 Consultar fechas y precio <ArrowRight className="w-4 h-4" />
               </a>
             </div>
@@ -766,8 +847,21 @@ const FAQS = [
 ];
 
 const FAQ: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const toggle = (index: number) => setActiveIndex(activeIndex === index ? null : index);
+  const faqItems = FAQS.map((faq, index) => {
+    const Icon = faq.Icon;
+
+    return {
+      id: `faq-${index}`,
+      triggerLabel: `${faq.q}: mostrar u ocultar respuesta`,
+      header: (
+        <>
+          <Icon weight="light" className="w-5 h-5" aria-hidden="true" />
+          <span>{faq.q}</span>
+        </>
+      ),
+      content: <p>{faq.a}</p>,
+    };
+  });
 
   return (
     <section className="py-24 bg-[#F9F8F4]">
@@ -778,62 +872,13 @@ const FAQ: React.FC = () => {
           <p className="text-gray-500 text-base md:text-lg font-light mt-2">Respuestas para tu tranquilidad antes de viajar.</p>
         </div>
 
-        <div className="space-y-3 md:space-y-4">
-          {FAQS.map((faq, index) => {
-            const isActive = activeIndex === index;
-            const Icon = faq.Icon;
-
-            return (
-              <div key={index} data-reveal>
-                <div
-                  className={`bg-white rounded-2xl border transition-colors duration-300 overflow-hidden ${
-                    isActive ? 'border-[#D4AF37] shadow-md' : 'border-gray-100 hover:border-gray-200 shadow-sm'
-                  }`}
-                >
-                  <button
-                    className="w-full text-left px-6 py-5 md:px-8 md:py-6 flex items-center gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#005333]/40"
-                    onClick={() => toggle(index)}
-                    aria-expanded={isActive}
-                  >
-                    <span className={`flex-shrink-0 transition-colors duration-300 ${isActive ? 'text-[#005333]' : 'text-[#005333]/30'}`}>
-                      <Icon weight="light" className="w-5 h-5" aria-hidden="true" />
-                    </span>
-
-                    <h3 className={`flex-1 serif-title text-base md:text-lg leading-snug transition-colors duration-300 ${isActive ? 'text-[#005333]' : 'text-gray-800'}`}>
-                      {faq.q}
-                    </h3>
-
-                    <span
-                      className={`flex-shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-300 ${
-                        isActive ? 'bg-[#005333] text-[#D4AF37] rotate-180' : 'bg-gray-100 text-[#005333]'
-                      }`}
-                      aria-hidden="true"
-                    >
-                      <CaretDownIcon weight="bold" className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    </span>
-                  </button>
-
-                  <div
-                    className="transition-all duration-500 ease-in-out overflow-hidden"
-                    style={{
-                      display: 'grid',
-                      gridTemplateRows: isActive ? '1fr' : '0fr',
-                      opacity: isActive ? 1 : 0
-                    }}
-                  >
-                    <div className="min-h-0 overflow-hidden">
-                      <div className="pl-[3.75rem] pr-6 md:pl-[4.5rem] md:pr-8 pb-6 md:pb-7 pt-1">
-                        <div className="w-full h-px bg-gray-100 mb-5"></div>
-                        <p className="text-gray-600 leading-relaxed text-sm md:text-base">
-                          {faq.a}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div data-reveal>
+          <Accordion
+            className="md:gap-4"
+            headingLevel={3}
+            items={faqItems}
+            type="single"
+          />
         </div>
       </div>
     </section>
