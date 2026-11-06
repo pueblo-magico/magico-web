@@ -21,6 +21,7 @@ test('customer and admin entry points use standalone Reservas', () => {
   assert.doesNotMatch(index, /PanelReservas[^']*\)\s*\/>/);
   assert.match(index, /PanelSitio siteOnly/);
   assert.match(hero, /HostedBookingLauncher/);
+  assert.match(hero, /href=\{\(t\.hero as any\)\.bookLink\}/);
   assert.match(stay, /HostedBookingLauncher/);
   assert.doesNotMatch(hero, /BookingWidget/);
   assert.doesNotMatch(stay, /BookingWidget|ESTADIA_PRICES|makesOffer/);

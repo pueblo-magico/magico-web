@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Tree, UsersThree, Mountains } from '@phosphor-icons/react';
 import { HostedBookingLauncher } from './HostedBookingLauncher';
-import { RESERVAS_PUBLIC_URL } from '../src/data/config';
 
 const PachamamaFestBadge: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { t } = useLanguage();
@@ -164,7 +163,7 @@ export const HeroNuevo: React.FC = () => {
 
           {/* Links secundarios */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', alignItems: 'center' }}>
-            <a href={RESERVAS_PUBLIC_URL}
+            <a href={(t.hero as any).bookLink}
               style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 600, textDecoration: 'none', letterSpacing: '0.04em' }}>
               {t.hero.btnBook} ↗
             </a>
