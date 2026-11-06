@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { usePrivateProposalMeta } from './hooks/usePrivateProposalMeta';
 import { img } from './lib/img';
 import { WA_MAGICO } from './data/config';
 
@@ -202,6 +203,7 @@ const ESPACIO_IMGS = [
 ];
 
 const PropuestaNicoGrupe: React.FC = () => {
+  usePrivateProposalMeta(`Propuesta · ${PROSPECT.comunidad} × Pueblo Mágico`);
   const [expiresAt] = useState(() => {
     const d = new Date();
     d.setHours(d.getHours() + 72);
@@ -209,7 +211,6 @@ const PropuestaNicoGrupe: React.FC = () => {
   });
 
   useEffect(() => {
-    document.title = `Propuesta · ${PROSPECT.comunidad} × Pueblo Mágico`;
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => {
         if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }

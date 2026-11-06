@@ -32,7 +32,7 @@ const COLORS = {
 };
 
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  '¡Hola! Quiero organizar un retiro en Pueblo Mágico. ¿Podemos conversar sobre el grupo, las fechas y la propuesta?'
+  '¡Hola! Quiero pedir un presupuesto para organizar un retiro en Pueblo Mágico. ¿Podemos conversar sobre el grupo, las fechas y la propuesta?'
 );
 const WHATSAPP_HREF = `https://wa.me/${WA_MAGICO}?text=${WHATSAPP_MESSAGE}`;
 
@@ -196,7 +196,7 @@ const OrganizaTuRetiro: React.FC = () => {
                 rel="noopener noreferrer"
                 className="btn-gold btn-icon-inline max-w-full whitespace-nowrap text-[11px] font-semibold sm:text-sm"
               >
-                Quiero organizar un retiro
+                Pedir un presupuesto
                 <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
               </a>
               <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-white/75">
@@ -491,7 +491,7 @@ const OrganizaTuRetiro: React.FC = () => {
               rel="noopener noreferrer"
               className="btn-gold btn-icon-inline mt-9 max-w-full whitespace-nowrap text-[11px] font-semibold sm:text-sm"
             >
-              Conversemos por WhatsApp
+              Pedir un presupuesto
               <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
             </a>
           </div>
