@@ -194,10 +194,10 @@ const OrganizaTuRetiro: React.FC = () => {
                 href={WHATSAPP_HREF}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-gold inline-flex items-center justify-center gap-2 text-sm font-semibold"
+                className="btn-gold btn-icon-inline max-w-full whitespace-nowrap text-[11px] font-semibold sm:text-sm"
               >
                 Quiero organizar un retiro
-                <ArrowRight size={18} aria-hidden="true" />
+                <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
               </a>
               <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-white/75">
                 <span>15 a 30 personas</span>
@@ -489,10 +489,10 @@ const OrganizaTuRetiro: React.FC = () => {
               href={WHATSAPP_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-gold mt-9 inline-flex items-center justify-center gap-2 text-sm font-semibold"
+              className="btn-gold btn-icon-inline mt-9 max-w-full whitespace-nowrap text-[11px] font-semibold sm:text-sm"
             >
               Conversemos por WhatsApp
-              <ArrowRight size={18} aria-hidden="true" />
+              <ArrowRight size={18} className="shrink-0" aria-hidden="true" />
             </a>
           </div>
         </section>
