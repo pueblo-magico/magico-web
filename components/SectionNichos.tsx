@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { ROUTES } from '../src/routes';
 
 export const SectionNichos: React.FC = () => {
   const { t } = useLanguage();
@@ -26,9 +27,9 @@ export const SectionNichos: React.FC = () => {
       title: (t.retreats as any).shortTitle as string,
       desc:  t.retreats.description as string,
       image: (t.retreats.images[0] as any).image,
-      href:  t.retreats.link as string,
+      href:  ROUTES.ORGANIZA_TU_RETIRO,
       cta:   (t.retreats as any).shortCta as string,
-      external: true,
+      external: false,
     },
     {
       tag:   (t as any).schools.tag as string,
