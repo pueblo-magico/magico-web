@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Tree, UsersThree, SunHorizon, Eye } from '@phosphor-icons/react';
+import { ROUTES } from '../src/routes';
 
 export const SectionPilares: React.FC = () => {
   const { t } = useLanguage();
@@ -20,15 +21,30 @@ export const SectionPilares: React.FC = () => {
     <section id="pilares" className="py-20 bg-white border-y border-brand/5">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <div data-reveal className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-          {t.pillars.map((pillar) => (
-            <div key={pillar.id} className="text-center group">
+          {t.pillars.map((pillar) => {
+            const content = <>
               <div className="w-12 h-12 md:w-14 md:h-14 mx-auto bg-bone rounded-full flex items-center justify-center mb-4 group-hover:bg-brand transition-colors duration-300 text-brand group-hover:text-gold">
                 {getIcon(pillar.id)}
               </div>
               <h3 className="text-base md:text-lg mb-2 text-brand font-serif">{pillar.title}</h3>
               <p className="text-xs md:text-sm text-dark/60 leading-relaxed">{pillar.subtitle}</p>
-            </div>
-          ))}
+            </>;
+
+            return pillar.id === 1 ? (
+              <a
+                key={pillar.id}
+                href={ROUTES.REFORESTACION}
+                className="group block rounded-2xl text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4"
+                aria-label={`${pillar.title}: ${pillar.subtitle}`}
+              >
+                {content}
+              </a>
+            ) : (
+              <div key={pillar.id} className="group text-center">
+                {content}
+              </div>
+            );
+          })}
         </div>
 
         {/* Donations Section */}
