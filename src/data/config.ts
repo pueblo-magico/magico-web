@@ -2,7 +2,7 @@
  * Global configuration constants
  */
 
-import { resolvePortalUrl } from './portalUrl';
+import { normalizePortalUrl, resolvePortalUrl } from './portalUrl';
 
 export const WA_MAGICO = '5493516765820';
 export const WA_VOLUNTEERS = '5493512272919';
@@ -42,6 +42,14 @@ export const STAFF_PORTAL_URL = resolvePortalUrl(
   import.meta.env.VITE_STAFF_PORTAL_URL,
   'https://admin.experienciamagico.com',
 );
+
+// Cloudflare Pages preview hosts are ephemeral and cannot each be registered as
+// an exact OIDC callback. Preview builds therefore delegate sign-in to the
+// stable website DEV origin. Stable DEV and production omit this variable and
+// keep using their same-origin auth endpoint.
+export const WEBSITE_LOGIN_URL = normalizePortalUrl(
+  import.meta.env.VITE_WEBSITE_LOGIN_URL,
+) ?? '/api/v1/auth/login';
 
 // Datos públicos de la campaña de reforestación. Se inyectan en build time y
 // pueden quedar vacíos: la landing deriva a WhatsApp hasta que estén configurados.

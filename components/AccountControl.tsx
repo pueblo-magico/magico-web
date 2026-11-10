@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRightLeft, ChevronDown, ExternalLink, LogOut, UserRound } from 'lucide-react';
 import { Button, DropdownMenu, type DropdownMenuItem } from '@pueblo-magico/react-ui';
 import { closeWebsiteSession, type WebsiteAccountState } from '../src/account';
-import { COMPANION_PORTAL_URL, STAFF_PORTAL_URL } from '../src/data/config';
+import { COMPANION_PORTAL_URL, STAFF_PORTAL_URL, WEBSITE_LOGIN_URL } from '../src/data/config';
 
 export type StaffAccessState = 'allowed' | 'denied' | 'loading' | 'not_configured' | 'unavailable';
 
@@ -37,7 +37,7 @@ export const AccountControl: React.FC<AccountControlProps> = ({
   }
   if (state.status === 'signed_out' || state.status === 'unavailable') {
     return (
-      <a href="/api/v1/auth/login" className={sharedClasses} onClick={onSignedOut}>
+      <a href={WEBSITE_LOGIN_URL} className={sharedClasses} onClick={onSignedOut}>
         <UserRound size={18} aria-hidden="true" />
         {isSpanish ? 'Ingresar' : 'Sign in'}
       </a>

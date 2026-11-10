@@ -26,6 +26,20 @@ Mágico Auth autentica identidad solamente. Companion, Staff Portal y Reservas c
 3. Menú accesible con estados de carga, ingreso, cuenta autenticada, cambio de cuenta y cierre local.
 4. Contrato autenticado de decisión de membresía con Staff Portal. Hasta que exista, el acceso interno queda oculto.
 
+### Previews efímeros de Cloudflare Pages
+
+Cloudflare Pages no ofrece configuración de variables por rama de preview y
+Mágico Auth exige callbacks exactos. Por eso no se registra cada host `pr-*` ni
+se usan comodines. El build de preview configura `VITE_WEBSITE_LOGIN_URL` para
+delegar el ingreso al endpoint del origen DEV estable:
+
+`https://dev.pueblo-magico-web.pages.dev/api/v1/auth/login`
+
+La autorización y la cookie de sesión permanecen en ese origen estable. Los
+builds del origen DEV estable y de producción omiten la variable y usan
+`/api/v1/auth/login` en el mismo origen. La variable es una URL pública; no
+contiene tokens, secretos ni concede permisos de Staff o Reservas.
+
 ## Fuera de alcance
 
 - SSO por cookies compartidas.

@@ -5,7 +5,7 @@ import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useWebsiteAccount } from './account';
-import { COMPANION_PORTAL_URL } from './data/config';
+import { COMPANION_PORTAL_URL, WEBSITE_LOGIN_URL } from './data/config';
 
 const copy = {
   es: {
@@ -82,7 +82,7 @@ export const Cuenta: React.FC = () => {
                 <>
                   <CardDescription className="max-w-xl text-base leading-relaxed text-white/80 md:text-lg">{content.signedOutDescription}</CardDescription>
                   <CardFooter className="px-0 pb-0 pt-8">
-                    <a href="/api/v1/auth/login" className={buttonVariants({ variant: 'primary', size: 'lg', shape: 'pill', className: 'min-h-12 w-full justify-center gap-2' })}>
+                    <a href={WEBSITE_LOGIN_URL} className={buttonVariants({ variant: 'primary', size: 'lg', shape: 'pill', className: 'min-h-12 w-full justify-center gap-2' })}>
                       {account.state.status === 'unavailable' ? content.retry : content.signIn}
                       <ArrowRight size={19} weight="bold" aria-hidden="true" />
                     </a>

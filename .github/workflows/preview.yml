@@ -45,6 +45,9 @@ jobs:
         env:
           VITE_COMPANION_PORTAL_URL: https://magico-companion-dev.dev-pueblomagico.workers.dev
           VITE_STAFF_PORTAL_URL: https://magico-staff-portal-dev.dev-pueblomagico.workers.dev
+          # Pages cannot vary environment variables per preview branch. All
+          # ephemeral previews delegate OIDC to the exact, registered DEV host.
+          VITE_WEBSITE_LOGIN_URL: https://dev.pueblo-magico-web.pages.dev/api/v1/auth/login
           VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER: ${{ vars.VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER }}
           VITE_REFORESTATION_SEPA_IBAN: ${{ vars.VITE_REFORESTATION_SEPA_IBAN }}
           VITE_REFORESTATION_SEPA_BIC: ${{ vars.VITE_REFORESTATION_SEPA_BIC }}
