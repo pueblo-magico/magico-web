@@ -1,6 +1,9 @@
 name: Deploy DEV to Cloudflare Pages
 
 on:
+  push:
+    branches:
+      - dev
   workflow_dispatch:
     inputs:
       confirm_development:
@@ -15,12 +18,12 @@ permissions:
 
 jobs:
   deploy:
-    if: ${{ inputs.confirm_development }}
+    if: ${{ github.event_name == 'push' || inputs.confirm_development }}
     environment: development
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout selected commit
+      - name: Checkout DEV commit
         uses: actions/checkout@v7
 
       - name: Setup Node.js
@@ -48,15 +51,10 @@ jobs:
           VITE_REFORESTATION_SEPA_BANK: ${{ vars.VITE_REFORESTATION_SEPA_BANK }}
           VITE_REFORESTATION_SEPA_CURRENCY: ${{ vars.VITE_REFORESTATION_SEPA_CURRENCY }}
 
-      - name: Configure isolated DEV D1 binding
-        run: node scripts/cloudflare/configure-dev-d1.mjs
-        env:
-          MAGICO_WEB_DEV_D1_DATABASE_ID: ${{ vars.MAGICO_WEB_DEV_D1_DATABASE_ID }}
-
       - name: Deploy stable DEV origin
         uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_DEV_API_TOKEN }}
-          accountId: ${{ vars.CLOUDFLARE_DEV_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          command: pages deploy dist --project-name=pueblo-magico-web --branch=main
+          command: pages deploy dist --project-name=pueblo-magico-web --branch=dev

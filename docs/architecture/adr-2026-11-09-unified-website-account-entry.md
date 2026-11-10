@@ -33,14 +33,14 @@ se usan comodines. Los pull requests se validan con un build sin despliegue y
 configuran `VITE_WEBSITE_LOGIN_URL` para delegar el ingreso al endpoint del
 origen DEV estable:
 
-`https://pueblo-magico-web-2pw.pages.dev/api/v1/auth/login`
+`https://dev.pueblo-magico-web.pages.dev/api/v1/auth/login`
 
 La autorización y la cookie de sesión permanecen en ese origen estable. Los
-despliegues DEV se hacen en el proyecto `pueblo-magico-web` de la cuenta
-Cloudflare DEV dedicada. Los builds del origen DEV estable y de producción
-omiten la variable y usan `/api/v1/auth/login` en el mismo origen. La variable
-es una URL pública; no contiene tokens, secretos ni concede permisos de Staff o
-Reservas.
+despliegues DEV se hacen únicamente desde la rama Git `dev` hacia la rama Pages
+`dev` del proyecto productivo `pueblo-magico-web`; los pull requests comunes no
+despliegan. Los builds del origen DEV estable y de producción omiten la variable
+y usan `/api/v1/auth/login` en el mismo origen. La variable es una URL pública;
+no contiene tokens, secretos ni concede permisos de Staff o Reservas.
 
 ## Fuera de alcance
 

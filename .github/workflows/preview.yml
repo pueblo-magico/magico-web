@@ -45,7 +45,7 @@ jobs:
           VITE_STAFF_PORTAL_URL: https://magico-staff-portal-dev.dev-pueblomagico.workers.dev
           # Pull-request builds delegate OIDC to the exact, registered DEV
           # origin. This workflow validates the artifact but never deploys it.
-          VITE_WEBSITE_LOGIN_URL: https://pueblo-magico-web-2pw.pages.dev/api/v1/auth/login
+          VITE_WEBSITE_LOGIN_URL: https://dev.pueblo-magico-web.pages.dev/api/v1/auth/login
           VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER: ${{ vars.VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER }}
           VITE_REFORESTATION_SEPA_IBAN: ${{ vars.VITE_REFORESTATION_SEPA_IBAN }}
           VITE_REFORESTATION_SEPA_BIC: ${{ vars.VITE_REFORESTATION_SEPA_BIC }}
