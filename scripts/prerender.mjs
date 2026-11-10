@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, createReadStream, s
 import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { createServer } from 'http';
-import { PRIVATE_PROPOSAL_PATH, privateProposalShell } from './private-proposal.mjs';
+import { PRIVATE_PROPOSALS, privateProposalShell } from './private-proposal.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = process.env.PRERENDER_DIST || join(__dirname, '..', 'dist');
@@ -83,13 +83,6 @@ export const ROUTES = [
     description: '7 días para elevar tu conciencia, expandir tu visión y reconectar con tu propósito en el Valle Sagrado de los Incas, Perú. Del 22 al 29 de Julio.',
     image: 'https://experienciamagico.com/uploads/temazcal.webp',
     canonical: 'https://experienciamagico.com/el-vuelo-del-condor',
-  },
-  {
-    path: '/propuesta/calma-magico',
-    title: 'Calma Salvaje — Una propuesta de Pueblo Mágico para Calma Yoga',
-    description: 'Retiro residencial de yoga en las Sierras Grandes de Córdoba. 3 días, hasta 30 personas. Pueblo Mágico + Calma Yoga.',
-    image: 'https://experienciamagico.com/uploads/campoentero.webp',
-    canonical: 'https://experienciamagico.com/propuesta/calma-magico',
   },
   {
     path: '/inti-raymi',
@@ -228,8 +221,13 @@ function htmlFileFor(route) {
 // ─── Phase 1: Meta tag injection (fast, no browser needed) ───────────────────
 console.log('\nPhase 1: Meta tag injection...');
 const template = readFileSync(join(DIST, 'index.html'), 'utf-8');
-// A dedicated noindex document exists before JavaScript runs, without public SEO metadata.
-writeFileSync(join(DIST, `${PRIVATE_PROPOSAL_PATH.slice(1)}.html`), privateProposalShell(template));
+// Dedicated noindex documents exist before JavaScript runs, without public SEO metadata.
+for (const proposal of PRIVATE_PROPOSALS) {
+  const output = join(DIST, `${proposal.path.slice(1)}.html`);
+  mkdirSync(dirname(output), { recursive: true });
+  writeFileSync(output, privateProposalShell(template, proposal.title));
+  console.log(`  ✓ ${proposal.path} (propuesta privada)`);
+}
 
 // Fallback nativo de Cloudflare Pages para rutas desconocidas: si existe un
 // 404.html en la raíz del output, lo sirve para cualquier ruta no encontrada —
@@ -239,7 +237,7 @@ writeFileSync(join(DIST, `${PRIVATE_PROPOSAL_PATH.slice(1)}.html`), privatePropo
 writeFileSync(join(DIST, '404.html'), template);
 console.log('  ✓ 404.html (fallback SPA nativo)');
 
-// Shell para las 3 rutas client-only (reset-vital, despertar, propuesta/nico-grupe)
+// Shell para las 2 rutas client-only (reset-vital y despertar)
 // referenciadas desde _redirects. IMPORTANTE: va en una carpeta con su propio
 // index.html (como cualquier ruta prerenderizada), NO como un archivo .html
 // suelto — Cloudflare Pages normaliza automáticamente cualquier destino que

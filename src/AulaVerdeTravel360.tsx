@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowDown, ArrowRight, MapPin, Mountain, Users, Leaf, BookOpen, Compass, Home, Utensils, Check, Plus } from 'lucide-react';
 import { WA_MAGICO } from './data/config';
+import { usePrivateProposalMeta } from './hooks/usePrivateProposalMeta';
 import './AulaVerdeTravel360.css';
 
 const programs = {
@@ -23,16 +24,7 @@ const photo = (name: string) => `/uploads/Aula%20Verde/${name}.jpg`;
 
 export default function AulaVerdeTravel360() {
   const [selected, setSelected] = useState<Program>('A');
-  useEffect(() => {
-    const title = document.title;
-    document.title = 'Aula Verde · Propuesta para 360 Travel';
-    const existing = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
-    const previous = existing?.content;
-    const meta = existing || document.createElement('meta');
-    meta.name = 'robots'; meta.content = 'noindex, nofollow, noarchive, nosnippet';
-    if (!existing) document.head.appendChild(meta);
-    return () => { document.title = title; if (existing) existing.content = previous || ''; else meta.remove(); };
-  }, []);
+  usePrivateProposalMeta('Aula Verde · Propuesta para 360 Travel');
   const consult = (program?: Program) => `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent(`Hola, somos 360 Travel. Queremos coordinar una propuesta de Aula Verde para 40 estudiantes${program ? `, Programa ${program} (${programs[program].duration})` : ''}. Fechas tentativas: `)}`;
   const show = (p: Program) => { setSelected(p); document.getElementById('itinerario')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
   return <div className="av360">

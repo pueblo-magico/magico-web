@@ -20,8 +20,16 @@
 /festival-atardeser    /festival-raiz-sonora    301
 /festival-31-octubre    /festival-raiz-sonora    301
 
-# Nombre corregido de la propuesta privada para 360 Travel
-/aulas-verdes-travel-360    /aulas-verdes-360-travel    301
+# Propuestas personalizadas: árbol canónico plural y aliases históricos.
+/presupuesto/aulas-verdes-360-travel    /presupuestos/aulas-verdes-360-travel    301
+/presupuesto/aulas-verdes-729-salvador-mazza    /presupuestos/aulas-verdes-729-salvador-mazza    301
+/presupuesto/calma-magico    /presupuestos/calma-magico    301
+/presupuesto/nico-grupe    /presupuestos/nico-grupe    301
+/aulas-verdes-360-travel    /presupuestos/aulas-verdes-360-travel    301
+/aulas-verdes-travel-360    /presupuestos/aulas-verdes-360-travel    301
+/aulas-verdes-729-salvador-mazza    /presupuestos/aulas-verdes-729-salvador-mazza    301
+/propuesta/calma-magico    /presupuestos/calma-magico    301
+/propuesta/nico-grupe    /presupuestos/nico-grupe    301
 
 # SPA fallback SOLO para las rutas client-only que no están prerenderizadas
 # (todo lo demás ya tiene su propio dist/<ruta>.html real — ver
@@ -36,5 +44,4 @@
 # que cualquier ruta prerenderizada) no sufre esa normalización.
 /reset-vital    /app-shell/   200
 /despertar    /app-shell/   200
-/propuesta/nico-grupe    /app-shell/   200
 /admin/sitio    /app-shell/   200
