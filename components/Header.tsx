@@ -9,6 +9,7 @@ import {
   Snowflake,
   Sprout,
   TreePine,
+  UserRound,
   UsersRound,
   X,
   Zap,
@@ -354,6 +355,18 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
                </a>
             </li>
             
+            {/* Mobile account entry */}
+            <li className="mt-6 w-full lg:hidden">
+              <a
+                href={ROUTES.LOGIN}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="mx-auto flex min-h-11 w-full max-w-xs items-center justify-center gap-2 rounded-full border border-brand px-6 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+              >
+                <UserRound size={18} aria-hidden="true" />
+                {language === 'es' ? 'Ingresar' : 'Sign in'}
+              </a>
+            </li>
+
             {/* Mobile Language Button */}
             <li className="lg:hidden mt-8 w-full flex justify-center pb-10">
               <button
@@ -367,7 +380,18 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
         </nav>
 
         {/* Desktop Language Button */}
-        <div className="hidden lg:flex items-center justify-self-end pl-5">
+        <div className="hidden items-center justify-self-end gap-3 pl-5 lg:flex">
+          <a
+            href={ROUTES.LOGIN}
+            className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-semibold transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${
+              useSolidHeader
+                ? 'border-black/15 text-dark hover:border-brand hover:bg-brand hover:text-white'
+                : 'border-white/40 text-white hover:border-white hover:bg-white hover:text-brand'
+            }`}
+          >
+            <UserRound size={16} aria-hidden="true" />
+            {language === 'es' ? 'Ingresar' : 'Sign in'}
+          </a>
           <button
             onClick={toggleLanguage}
             className={`

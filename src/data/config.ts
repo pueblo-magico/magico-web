@@ -2,6 +2,8 @@
  * Global configuration constants
  */
 
+import { resolvePortalUrl } from './portalUrl';
+
 export const WA_MAGICO = '5493516765820';
 export const WA_VOLUNTEERS = '5493512272919';
 export const WA_GONDOR = '5491157300099';
@@ -31,6 +33,15 @@ function reservasBaseUrl(): string {
 export const RESERVAS_BASE_URL = reservasBaseUrl();
 export const RESERVAS_PUBLIC_URL = `${RESERVAS_BASE_URL}/reservar?paso=fechas`;
 export const RESERVAS_ADMIN_URL = `${RESERVAS_BASE_URL}/admin`;
+
+export const COMPANION_PORTAL_URL = resolvePortalUrl(
+  import.meta.env.VITE_COMPANION_PORTAL_URL,
+  'https://mi.experienciamagico.com',
+);
+export const STAFF_PORTAL_URL = resolvePortalUrl(
+  import.meta.env.VITE_STAFF_PORTAL_URL,
+  'https://admin.experienciamagico.com',
+);
 
 // Datos públicos de la campaña de reforestación. Se inyectan en build time y
 // pueden quedar vacíos: la landing deriva a WhatsApp hasta que estén configurados.

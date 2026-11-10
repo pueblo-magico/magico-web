@@ -43,6 +43,7 @@ const Estadia = lazy(() => import('./src/Estadia'));
 const Coliving = lazy(() => import('./src/Coliving'));
 const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
+const Ingresar = lazy(() => import('./src/Ingresar'));
 const NotFound = lazy(() => import('./src/NotFound'));
 const PanelSitio = lazy(() => import('./src/PanelReservas'));
 
@@ -144,6 +145,7 @@ root.render(
               <Route path="/coliving" element={<Coliving />} />
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
               <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
+              <Route path={ROUTES.LOGIN} element={<Ingresar />} />
               <Route path="/admin/reservas" element={<ExternalRedirect to={RESERVAS_ADMIN_URL} />} />
               <Route path="/admin/sitio" element={<PanelSitio siteOnly />} />
               <Route path="*" element={<NotFound />} />

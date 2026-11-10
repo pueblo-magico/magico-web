@@ -70,6 +70,14 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/politica-de-privacidad',
   },
   {
+    path: '/ingresar',
+    title: 'Ingresar | Pueblo Mágico',
+    description: 'Acceso a Mi cuenta y a las herramientas del equipo de Pueblo Mágico.',
+    image: 'https://experienciamagico.com/uploads/img_6948.webp',
+    canonical: 'https://experienciamagico.com/ingresar',
+    robots: 'noindex,follow',
+  },
+  {
     path: '/el-vuelo-del-condor',
     title: 'El Vuelo del Cóndor — Un viaje iniciático en Perú | Pueblo Mágico',
     description: '7 días para elevar tu conciencia, expandir tu visión y reconectar con tu propósito en el Valle Sagrado de los Incas, Perú. Del 22 al 29 de Julio.',
@@ -299,6 +307,7 @@ for (const route of ROUTES) {
     `  <meta name="geo.placename" content="Los Gigantes, Córdoba, Argentina" />`,
     `  <meta name="geo.position" content="-31.5;-64.7" />`,
     `  <meta name="ICBM" content="-31.5, -64.7" />`,
+    ...(route.robots ? [`  <meta name="robots" content="${route.robots}" />`] : []),
   ].join('\n');
 
   const jsonLD = buildJsonLD(route);
