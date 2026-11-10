@@ -27,6 +27,11 @@ retains its explicit `confirm_production` gate. The DEV branch currently uses
 the Pages preview-environment bindings of the production project; this is a
 temporary operating decision and does not re-enable per-PR deployments.
 
+Before each DEV deployment, the workflow patches only the Pages `preview`
+environment with the registered website base URL, DEV Mágico Auth issuer and
+client ID, and a newly generated session-cookie secret. Production environment
+variables and secrets are not included in that API update.
+
 ## Legacy preview cleanup
 
 `.github/workflows/cleanup-preview.yml` remains temporarily enabled on pull

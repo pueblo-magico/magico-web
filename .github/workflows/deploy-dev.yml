@@ -51,6 +51,16 @@ jobs:
           VITE_REFORESTATION_SEPA_BANK: ${{ vars.VITE_REFORESTATION_SEPA_BANK }}
           VITE_REFORESTATION_SEPA_CURRENCY: ${{ vars.VITE_REFORESTATION_SEPA_CURRENCY }}
 
+      - name: Configure stable DEV auth bindings
+        run: node scripts/cloudflare/configure-pages-dev.mjs
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PROJECT_NAME: pueblo-magico-web
+          WEBSITE_BASE_URL: https://dev.pueblo-magico-web.pages.dev
+          MAGICO_AUTH_ISSUER: https://magico-auth-hffm3o.us1.zitadel.cloud
+          MAGICO_AUTH_CLIENT_ID: '398930695528940858'
+
       - name: Deploy stable DEV origin
         uses: cloudflare/wrangler-action@v4
         with:
