@@ -9,7 +9,6 @@ import {
   Snowflake,
   Sprout,
   TreePine,
-  UserRound,
   UsersRound,
   X,
   Zap,
@@ -18,6 +17,8 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { ROUTES } from '../src/routes';
+import { useWebsiteAccount } from '../src/account';
+import { AccountControl } from './AccountControl';
 import { PageSectionNav } from './PageSectionNav';
 
 const submenuIcons: Record<string, LucideIcon> = {
@@ -43,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [hasAutoSubNavigation, setHasAutoSubNavigation] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
+  const account = useWebsiteAccount();
   const location = useLocation();
 
   const isHomePage = location.pathname === ROUTES.HOME;
@@ -357,14 +359,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
             
             {/* Mobile account entry */}
             <li className="mt-6 w-full lg:hidden">
-              <a
-                href={ROUTES.LOGIN}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="mx-auto flex min-h-11 w-full max-w-xs items-center justify-center gap-2 rounded-full border border-brand px-6 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
-              >
-                <UserRound size={18} aria-hidden="true" />
-                {language === 'es' ? 'Ingresar' : 'Sign in'}
-              </a>
+              <AccountControl language={language} mobile onSignedOut={() => setIsMobileMenuOpen(false)} state={account.state} />
             </li>
 
             {/* Mobile Language Button */}
@@ -381,17 +376,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
 
         {/* Desktop Language Button */}
         <div className="hidden items-center justify-self-end gap-3 pl-5 lg:flex">
-          <a
-            href={ROUTES.LOGIN}
-            className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-semibold transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${
-              useSolidHeader
-                ? 'border-black/15 text-dark hover:border-brand hover:bg-brand hover:text-white'
-                : 'border-white/40 text-white hover:border-white hover:bg-white hover:text-brand'
-            }`}
-          >
-            <UserRound size={16} aria-hidden="true" />
-            {language === 'es' ? 'Ingresar' : 'Sign in'}
-          </a>
+          <AccountControl language={language} state={account.state} tone={useSolidHeader ? 'solid' : 'overlay'} />
           <button
             onClick={toggleLanguage}
             className={`

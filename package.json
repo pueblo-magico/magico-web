@@ -15,6 +15,7 @@
     "test:cucuru": "node --test tests/cucuru-donations.test.mjs",
     "test:pricing-localization": "node --test tests/pricing-localization.test.mjs",
     "test:portal-access": "node --test tests/portal-access.test.mjs tests/portal-url.test.mjs",
+    "test:website-auth": "node --test tests/website-auth.test.mjs",
     "test:reservas-cutover": "node --test tests/reservas-cutover.test.mjs tests/reservas-rate-presentation.test.mjs"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "@react-pdf/renderer": "^4.3.2",
     "cropperjs": "^2.1.0",
     "i18next": "^26.0.8",
+    "jose": "^6.2.12",
     "lucide-react": "^0.344.0",
     "marked": "^17.0.1",
     "pako": "1.0.11",
