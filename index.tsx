@@ -35,6 +35,7 @@ const Empresas = lazy(() => import('./src/Empresas'));
 const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
 const Reforestacion = lazy(() => import('./src/Reforestacion'));
+const Practicas = lazy(() => import('./src/Practicas'));
 const Despertar = lazy(() => import('./src/Despertar'));
 const DespertarDelColibri = lazy(() => import('./src/DespertarDelColibri'));
 const PropuestaNicoGrupe = lazy(() => import('./src/PropuestaNicoGrupe'));
@@ -143,6 +144,7 @@ root.render(
               <Route path="/cordoba-fly-fishing" element={<CordobaFlyFishing />} />
               <Route path="/voluntariado" element={<Voluntariado />} />
               <Route path="/reforestacion" element={<Reforestacion />} />
+              <Route path={ROUTES.PRACTICAS} element={<Practicas />} />
               <Route path="/despertar" element={<Despertar />} />
               <Route path={ROUTES.DESPERTAR_COLIBRI} element={<DespertarDelColibri />} />
               {/* Campañas de invierno 2026 terminadas — redirigen a la estadía actual */}

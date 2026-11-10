@@ -1,10 +1,21 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Tree, UsersThree, SunHorizon, Eye } from '@phosphor-icons/react';
+import { ArrowRight, Tree, UsersThree, SunHorizon, Eye } from '@phosphor-icons/react';
 import { ROUTES } from '../src/routes';
 
 export const SectionPilares: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const practicesCopy = language === 'es' ? {
+    eyebrow: 'Pilares en acción',
+    title: 'Prácticas que sostienen nuestra visión',
+    text: 'El temazcal, la palabra, la música, el fuego y el rezo son formas de integrar, incorporar y expresar lo que somos.',
+    cta: 'Conocer nuestras prácticas',
+  } : {
+    eyebrow: 'Pillars in action',
+    title: 'Practices that sustain our vision',
+    text: 'Temazcal, word, music, fire and prayer are ways of integrating, embodying and expressing who we are.',
+    cta: 'Discover our practices',
+  };
 
   const getIcon = (id: number) => {
     const cls = 'w-6 h-6 md:w-7 md:h-7';
@@ -30,10 +41,16 @@ export const SectionPilares: React.FC = () => {
               <p className="text-xs md:text-sm text-dark/60 leading-relaxed">{pillar.subtitle}</p>
             </>;
 
-            return pillar.id === 1 ? (
+            const pillarHref = pillar.id === 1
+              ? ROUTES.REFORESTACION
+              : pillar.id === 4
+                ? ROUTES.PRACTICAS
+                : null;
+
+            return pillarHref ? (
               <a
                 key={pillar.id}
-                href={ROUTES.REFORESTACION}
+                href={pillarHref}
                 className="group block rounded-2xl text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4"
                 aria-label={`${pillar.title}: ${pillar.subtitle}`}
               >
@@ -46,6 +63,21 @@ export const SectionPilares: React.FC = () => {
             );
           })}
         </div>
+
+        <a href={ROUTES.PRACTICAS} className="group mt-16 grid overflow-hidden rounded-[30px] border border-brand/10 bg-[#F7F1E7] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(23,49,39,0.12)] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 md:grid-cols-[0.8fr_1.2fr]">
+          <div className="relative min-h-[240px] overflow-hidden md:min-h-full">
+            <img src="/uploads/temazcal.webp" alt={language === 'es' ? 'Temazcal ceremonial en Pueblo Mágico' : 'Ceremonial temazcal at Pueblo Mágico'} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+            <div className="absolute inset-0 bg-brand/20" />
+          </div>
+          <div className="flex flex-col justify-center p-8 md:p-12">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#A94A2B]">{practicesCopy.eyebrow}</p>
+            <h3 className="mt-4 font-serif text-3xl leading-tight text-brand md:text-4xl">{practicesCopy.title}</h3>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-dark/65 md:text-base">{practicesCopy.text}</p>
+            <span className="mt-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gold transition-colors group-hover:text-brand">
+              {practicesCopy.cta}<ArrowRight size={17} weight="bold" aria-hidden="true" />
+            </span>
+          </div>
+        </a>
 
         {/* Donations Section */}
         <div className="mt-20 text-center">

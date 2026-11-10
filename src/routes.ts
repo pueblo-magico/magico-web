@@ -33,6 +33,7 @@ export const ROUTES = {
   FLY_FISHING: '/cordoba-fly-fishing',
   VOLUNTARIADO: '/voluntariado',
   REFORESTACION: '/reforestacion',
+  PRACTICAS: '/practicas',
   ADMIN_RESERVAS: '/admin/reservas',
   RAIZ_SONORA: '/festival-raiz-sonora',
   BROTE: '/brote-ronda-de-mujeres',
