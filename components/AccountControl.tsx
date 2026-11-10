@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, ExternalLink, LogOut, UserRound } from 'lucide-react';
+import { ArrowRightLeft, ChevronDown, ExternalLink, LogOut, UserRound } from 'lucide-react';
 import { Button, DropdownMenu, type DropdownMenuItem } from '@pueblo-magico/react-ui';
 import { closeWebsiteSession, type WebsiteAccountState } from '../src/account';
 import { COMPANION_PORTAL_URL, STAFF_PORTAL_URL } from '../src/data/config';
@@ -42,7 +42,6 @@ export const AccountControl: React.FC<AccountControlProps> = ({
     );
   }
 
-  const initials = state.user.displayName.trim().slice(0, 1).toLocaleUpperCase();
   const items: DropdownMenuItem[] = [
     { description: state.user.email, id: 'identity', isDisabled: true, label: state.user.displayName, textValue: state.user.displayName },
     { icon: <UserRound size={17} aria-hidden="true" />, id: 'companion', label: isSpanish ? 'Mi cuenta' : 'My account', textValue: isSpanish ? 'Mi cuenta' : 'My account' },
@@ -85,9 +84,11 @@ export const AccountControl: React.FC<AccountControlProps> = ({
         onAction={(id) => { void onAction(id); }}
         trigger={(
           <Button type="button" variant="ghost" className={sharedClasses} aria-label={isSpanish ? 'Abrir menú de cuenta' : 'Open account menu'}>
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-current/10 font-bold" aria-hidden="true">{initials}</span>
-            <span className={mobile ? 'max-w-[12rem] truncate' : 'max-w-24 truncate'}>{state.user.displayName}</span>
-            <span aria-hidden="true">⌄</span>
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-current/10" aria-hidden="true">
+              <UserRound size={16} strokeWidth={1.8} />
+            </span>
+            <span>{isSpanish ? 'Mi cuenta' : 'My account'}</span>
+            <ChevronDown className="shrink-0" size={15} strokeWidth={2} aria-hidden="true" />
           </Button>
         )}
       />

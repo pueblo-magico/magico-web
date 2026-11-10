@@ -9,15 +9,20 @@ test('the public website exposes one website-owned account entry', () => {
   const routes = read('src/routes.ts');
   const header = read('components/Header.tsx');
   const accountControl = read('components/AccountControl.tsx');
-  const accessPage = read('src/Ingresar.tsx');
+  const accessPage = read('src/Cuenta.tsx');
+  const prerender = read('scripts/prerender.mjs');
 
-  assert.match(routes, /LOGIN:\s*['"]\/ingresar['"]/);
-  assert.match(index, /path=\{ROUTES\.LOGIN\}/);
-  assert.match(index, /<Ingresar\s*\/>/);
+  assert.match(routes, /ACCOUNT:\s*['"]\/cuenta['"]/);
+  assert.doesNotMatch(routes, /\/ingresar/);
+  assert.match(prerender, /path:\s*['"]\/cuenta['"]/);
+  assert.doesNotMatch(prerender, /\/ingresar/);
+  assert.match(index, /path=\{ROUTES\.ACCOUNT\}/);
+  assert.match(index, /<Cuenta\s*\/>/);
   assert.match(header, /useWebsiteAccount/);
   assert.match(header, /<AccountControl/);
   assert.match(accountControl, /\/api\/v1\/auth\/login/);
   assert.match(accountControl, /Mi cuenta/);
+  assert.match(accountControl, /ChevronDown/);
   assert.match(accountControl, /Portal del equipo/);
   assert.match(accountControl, /staffAccess === 'allowed'/);
   assert.match(accountControl, /Cerrar sesión de Mi cuenta/);

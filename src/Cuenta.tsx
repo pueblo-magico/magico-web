@@ -40,7 +40,7 @@ const copy = {
   },
 } as const;
 
-export const Ingresar: React.FC = () => {
+export const Cuenta: React.FC = () => {
   const { language } = useLanguage();
   const content = copy[language];
   const account = useWebsiteAccount();
@@ -112,4 +112,4 @@ export const Ingresar: React.FC = () => {
   );
 };
 
-export default Ingresar;
+export default Cuenta;

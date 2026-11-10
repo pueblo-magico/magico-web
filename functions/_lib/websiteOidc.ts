@@ -201,7 +201,7 @@ export async function completeWebsiteCallback(request: Request, config: WebsiteA
     issuer: config.issuer,
     subject: verification.payload.sub,
   };
-  return redirect(config.appBaseUrl.toString(), [
+  return redirect(new URL('/cuenta', config.appBaseUrl).toString(), [
     clearWebsiteCookie(transactionName, config.appBaseUrl),
     serializeWebsiteCookie({
       appBaseUrl: config.appBaseUrl,

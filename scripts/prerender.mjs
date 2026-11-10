@@ -70,11 +70,11 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/politica-de-privacidad',
   },
   {
-    path: '/ingresar',
-    title: 'Ingresar | Pueblo Mágico',
+    path: '/cuenta',
+    title: 'Tu cuenta | Pueblo Mágico',
     description: 'Acceso a Mi cuenta y a las herramientas del equipo de Pueblo Mágico.',
     image: 'https://experienciamagico.com/uploads/img_6948.webp',
-    canonical: 'https://experienciamagico.com/ingresar',
+    canonical: 'https://experienciamagico.com/cuenta',
     robots: 'noindex,follow',
   },
   {
