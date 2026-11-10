@@ -7,6 +7,7 @@ import { COMPANION_PORTAL_URL, STAFF_PORTAL_URL } from '../src/data/config';
 export type StaffAccessState = 'allowed' | 'denied' | 'loading' | 'not_configured' | 'unavailable';
 
 interface AccountControlProps {
+  readonly compact?: boolean;
   readonly language: 'en' | 'es';
   readonly mobile?: boolean;
   readonly onSignedOut?: () => void;
@@ -16,6 +17,7 @@ interface AccountControlProps {
 }
 
 export const AccountControl: React.FC<AccountControlProps> = ({
+  compact = false,
   language,
   mobile = false,
   onSignedOut,
@@ -83,12 +85,26 @@ export const AccountControl: React.FC<AccountControlProps> = ({
         items={items}
         onAction={(id) => { void onAction(id); }}
         trigger={(
-          <Button type="button" variant="ghost" className={sharedClasses} aria-label={isSpanish ? 'Abrir menú de cuenta' : 'Open account menu'}>
-            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-current/10" aria-hidden="true">
-              <UserRound size={16} strokeWidth={1.8} />
-            </span>
-            <span>{isSpanish ? 'Mi cuenta' : 'My account'}</span>
-            <ChevronDown className="shrink-0" size={15} strokeWidth={2} aria-hidden="true" />
+          <Button
+            type="button"
+            variant="ghost"
+            className={compact ? `${sharedClasses} h-11 w-11 min-w-11 justify-center p-0` : sharedClasses}
+            aria-label={isSpanish ? 'Abrir menú de cuenta' : 'Open account menu'}
+          >
+            {compact ? (
+              <>
+                <UserRound size={21} strokeWidth={1.8} aria-hidden="true" />
+                <span className="sr-only">{isSpanish ? 'Mi cuenta' : 'My account'}</span>
+              </>
+            ) : (
+              <>
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-current/10" aria-hidden="true">
+                  <UserRound size={16} strokeWidth={1.8} />
+                </span>
+                <span>{isSpanish ? 'Mi cuenta' : 'My account'}</span>
+                <ChevronDown className="shrink-0" size={15} strokeWidth={2} aria-hidden="true" />
+              </>
+            )}
           </Button>
         )}
       />

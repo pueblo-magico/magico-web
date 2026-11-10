@@ -223,9 +223,9 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
 
   return (
     <header className={pillClasses}>
-      <div data-header-main-row className="flex w-full items-center justify-between px-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-4">
+      <div data-header-main-row className="flex w-full items-center justify-between px-2 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-5 lg:px-4">
         {/* Logo - Left */}
-        <div className="flex-1 lg:flex lg:justify-self-start">
+        <div className="flex-1 lg:flex lg:min-w-[134px] lg:justify-self-start">
           <a href={ROUTES.HOME} className="relative z-[1200] inline-block" onClick={(e) => { 
             if (isHomePage) {
               e.preventDefault(); 
@@ -260,11 +260,11 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
           className={`
             fixed top-0 left-0 w-full h-screen bg-white pt-[100px] pb-10 px-8
             flex flex-col overflow-y-auto transition-all duration-400 z-[1100]
-            lg:static lg:h-auto lg:w-auto lg:bg-transparent lg:p-0 lg:flex-row lg:opacity-100 lg:visible lg:overflow-visible
+            lg:static lg:h-auto lg:min-w-0 lg:w-auto lg:bg-transparent lg:p-0 lg:flex-row lg:opacity-100 lg:visible lg:overflow-visible
             ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible lg:opacity-100 lg:visible'}
           `}
         >
-          <ul className="flex flex-col lg:flex-row items-center gap-0 lg:gap-[45px] w-full lg:w-auto">
+          <ul className="flex w-full flex-col items-center gap-0 lg:w-auto lg:flex-row lg:justify-center lg:gap-4 xl:gap-6 2xl:gap-8">
             {t.menu.items.map((item: any, index: number) => (
               <li key={index} className="relative group w-full lg:w-auto text-center lg:text-left">
                 <a
@@ -376,7 +376,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
 
         {/* Desktop Language Button */}
         <div className="hidden items-center justify-self-end gap-3 pl-5 lg:flex">
-          <AccountControl language={language} state={account.state} tone={useSolidHeader ? 'solid' : 'overlay'} />
+          <AccountControl compact language={language} state={account.state} tone={useSolidHeader ? 'solid' : 'overlay'} />
           <button
             onClick={toggleLanguage}
             className={`

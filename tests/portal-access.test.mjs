@@ -20,9 +20,11 @@ test('the public website exposes one website-owned account entry', () => {
   assert.match(index, /<Cuenta\s*\/>/);
   assert.match(header, /useWebsiteAccount/);
   assert.match(header, /<AccountControl/);
+  assert.match(header, /<AccountControl compact/);
   assert.match(accountControl, /\/api\/v1\/auth\/login/);
   assert.match(accountControl, /Mi cuenta/);
   assert.match(accountControl, /ChevronDown/);
+  assert.match(accountControl, /className="sr-only"/);
   assert.match(accountControl, /Portal del equipo/);
   assert.match(accountControl, /staffAccess === 'allowed'/);
   assert.match(accountControl, /Cerrar sesión de Mi cuenta/);
