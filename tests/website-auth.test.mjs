@@ -4,7 +4,12 @@ import assert from 'node:assert/strict';
 import { readWebsiteAuthConfig } from '../functions/_lib/websiteAuthConfig.ts';
 import { serializeWebsiteCookie, websiteCookieName } from '../functions/_lib/websiteAuthCookies.ts';
 import { sealWebsiteValue, unsealWebsiteValue } from '../functions/_lib/websiteAuthCrypto.ts';
-import { beginWebsiteLogin, readWebsiteSession } from '../functions/_lib/websiteOidc.ts';
+import {
+  beginWebsiteLogin,
+  fetchWebsiteOidcUserInfo,
+  parseWebsiteOidcProfile,
+  readWebsiteSession,
+} from '../functions/_lib/websiteOidc.ts';
 
 const config = {
   appBaseUrl: new URL('https://dev.pueblo-magico-web.pages.dev'),
@@ -43,6 +48,7 @@ test('website login uses authorization code, PKCE and an HttpOnly transaction co
     issuer: config.issuer,
     jwks_uri: 'https://magico-auth.example.com/oauth/v2/keys',
     token_endpoint: 'https://magico-auth.example.com/oauth/v2/token',
+    userinfo_endpoint: 'https://magico-auth.example.com/oidc/v1/userinfo',
   }), { status: 200 });
 
   const response = await beginWebsiteLogin(config);
@@ -65,6 +71,7 @@ test('account switching requests provider account selection', async (context) =>
     issuer: config.issuer,
     jwks_uri: 'https://magico-auth.example.com/oauth/v2/keys',
     token_endpoint: 'https://magico-auth.example.com/oauth/v2/token',
+    userinfo_endpoint: 'https://magico-auth.example.com/oidc/v1/userinfo',
   }), { status: 200 });
   const response = await beginWebsiteLogin(config, 'select_account');
   assert.equal(new URL(response.headers.get('Location')).searchParams.get('prompt'), 'select_account');
@@ -84,6 +91,41 @@ test('website session rejects expired and modified cookies', async () => {
   assert.equal(await readWebsiteSession(new Request(config.appBaseUrl, { headers: { Cookie: modifiedCookie } }), config), null);
 });
 
+test('website profile prefers the verified userinfo name over an email fallback', () => {
+  assert.deepEqual(parseWebsiteOidcProfile({
+    email: 'test@example.com',
+    name: 'Jasper Meyer',
+    sub: 'user-1',
+  }), {
+    displayName: 'Jasper Meyer',
+    email: 'test@example.com',
+  });
+  assert.equal(parseWebsiteOidcProfile({
+    email: 'test@example.com',
+    family_name: 'Meyer',
+    given_name: 'Jasper',
+  }).displayName, 'Jasper Meyer');
+});
+
+test('website userinfo validates the authenticated subject', async (context) => {
+  const originalFetch = globalThis.fetch;
+  context.after(() => { globalThis.fetch = originalFetch; });
+  globalThis.fetch = async (_input, init) => {
+    assert.equal(init.headers.Authorization, 'Bearer access-token');
+    return new Response(JSON.stringify({ name: 'Jasper Meyer', sub: 'user-1' }), { status: 200 });
+  };
+  await assert.doesNotReject(() => fetchWebsiteOidcUserInfo({
+    accessToken: 'access-token',
+    endpoint: 'https://magico-auth.example.com/oidc/v1/userinfo',
+    expectedSubject: 'user-1',
+  }));
+  await assert.rejects(() => fetchWebsiteOidcUserInfo({
+    accessToken: 'access-token',
+    endpoint: 'https://magico-auth.example.com/oidc/v1/userinfo',
+    expectedSubject: 'another-user',
+  }), /invalid_website_oidc_userinfo/);
+});
+
 test('website login rejects discovery from another issuer', async (context) => {
   const originalFetch = globalThis.fetch;
   context.after(() => { globalThis.fetch = originalFetch; });
@@ -92,6 +134,7 @@ test('website login rejects discovery from another issuer', async (context) => {
     issuer: 'https://attacker.example',
     jwks_uri: 'https://attacker.example/keys',
     token_endpoint: 'https://attacker.example/token',
+    userinfo_endpoint: 'https://attacker.example/userinfo',
   }), { status: 200 });
   await assert.rejects(() => beginWebsiteLogin(config), /invalid_website_oidc_discovery/);
 });

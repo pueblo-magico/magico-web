@@ -10,6 +10,7 @@ interface OidcDiscovery {
   readonly authorizationEndpoint: string;
   readonly jwksUri: string;
   readonly tokenEndpoint: string;
+  readonly userInfoEndpoint: string;
 }
 
 interface WebsiteAuthTransaction {
@@ -57,6 +58,54 @@ export async function discoverWebsiteOidc(issuer: string): Promise<OidcDiscovery
     authorizationEndpoint: requiredHttpsEndpoint(value.authorization_endpoint, 'website_authorization_endpoint'),
     jwksUri: requiredHttpsEndpoint(value.jwks_uri, 'website_jwks_uri'),
     tokenEndpoint: requiredHttpsEndpoint(value.token_endpoint, 'website_token_endpoint'),
+    userInfoEndpoint: requiredHttpsEndpoint(value.userinfo_endpoint, 'website_userinfo_endpoint'),
+  };
+}
+
+export async function fetchWebsiteOidcUserInfo(input: {
+  readonly accessToken: string;
+  readonly endpoint: string;
+  readonly expectedSubject: string;
+}): Promise<Record<string, unknown>> {
+  const response = await fetch(input.endpoint, {
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${input.accessToken}`,
+    },
+    signal: AbortSignal.timeout(5_000),
+  });
+  if (!response.ok) throw new Error('website_oidc_userinfo_unavailable');
+  const text = await response.text();
+  if (text.length > 32_768) throw new Error('website_oidc_userinfo_too_large');
+  let value: unknown;
+  try {
+    value = JSON.parse(text) as unknown;
+  } catch {
+    throw new Error('invalid_website_oidc_userinfo');
+  }
+  if (!isRecord(value) || value.sub !== input.expectedSubject) {
+    throw new Error('invalid_website_oidc_userinfo');
+  }
+  return value;
+}
+
+function trimmedClaim(value: unknown, maximumLength: number): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed && trimmed.length <= maximumLength ? trimmed : undefined;
+}
+
+export function parseWebsiteOidcProfile(value: unknown): { readonly displayName: string; readonly email?: string } {
+  const claims = isRecord(value) ? value : {};
+  const email = trimmedClaim(claims.email, 320);
+  const fullName = trimmedClaim(claims.name, 160);
+  const givenName = trimmedClaim(claims.given_name, 80);
+  const familyName = trimmedClaim(claims.family_name, 80);
+  const composedName = [givenName, familyName].filter((part): part is string => Boolean(part)).join(' ');
+  const preferredUsername = trimmedClaim(claims.preferred_username, 160);
+  return {
+    displayName: fullName ?? (composedName || undefined) ?? preferredUsername ?? email ?? 'Tu cuenta',
+    ...(email ? { email } : {}),
   };
 }
 
@@ -139,7 +188,7 @@ async function exchangeCode(input: {
   readonly config: WebsiteAuthConfig;
   readonly discovery: OidcDiscovery;
   readonly transaction: WebsiteAuthTransaction;
-}): Promise<{ readonly expiresIn: number; readonly idToken: string }> {
+}): Promise<{ readonly accessToken: string; readonly expiresIn: number; readonly idToken: string }> {
   const response = await fetch(input.discovery.tokenEndpoint, {
     body: new URLSearchParams({
       client_id: input.config.clientId,
@@ -155,13 +204,14 @@ async function exchangeCode(input: {
   if (!response.ok) throw new Error('website_oidc_token_exchange_failed');
   const value: unknown = await response.json();
   if (!isRecord(value)
+    || typeof value.access_token !== 'string'
     || typeof value.id_token !== 'string'
     || typeof value.expires_in !== 'number'
     || !Number.isFinite(value.expires_in)
     || value.expires_in <= 0) {
     throw new Error('invalid_website_oidc_token_response');
   }
-  return { expiresIn: value.expires_in, idToken: value.id_token };
+  return { accessToken: value.access_token, expiresIn: value.expires_in, idToken: value.id_token };
 }
 
 export async function completeWebsiteCallback(request: Request, config: WebsiteAuthConfig): Promise<Response> {
@@ -188,15 +238,17 @@ export async function completeWebsiteCallback(request: Request, config: WebsiteA
   if (verification.payload.nonce !== transaction.nonce || typeof verification.payload.sub !== 'string') {
     throw new Error('invalid_website_oidc_id_token');
   }
+  const userInfo = await fetchWebsiteOidcUserInfo({
+    accessToken: token.accessToken,
+    endpoint: discovery.userInfoEndpoint,
+    expectedSubject: verification.payload.sub,
+  });
   const tokenExpiresAt = now + Math.floor(token.expiresIn);
   const expiresAt = Math.min(tokenExpiresAt, verification.payload.exp ?? tokenExpiresAt, now + maximumSessionLifetimeSeconds);
-  const email = typeof verification.payload.email === 'string' ? verification.payload.email : undefined;
-  const displayName = typeof verification.payload.name === 'string' && verification.payload.name.trim()
-    ? verification.payload.name.trim()
-    : email ?? 'Tu cuenta';
+  const profile = parseWebsiteOidcProfile({ ...verification.payload, ...userInfo });
   const session: WebsiteSession = {
-    displayName,
-    ...(email ? { email } : {}),
+    displayName: profile.displayName,
+    ...(profile.email ? { email: profile.email } : {}),
     expiresAt,
     issuer: config.issuer,
     subject: verification.payload.sub,
