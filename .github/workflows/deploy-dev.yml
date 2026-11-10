@@ -48,10 +48,15 @@ jobs:
           VITE_REFORESTATION_SEPA_BANK: ${{ vars.VITE_REFORESTATION_SEPA_BANK }}
           VITE_REFORESTATION_SEPA_CURRENCY: ${{ vars.VITE_REFORESTATION_SEPA_CURRENCY }}
 
+      - name: Configure isolated DEV D1 binding
+        run: node scripts/cloudflare/configure-dev-d1.mjs
+        env:
+          MAGICO_WEB_DEV_D1_DATABASE_ID: ${{ vars.MAGICO_WEB_DEV_D1_DATABASE_ID }}
+
       - name: Deploy stable DEV origin
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           command: pages deploy dist --project-name=pueblo-magico-web --branch=main
