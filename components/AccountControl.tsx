@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, ChevronDown, ExternalLink, LogOut, UserRound } from 'lucide-react';
+import { ArrowRightLeft, ChevronDown, ExternalLink, LogIn, LogOut, UserRound } from 'lucide-react';
 import { Button, DropdownMenu, type DropdownMenuItem } from '@pueblo-magico/react-ui';
 import { closeWebsiteSession, type WebsiteAccountState } from '../src/account';
 import { COMPANION_PORTAL_URL, STAFF_PORTAL_URL, WEBSITE_LOGIN_URL } from '../src/data/config';
@@ -28,21 +28,34 @@ export const AccountControl: React.FC<AccountControlProps> = ({
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const isSpanish = language === 'es';
-  const sharedClasses = mobile
+  const signedOutClasses = mobile
     ? 'mx-auto flex min-h-11 w-full max-w-xs items-center justify-center gap-2 rounded-full border border-brand px-6 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold'
-    : `inline-flex min-h-10 items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-semibold transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${tone === 'solid' ? 'border-black/15 text-dark hover:border-brand hover:bg-brand hover:text-white' : 'border-white/40 text-white hover:border-white hover:bg-white hover:text-brand'}`;
+    : `inline-flex h-10 min-h-10 items-center gap-2 rounded-full border text-[11px] font-semibold transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${compact ? 'w-10 min-w-10 justify-center p-0' : 'px-4 py-0'} ${tone === 'solid' ? 'border-black/15 text-dark hover:border-brand hover:bg-brand hover:text-white' : 'border-white/40 text-white hover:border-white hover:bg-white hover:text-brand'}`;
 
   if (state.status === 'loading') {
-    return <span aria-label={isSpanish ? 'Consultando tu cuenta' : 'Checking your account'} className={`${sharedClasses} min-w-24 animate-pulse opacity-60`} />;
+    return <span aria-label={isSpanish ? 'Consultando tu cuenta' : 'Checking your account'} className={`${signedOutClasses} ${compact && !mobile ? '' : 'min-w-24'} animate-pulse opacity-60`} />;
   }
   if (state.status === 'signed_out' || state.status === 'unavailable') {
+    const signInLabel = isSpanish ? 'Ingresar' : 'Sign in';
     return (
-      <a href={WEBSITE_LOGIN_URL} className={sharedClasses} onClick={onSignedOut}>
-        <UserRound size={18} aria-hidden="true" />
-        {isSpanish ? 'Ingresar' : 'Sign in'}
+      <a
+        href={WEBSITE_LOGIN_URL}
+        aria-label={signInLabel}
+        className={signedOutClasses}
+        onClick={onSignedOut}
+        title={compact ? signInLabel : undefined}
+      >
+        <LogIn size={compact ? 20 : 18} strokeWidth={1.9} aria-hidden="true" />
+        {compact ? <span className="sr-only">{signInLabel}</span> : signInLabel}
       </a>
     );
   }
+
+  const accountInitial = (state.user.displayName.trim()[0] || state.user.email?.trim()[0] || 'M').toLocaleUpperCase();
+  const accountMenuLabel = isSpanish ? `Abrir cuenta de ${state.user.displayName}` : `Open ${state.user.displayName}'s account`;
+  const authenticatedClasses = mobile
+    ? 'mx-auto flex min-h-11 w-full max-w-xs items-center justify-center gap-2 rounded-full border border-brand bg-brand px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-colors hover:border-gold hover:bg-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold'
+    : `relative inline-flex h-10 min-h-10 items-center gap-2 rounded-full border text-[11px] font-semibold transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold ${compact ? 'w-10 min-w-10 justify-center p-0' : 'px-4 py-0'} ${tone === 'solid' ? 'border-brand bg-brand text-white shadow-sm hover:border-gold hover:bg-gold' : 'border-white bg-white text-brand shadow-md hover:border-gold hover:bg-gold hover:text-white'}`;
 
   const items: DropdownMenuItem[] = [
     { description: state.user.email, id: 'identity', isDisabled: true, label: state.user.displayName, textValue: state.user.displayName },
@@ -88,18 +101,20 @@ export const AccountControl: React.FC<AccountControlProps> = ({
           <Button
             type="button"
             variant="ghost"
-            className={compact ? `${sharedClasses} h-11 w-11 min-w-11 justify-center p-0` : sharedClasses}
-            aria-label={isSpanish ? 'Abrir menú de cuenta' : 'Open account menu'}
+            className={authenticatedClasses}
+            aria-label={accountMenuLabel}
           >
             {compact ? (
               <>
-                <UserRound size={21} strokeWidth={1.8} aria-hidden="true" />
+                <span className="text-sm font-bold leading-none" aria-hidden="true">{accountInitial}</span>
+                <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white" aria-hidden="true" />
                 <span className="sr-only">{isSpanish ? 'Mi cuenta' : 'My account'}</span>
               </>
             ) : (
               <>
-                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-current/10" aria-hidden="true">
-                  <UserRound size={16} strokeWidth={1.8} />
+                <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-bold" aria-hidden="true">
+                  {accountInitial}
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white" />
                 </span>
                 <span>{isSpanish ? 'Mi cuenta' : 'My account'}</span>
                 <ChevronDown className="shrink-0" size={15} strokeWidth={2} aria-hidden="true" />

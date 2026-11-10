@@ -24,6 +24,10 @@ test('the public website exposes one website-owned account entry', () => {
   assert.match(header, /max-width: 1023px/);
   assert.match(header, /lg:grid-cols-\[minmax\(170px,1fr\)_auto_minmax\(170px,1fr\)\]/);
   assert.match(accountControl, /WEBSITE_LOGIN_URL/);
+  assert.match(accountControl, /LogIn/);
+  assert.match(accountControl, /accountInitial/);
+  assert.match(accountControl, /bg-emerald-400/);
+  assert.match(accountControl, /authenticatedClasses/);
   assert.match(accountControl, /Mi cuenta/);
   assert.match(accountControl, /ChevronDown/);
   assert.match(accountControl, /className="sr-only"/);
@@ -36,6 +40,7 @@ test('the public website exposes one website-owned account entry', () => {
   assert.match(accessPage, /COMPANION_PORTAL_URL/);
   assert.doesNotMatch(accessPage, /STAFF_PORTAL_URL|localStorage|sessionStorage|document\.cookie/);
   assert.doesNotMatch(accountControl, /localStorage|sessionStorage|document\.cookie/);
+  assert.match(header, /inline-flex h-10 items-center justify-center/);
 });
 
 test('portal destinations are configured independently for preview and production', () => {

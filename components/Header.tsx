@@ -381,7 +381,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
           <button
             onClick={toggleLanguage}
             className={`
-              text-[11px] font-medium uppercase border rounded-[20px] py-[5px] px-[18px] transition-all duration-300
+              inline-flex h-10 items-center justify-center text-[11px] font-medium uppercase border rounded-full py-0 px-4 transition-all duration-300
               ${
                 useSolidHeader
                   ? 'border-black/15 text-dark hover:bg-brand hover:border-brand hover:text-white'
