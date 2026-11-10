@@ -21,8 +21,8 @@ test('the public website exposes one website-owned account entry', () => {
   assert.match(header, /useWebsiteAccount/);
   assert.match(header, /<AccountControl/);
   assert.match(header, /<AccountControl compact/);
-  assert.match(header, /max-width: 1535px/);
-  assert.match(header, /2xl:grid-cols-\[auto_minmax\(0,1fr\)_auto\]/);
+  assert.match(header, /max-width: 1023px/);
+  assert.match(header, /lg:grid-cols-\[minmax\(170px,1fr\)_auto_minmax\(170px,1fr\)\]/);
   assert.match(accountControl, /\/api\/v1\/auth\/login/);
   assert.match(accountControl, /Mi cuenta/);
   assert.match(accountControl, /ChevronDown/);
