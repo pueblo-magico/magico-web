@@ -33,7 +33,7 @@ se usan comodines. Los pull requests se validan con un build sin despliegue y
 configuran `VITE_WEBSITE_LOGIN_URL` para delegar el ingreso al endpoint del
 origen DEV estable:
 
-`https://dev.pueblo-magico-web.pages.dev/api/v1/auth/login`
+`https://pueblo-magico-web-2pw.pages.dev/api/v1/auth/login`
 
 La autorización y la cookie de sesión permanecen en ese origen estable. Los
 despliegues DEV se hacen en el proyecto `pueblo-magico-web` de la cuenta

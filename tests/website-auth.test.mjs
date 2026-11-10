@@ -7,7 +7,7 @@ import { sealWebsiteValue, unsealWebsiteValue } from '../functions/_lib/websiteA
 import { beginWebsiteLogin, readWebsiteSession } from '../functions/_lib/websiteOidc.ts';
 
 const config = {
-  appBaseUrl: new URL('https://dev.pueblo-magico-web.pages.dev'),
+  appBaseUrl: new URL('https://pueblo-magico-web-2pw.pages.dev'),
   clientId: 'website-client',
   issuer: 'https://magico-auth.example.com',
   sessionSecret: 'a-secure-website-session-secret-32-characters',
@@ -17,13 +17,13 @@ test('website auth config rejects unsafe URLs and short secrets', () => {
   assert.throws(() => readWebsiteAuthConfig({
     MAGICO_AUTH_CLIENT_ID: 'client',
     MAGICO_AUTH_ISSUER: 'https://magico-auth.example.com',
-    WEBSITE_BASE_URL: 'https://dev.pueblo-magico-web.pages.dev?redirect=https://attacker.example',
+    WEBSITE_BASE_URL: 'https://pueblo-magico-web-2pw.pages.dev?redirect=https://attacker.example',
     WEBSITE_SESSION_SECRET: config.sessionSecret,
   }), /invalid_website_base_url/);
   assert.throws(() => readWebsiteAuthConfig({
     MAGICO_AUTH_CLIENT_ID: 'client',
     MAGICO_AUTH_ISSUER: 'https://magico-auth.example.com',
-    WEBSITE_BASE_URL: 'https://dev.pueblo-magico-web.pages.dev',
+    WEBSITE_BASE_URL: 'https://pueblo-magico-web-2pw.pages.dev',
     WEBSITE_SESSION_SECRET: 'short',
   }), /invalid_website_session_secret/);
 });
@@ -50,7 +50,7 @@ test('website login uses authorization code, PKCE and an HttpOnly transaction co
   assert.equal(response.status, 302);
   assert.equal(location.searchParams.get('response_type'), 'code');
   assert.equal(location.searchParams.get('code_challenge_method'), 'S256');
-  assert.equal(location.searchParams.get('redirect_uri'), 'https://dev.pueblo-magico-web.pages.dev/api/v1/auth/callback');
+  assert.equal(location.searchParams.get('redirect_uri'), 'https://pueblo-magico-web-2pw.pages.dev/api/v1/auth/callback');
   assert.match(response.headers.get('Set-Cookie'), /__Host-magico_web_transaction=/);
   assert.match(response.headers.get('Set-Cookie'), /HttpOnly/);
   assert.match(response.headers.get('Set-Cookie'), /Secure/);

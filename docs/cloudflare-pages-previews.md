@@ -15,7 +15,7 @@ selected commit to the `pueblo-magico-web` project in the dedicated DEV
 Cloudflare account. The project production branch is `main`, so the stable
 origin and registered OIDC callback remain:
 
-`https://dev.pueblo-magico-web.pages.dev`
+`https://pueblo-magico-web-2pw.pages.dev`
 
 The `development` GitHub environment must own this secret:
 
