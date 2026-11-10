@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
   };
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)');
+    const mq = window.matchMedia('(max-width: 1279px)');
     setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
@@ -211,7 +211,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
     flex min-w-0 ${hasSubNavigation ? 'flex-col' : 'items-center justify-between'}
     ${
       useSolidHeader
-        ? `bg-white text-dark shadow-[0_8px_30px_rgba(0,0,0,0.08)] border-b border-brand/10 px-5 ${showSubNavigation ? 'pt-2 pb-0 lg:pt-2.5 lg:pb-0' : 'py-2 lg:py-2.5'}`
+        ? `bg-white text-dark shadow-[0_8px_30px_rgba(0,0,0,0.08)] border-b border-brand/10 px-5 ${showSubNavigation ? 'pt-2 pb-0 xl:pt-2.5 xl:pb-0' : 'py-2 xl:py-2.5'}`
         : 'bg-transparent text-white border-none px-5 py-2.5'
     }
   `;
@@ -223,9 +223,9 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
 
   return (
     <header className={pillClasses}>
-      <div data-header-main-row className="flex w-full items-center justify-between px-2 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-5 lg:px-4">
+      <div data-header-main-row className="flex w-full items-center justify-between px-2 xl:grid xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:px-4">
         {/* Logo - Left */}
-        <div className="flex-1 lg:flex lg:min-w-[134px] lg:justify-self-start">
+        <div className="flex-1 xl:flex xl:min-w-[134px] xl:justify-self-start">
           <a href={ROUTES.HOME} className="relative z-[1200] inline-block" onClick={(e) => { 
             if (isHomePage) {
               e.preventDefault(); 
@@ -245,7 +245,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
         {/* Mobile Toggle */}
         <button
           onClick={toggleMobileMenu}
-          className="lg:hidden relative z-[1200] p-2 focus:outline-none"
+          className="xl:hidden relative z-[1200] p-2 focus:outline-none"
           aria-label={t.ui.toggleMenu}
         >
           {isMobileMenuOpen ? (
@@ -260,20 +260,20 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
           className={`
             fixed top-0 left-0 w-full h-screen bg-white pt-[100px] pb-10 px-8
             flex flex-col overflow-y-auto transition-all duration-400 z-[1100]
-            lg:static lg:h-auto lg:min-w-0 lg:w-auto lg:bg-transparent lg:p-0 lg:flex-row lg:opacity-100 lg:visible lg:overflow-visible
-            ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible lg:opacity-100 lg:visible'}
+            xl:static xl:h-auto xl:min-w-0 xl:w-auto xl:bg-transparent xl:p-0 xl:flex-row xl:opacity-100 xl:visible xl:overflow-visible
+            ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible xl:opacity-100 xl:visible'}
           `}
         >
-          <ul className="flex w-full flex-col items-center gap-0 lg:w-auto lg:flex-row lg:justify-center lg:gap-4 xl:gap-6 2xl:gap-8">
+          <ul className="flex w-full flex-col items-center gap-0 xl:w-auto xl:flex-row xl:justify-center xl:gap-5 2xl:gap-8">
             {t.menu.items.map((item: any, index: number) => (
-              <li key={index} className="relative group w-full lg:w-auto text-center lg:text-left">
+              <li key={index} className="relative group w-full xl:w-auto text-center xl:text-left">
                 <a
                   href={item.href.startsWith('#') && !isHomePage ? ROUTES.HOME + item.href : item.href}
                   onClick={(e) => handleNavClick(e, item.href, !!item.submenu, index)}
                   className={`
-                    relative flex items-center justify-center lg:justify-start gap-1.5 py-3.5 lg:py-2.5
-                    text-[16px] lg:text-[13px] font-serif lg:font-sans font-normal lg:font-medium
-                    border-b border-black/5 lg:border-none w-full lg:w-auto
+                    relative flex items-center justify-center xl:justify-start gap-1.5 py-3.5 xl:py-2.5
+                    text-[16px] xl:text-[13px] font-serif xl:font-sans font-normal xl:font-medium
+                    border-b border-black/5 xl:border-none w-full xl:w-auto
                     transition-colors duration-300
                     ${useSolidHeader
                       ? (isMenuItemActive(item) ? 'text-brand font-semibold' : 'text-dark hover:text-brand')
@@ -284,26 +284,26 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
                   {item.label}
                   {item.submenu && (
                     <ChevronDown 
-                      className={`w-3 h-3 transition-transform duration-300 lg:group-hover:rotate-180 ${activeSubmenu === index ? 'rotate-180' : ''}`}
+                      className={`w-3 h-3 transition-transform duration-300 xl:group-hover:rotate-180 ${activeSubmenu === index ? 'rotate-180' : ''}`}
                     />
                   )}
-                  <span className={`pointer-events-none absolute inset-x-0 -bottom-px hidden h-0.5 origin-center rounded-full bg-gold transition-transform duration-300 lg:block ${isMenuItemActive(item) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} aria-hidden="true" />
+                  <span className={`pointer-events-none absolute inset-x-0 -bottom-px hidden h-0.5 origin-center rounded-full bg-gold transition-transform duration-300 xl:block ${isMenuItemActive(item) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} aria-hidden="true" />
                 </a>
 
                 {/* Submenu */}
                 {item.submenu && (
                   <ul
                     className={`
-                      lg:absolute lg:top-full lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-[12px]
-                      bg-[#FAFAFA] lg:bg-white lg:min-w-[360px] lg:rounded-[22px] lg:border lg:border-brand/10 lg:shadow-[0_18px_50px_rgba(23,49,39,0.14)]
-                      lg:opacity-0 lg:invisible lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0
+                      xl:absolute xl:top-full xl:left-1/2 xl:-translate-x-1/2 xl:translate-y-[12px]
+                      bg-[#FAFAFA] xl:bg-white xl:min-w-[360px] xl:rounded-[22px] xl:border xl:border-brand/10 xl:shadow-[0_18px_50px_rgba(23,49,39,0.14)]
+                      xl:opacity-0 xl:invisible xl:group-hover:opacity-100 xl:group-hover:visible xl:group-hover:translate-y-0
                       transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-                      w-full lg:w-auto py-1 lg:p-3
-                      ${activeSubmenu === index ? 'block animate-fadeIn' : 'hidden lg:block'}
+                      w-full xl:w-auto py-1 xl:p-3
+                      ${activeSubmenu === index ? 'block animate-fadeIn' : 'hidden xl:block'}
                     `}
                   >
                     {item.submenuEyebrow && (
-                      <li className="hidden px-4 pb-2 pt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-dark/45 lg:block">
+                      <li className="hidden px-4 pb-2 pt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-dark/45 xl:block">
                         {item.submenuEyebrow}
                       </li>
                     )}
@@ -316,16 +316,16 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
                           <a
                             href={sub.href.startsWith('#') && !isHomePage ? ROUTES.HOME + sub.href : sub.href}
                             onClick={(e) => handleNavClick(e, sub.href, false, index)}
-                            className={`group/sub relative flex items-center gap-3 overflow-hidden rounded-xl px-4 py-2.5 text-left transition-[background-color,color] duration-200 lg:min-h-[62px] ${isSubmenuItemActive ? 'bg-[#F5F0E4] text-brand before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-r-full before:bg-gold' : 'text-[#666] hover:bg-[#F8F5EE] hover:text-brand'}`}
+                            className={`group/sub relative flex items-center gap-3 overflow-hidden rounded-xl px-4 py-2.5 text-left transition-[background-color,color] duration-200 xl:min-h-[62px] ${isSubmenuItemActive ? 'bg-[#F5F0E4] text-brand before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-r-full before:bg-gold' : 'text-[#666] hover:bg-[#F8F5EE] hover:text-brand'}`}
                           >
-                            <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F7F3EB] text-dark/55 transition-colors group-hover/sub:text-brand lg:flex">
+                            <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F7F3EB] text-dark/55 transition-colors group-hover/sub:text-brand xl:flex">
                               <SubmenuIcon size={19} strokeWidth={1.6} aria-hidden="true" />
                             </span>
                             <span className="min-w-0 flex-1">
                               <span className={`block text-[14px] leading-tight ${isSubmenuItemActive ? 'font-semibold' : 'font-medium'}`}>{sub.label}</span>
-                              {sub.description && <span className="mt-1 hidden text-[11px] font-light leading-tight text-dark/50 lg:block">{sub.description}</span>}
+                              {sub.description && <span className="mt-1 hidden text-[11px] font-light leading-tight text-dark/50 xl:block">{sub.description}</span>}
                             </span>
-                            <ArrowRight className={`hidden shrink-0 text-gold transition-[opacity,transform] duration-200 lg:block ${isSubmenuItemActive ? 'opacity-100' : 'translate-x-1 opacity-0 group-hover/sub:translate-x-0 group-hover/sub:opacity-100'}`} size={18} aria-hidden="true" />
+                            <ArrowRight className={`hidden shrink-0 text-gold transition-[opacity,transform] duration-200 xl:block ${isSubmenuItemActive ? 'opacity-100' : 'translate-x-1 opacity-0 group-hover/sub:translate-x-0 group-hover/sub:opacity-100'}`} size={18} aria-hidden="true" />
                           </a>
                         </li>
                       );
@@ -335,7 +335,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
                         <a
                           href={item.viewAllLink.href.startsWith('#') && !isHomePage ? ROUTES.HOME + item.viewAllLink.href : item.viewAllLink.href}
                           onClick={(e) => handleNavClick(e, item.viewAllLink.href, false, index)}
-                          className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[12px] font-semibold text-gold transition-colors hover:bg-gold/10 hover:text-brand lg:justify-between"
+                          className="flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[12px] font-semibold text-gold transition-colors hover:bg-gold/10 hover:text-brand xl:justify-between"
                         >
                           {item.viewAllLink.label}<ArrowRight size={16} aria-hidden="true" />
                         </a>
@@ -347,7 +347,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
             ))}
             
             {/* Desktop Reservar Button */}
-            <li className="hidden lg:block pl-4 border-l border-white/20">
+            <li className="hidden xl:block pl-4 border-l border-white/20">
                <a 
                  href={t.menu.bookLink} 
                  onClick={(e) => handleNavClick(e, t.menu.bookLink, false, -1)}
@@ -358,12 +358,12 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
             </li>
             
             {/* Mobile account entry */}
-            <li className="mt-6 w-full lg:hidden">
+            <li className="mt-6 w-full xl:hidden">
               <AccountControl language={language} mobile onSignedOut={() => setIsMobileMenuOpen(false)} state={account.state} />
             </li>
 
             {/* Mobile Language Button */}
-            <li className="lg:hidden mt-8 w-full flex justify-center pb-10">
+            <li className="xl:hidden mt-8 w-full flex justify-center pb-10">
               <button
                 onClick={toggleLanguage}
                 className="border border-brand text-brand hover:bg-brand hover:text-white rounded-[30px] py-2 px-8 text-[12px] font-medium transition-colors uppercase"
@@ -375,7 +375,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation }) => {
         </nav>
 
         {/* Desktop Language Button */}
-        <div className="hidden items-center justify-self-end gap-3 pl-5 lg:flex">
+        <div className="hidden items-center justify-self-end gap-3 pl-5 xl:flex">
           <AccountControl compact language={language} state={account.state} tone={useSolidHeader ? 'solid' : 'overlay'} />
           <button
             onClick={toggleLanguage}
