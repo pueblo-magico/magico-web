@@ -65,7 +65,9 @@ test('portal destinations are configured independently for development and produ
   assert.match(developmentWorkflow, /magico-staff-portal-dev\.dev-pueblomagico\.workers\.dev/);
   assert.match(developmentWorkflow, /configure-dev-d1\.mjs/);
   assert.match(developmentWorkflow, /MAGICO_WEB_DEV_D1_DATABASE_ID/);
-  assert.match(developmentWorkflow, /accountId:\s*\$\{\{ vars\.CLOUDFLARE_ACCOUNT_ID \}\}/);
+  assert.match(developmentWorkflow, /apiToken:\s*\$\{\{ secrets\.CLOUDFLARE_DEV_API_TOKEN \}\}/);
+  assert.match(developmentWorkflow, /accountId:\s*\$\{\{ vars\.CLOUDFLARE_DEV_ACCOUNT_ID \}\}/);
+  assert.doesNotMatch(developmentWorkflow, /secrets\.CLOUDFLARE_API_TOKEN|vars\.CLOUDFLARE_ACCOUNT_ID/);
   assert.match(developmentWorkflow, /pages deploy dist --project-name=pueblo-magico-web --branch=main/);
   assert.match(productionWorkflow, /VITE_COMPANION_PORTAL_URL/);
   assert.match(productionWorkflow, /VITE_STAFF_PORTAL_URL/);
