@@ -32,6 +32,13 @@ environment with the registered website base URL, DEV Mágico Auth issuer and
 client ID, and a newly generated session-cookie secret. Production environment
 variables and secrets are not included in that API update.
 
+The workflow then moves `wrangler.toml` aside only inside the ephemeral CI
+checkout. A Pages deployment containing `pages_build_output_dir` treats the
+Wrangler file as the source of truth and would otherwise overwrite the preview
+variables configured immediately before deployment. The committed Wrangler
+configuration remains unchanged and continues to describe production/local
+bindings.
+
 ## Legacy preview cleanup
 
 `.github/workflows/cleanup-preview.yml` remains temporarily enabled on pull

@@ -61,6 +61,9 @@ jobs:
           MAGICO_AUTH_ISSUER: https://magico-auth-hffm3o.us1.zitadel.cloud
           MAGICO_AUTH_CLIENT_ID: '398930695528940858'
 
+      - name: Use dashboard-managed preview bindings
+        run: mv wrangler.toml wrangler.local.toml
+
       - name: Deploy stable DEV origin
         uses: cloudflare/wrangler-action@v4
         with:

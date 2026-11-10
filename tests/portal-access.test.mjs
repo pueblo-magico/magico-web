@@ -65,6 +65,7 @@ test('portal destinations are configured independently for development and produ
   assert.match(developmentWorkflow, /magico-staff-portal-dev\.dev-pueblomagico\.workers\.dev/);
   assert.match(developmentWorkflow, /configure-pages-dev\.mjs/);
   assert.match(developmentWorkflow, /WEBSITE_BASE_URL:\s*https:\/\/dev\.pueblo-magico-web\.pages\.dev/);
+  assert.match(developmentWorkflow, /mv wrangler\.toml wrangler\.local\.toml/);
   assert.match(developmentWorkflow, /branches:\s*\n\s*- dev/);
   assert.match(developmentWorkflow, /apiToken:\s*\$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/);
   assert.match(developmentWorkflow, /accountId:\s*\$\{\{ secrets\.CLOUDFLARE_ACCOUNT_ID \}\}/);
