@@ -84,9 +84,6 @@ const EmpresasProceso: React.FC = () => {
                 <div className="relative z-10">
                   <h3 className="text-xl serif-title text-white mb-3">{item.title}</h3>
                   <p className="text-white/75 text-sm leading-relaxed font-light">{item.text}</p>
-                  {item.price && (
-                    <p className="mt-4 inline-block rounded-full bg-[#D4AF37] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#005333]">{item.price}</p>
-                  )}
                 </div>
               </div>
             ))}

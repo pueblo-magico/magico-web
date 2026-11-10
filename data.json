@@ -2339,12 +2339,9 @@
         "tag": "Jornadas privadas y exclusivas",
         "title": "Una experiencia solo para tu organización",
         "items": [
-          { "title": "Jornada corporativa", "text": "Una experiencia de un día. Ideal para voluntariado, restauración, integración y primeras experiencias institucionales.",
-            "price": "Desde $35.000 por persona" },
-          { "title": "Jornada + noche", "text": "Más inmersiva: permite incorporar convivencia, fogón, naturaleza y actividades complementarias.",
-            "price": "Desde $75.000 por persona" },
-          { "title": "Programa de varios días", "text": "Para equipos que buscan profundizar en liderazgo, cultura, coordinación y estrategia.",
-            "price": "A consultar" }
+          { "title": "Jornada corporativa", "text": "Una experiencia de un día. Ideal para voluntariado, restauración, integración y primeras experiencias institucionales." },
+          { "title": "Jornada + noche", "text": "Más inmersiva: permite incorporar convivencia, fogón, naturaleza y actividades complementarias." },
+          { "title": "Programa de varios días", "text": "Para equipos que buscan profundizar en liderazgo, cultura, coordinación y estrategia." }
         ],
         "note": "Cada jornada es exclusiva para tu equipo y se diseña según los objetivos de tu organización.",
         "more_title": "Otras formas de sumarse",
@@ -2452,7 +2449,7 @@
           },
           {
             "q": "¿Cuánto cuesta?",
-            "a": "Jornada de un día: desde $35.000 por persona. Jornada con una noche: desde $75.000 por persona. Programas de varios días: a consultar. Las jornadas abiertas a organizaciones son por postulación: si tu empresa es seleccionada, acordamos juntos las condiciones de participación, incluidos el traslado y los seguros."
+            "a": "Cada programa se diseña a medida según los objetivos, la cantidad de participantes, la duración y las necesidades de tu organización. Contactanos para preparar una propuesta personalizada. Las jornadas abiertas a organizaciones son por postulación: si tu empresa es seleccionada, acordamos juntos las condiciones de participación, incluidos el traslado y los seguros."
           },
           {
             "q": "¿Cómo se llega desde Córdoba? ¿Hay traslado?",
@@ -5199,12 +5196,9 @@
         "tag": "Private, exclusive days",
         "title": "An experience just for your organization",
         "items": [
-          { "title": "Corporate day", "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences.",
-            "price": "From USD 25 per person" },
-          { "title": "Day + overnight", "text": "More immersive: adds shared living, a bonfire, nature and complementary activities.",
-            "price": "From USD 50 per person" },
-          { "title": "Multi-day program", "text": "For teams looking to go deeper on leadership, culture, coordination and strategy.",
-            "price": "On request" }
+          { "title": "Corporate day", "text": "A one-day experience. Ideal for volunteering, restoration, integration and first institutional experiences." },
+          { "title": "Day + overnight", "text": "More immersive: adds shared living, a bonfire, nature and complementary activities." },
+          { "title": "Multi-day program", "text": "For teams looking to go deeper on leadership, culture, coordination and strategy." }
         ],
         "note": "Each day is exclusive to your team and designed around your organization's goals.",
         "more_title": "Other ways to join",
@@ -5312,7 +5306,7 @@
           },
           {
             "q": "How much does it cost?",
-            "a": "One-day program: from USD 25 per person. Day + one night: from USD 50 per person. Multi-day programs: on request. Days open to organizations are by application: if your company is selected, we agree on the participation terms together, including transport and insurance."
+            "a": "Each program is tailored to your organization's goals, group size, duration and specific needs. Contact us and we will prepare a personalized proposal. Days open to organizations are by application: if your company is selected, we agree on the participation terms together, including transport and insurance."
           },
           {
             "q": "How do we get there from Córdoba? Is transport available?",
