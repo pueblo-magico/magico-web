@@ -43,10 +43,11 @@ test('the public website exposes one website-owned account entry', () => {
   assert.match(header, /inline-flex h-10 items-center justify-center/);
 });
 
-test('portal destinations are configured independently for preview and production', () => {
+test('portal destinations are configured independently for development and production', () => {
   const config = read('src/data/config.ts');
   const exampleEnv = read('.env.example');
-  const previewWorkflow = read('.github/workflows/preview.yml');
+  const pullRequestWorkflow = read('.github/workflows/preview.yml');
+  const developmentWorkflow = read('.github/workflows/deploy-dev.yml');
   const productionWorkflow = read('.github/workflows/deploy.yml');
 
   assert.match(config, /VITE_COMPANION_PORTAL_URL/);
@@ -58,9 +59,11 @@ test('portal destinations are configured independently for preview and productio
   assert.match(exampleEnv, /VITE_COMPANION_PORTAL_URL=/);
   assert.match(exampleEnv, /VITE_STAFF_PORTAL_URL=/);
   assert.match(exampleEnv, /VITE_WEBSITE_LOGIN_URL=/);
-  assert.match(previewWorkflow, /magico-companion-dev\.dev-pueblomagico\.workers\.dev/);
-  assert.match(previewWorkflow, /magico-staff-portal-dev\.dev-pueblomagico\.workers\.dev/);
-  assert.match(previewWorkflow, /VITE_WEBSITE_LOGIN_URL:\s*https:\/\/dev\.pueblo-magico-web\.pages\.dev\/api\/v1\/auth\/login/);
+  assert.doesNotMatch(pullRequestWorkflow, /wrangler-action|pages deploy|CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID/);
+  assert.match(developmentWorkflow, /environment:\s*development/);
+  assert.match(developmentWorkflow, /magico-companion-dev\.dev-pueblomagico\.workers\.dev/);
+  assert.match(developmentWorkflow, /magico-staff-portal-dev\.dev-pueblomagico\.workers\.dev/);
+  assert.match(developmentWorkflow, /pages deploy dist --project-name=pueblo-magico-web --branch=main/);
   assert.match(productionWorkflow, /VITE_COMPANION_PORTAL_URL/);
   assert.match(productionWorkflow, /VITE_STAFF_PORTAL_URL/);
 });

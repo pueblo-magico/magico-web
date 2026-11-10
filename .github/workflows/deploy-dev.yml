@@ -1,0 +1,57 @@
+name: Deploy DEV to Cloudflare Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_development:
+        description: Confirmar despliegue manual al entorno DEV
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    if: ${{ inputs.confirm_development }}
+    environment: development
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout selected commit
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Build DEV artifact
+        run: npm run build
+        env:
+          VITE_COMPANION_PORTAL_URL: https://magico-companion-dev.dev-pueblomagico.workers.dev
+          VITE_STAFF_PORTAL_URL: https://magico-staff-portal-dev.dev-pueblomagico.workers.dev
+          VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER: ${{ vars.VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER }}
+          VITE_REFORESTATION_SEPA_IBAN: ${{ vars.VITE_REFORESTATION_SEPA_IBAN }}
+          VITE_REFORESTATION_SEPA_BIC: ${{ vars.VITE_REFORESTATION_SEPA_BIC }}
+          VITE_REFORESTATION_SEPA_BANK: ${{ vars.VITE_REFORESTATION_SEPA_BANK }}
+          VITE_REFORESTATION_SEPA_CURRENCY: ${{ vars.VITE_REFORESTATION_SEPA_CURRENCY }}
+
+      - name: Deploy stable DEV origin
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy dist --project-name=pueblo-magico-web --branch=main
