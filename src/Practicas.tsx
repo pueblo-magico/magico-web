@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Eye,
   Flame,
+  Hammer,
   Leaf,
   MessageCircle,
   Music2,
@@ -25,8 +26,8 @@ import { SITE_URL } from './data/config';
 const CONTENT = {
   es: {
     seo: {
-      title: 'Prácticas de Pueblo Mágico · Temazcal, palabra, música y fuego',
-      description: 'Conocé las prácticas con las que Pueblo Mágico integra y expresa su visión: temazcal, rapé ceremonial, música, círculos de palabra, fuego y tabaco ceremonial.',
+      title: 'Prácticas de Pueblo Mágico · Palabra, música, fuego y artesanía',
+      description: 'Conocé las prácticas con las que Pueblo Mágico integra y expresa su visión: palabra, música, fuego, artesanía, temazcal, rapé y tabaco ceremonial.',
     },
     hero: {
       eyebrow: 'Pilares en acción · Pueblo Mágico',
@@ -52,6 +53,7 @@ const CONTENT = {
       lead: 'Una ceremonia para entrar en el calor, el silencio y la escucha.',
       text: 'El temazcal reúne vapor, oscuridad, palabra, canto y presencia dentro de un espacio guiado. En Pueblo Mágico es una práctica central para rezar, integrar procesos y recordar que la transformación también se atraviesa en comunidad.',
       note: 'Se comparte únicamente dentro de invitaciones específicas, con cupo, contexto y acompañamiento informados en cada convocatoria.',
+      cta: 'Conocer la ceremonia de Temazcal',
     },
     practices: {
       eyebrow: 'Prácticas vivas',
@@ -63,6 +65,7 @@ const CONTENT = {
         { id: 'palabra', title: 'Círculos de palabra', purpose: 'Para hablar sin máscaras.', text: 'Nos sentamos en ronda para decir con honestidad, escuchar sin apuro y dejar que la palabra circule.' },
         { id: 'fuego', title: 'Fuego ceremonial', purpose: 'Para levantar rezos y abrigar el territorio.', text: 'El fuego reúne, ilumina y sostiene la intención compartida. A su alrededor cantamos, escuchamos y agradecemos.' },
         { id: 'tabaco', title: 'Uso ceremonial de tabaco', purpose: 'Para rezar y transformar.', text: 'El tabaco se aborda como elemento ceremonial dentro de un marco de intención, respeto y cuidado.' },
+        { id: 'artesania', title: 'Artesanía', purpose: 'Para crear con las manos y habitar el proceso.', text: 'Trabajar la materia nos conecta con el tiempo, el oficio y los saberes compartidos. Crear también es una forma de escuchar y transformar.' },
       ],
       careTitle: 'Una aclaración necesaria',
       careText: 'El rapé y el tabaco se presentan como prácticas ceremoniales para personas adultas. No son tratamientos médicos ni una invitación al consumo libre. Cuando hablamos de música como medicina, lo hacemos en un sentido ceremonial y comunitario, no clínico. La participación es siempre voluntaria y cada convocatoria debe comunicar su contexto y condiciones.',
@@ -86,8 +89,8 @@ const CONTENT = {
   },
   en: {
     seo: {
-      title: 'Pueblo Mágico Practices · Temazcal, word, music and fire',
-      description: 'Discover the practices through which Pueblo Mágico integrates and expresses its vision: temazcal, ceremonial rapé, music, word circles, fire and ceremonial tobacco.',
+      title: 'Pueblo Mágico Practices · Word, music, fire and craft',
+      description: 'Discover the practices through which Pueblo Mágico expresses its vision: word, music, fire, craft, temazcal, ceremonial rapé and tobacco.',
     },
     hero: {
       eyebrow: 'Pillars in action · Pueblo Mágico',
@@ -113,6 +116,7 @@ const CONTENT = {
       lead: 'A ceremony for entering warmth, silence and listening.',
       text: 'Temazcal brings together steam, darkness, word, song and presence within a guided space. At Pueblo Mágico it is a central practice for prayer, integration and remembering that transformation is also lived in community.',
       note: 'It is shared only through specific invitations, with capacity, context and guidance explained in each announcement.',
+      cta: 'Discover the Temazcal ceremony',
     },
     practices: {
       eyebrow: 'Living practices',
@@ -124,6 +128,7 @@ const CONTENT = {
         { id: 'palabra', title: 'Word circles', purpose: 'To speak without masks.', text: 'We sit in a circle to speak honestly, listen without rushing and let the word move among us.' },
         { id: 'fuego', title: 'Ceremonial fire', purpose: 'To carry prayers and warm the land.', text: 'Fire gathers, illuminates and holds shared intention. Around it we sing, listen and give thanks.' },
         { id: 'tabaco', title: 'Ceremonial use of tobacco', purpose: 'To pray and transform.', text: 'Tobacco is approached as a ceremonial element within a framework of intention, respect and care.' },
+        { id: 'artesania', title: 'Craft', purpose: 'To create with our hands and inhabit the process.', text: 'Working with matter connects us with time, craft and shared knowledge. Creating is also a way of listening and transforming.' },
       ],
       careTitle: 'A necessary clarification',
       careText: 'Rapé and tobacco are presented as ceremonial practices for adults. They are not medical treatments or an invitation to unrestricted use. When we speak of music as medicine, we mean it in a ceremonial and communal, not clinical, sense. Participation is always voluntary, and every invitation must communicate its context and conditions.',
@@ -153,6 +158,7 @@ const PRACTICE_ICONS: Record<string, LucideIcon> = {
   palabra: MessageCircle,
   fuego: Flame,
   tabaco: Leaf,
+  artesania: Hammer,
 };
 
 const VISION_ICONS = [Eye, Users, Sparkles, Flame];
@@ -165,7 +171,7 @@ const Practicas: React.FC = () => {
   useEffect(() => {
     const previousTitle = document.title;
     const pageUrl = `${SITE_URL}${ROUTES.PRACTICAS}`;
-    const imageUrl = `${SITE_URL}/uploads/temazcal.webp`;
+    const imageUrl = `${SITE_URL}/uploads/sunset-rio-amigos.webp`;
     document.title = content.seo.title;
 
     const setMeta = (selector: string, attribute: 'name' | 'property', key: string, value: string) => {
@@ -205,7 +211,7 @@ const Practicas: React.FC = () => {
       <Header />
       <main>
         <section className="relative flex min-h-[88vh] items-end overflow-hidden px-6 pb-16 pt-32 text-white md:min-h-[92vh] md:px-12 md:pb-24">
-          <img src="/uploads/temazcal.webp" alt={language === 'es' ? 'Temazcal ceremonial en Pueblo Mágico' : 'Ceremonial temazcal at Pueblo Mágico'} className="absolute inset-0 h-full w-full object-cover" />
+          <img src="/uploads/sunset-rio-amigos.webp" alt={language === 'es' ? 'Comunidad reunida en círculo en Pueblo Mágico' : 'Community gathered in a circle at Pueblo Mágico'} className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,28,20,0.38)_0%,rgba(4,28,20,0.48)_36%,rgba(4,28,20,0.94)_100%)]" />
           <div className="relative z-10 mx-auto w-full max-w-7xl">
             <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.32em] text-[#E7C866]">{content.hero.eyebrow}</p>
@@ -242,25 +248,6 @@ const Practicas: React.FC = () => {
           </div>
         </section>
 
-        <section id="temazcal" className="overflow-hidden bg-[#073D2C] px-6 py-20 text-white md:px-12 md:py-28">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#E7C866]">{content.temazcal.eyebrow}</p>
-              <h2 className="mt-5 font-serif text-5xl text-white md:text-7xl">{content.temazcal.title}</h2>
-              <p className="mt-5 font-serif text-2xl leading-snug text-[#E7C866] md:text-3xl">{content.temazcal.lead}</p>
-              <p className="mt-7 text-base leading-8 text-white/[0.72]">{content.temazcal.text}</p>
-              <div className="mt-8 flex gap-3 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 text-sm leading-6 text-white/[0.66]">
-                <CalendarDays className="mt-0.5 shrink-0 text-[#E7C866]" size={20} aria-hidden="true" />
-                <p>{content.temazcal.note}</p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-[36px] border border-[#E7C866]/25" aria-hidden="true" />
-              <img src="/uploads/Ciclo Femenino/Temazcal.jpeg" alt={language === 'es' ? 'Estructura ceremonial de temazcal' : 'Ceremonial temazcal structure'} className="relative aspect-[4/3] w-full rounded-[30px] object-cover shadow-2xl" loading="lazy" />
-            </div>
-          </div>
-        </section>
-
         <section id="practicas" className="bg-white px-6 py-20 md:px-12 md:py-28">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-3xl text-center">
@@ -268,7 +255,18 @@ const Practicas: React.FC = () => {
               <h2 className="mt-5 font-serif text-4xl leading-tight text-[#073D2C] md:text-6xl">{content.practices.title}</h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-[#24362F]/[0.68]">{content.practices.intro}</p>
             </div>
-            <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-14 grid gap-4 md:grid-cols-3">
+              {[
+                { src: '/uploads/sunset-rio-amigos.webp', es: 'Comunidad y palabra', en: 'Community and word' },
+                { src: '/uploads/sunset-rio-guitarreada.webp', es: 'Música y fuego', en: 'Music and fire' },
+                { src: '/uploads/fausto-tallando.jpg', es: 'Artesanía y oficio', en: 'Craft and skill' },
+              ].map((image, index) => <figure key={image.src} className={`group relative overflow-hidden rounded-[28px] ${index === 1 ? 'md:translate-y-7' : ''}`}>
+                <img src={image.src} alt={language === 'es' ? image.es : image.en} className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#061F17]/80 via-transparent to-transparent" />
+                <figcaption className="absolute bottom-0 left-0 p-6 font-serif text-2xl text-white">{language === 'es' ? image.es : image.en}</figcaption>
+              </figure>)}
+            </div>
+            <div className="mt-14 grid gap-5 md:mt-20 md:grid-cols-2 lg:grid-cols-3">
               {content.practices.items.map((practice, index) => {
                 const Icon = PRACTICE_ICONS[practice.id];
                 return <article key={practice.id} className={`group rounded-[28px] border p-7 transition-transform duration-300 hover:-translate-y-1 ${index === 3 ? 'border-[#A94A2B]/20 bg-[#FFF8EF]' : 'border-[#073D2C]/10 bg-[#F8F5EF]'}`}>
@@ -283,6 +281,28 @@ const Practicas: React.FC = () => {
               <ShieldCheck className="shrink-0 text-[#A94A2B]" size={28} strokeWidth={1.6} aria-hidden="true" />
               <div><h3 className="font-serif text-2xl text-[#073D2C]">{content.practices.careTitle}</h3><p className="mt-3 max-w-4xl text-sm leading-7 text-[#24362F]/[0.70]">{content.practices.careText}</p></div>
             </aside>
+          </div>
+        </section>
+
+        <section id="temazcal" className="overflow-hidden bg-[#073D2C] px-6 py-20 text-white md:px-12 md:py-28">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#E7C866]">{content.temazcal.eyebrow}</p>
+              <h2 className="mt-5 font-serif text-5xl text-white md:text-7xl">{content.temazcal.title}</h2>
+              <p className="mt-5 font-serif text-2xl leading-snug text-[#E7C866] md:text-3xl">{content.temazcal.lead}</p>
+              <p className="mt-7 text-base leading-8 text-white/[0.72]">{content.temazcal.text}</p>
+              <div className="mt-8 flex gap-3 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 text-sm leading-6 text-white/[0.66]">
+                <CalendarDays className="mt-0.5 shrink-0 text-[#E7C866]" size={20} aria-hidden="true" />
+                <p>{content.temazcal.note}</p>
+              </div>
+              <a href={ROUTES.TEMAZCAL} className="mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-7 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-[#073D2C] transition-colors hover:bg-white">
+                {content.temazcal.cta}<ArrowRight size={16} aria-hidden="true" />
+              </a>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-[36px] border border-[#E7C866]/25" aria-hidden="true" />
+              <img src="/uploads/Ciclo Femenino/Temazcal.jpeg" alt={language === 'es' ? 'Estructura ceremonial de temazcal' : 'Ceremonial temazcal structure'} className="relative aspect-[4/3] w-full rounded-[30px] object-cover shadow-2xl" loading="lazy" />
+            </div>
           </div>
         </section>
 

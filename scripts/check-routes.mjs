@@ -33,6 +33,7 @@ const ROUTE_PATHS = [
   '/festival-raiz-sonora',
   '/organizamos-tu-experiencia',
   '/practicas',
+  '/temazcal',
   '/coliving',
   '/ciclo-vital-femenino',
   '/reset-vital',

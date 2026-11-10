@@ -154,10 +154,17 @@ export const ROUTES = [
   },
   {
     path: '/practicas',
-    title: 'Prácticas de Pueblo Mágico · Temazcal, palabra, música y fuego',
-    description: 'Conocé las prácticas con las que Pueblo Mágico integra y expresa su visión: temazcal, rapé ceremonial, música, círculos de palabra, fuego y tabaco ceremonial.',
-    image: 'https://experienciamagico.com/uploads/temazcal.webp',
+    title: 'Prácticas de Pueblo Mágico · Palabra, música, fuego y artesanía',
+    description: 'Conocé las prácticas con las que Pueblo Mágico integra y expresa su visión: palabra, música, fuego, artesanía, temazcal, rapé y tabaco ceremonial.',
+    image: 'https://experienciamagico.com/uploads/sunset-rio-amigos.webp',
     canonical: 'https://experienciamagico.com/practicas',
+  },
+  {
+    path: '/temazcal',
+    title: 'Temazcal en Pueblo Mágico · Ceremonia, calor y comunidad',
+    description: 'Conocé cómo vivimos el Temazcal en Pueblo Mágico: una ceremonia guiada de calor, vapor, palabra, canto, silencio y presencia compartida.',
+    image: 'https://experienciamagico.com/uploads/temazcal.webp',
+    canonical: 'https://experienciamagico.com/temazcal',
   },
   {
     path: '/cordoba-fly-fishing',

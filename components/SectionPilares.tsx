@@ -8,12 +8,12 @@ export const SectionPilares: React.FC = () => {
   const practicesCopy = language === 'es' ? {
     eyebrow: 'Pilares en acción',
     title: 'Prácticas que sostienen nuestra visión',
-    text: 'El temazcal, la palabra, la música, el fuego y el rezo son formas de integrar, incorporar y expresar lo que somos.',
+    text: 'La palabra, la música, el fuego, la artesanía, el rezo y el temazcal son formas de integrar, incorporar y expresar lo que somos.',
     cta: 'Conocer nuestras prácticas',
   } : {
     eyebrow: 'Pillars in action',
     title: 'Practices that sustain our vision',
-    text: 'Temazcal, word, music, fire and prayer are ways of integrating, embodying and expressing who we are.',
+    text: 'Word, music, fire, craft, prayer and temazcal are ways of integrating, embodying and expressing who we are.',
     cta: 'Discover our practices',
   };
 
@@ -65,9 +65,10 @@ export const SectionPilares: React.FC = () => {
         </div>
 
         <a href={ROUTES.PRACTICAS} className="group mt-16 grid overflow-hidden rounded-[30px] border border-brand/10 bg-[#F7F1E7] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(23,49,39,0.12)] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4 md:grid-cols-[0.8fr_1.2fr]">
-          <div className="relative min-h-[240px] overflow-hidden md:min-h-full">
-            <img src="/uploads/temazcal.webp" alt={language === 'es' ? 'Temazcal ceremonial en Pueblo Mágico' : 'Ceremonial temazcal at Pueblo Mágico'} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-            <div className="absolute inset-0 bg-brand/20" />
+          <div className="grid min-h-[280px] grid-cols-2 grid-rows-2 gap-1 overflow-hidden md:min-h-full">
+            <img src="/uploads/sunset-rio-amigos.webp" alt={language === 'es' ? 'Comunidad reunida en círculo' : 'Community gathered in a circle'} className="row-span-2 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+            <img src="/uploads/sunset-rio-guitarreada.webp" alt={language === 'es' ? 'Música compartida junto al fuego' : 'Music shared by the fire'} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+            <img src="/uploads/fausto-tallando.jpg" alt={language === 'es' ? 'Trabajo artesanal en madera' : 'Wood craftsmanship'} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
           </div>
           <div className="flex flex-col justify-center p-8 md:p-12">
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#A94A2B]">{practicesCopy.eyebrow}</p>

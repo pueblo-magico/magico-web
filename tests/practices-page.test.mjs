@@ -12,12 +12,19 @@ test('practices page is routable, prerendered and discoverable', () => {
   const smokeRoutes = read('scripts/check-routes.mjs');
 
   assert.match(routes, /PRACTICAS:\s*'\/practicas'/);
+  assert.match(routes, /TEMAZCAL:\s*'\/temazcal'/);
   assert.match(entry, /import\('\.\/src\/Practicas'\)/);
+  assert.match(entry, /import\('\.\/src\/Temazcal'\)/);
   assert.match(entry, /path=\{ROUTES\.PRACTICAS\}/);
+  assert.match(entry, /path=\{ROUTES\.TEMAZCAL\}/);
   assert.match(prerender, /path:\s*'\/practicas'/);
+  assert.match(prerender, /path:\s*'\/temazcal'/);
   assert.match(prerender, /canonical:\s*'https:\/\/experienciamagico\.com\/practicas'/);
+  assert.match(prerender, /canonical:\s*'https:\/\/experienciamagico\.com\/temazcal'/);
   assert.match(sitemap, /<loc>https:\/\/experienciamagico\.com\/practicas<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/experienciamagico\.com\/temazcal<\/loc>/);
   assert.match(smokeRoutes, /'\/practicas'/);
+  assert.match(smokeRoutes, /'\/temazcal'/);
 });
 
 test('page communicates the strategy and every confirmed practice', () => {
@@ -34,8 +41,10 @@ test('page communicates the strategy and every confirmed practice', () => {
     'Círculos de palabra',
     'Fuego ceremonial',
     'Uso ceremonial de tabaco',
+    'Artesanía',
   ]) assert.ok(page.includes(text), `Missing practices copy: ${text}`);
 
+  assert.match(page, /href=\{ROUTES\.TEMAZCAL\}/);
   assert.match(page, /invitaciones abiertas/i);
   assert.match(page, /No son tratamientos médicos ni una invitación al consumo libre/);
   assert.match(page, /participación es siempre voluntaria/);
@@ -55,5 +64,17 @@ test('practices page uses existing Pueblo Mágico photography', () => {
     'public/uploads/temazcal.webp',
     'public/uploads/Ciclo Femenino/Temazcal.jpeg',
     'public/uploads/sunset-rio-fogon-real.webp',
+    'public/uploads/sunset-rio-amigos.webp',
+    'public/uploads/sunset-rio-guitarreada.webp',
+    'public/uploads/fausto-tallando.jpg',
   ]) assert.ok(existsSync(new URL(`../${asset}`, import.meta.url)), `Missing asset: ${asset}`);
+});
+
+test('temazcal has a dedicated editorial page with a path back to practices', () => {
+  const page = read('src/Temazcal.tsx');
+
+  assert.match(page, /Qué es|La ceremonia/);
+  assert.match(page, /Participación voluntaria/);
+  assert.match(page, /href=\{ROUTES\.PRACTICAS\}/);
+  assert.match(page, /href="\/#eventos"/);
 });
