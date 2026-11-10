@@ -11,6 +11,7 @@ export async function onRequestGet({ request, env }: any): Promise<Response> {
     user: {
       displayName: session.displayName,
       ...(session.email ? { email: session.email } : {}),
+      ...(session.pictureUrl ? { pictureUrl: session.pictureUrl } : {}),
     },
   });
 }

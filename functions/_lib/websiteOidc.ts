@@ -25,6 +25,7 @@ export interface WebsiteSession {
   readonly email?: string;
   readonly expiresAt: number;
   readonly issuer: string;
+  readonly pictureUrl?: string;
   readonly subject: string;
 }
 
@@ -95,7 +96,23 @@ function trimmedClaim(value: unknown, maximumLength: number): string | undefined
   return trimmed && trimmed.length <= maximumLength ? trimmed : undefined;
 }
 
-export function parseWebsiteOidcProfile(value: unknown): { readonly displayName: string; readonly email?: string } {
+function profileImageUrl(value: unknown): string | undefined {
+  const candidate = trimmedClaim(value, 2_048);
+  if (!candidate) return undefined;
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== 'https:' || url.username || url.password) return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+export function parseWebsiteOidcProfile(value: unknown): {
+  readonly displayName: string;
+  readonly email?: string;
+  readonly pictureUrl?: string;
+} {
   const claims = isRecord(value) ? value : {};
   const email = trimmedClaim(claims.email, 320);
   const fullName = trimmedClaim(claims.name, 160);
@@ -103,9 +120,11 @@ export function parseWebsiteOidcProfile(value: unknown): { readonly displayName:
   const familyName = trimmedClaim(claims.family_name, 80);
   const composedName = [givenName, familyName].filter((part): part is string => Boolean(part)).join(' ');
   const preferredUsername = trimmedClaim(claims.preferred_username, 160);
+  const pictureUrl = profileImageUrl(claims.picture);
   return {
     displayName: fullName ?? (composedName || undefined) ?? preferredUsername ?? email ?? 'Tu cuenta',
     ...(email ? { email } : {}),
+    ...(pictureUrl ? { pictureUrl } : {}),
   };
 }
 
@@ -131,15 +150,19 @@ function parseSession(value: unknown): WebsiteSession {
     || typeof value.expiresAt !== 'number'
     || typeof value.issuer !== 'string'
     || typeof value.subject !== 'string'
-    || (value.email !== undefined && typeof value.email !== 'string')) {
+    || (value.email !== undefined && typeof value.email !== 'string')
+    || (value.pictureUrl !== undefined && typeof value.pictureUrl !== 'string')) {
     throw new Error('invalid_website_session');
   }
   const email = typeof value.email === 'string' && value.email ? value.email : undefined;
+  const pictureUrl = profileImageUrl(value.pictureUrl);
+  if (value.pictureUrl !== undefined && !pictureUrl) throw new Error('invalid_website_session');
   return {
     displayName: value.displayName,
     ...(email ? { email } : {}),
     expiresAt: value.expiresAt,
     issuer: value.issuer,
+    ...(pictureUrl ? { pictureUrl } : {}),
     subject: value.subject,
   };
 }
@@ -251,6 +274,7 @@ export async function completeWebsiteCallback(request: Request, config: WebsiteA
     ...(profile.email ? { email: profile.email } : {}),
     expiresAt,
     issuer: config.issuer,
+    ...(profile.pictureUrl ? { pictureUrl: profile.pictureUrl } : {}),
     subject: verification.payload.sub,
   };
   return redirect(new URL('/cuenta', config.appBaseUrl).toString(), [

@@ -4,7 +4,7 @@ export type WebsiteAccountState =
   | { readonly status: 'loading' }
   | { readonly status: 'signed_out' }
   | { readonly message: string; readonly status: 'unavailable' }
-  | { readonly status: 'authenticated'; readonly user: { readonly displayName: string; readonly email?: string } };
+  | { readonly status: 'authenticated'; readonly user: { readonly displayName: string; readonly email?: string; readonly pictureUrl?: string } };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -14,9 +14,21 @@ function parseAuthenticated(value: unknown): WebsiteAccountState | null {
   if (!isRecord(value) || value.status !== 'authenticated' || !isRecord(value.user)) return null;
   const displayName = value.user.displayName;
   const email = value.user.email;
-  if (typeof displayName !== 'string' || !displayName.trim() || (email !== undefined && typeof email !== 'string')) return null;
+  const pictureUrl = value.user.pictureUrl;
+  if (typeof displayName !== 'string'
+    || !displayName.trim()
+    || (email !== undefined && typeof email !== 'string')
+    || (pictureUrl !== undefined && typeof pictureUrl !== 'string')) return null;
   const normalizedEmail = typeof email === 'string' && email ? email : undefined;
-  return { status: 'authenticated', user: { displayName: displayName.trim(), ...(normalizedEmail ? { email: normalizedEmail } : {}) } };
+  const normalizedPictureUrl = typeof pictureUrl === 'string' && pictureUrl ? pictureUrl : undefined;
+  return {
+    status: 'authenticated',
+    user: {
+      displayName: displayName.trim(),
+      ...(normalizedEmail ? { email: normalizedEmail } : {}),
+      ...(normalizedPictureUrl ? { pictureUrl: normalizedPictureUrl } : {}),
+    },
+  };
 }
 
 export function useWebsiteAccount(): { readonly refresh: () => Promise<void>; readonly state: WebsiteAccountState } {

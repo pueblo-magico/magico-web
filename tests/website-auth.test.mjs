@@ -95,10 +95,12 @@ test('website profile prefers the verified userinfo name over an email fallback'
   assert.deepEqual(parseWebsiteOidcProfile({
     email: 'test@example.com',
     name: 'Jasper Meyer',
+    picture: 'https://images.example.com/jasper.jpg',
     sub: 'user-1',
   }), {
     displayName: 'Jasper Meyer',
     email: 'test@example.com',
+    pictureUrl: 'https://images.example.com/jasper.jpg',
   });
   assert.equal(parseWebsiteOidcProfile({
     email: 'test@example.com',

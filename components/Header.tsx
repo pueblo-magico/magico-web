@@ -360,7 +360,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
             
             {/* Mobile account entry */}
             <li className="mt-6 w-full lg:hidden">
-              <AccountControl language={language} mobile onSignedOut={() => setIsMobileMenuOpen(false)} state={account.state} />
+              <AccountControl language={language} mobile onNavigate={() => setIsMobileMenuOpen(false)} state={account.state} />
             </li>
 
             {/* Mobile Language Button */}
