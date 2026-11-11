@@ -2,10 +2,12 @@ import React, { useMemo } from 'react';
 import {
   ArrowRight,
   BedDouble,
+  CalendarDays,
   Check,
   ChefHat,
   Flame,
   HeartHandshake,
+  Instagram,
   Leaf,
   MapPin,
   Mountain,
@@ -106,7 +108,7 @@ const EXPERIENCES = [
     Icon: Flame,
     image: '/uploads/Ciclo Femenino/Temazcal.jpeg',
     alt: 'Temazcal en Pueblo Mágico',
-    text: 'Ceremonia para hasta 16 participantes, con preparación del espacio y coordinación con el equipo responsable.',
+    text: 'Ceremonia para todos los participantes y el equipo facilitador, con preparación del espacio y coordinación con el equipo responsable.',
   },
   {
     title: 'Inmersión en hielo',
@@ -118,8 +120,8 @@ const EXPERIENCES = [
   {
     title: 'Caminata sobre fuego',
     Icon: Sun,
-    image: '/uploads/arcos-fuego.jpg',
-    alt: 'Fuego ceremonial en la naturaleza',
+    image: '/uploads/propuestas/jesus-cordoba-firewalk-v2.webp',
+    alt: 'Visual ilustrativo de una caminata sobre brasas preparadas',
     text: 'Disponibilidad de un sector natural de aproximadamente 20 × 20 metros, sujeto a condiciones ambientales, prevención de incendios, permisos y protocolos técnicos.',
   },
 ];
@@ -131,7 +133,7 @@ const OPTION_ONE = [
   'Uso exclusivo del ecocentro',
   'Gastronomía consciente premium',
   'Dos anfitriones adicionales dedicados',
-  'Temazcal para hasta 16 participantes + equipo facilitador',
+  'Temazcal para todos los participantes y equipo facilitador',
   'Provisión y traslado de 600 kg de hielo',
   'Disponibilidad de sector para caminata sobre fuego',
   'Coordinación logística y operativa',
@@ -183,8 +185,13 @@ const PropuestaJesusCordoba: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#061f1a] via-[#082f27]/65 to-black/20" />
           <div className="relative z-10 mx-auto w-full max-w-6xl px-5 md:px-12">
             <div className="max-w-4xl">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/15 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/90 backdrop-blur-md">
-                <MapPin size={14} aria-hidden="true" /> Sierras Grandes · Córdoba
+              <div className="mb-6 flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/15 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/90 backdrop-blur-md">
+                  <MapPin size={14} aria-hidden="true" /> Sierras Grandes · Córdoba
+                </div>
+                <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/25 bg-black/15 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/90 backdrop-blur-md">
+                  <CalendarDays size={14} className="shrink-0" aria-hidden="true" /> Finde de carnaval 2027 · 6 al 9 de febrero
+                </div>
               </div>
               <Eyebrow light>Propuesta de experiencia exclusiva</Eyebrow>
               <p className="mt-5 text-sm font-medium tracking-[0.18em] text-white/75">Pueblo Mágico × Jesús Córdoba</p>
@@ -266,7 +273,7 @@ const PropuestaJesusCordoba: React.FC = () => {
         <section className="bg-white px-5 py-20 md:py-28">
           <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:items-center">
             <div className="relative overflow-hidden rounded-[2rem]">
-              <img src={img('/uploads/comida.jpg', 1100)} alt="Gastronomía consciente preparada en Pueblo Mágico" className="h-[440px] w-full object-cover md:h-[620px]" loading="lazy" />
+              <img src={img('/uploads/propuestas/jesus-cordoba-gastronomia-v2.webp', 1100)} alt="Visual ilustrativo de una mesa de gastronomía consciente en la montaña" className="h-[440px] w-full object-cover md:h-[620px]" loading="lazy" />
               <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/20 bg-[#082F27]/90 p-5 text-white backdrop-blur-md md:inset-x-7 md:bottom-7 md:p-7">
                 <ChefHat size={23} style={{ color: C.gold }} aria-hidden="true" />
                 <p className="serif-title mt-3 text-2xl md:text-3xl">Alimentación que acompaña la transformación.</p>
@@ -368,7 +375,7 @@ const PropuestaJesusCordoba: React.FC = () => {
               <article className="rounded-3xl bg-white p-7 text-left shadow-2xl md:p-10" style={{ color: C.ink }}>
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: C.clay }}>Opción 1</p>
                 <h3 className="serif-title mt-3 text-3xl md:text-4xl" style={{ color: C.green }}>Experiencia de 2 noches</h3>
-                <p className="serif-title mt-7 text-4xl md:text-5xl" style={{ color: C.dark }}>$12.500.000 <span className="text-base font-sans font-semibold">ARS</span></p>
+                <p className="serif-title mt-7 text-4xl md:text-5xl" style={{ color: C.dark }}>$13.800.000 <span className="text-base font-sans font-semibold">ARS</span></p>
                 <p className="mt-2 text-sm" style={{ color: C.muted }}>Inversión total por la experiencia integral.</p>
                 <div className="my-7 h-px bg-[#064D3B]/10" />
                 <CheckList items={OPTION_ONE} />
@@ -377,7 +384,7 @@ const PropuestaJesusCordoba: React.FC = () => {
               <article className="rounded-3xl border border-white/15 bg-white/[0.07] p-7 text-left backdrop-blur-sm md:p-10">
                 <p className="text-[10px] font-bold uppercase tracking-[0.3em]" style={{ color: C.gold }}>Opción 2</p>
                 <h3 className="serif-title mt-3 text-3xl md:text-4xl">Experiencia de 3 noches</h3>
-                <p className="serif-title mt-7 text-4xl md:text-5xl">$16.500.000 <span className="text-base font-sans font-semibold text-white/70">ARS</span></p>
+                <p className="serif-title mt-7 text-4xl md:text-5xl">$17.500.000 <span className="text-base font-sans font-semibold text-white/70">ARS</span></p>
                 <p className="mt-2 text-sm text-white/65">Inversión total por la experiencia integral.</p>
                 <div className="my-7 h-px bg-white/15" />
                 <p className="text-base leading-relaxed text-white/80">Incluye los mismos servicios de la opción de 2 noches, extendidos a tres noches, con una jornada adicional de alojamiento, gastronomía y acompañamiento operativo.</p>
@@ -395,14 +402,31 @@ const PropuestaJesusCordoba: React.FC = () => {
           </div>
         </section>
 
-        <section className="relative overflow-hidden px-5 py-24 text-center text-white md:py-36">
+        <section className="relative overflow-hidden px-5 py-24 text-white md:py-36">
           <img src={img('/uploads/campoentero.webp', 1800)} alt="Pueblo Mágico en el paisaje de las Sierras Grandes" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-[#082F27]/85" />
-          <div className="relative z-10 mx-auto max-w-4xl">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10"><Leaf size={25} style={{ color: C.gold }} aria-hidden="true" /></div>
-            <Eyebrow light>Una alianza para crear experiencias que dejan huella</Eyebrow>
-            <h2 className="serif-title mt-5 text-4xl leading-tight md:text-6xl">Los grandes procesos de transformación necesitan entornos que acompañen su profundidad.</h2>
-            <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/70 md:text-lg">Nos entusiasma la posibilidad de trabajar junto a Jesús y su equipo, poniendo nuestro territorio y experiencia al servicio de esta propuesta, y que este encuentro sea el comienzo de una colaboración a largo plazo.</p>
+          <div className="relative z-10 mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+            <div className="mx-auto w-full max-w-sm overflow-hidden rounded-[2rem] border border-white/15 bg-white/10 p-3 shadow-2xl backdrop-blur-sm">
+              <img src={img('/uploads/propuestas/jesus-cordoba-retrato.webp', 800)} alt="Jesús Córdoba, facilitador de la experiencia" className="aspect-[4/5] w-full rounded-[1.4rem] object-cover object-top" loading="lazy" />
+              <div className="flex items-center justify-between gap-4 px-3 py-4">
+                <div>
+                  <p className="serif-title text-2xl">Jesús Córdoba</p>
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/55">Facilitador principal</p>
+                </div>
+                <a href="https://www.instagram.com/jesuscordoba.oficial/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de Jesús Córdoba" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 transition-colors hover:bg-white hover:text-[#064D3B]">
+                  <Instagram size={19} aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+            <div className="text-center lg:text-left">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10 lg:mx-0"><Leaf size={25} style={{ color: C.gold }} aria-hidden="true" /></div>
+              <Eyebrow light>Una alianza para crear experiencias que dejan huella</Eyebrow>
+              <h2 className="serif-title mt-5 text-4xl leading-tight md:text-6xl">Los grandes procesos de transformación necesitan entornos que acompañen su profundidad.</h2>
+              <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-white/70 md:text-lg lg:mx-0">Nos entusiasma la posibilidad de trabajar junto a Jesús y su equipo, poniendo nuestro territorio y experiencia al servicio de esta propuesta, y que este encuentro sea el comienzo de una colaboración a largo plazo.</p>
+              <a href="https://www.instagram.com/jesuscordoba.oficial/" target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/80 underline decoration-[#C9A94E] underline-offset-8 transition-colors hover:text-white">
+                <Instagram size={17} aria-hidden="true" /> @jesuscordoba.oficial
+              </a>
+            </div>
           </div>
         </section>
 
