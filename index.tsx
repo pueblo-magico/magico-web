@@ -19,6 +19,7 @@ import CicloVitalFemenino from './src/CicloVitalFemenino';
 import { ROUTES } from './src/routes.js';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
+const PropuestaJesusCordoba = lazy(() => import('./src/PropuestaJesusCordoba'));
 const AulaVerdeTravel360 = lazy(() => import('./src/AulaVerdeTravel360'));
 const AulaVerdeSalvadorMazza = lazy(() => import('./src/AulaVerdeSalvadorMazza'));
 const OrganizamosTuExperiencia = lazy(() => import('./src/OrganizamosTuExperiencia'));
@@ -128,6 +129,7 @@ root.render(
               <Route path="/propuesta/calma-magico" element={<Navigate to={ROUTES.PRESUPUESTO_CALMA_YOGA} replace />} />
               <Route path="/organizamos-tu-experiencia" element={<OrganizamosTuExperiencia />} />
               <Route path={ROUTES.ORGANIZA_TU_RETIRO} element={<OrganizaTuRetiro />} />
+              <Route path={ROUTES.PRESUPUESTO_JESUS_CORDOBA} element={<PropuestaJesusCordoba />} />
               <Route path={ROUTES.PRESUPUESTO_RETIRO} element={<PresupuestoRetiro />} />
               <Route path="/inti-raymi" element={<IntiRaymi />} />
               <Route path="/pachamama-fest" element={<PachamamaFest />} />

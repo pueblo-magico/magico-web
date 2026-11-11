@@ -16,6 +16,7 @@ export const ROUTES = {
   PRESUPUESTO_360_TRAVEL: '/presupuestos/aulas-verdes-360-travel',
   PRESUPUESTO_SALVADOR_MAZZA: '/presupuestos/aulas-verdes-729-salvador-mazza',
   PRESUPUESTO_CALMA_YOGA: '/presupuestos/calma-magico',
+  PRESUPUESTO_JESUS_CORDOBA: '/presupuestos/jesus-cordoba',
   ORGANIZA_EXPERIENCIA: '/organizamos-tu-experiencia',
   ORGANIZA_TU_RETIRO: '/organiza-tu-retiro',
   PRESUPUESTO_RETIRO: '/presupuestos/:proposalId',

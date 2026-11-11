@@ -79,6 +79,7 @@ test('all proposal components apply private metadata during client navigation', 
     'src/PropuestaCalmaYoga.tsx',
     'src/PropuestaNicoGrupe.tsx',
     'src/PresupuestoRetiro.tsx',
+    'src/PropuestaJesusCordoba.tsx',
   ]) {
     assert.match(read(file), /usePrivateProposalMeta\(/);
   }
