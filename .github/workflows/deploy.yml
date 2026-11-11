@@ -12,6 +12,10 @@ on:
         default: false
         type: boolean
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   deploy:
     if: ${{ inputs.confirm_production }}
@@ -29,7 +33,9 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium
@@ -37,6 +43,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
+          VITE_COMPANION_PORTAL_URL: ${{ vars.VITE_COMPANION_PORTAL_URL }}
+          VITE_STAFF_PORTAL_URL: ${{ vars.VITE_STAFF_PORTAL_URL }}
           VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER: ${{ vars.VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER }}
           VITE_REFORESTATION_SEPA_IBAN: ${{ vars.VITE_REFORESTATION_SEPA_IBAN }}
           VITE_REFORESTATION_SEPA_BIC: ${{ vars.VITE_REFORESTATION_SEPA_BIC }}

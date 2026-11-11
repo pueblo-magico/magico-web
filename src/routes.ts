@@ -13,6 +13,7 @@ export const ROUTES = {
   VUELO_CONDOR: '/el-vuelo-del-condor',
   TERMINOS: '/terminos-y-condiciones',
   PRIVACIDAD: '/politica-de-privacidad',
+  ACCOUNT: '/cuenta',
   PRESUPUESTO_360_TRAVEL: '/presupuestos/aulas-verdes-360-travel',
   PRESUPUESTO_SALVADOR_MAZZA: '/presupuestos/aulas-verdes-729-salvador-mazza',
   PRESUPUESTO_CALMA_YOGA: '/presupuestos/calma-magico',

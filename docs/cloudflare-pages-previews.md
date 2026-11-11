@@ -1,41 +1,54 @@
-# Cloudflare Pages previews for pull requests
+# Cloudflare Pages environments
 
-The `Cloudflare Pages PR Preview` workflow builds every pull request targeting
-`main`. For branches in this repository it deploys the generated `dist` folder
-to the existing `pueblo-magico-web` Cloudflare Pages project.
+Pull requests targeting `main` run `.github/workflows/preview.yml` as a
+build-only validation. That workflow does not receive Cloudflare credentials,
+create a GitHub deployment, or publish a Cloudflare Pages preview.
 
-Each pull request gets a stable Cloudflare branch named `pr-<number>`. After a
-successful deployment, the workflow creates or updates one pull-request comment
-containing the preview URL. Cloudflare also creates an immutable URL for each
-individual deployment.
+This prevents ordinary pull requests from creating one Cloudflare branch per
+PR. The production account keeps one explicitly promoted DEV branch only.
 
-## One-time activation
+## Stable DEV deployment
 
-1. In Cloudflare, open **My Profile > API Tokens > Create Token > Custom token**.
-2. Give the token the **Account > Cloudflare Pages > Edit** permission and scope
-   it to the account containing the `pueblo-magico-web` Pages project.
-3. Copy the account ID from the Cloudflare dashboard.
-4. In GitHub, open **Settings > Secrets and variables > Actions** for this
-   repository and create these repository secrets:
-   - `CLOUDFLARE_API_TOKEN`: the token from step 2.
-   - `CLOUDFLARE_ACCOUNT_ID`: the account ID from step 3.
-5. In **Settings > Actions > General**, keep GitHub Actions enabled. If the
-   organization restricts the automatic `GITHUB_TOKEN`, allow workflows to
-   create deployments and write pull-request comments. The workflow declares
-   only `contents: read`, `deployments: write`, and `pull-requests: write`.
-6. Re-run the `Cloudflare Pages PR Preview` workflow for the open pull request,
-   or push a new commit to it.
+Development releases use `.github/workflows/deploy-dev.yml`. Pushing an
+explicitly selected commit to the Git branch `dev` builds it and deploys to the
+Cloudflare Pages branch `dev` in the production-account
+`pueblo-magico-web` project. The workflow can also be started manually with an
+explicit confirmation. The stable origin and registered OIDC callback remain:
 
-The stable URL for pull request 7 will normally be:
+`https://dev.pueblo-magico-web.pages.dev`
 
-`https://pr-7.pueblo-magico-web.pages.dev`
+The workflow uses the existing repository secrets:
 
-Use the URL posted by the workflow as the authoritative value, because
-Cloudflare may normalize a branch alias.
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
 
-## Security behavior
+The production workflow remains isolated in `.github/workflows/deploy.yml` and
+retains its explicit `confirm_production` gate. The DEV branch currently uses
+the Pages preview-environment bindings of the production project; this is a
+temporary operating decision and does not re-enable per-PR deployments.
 
-Pull requests from forks run the build but skip deployment. This prevents
-untrusted fork code from receiving the Cloudflare credentials. A maintainer can
-create an in-repository branch for a trusted external change when a preview is
-required.
+Before each DEV deployment, the workflow patches only the Pages `preview`
+environment with the registered website base URL, DEV Mágico Auth issuer and
+client ID, and a newly generated session-cookie secret. Production environment
+variables and secrets are not included in that API update.
+
+The workflow then moves `wrangler.toml` aside only inside the ephemeral CI
+checkout. A Pages deployment containing `pages_build_output_dir` treats the
+Wrangler file as the source of truth and would otherwise overwrite the preview
+variables configured immediately before deployment. The committed Wrangler
+configuration remains unchanged and continues to describe production/local
+bindings.
+
+## Legacy preview cleanup
+
+`.github/workflows/cleanup-preview.yml` remains temporarily enabled on pull
+request closure so legacy `pr-*` deployments can be deleted. It does not target
+the stable `dev` branch and does not create deployments. Remove the cleanup
+workflow after all legacy PR aliases have been removed.
+
+## OIDC behavior
+
+Mágico Auth requires an exact callback origin. The stable DEV deployment uses
+same-origin `/api/v1/auth/login`; pull-request builds set the public login URL
+to the registered stable DEV origin only for build validation. No ephemeral
+`pr-*` callback hosts or wildcard callbacks are registered.

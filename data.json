@@ -572,14 +572,14 @@
     "experiences": {
       "tag": "En Mágico",
       "title": "Diseñá tu <span class='italic text-gold'>Experiencia</span>",
-      "intro_p1": "En Pueblo Mágico, <strong class='text-brand font-medium'>lo básico es extraordinario</strong>. Tu estadía siempre incluye <strong class='text-[#8B6914] font-medium'>Alojamiento, Pensión Completa y la experiencia Reset Vital</strong>. Descubrí la calma profunda de habitar la montaña durante la semana, el ritmo perfecto para el enfoque, la creatividad y la presencia.",
+      "intro_p1": "En Pueblo Mágico, <strong class='text-brand font-medium'>lo básico es extraordinario</strong>. Tu estadía incluye <strong class='text-[#8B6914] font-medium'>alojamiento, desayuno y la experiencia Reset Vital</strong>; podés elegir pensión completa cuando esté disponible. Descubrí la calma profunda de habitar la montaña.",
       "intro_p2": "Ya recibimos viajeros de todo el mundo. Somos el destino ideal para quienes buscan un <b>Coworking con alma</b> o un retiro personal autoguiado: el <b>Reset Vital</b>.",
       "badge_accommodation": "Alojamiento", 
       "personalizeStay": "PERSONALIZÁ TU ESTADÍA",
       "coworkingBadge": "Coworking & Coliving",
-      "card_extra_text": "También podés solo alojarte si querés — desde $20.000/persona/noche con desayuno, en carpa, Refugio de Piedra o domo compartido. Sumá almuerzo, cena o pensión completa a tu gusto.",
+      "card_extra_text": "Consultá fechas, disponibilidad y precio final online para Refugio de Piedra o domo. El camping se coordina por WhatsApp.",
       "btn": "RESERVAR MI LUGAR", 
-      "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
+      "link": "https://reservas.experienciamagico.com/reservar?paso=fechas",
       "cards": [
         {
           "id": 1,
@@ -1137,7 +1137,7 @@
       "reservationKicker": "ECOLODGE DE MONTAÑA",
       "reservationCta": "Verificar disponibilidad",
       "reservationTitle": "Reserva tu experiencia inolvidable en la montaña",
-      "reservationPricing": "Desde $20.000/persona/noche (carpa, con desayuno) · sumá comidas a tu gusto"
+      "reservationPricing": "Disponibilidad y precio final verificados al reservar"
     },
     "video": {
       "title": "Viví nuestra experiencia de <span class='italic text-gold'>montaña</span>",
@@ -1230,7 +1230,7 @@
       ],
       "book": "RESERVAR",
       "lang": "ENGLISH",
-      "bookLink": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20una%20experiencia%20en%20Pueblo%20M%C3%A1gico.%20%E2%9C%A8"
+      "bookLink": "https://reservas.experienciamagico.com/reservar?paso=fechas"
     },
     "pillars": [
       {
@@ -3433,14 +3433,14 @@
     "experiences": {
       "tag": "Mágico Experience",
       "title": "Design your stay",
-      "intro_p1": "At Pueblo Mágico, <strong class='text-brand font-medium'>the basics are extraordinary</strong>. Your stay always includes <strong class='text-[#8B6914] font-medium'>Accommodation, Full Board, and the Reset Vital experience</strong>. Discover the deep calm of inhabiting the mountain during the week, the perfect pace for focus, creativity, and presence.",
+      "intro_p1": "At Pueblo Mágico, <strong class='text-brand font-medium'>the basics are extraordinary</strong>. Your stay includes <strong class='text-[#8B6914] font-medium'>accommodation, breakfast and the Reset Vital experience</strong>; full board can be selected when available. Discover the deep calm of living in the mountains.",
       "intro_p2": "We have already hosted travelers from all over the world. We are the ideal destination for those seeking a <b>Coworking with soul</b> or a self-guided personal retreat: the <b>Reset Vital</b>.",
       "badge_accommodation": "Accommodation",
       "personalizeStay": "CUSTOMIZE YOUR STAY",
       "coworkingBadge": "Coworking & Coliving",
-      "card_extra_text": "You can also just book accommodation if you wish — from USD 15/person/night with breakfast, in a tent, the Stone Refuge or a shared dome. Add lunch, dinner or full board as you like.",
+      "card_extra_text": "Check dates, availability and the final price online for the Stone Refuge or a dome. Camping is arranged via WhatsApp.",
       "btn": "Book my spot", 
-      "link": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20mi%20lugar%20en%20una%20experiencia.%20%E2%9C%A8",
+      "link": "https://reservas.experienciamagico.com/reservar?paso=fechas",
       "cards": [
         {
           "id": 1,
@@ -3998,7 +3998,7 @@
       "reservationKicker": "MOUNTAIN ECOLODGE",
       "reservationCta": "Check availability",
       "reservationTitle": "Book your unforgettable mountain experience",
-      "reservationPricing": "From USD 15/person/night (tent, with breakfast) · add meals as you like"
+      "reservationPricing": "Availability and final price verified when booking"
     },
     "video": {
       "title": "Live our mountain <span class='italic text-gold'>experience</span>",
@@ -4087,7 +4087,7 @@
       ],
       "book": "BOOK NOW",
       "lang": "ESPAÑOL",
-      "bookLink": "https://wa.me/5493516765820?text=Hola!%20Vengo%20de%20la%20web%20y%20quiero%20reservar%20una%20experiencia%20en%20Pueblo%20M%C3%A1gico.%20%E2%9C%A8"
+      "bookLink": "https://reservas.experienciamagico.com/reservar?paso=fechas"
     },
     "pillars": [
       {

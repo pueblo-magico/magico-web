@@ -1,0 +1,73 @@
+name: Deploy DEV to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+    inputs:
+      confirm_development:
+        description: Confirmar despliegue manual al entorno DEV
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'push' || inputs.confirm_development }}
+    environment: development
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout DEV commit
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Build DEV artifact
+        run: npm run build
+        env:
+          VITE_COMPANION_PORTAL_URL: https://magico-companion-dev.dev-pueblomagico.workers.dev
+          VITE_STAFF_PORTAL_URL: https://magico-staff-portal-dev.dev-pueblomagico.workers.dev
+          VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER: ${{ vars.VITE_REFORESTATION_SEPA_ACCOUNT_HOLDER }}
+          VITE_REFORESTATION_SEPA_IBAN: ${{ vars.VITE_REFORESTATION_SEPA_IBAN }}
+          VITE_REFORESTATION_SEPA_BIC: ${{ vars.VITE_REFORESTATION_SEPA_BIC }}
+          VITE_REFORESTATION_SEPA_BANK: ${{ vars.VITE_REFORESTATION_SEPA_BANK }}
+          VITE_REFORESTATION_SEPA_CURRENCY: ${{ vars.VITE_REFORESTATION_SEPA_CURRENCY }}
+
+      - name: Configure stable DEV auth bindings
+        run: node scripts/cloudflare/configure-pages-dev.mjs
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PROJECT_NAME: pueblo-magico-web
+          WEBSITE_BASE_URL: https://dev.pueblo-magico-web.pages.dev
+          MAGICO_AUTH_ISSUER: https://magico-auth-hffm3o.us1.zitadel.cloud
+          MAGICO_AUTH_CLIENT_ID: '398930695528940858'
+
+      - name: Use dashboard-managed preview bindings
+        run: mv wrangler.toml wrangler.local.toml
+
+      - name: Deploy stable DEV origin
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy dist --project-name=pueblo-magico-web --branch=dev

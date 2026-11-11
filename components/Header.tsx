@@ -17,6 +17,8 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { ROUTES } from '../src/routes';
+import { useWebsiteAccount } from '../src/account';
+import { AccountControl } from './AccountControl';
 import { PageSectionNav } from './PageSectionNav';
 
 const submenuIcons: Record<string, LucideIcon> = {
@@ -43,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
   const [isMobile, setIsMobile] = useState(false);
   const [hasAutoSubNavigation, setHasAutoSubNavigation] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
+  const account = useWebsiteAccount();
   const location = useLocation();
 
   const isHomePage = location.pathname === ROUTES.HOME;
@@ -221,7 +224,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
 
   return (
     <header className={pillClasses}>
-      <div data-header-main-row className="flex w-full items-center justify-between px-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-4">
+      <div data-header-main-row className="flex w-full items-center justify-between px-2 lg:grid lg:grid-cols-[minmax(170px,1fr)_auto_minmax(170px,1fr)] lg:px-4">
         {/* Logo - Left */}
         <div className="flex-1 lg:flex lg:justify-self-start">
           <a href={ROUTES.HOME} className="relative z-[1200] inline-block" onClick={(e) => { 
@@ -262,7 +265,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
             ${isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible lg:opacity-100 lg:visible'}
           `}
         >
-          <ul className="flex flex-col lg:flex-row items-center gap-0 lg:gap-[45px] w-full lg:w-auto">
+          <ul className="flex w-full flex-col items-center gap-0 lg:w-auto lg:flex-row lg:gap-3 xl:gap-6 2xl:gap-[45px]">
             {t.menu.items.map((item: any, index: number) => (
               <li key={index} className="relative group w-full lg:w-auto text-center lg:text-left">
                 <a
@@ -348,8 +351,6 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
             <li className="hidden lg:block pl-4 border-l border-white/20">
                <a 
                  href={t.menu.bookLink} 
-                 target="_blank"
-                 rel="noopener noreferrer"
                  onClick={(e) => handleNavClick(e, t.menu.bookLink, false, -1)}
                  className={`text-xs font-bold px-5 py-2 rounded-full transition-all shadow-lg ${useSolidHeader ? 'bg-brand text-white hover:bg-gold' : 'bg-white text-brand hover:bg-gold hover:text-white'}`}
                >
@@ -357,6 +358,11 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
                </a>
             </li>
             
+            {/* Mobile account entry */}
+            <li className="mt-6 w-full lg:hidden">
+              <AccountControl language={language} mobile onNavigate={() => setIsMobileMenuOpen(false)} state={account.state} />
+            </li>
+
             {/* Mobile Language Button */}
             <li className="lg:hidden mt-8 w-full flex justify-center pb-10">
               <button
@@ -370,11 +376,12 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
         </nav>
 
         {/* Desktop Language Button */}
-        <div className="hidden lg:flex items-center justify-self-end pl-5">
+        <div className="hidden items-center justify-self-end gap-3 pl-5 lg:flex">
+          <AccountControl compact language={language} state={account.state} tone={useSolidHeader ? 'solid' : 'overlay'} />
           <button
             onClick={toggleLanguage}
             className={`
-              text-[11px] font-medium uppercase border rounded-[20px] py-[5px] px-[18px] transition-all duration-300
+              inline-flex h-10 items-center justify-center text-[11px] font-medium uppercase border rounded-full py-0 px-4 transition-all duration-300
               ${
                 useSolidHeader
                   ? 'border-black/15 text-dark hover:bg-brand hover:border-brand hover:text-white'

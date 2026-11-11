@@ -9,6 +9,7 @@ import { UpdateBanner } from './components/UpdateBanner';
 import './src/i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Main from './Main';
+import '@pueblo-magico/react-ui/styles.css';
 import './index.css';
 import Familion from './src/Familion';
 import Gondorbows from './src/Gondorbows';
@@ -17,6 +18,7 @@ import AchalaViva from './src/AchalaViva';
 import VueloDelCondor from './src/VueloDelCondor';
 import CicloVitalFemenino from './src/CicloVitalFemenino';
 import { ROUTES } from './src/routes.js';
+import { RESERVAS_ADMIN_URL, RESERVAS_PUBLIC_URL } from './src/data/config';
 
 const PropuestaCalmaYoga = lazy(() => import('./src/PropuestaCalmaYoga'));
 const PropuestaJesusCordoba = lazy(() => import('./src/PropuestaJesusCordoba'));
@@ -44,8 +46,9 @@ const Estadia = lazy(() => import('./src/Estadia'));
 const Coliving = lazy(() => import('./src/Coliving'));
 const TerminosYCondiciones = lazy(() => import('./src/TerminosYCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./src/PoliticaPrivacidad'));
+const Cuenta = lazy(() => import('./src/Cuenta'));
 const NotFound = lazy(() => import('./src/NotFound'));
-const PanelReservas = lazy(() => import('./src/PanelReservas'));
+const PanelSitio = lazy(() => import('./src/PanelReservas'));
 
 const PRIVATE_PROPOSAL_PREFIXES = [
   '/presupuesto/',
@@ -86,12 +89,24 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
+const ResetVitalInstallBanner: React.FC = () => {
+  const { pathname } = useLocation();
+  return pathname === '/reset-vital' ? <PWAInstallBanner /> : null;
+};
+
 const PageLoader = () => (
   <div id="loader-container" style={{ minHeight: '100vh', background: '#FDFBF7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     <div style={{ width: 48, height: 48, border: '3px solid #e5e7eb', borderTopColor: '#A8971C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
+
+const ExternalRedirect: React.FC<{ to: string }> = ({ to }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return <PageLoader />;
+};
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -106,7 +121,7 @@ root.render(
         <BrowserRouter>
           <ScrollToTop />
           <UpdateBanner />
-          <PWAInstallBanner />
+          <ResetVitalInstallBanner />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Main />} />
@@ -154,10 +169,14 @@ root.render(
               <Route path="/presupuesto/nico-grupe" element={<Navigate to={ROUTES.PRESUPUESTO_NICO_GRUPE} replace />} />
               <Route path="/propuesta/nico-grupe" element={<Navigate to={ROUTES.PRESUPUESTO_NICO_GRUPE} replace />} />
               <Route path="/estadia" element={<Estadia />} />
+              <Route path="/reservar" element={<ExternalRedirect to={RESERVAS_PUBLIC_URL} />} />
+              <Route path="/reservas" element={<ExternalRedirect to={RESERVAS_PUBLIC_URL} />} />
               <Route path="/coliving" element={<Coliving />} />
               <Route path="/terminos-y-condiciones" element={<TerminosYCondiciones />} />
               <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
-              <Route path="/admin/reservas" element={<PanelReservas />} />
+              <Route path={ROUTES.ACCOUNT} element={<Cuenta />} />
+              <Route path="/admin/reservas" element={<ExternalRedirect to={RESERVAS_ADMIN_URL} />} />
+              <Route path="/admin/sitio" element={<PanelSitio siteOnly />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
