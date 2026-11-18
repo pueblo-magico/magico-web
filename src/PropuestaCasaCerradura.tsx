@@ -56,7 +56,7 @@ export default function PropuestaCasaCerradura() {
   usePrivateProposalMeta('Propuesta Corporativa La Casa de la Cerradura | Pueblo Mágico');
   const [selected, setSelected] = useState(1);
   return <div className="min-h-screen overflow-x-hidden bg-[#FDFBF7] text-[#2A1708]">
-    <Header autoSubNavigation={false} />
+    <Header autoSubNavigation />
     <main>
       <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-20 pt-40 text-white md:pb-28">
         <img src={img('/uploads/sunset-rio-rio-real.webp', 1800)} alt="Río y paisaje natural de Pueblo Mágico en las Sierras Grandes" className="absolute inset-0 h-full w-full object-cover" loading="eager" fetchPriority="high" />
@@ -69,9 +69,6 @@ export default function PropuestaCasaCerradura() {
           <a className="inline-flex rounded-full bg-[#D4AF37] px-8 py-4 font-bold text-[#2A1708]" href="#propuestas">Explorar la propuesta</a>
         </div>
       </section>
-      <nav aria-label="Secciones de la propuesta" className="sticky top-0 z-30 overflow-x-auto border-b border-[#e9e0d2] bg-[#FDFBF7]/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex w-max max-w-none gap-6 text-xs font-bold uppercase tracking-wider md:justify-center">{[['lugar','El lugar'],['experiencias','Experiencias'],['propuestas','Paquetes'],['programa','Programa'],['adicionales','Opcionales'],['inversion','Inversión'],['contacto','Contacto']].map(([id,label])=><a key={id} href={'#'+id} className="text-[#005333] hover:underline">{label}</a>)}</div>
-      </nav>
       <section className={section}>
         <Label>El espíritu del encuentro</Label><h2 className={heading}>Un momento para celebrar el camino recorrido.</h2>
         <div className="max-w-3xl space-y-5 text-lg leading-relaxed text-[#6B4A33]"><p>Después de un año de trabajo, desafíos y logros compartidos, llega el momento de hacer una pausa.</p><p>En Pueblo Mágico los invitamos a vivir una experiencia diferente: salir de la rutina, disfrutar de la naturaleza y encontrarse como equipo en un ambiente relajado, cálido y auténtico.</p><p>Un espacio para compartir conversaciones, risas, buenos momentos y celebrar todo lo construido durante el año.</p><p className="serif-title text-2xl text-[#005333]">Porque los mejores equipos también se fortalecen cuando se permiten disfrutar juntos.</p></div>
