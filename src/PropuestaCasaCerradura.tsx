@@ -94,12 +94,21 @@ export default function PropuestaCasaCerradura() {
         <div className="mx-auto max-w-6xl">
           <Label>La experiencia de estar aquí</Label>
           <h2 className="serif-title mb-10 max-w-3xl text-4xl leading-tight md:text-6xl">La montaña tiene otra manera de reunirnos.</h2>
-          <video className="aspect-video w-full rounded-sm bg-black object-cover" controls playsInline preload="none" poster="/uploads/atardeser/atardeser-hero-video-poster-desktop-v2.webp" aria-label="Paisajes y encuentros en Pueblo Mágico">
-            <source src="/uploads/atardeser/atardeser-hero-video-desktop-v1.webm" type="video/webm" />
-            <source src="/uploads/atardeser/atardeser-hero-video-desktop-v1.mp4" type="video/mp4" />
-            Tu navegador no admite la reproducción de video.
-          </video>
-          <p className="mt-4 text-sm text-white/65">Imágenes reales de experiencias en Pueblo Mágico.</p>
+          <div className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-white/15 bg-black shadow-2xl">
+            <div className="relative aspect-[9/16]">
+              <img src="/uploads/img_3027-1-1-.webp" alt="Vista previa del video principal de Pueblo Mágico" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src="https://www.youtube-nocookie.com/embed/hxE7Ksy7IsY"
+                title="Video principal de Pueblo Mágico"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </div>
+          <p className="mt-5 text-center text-sm text-white/65">Viví nuestra experiencia de montaña.</p>
         </div>
       </section>
       <section id="lugar" className="bg-[#F3EEE5] scroll-mt-24"><div className={section}>
