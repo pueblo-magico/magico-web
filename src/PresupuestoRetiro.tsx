@@ -69,7 +69,7 @@ export const RETREAT_PROPOSALS: Record<string, Proposal> = {
     slug: 'jorgelina-asis',
     name: 'Jorgelina Asís',
     month: 'Febrero 2027',
-    group: '15 a 20 personas',
+    group: '15 a 30 personas',
     validThrough: '2026-12-18T23:59:59-03:00',
     includesProduction: true,
   },
@@ -165,6 +165,11 @@ const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) =
     const message = encodeURIComponent(`Hola Pueblo Mágico, soy ${proposal.name}. Quiero conversar sobre la propuesta de retiro de ${proposal.month}.`);
     return `https://wa.me/${WA_MAGICO}?text=${message}`;
   }, [proposal]);
+
+  const productionWhatsappHref = useMemo(() => {
+    const message = encodeURIComponent(`Hola Pueblo Mágico, soy ${proposal.name}. Quiero solicitar un presupuesto separado para los servicios de producción de la experiencia.`);
+    return `https://wa.me/${WA_MAGICO}?text=${message}`;
+  }, [proposal.name]);
 
   const price = new Intl.NumberFormat('es-AR').format(300000);
 
@@ -300,9 +305,14 @@ const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) =
                 ))}
               </div>
 
-              <p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-relaxed" style={{ color: COLORS.muted }}>
-                El alcance final de producción se define en conjunto según el formato, los canales y las necesidades de la experiencia.
-              </p>
+              <div className="mx-auto mt-10 max-w-3xl rounded-2xl border bg-white px-6 py-7 text-center shadow-sm md:px-10" style={{ borderColor: 'rgba(0,83,51,0.14)' }}>
+                <p className="text-sm leading-relaxed md:text-base" style={{ color: COLORS.muted }}>
+                  Si querés conocer más sobre estos servicios, pedinos un presupuesto separado. El alcance se define en conjunto según el formato, los canales y las necesidades de la experiencia.
+                </p>
+                <a href={productionWhatsappHref} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline mt-6 max-w-full text-[11px] font-semibold sm:text-sm">
+                  Pedir presupuesto de producción <ArrowRight size={18} aria-hidden="true" />
+                </a>
+              </div>
             </div>
           </section>
         )}

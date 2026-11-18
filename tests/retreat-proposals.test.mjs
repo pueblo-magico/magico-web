@@ -10,7 +10,7 @@ const source = readFileSync(new URL('../src/OrganizaTuRetiro.tsx', import.meta.u
 test('the supplied personalized retreat proposals are present', () => {
   assert.match(page, /cande:[\s\S]*name: 'Cande'[\s\S]*Febrero 2027[\s\S]*15 a 20 personas/);
   assert.match(page, /'barbi-firmapaz':[\s\S]*name: 'Barbi Firmapaz'[\s\S]*Marzo 2027[\s\S]*15 a 30 personas/);
-  assert.match(page, /'jorgelina-asis':[\s\S]*name: 'Jorgelina Asís'[\s\S]*Febrero 2027[\s\S]*15 a 20 personas/);
+  assert.match(page, /'jorgelina-asis':[\s\S]*name: 'Jorgelina Asís'[\s\S]*Febrero 2027[\s\S]*15 a 30 personas/);
   assert.match(page, /2 noches \/ 3 días/);
   assert.match(page, /300000/);
 });
@@ -19,6 +19,8 @@ test('Jorgelina proposal is valid through December 18 and includes full producti
   assert.match(page, /validThrough: '2026-12-18T23:59:59-03:00'/);
   assert.match(page, /includesProduction: true/);
   assert.match(page, /Vos hacé lo que más te gusta/);
+  assert.match(page, /pedinos un presupuesto separado/);
+  assert.match(page, /Pedir presupuesto de producción/);
 
   for (const expected of [
     'Landing personalizada',
