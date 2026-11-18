@@ -50,7 +50,7 @@ const section = 'mx-auto max-w-6xl px-5 py-24 md:px-12 md:py-36';
 const heading = 'serif-title mb-9 max-w-4xl text-4xl leading-[1.08] text-[#005333] md:text-6xl';
 const card = 'border-t border-[#b9aa8f] bg-transparent py-9 md:py-12';
 const button = 'inline-flex items-center justify-center rounded-full bg-[#005333] px-7 py-4 text-center text-sm font-bold text-white transition hover:bg-[#003D27] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D4AF37]';
-const Label = ({ children }: { children: React.ReactNode }) => <p className="mb-4 text-xs font-bold uppercase tracking-[0.24em] text-[#AA3E11]">{children}</p>;
+const Label = ({ children, onDark = false }: { children: React.ReactNode; onDark?: boolean }) => <p className={`mb-4 text-xs font-bold uppercase tracking-[0.24em] ${onDark ? 'text-[#F0D788]' : 'text-[#87310F]'}`}>{children}</p>;
 const Contact = ({ children, message = baseMessage }: { children: React.ReactNode; message?: string }) => <a className={button} href={wa(message)} target="_blank" rel="noopener noreferrer">{children} →</a>;
 
 const proposalNavigation: PageNavigation = {
@@ -79,20 +79,20 @@ export default function PropuestaCasaCerradura() {
         <img src={img('/uploads/sunset-rio-rio-real.webp', 1800)} alt="Río y paisaje natural de Pueblo Mágico en las Sierras Grandes" className="absolute inset-0 h-full w-full object-cover" loading="eager" fetchPriority="high" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
         <div className="relative mx-auto w-full max-w-6xl px-5 md:px-12">
-          <Label>Propuesta especialmente diseñada para La Casa de la Cerradura</Label>
+          <Label onDark>Propuesta especialmente diseñada para La Casa de la Cerradura</Label>
           <h1 className="serif-title max-w-4xl text-5xl leading-[1.05] md:text-7xl lg:text-8xl">Un encuentro para reconectar, inspirar y fortalecer al equipo.</h1>
-          <p className="mt-6 max-w-2xl text-lg text-white/90 md:text-2xl">Una experiencia para celebrar, compartir y reconectar con lo que nos une.</p>
-          <p className="my-8 text-sm tracking-[0.12em] text-white/80">10–13 diciembre 2026 · 18 participantes · Sierras Grandes, Córdoba · 1 o 2 noches</p>
+          <p className="mt-6 max-w-2xl text-lg text-white md:text-2xl">Una experiencia para celebrar, compartir y reconectar con lo que nos une.</p>
+          <p className="my-8 text-sm tracking-[0.12em] text-white">10–13 diciembre 2026 · 18 participantes · Sierras Grandes, Córdoba · 1 o 2 noches</p>
           <a className="inline-flex rounded-full bg-[#D4AF37] px-8 py-4 font-bold text-[#2A1708]" href="#propuestas">Explorar la propuesta</a>
         </div>
       </section>
       <section id="presentacion" className={section+' scroll-mt-24'}>
         <Label>El espíritu del encuentro</Label><h2 className={heading}>Un momento para celebrar el camino recorrido.</h2>
-        <div className="max-w-3xl space-y-5 text-lg leading-relaxed text-[#6B4A33]"><p>Después de un año de trabajo, desafíos y logros compartidos, llega el momento de hacer una pausa.</p><p>En Pueblo Mágico los invitamos a vivir una experiencia diferente: salir de la rutina, disfrutar de la naturaleza y encontrarse como equipo en un ambiente relajado, cálido y auténtico.</p><p>Un espacio para compartir conversaciones, risas, buenos momentos y celebrar todo lo construido durante el año.</p><p className="serif-title text-2xl text-[#005333]">Porque los mejores equipos también se fortalecen cuando se permiten disfrutar juntos.</p></div>
+        <div className="max-w-3xl space-y-5 text-lg leading-relaxed text-[#513827]"><p>Después de un año de trabajo, desafíos y logros compartidos, llega el momento de hacer una pausa.</p><p>En Pueblo Mágico los invitamos a vivir una experiencia diferente: salir de la rutina, disfrutar de la naturaleza y encontrarse como equipo en un ambiente relajado, cálido y auténtico.</p><p>Un espacio para compartir conversaciones, risas, buenos momentos y celebrar todo lo construido durante el año.</p><p className="serif-title text-2xl text-[#005333]">Porque los mejores equipos también se fortalecen cuando se permiten disfrutar juntos.</p></div>
       </section>
       <section className="bg-[#003D27] px-5 py-24 text-white md:py-32">
         <div className="mx-auto max-w-6xl">
-          <Label>La experiencia de estar aquí</Label>
+          <Label onDark>La experiencia de estar aquí</Label>
           <h2 className="serif-title mb-10 max-w-3xl text-4xl leading-tight md:text-6xl">La montaña tiene otra manera de reunirnos.</h2>
           <div className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-white/15 bg-black shadow-2xl">
             <div className="relative aspect-[9/16]">
@@ -108,7 +108,7 @@ export default function PropuestaCasaCerradura() {
               />
             </div>
           </div>
-          <p className="mt-5 text-center text-sm text-white/65">Viví nuestra experiencia de montaña.</p>
+          <p className="mt-5 text-center text-sm text-[#F2E9D9]">Viví nuestra experiencia de montaña.</p>
         </div>
       </section>
       <section id="lugar" className="bg-[#F3EEE5] scroll-mt-24"><div className={section}>
