@@ -109,6 +109,40 @@ test('the December peyote ceremony is dated and opens its WhatsApp contact', () 
   }
 });
 
+test('the December and New Year calendar includes the five announced events', () => {
+  const expectedEvents = [
+    { es: 'Temazcal', en: 'Temazcal', startDate: '2026-12-13', endDate: '2026-12-13' },
+    { es: 'Solsticio Fest', en: 'Solstice Fest', startDate: '2026-12-18', endDate: '2026-12-21' },
+    { es: 'NAVIDONONON JOJOJO', en: 'NAVIDONONON JOJOJO', startDate: '2026-12-24', endDate: '2026-12-28' },
+    { es: 'Temazcal', en: 'Temazcal', startDate: '2026-12-27', endDate: '2026-12-27' },
+    { es: 'FIN DE AÑO CONSCIENTE', en: 'CONSCIOUS NEW YEAR', startDate: '2026-12-31', endDate: '2027-01-04' },
+  ];
+
+  for (const language of ['es', 'en']) {
+    for (const expected of expectedEvents) {
+      const card = translations[language].events.cards.find((event) => (
+        event.title === expected[language] && event.startDate === expected.startDate
+      ));
+
+      assert.ok(card, `${language}: missing ${expected[language]} on ${expected.startDate}`);
+      assert.equal(card.endDate, expected.endDate);
+      assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
+      assert.equal(card.showInExperienceCatalog, false);
+      assert.equal(shouldShowMainCalendarEvent(card, '2026-11-18'), true);
+    }
+  }
+});
+
+test('the New Year gathering remains visible through January 4', () => {
+  const card = translations.es.events.cards.find((event) => (
+    event.title === 'FIN DE AÑO CONSCIENTE'
+  ));
+
+  assert.ok(card);
+  assert.equal(shouldShowMainCalendarEvent(card, '2027-01-04'), true);
+  assert.equal(shouldShowMainCalendarEvent(card, '2027-01-05'), false);
+});
+
 test('El Despertar del Colibrí uses its landing hero and complete social metadata', () => {
   for (const language of ['es', 'en']) {
     const card = translations[language].events.cards.find((event) => event.title === 'El Despertar del Colibrí');
