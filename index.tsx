@@ -24,6 +24,7 @@ const AulaVerdeTravel360 = lazy(() => import('./src/AulaVerdeTravel360'));
 const AulaVerdeSalvadorMazza = lazy(() => import('./src/AulaVerdeSalvadorMazza'));
 const OrganizamosTuExperiencia = lazy(() => import('./src/OrganizamosTuExperiencia'));
 const OrganizaTuRetiro = lazy(() => import('./src/OrganizaTuRetiro'));
+const PropuestaCasaCerradura = lazy(() => import('./src/PropuestaCasaCerradura'));
 const PresupuestoRetiro = lazy(() => import('./src/PresupuestoRetiro'));
 const IntiRaymi = lazy(() => import('./src/IntiRaymi'));
 const PachamamaFest = lazy(() => import('./src/PachamamaFest'));
@@ -130,6 +131,7 @@ root.render(
               <Route path="/organizamos-tu-experiencia" element={<OrganizamosTuExperiencia />} />
               <Route path={ROUTES.ORGANIZA_TU_RETIRO} element={<OrganizaTuRetiro />} />
               <Route path={ROUTES.PRESUPUESTO_JESUS_CORDOBA} element={<PropuestaJesusCordoba />} />
+              <Route path="/presupuestos/la-casa-de-la-cerradura" element={<PropuestaCasaCerradura />} />
               <Route path={ROUTES.PRESUPUESTO_RETIRO} element={<PresupuestoRetiro />} />
               <Route path="/inti-raymi" element={<IntiRaymi />} />
               <Route path="/pachamama-fest" element={<PachamamaFest />} />
