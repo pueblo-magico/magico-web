@@ -48,6 +48,8 @@ type Proposal = {
   name: string;
   month: string;
   group: string;
+  validThrough?: string;
+  includesProduction?: boolean;
 };
 
 export const RETREAT_PROPOSALS: Record<string, Proposal> = {
@@ -62,6 +64,14 @@ export const RETREAT_PROPOSALS: Record<string, Proposal> = {
     name: 'Barbi Firmapaz',
     month: 'Marzo 2027',
     group: '15 a 30 personas',
+  },
+  'jorgelina-asis': {
+    slug: 'jorgelina-asis',
+    name: 'Jorgelina Asís',
+    month: 'Febrero 2027',
+    group: '15 a 30 personas',
+    validThrough: '2026-12-18T23:59:59-03:00',
+    includesProduction: true,
   },
 };
 
@@ -85,7 +95,34 @@ const EXTRA_EXPERIENCES = [
   'Otras ceremonias ancestrales',
 ];
 
-const ValidityNotice: React.FC = () => {
+const PRODUCTION_SERVICES = [
+  {
+    title: 'Landing personalizada',
+    description: 'Diseñamos y publicamos una página clara y atractiva para presentar la experiencia y convertir el interés en consultas.',
+  },
+  {
+    title: 'Estrategia y difusión',
+    description: 'Ordenamos el mensaje, los momentos de comunicación y la convocatoria para acompañar el lanzamiento.',
+  },
+  {
+    title: 'Copy y piezas visuales',
+    description: 'Preparamos los textos y materiales necesarios para comunicar la propuesta en los canales acordados.',
+  },
+  {
+    title: 'Gestión de inscripciones',
+    description: 'Acompañamos las consultas, el seguimiento y la información práctica previa al encuentro.',
+  },
+  {
+    title: 'Coordinación pre-evento',
+    description: 'Articulamos cronograma, necesidades del grupo, equipo, espacios y detalles de hospitalidad.',
+  },
+  {
+    title: 'Producción integral',
+    description: 'Sostenemos la operación de la experiencia para que vos puedas concentrarte en facilitar y compartir tu propuesta.',
+  },
+];
+
+const ValidityNotice: React.FC<{ label: string }> = ({ label }) => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
   useEffect(() => {
@@ -109,7 +146,7 @@ const ValidityNotice: React.FC = () => {
       <div className="mx-auto flex max-w-6xl justify-center md:justify-end">
         <p className="pointer-events-auto inline-flex items-center gap-2 rounded-b-xl border border-t-0 border-white/20 bg-[#003D27]/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white shadow-lg backdrop-blur-md md:text-xs">
           <CalendarDays className="h-3.5 w-3.5 shrink-0" style={{ color: COLORS.gold }} aria-hidden="true" />
-          {VALIDITY_LABEL}
+          {label}
         </p>
       </div>
     </div>
@@ -119,17 +156,27 @@ const ValidityNotice: React.FC = () => {
 const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) => {
   usePrivateProposalMeta(`Propuesta para ${proposal.name} · Pueblo Mágico`);
 
+  const validityLabel = useMemo(() => {
+    if (!proposal.validThrough) return VALIDITY_LABEL;
+    return `Válida hasta el ${validityFormatter.format(new Date(proposal.validThrough))} inclusive`;
+  }, [proposal.validThrough]);
+
   const whatsappHref = useMemo(() => {
     const message = encodeURIComponent(`Hola Pueblo Mágico, soy ${proposal.name}. Quiero conversar sobre la propuesta de retiro de ${proposal.month}.`);
     return `https://wa.me/${WA_MAGICO}?text=${message}`;
   }, [proposal]);
+
+  const productionWhatsappHref = useMemo(() => {
+    const message = encodeURIComponent(`Hola Pueblo Mágico, soy ${proposal.name}. Quiero solicitar un presupuesto separado para los servicios de producción de la experiencia.`);
+    return `https://wa.me/${WA_MAGICO}?text=${message}`;
+  }, [proposal.name]);
 
   const price = new Intl.NumberFormat('es-AR').format(300000);
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: COLORS.cream, color: COLORS.brown }}>
       <Header autoSubNavigation={false} />
-      <ValidityNotice />
+      <ValidityNotice label={validityLabel} />
       <main>
         <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-14 pt-36 md:pb-24 md:pt-44">
           <img src={img('/uploads/dji_0074.webp', 1800)} alt="Vista aérea de Pueblo Mágico en Los Gigantes" className="absolute inset-0 h-full w-full object-cover" loading="eager" />
@@ -233,6 +280,43 @@ const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) =
           </div>
         </section>
 
+        {proposal.includesProduction && (
+          <section className="px-5 py-20 md:py-28" style={{ backgroundColor: COLORS.sand }}>
+            <div className="mx-auto max-w-6xl">
+              <div className="mx-auto max-w-4xl text-center">
+                <p className="text-[10px] font-bold uppercase tracking-[0.35em]" style={{ color: COLORS.terra }}>Producción completa de la experiencia</p>
+                <h2 className="serif-title mt-4 text-4xl leading-tight md:text-6xl" style={{ color: COLORS.green }}>
+                  Vos hacé lo que más te gusta.<br className="hidden sm:block" /> Nosotros nos encargamos del resto.
+                </h2>
+                <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed md:text-lg" style={{ color: COLORS.muted }}>
+                  Además de recibir al grupo en Pueblo Mágico, podemos acompañar la experiencia de punta a punta: desde cómo se presenta y comunica hasta la coordinación previa y la producción durante el encuentro.
+                </p>
+              </div>
+
+              <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {PRODUCTION_SERVICES.map((service) => (
+                  <article key={service.title} className="rounded-2xl border bg-white p-6 shadow-sm md:p-7" style={{ borderColor: 'rgba(0,83,51,0.12)' }}>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(212,175,55,0.16)', color: COLORS.green }}>
+                      <Sparkles size={18} aria-hidden="true" />
+                    </div>
+                    <h3 className="serif-title mt-5 text-2xl" style={{ color: COLORS.green }}>{service.title}</h3>
+                    <p className="mt-3 text-sm leading-relaxed" style={{ color: COLORS.muted }}>{service.description}</p>
+                  </article>
+                ))}
+              </div>
+
+              <div className="mx-auto mt-10 max-w-3xl rounded-2xl border bg-white px-6 py-7 text-center shadow-sm md:px-10" style={{ borderColor: 'rgba(0,83,51,0.14)' }}>
+                <p className="text-sm leading-relaxed md:text-base" style={{ color: COLORS.muted }}>
+                  Si querés conocer más sobre estos servicios, pedinos un presupuesto separado. El alcance se define en conjunto según el formato, los canales y las necesidades de la experiencia.
+                </p>
+                <a href={productionWhatsappHref} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline mt-6 max-w-full text-[11px] font-semibold sm:text-sm">
+                  Pedir presupuesto de producción <ArrowRight size={18} aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="px-5 py-20 text-white md:py-28" style={{ backgroundColor: COLORS.green }}>
           <div className="mx-auto max-w-6xl">
             <div className="mx-auto max-w-3xl text-center">
@@ -257,7 +341,7 @@ const PresupuestoRetiroPage: React.FC<{ proposal: Proposal }> = ({ proposal }) =
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="btn-gold btn-icon-inline mt-9 max-w-full text-[11px] font-semibold sm:text-sm">Hablar con Pueblo Mágico <ArrowRight size={18} aria-hidden="true" /></a>
             <div className="mx-auto mt-8 flex max-w-xl items-start gap-3 rounded-2xl border border-white/15 bg-white/[0.07] p-5 text-left">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" style={{ color: COLORS.gold }} aria-hidden="true" />
-              <p className="text-xs leading-relaxed text-white/60">Propuesta personalizada y no indexada. {VALIDITY_LABEL}.</p>
+              <p className="text-xs leading-relaxed text-white/60">Propuesta personalizada y no indexada. {validityLabel}.</p>
             </div>
           </div>
         </section>
