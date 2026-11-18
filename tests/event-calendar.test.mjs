@@ -109,8 +109,9 @@ test('the December peyote ceremony is dated and opens its WhatsApp contact', () 
   }
 });
 
-test('the December and New Year calendar includes the five announced events', () => {
+test('the December and New Year calendar includes the six announced events', () => {
   const expectedEvents = [
+    { es: 'Liderazgo con caballos', en: 'Leadership with horses', startDate: '2026-12-12', endDate: '2026-12-12' },
     { es: 'Temazcal', en: 'Temazcal', startDate: '2026-12-13', endDate: '2026-12-13' },
     { es: 'Solsticio Fest', en: 'Solstice Fest', startDate: '2026-12-18', endDate: '2026-12-21' },
     { es: 'NAVIDONONON JOJOJO', en: 'NAVIDONONON JOJOJO', startDate: '2026-12-24', endDate: '2026-12-28' },
@@ -130,6 +131,25 @@ test('the December and New Year calendar includes the five announced events', ()
       assert.equal(card.showInExperienceCatalog, false);
       assert.equal(shouldShowMainCalendarEvent(card, '2026-11-18'), true);
     }
+  }
+});
+
+test('the horse leadership event uses its dedicated image and WhatsApp contact', () => {
+  const expectedTitles = {
+    es: 'Liderazgo con caballos',
+    en: 'Leadership with horses',
+  };
+
+  for (const language of ['es', 'en']) {
+    const card = translations[language].events.cards.find((event) => event.title === expectedTitles[language]);
+
+    assert.ok(card);
+    assert.equal(card.image, '/uploads/events/liderazgo-con-caballos.webp');
+    assert.equal(card.startDate, '2026-12-12');
+    assert.equal(card.endDate, '2026-12-12');
+    assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
+    assert.equal(card.labels.length, 2);
+    assert.equal(card.showInExperienceCatalog, false);
   }
 });
 
