@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Header } from '../components/Header';
 import { PageSectionNav, type PageNavigation } from '../components/PageSectionNav';
 import { Footer } from '../components/Footer';
+import { WhatsAppButton } from '../components/WhatsAppButton';
 import { CookieBanner } from '../components/CookieBanner';
 import { usePrivateProposalMeta } from './hooks/usePrivateProposalMeta';
 import { img } from './lib/img';
@@ -73,7 +74,7 @@ export default function PropuestaCasaCerradura() {
   usePrivateProposalMeta('Propuesta Corporativa La Casa de la Cerradura | Pueblo Mágico');
   const [selected, setSelected] = useState(1);
   return <div className="min-h-screen overflow-x-hidden bg-[#FDFBF7] text-[#2A1708]">
-    <Header autoSubNavigation={false} subNavigation={<PageSectionNav navigation={proposalNavigation} />} />
+    <Header autoSubNavigation={false} subNavigation={<PageSectionNav navigation={proposalNavigation} syncHashOnScroll={false} />} />
     <main>
       <section className="relative flex min-h-[100svh] items-end overflow-hidden pb-20 pt-40 text-white md:pb-28">
         <img src={img('/uploads/sunset-rio-rio-real.webp', 1800)} alt="Río y paisaje natural de Pueblo Mágico en las Sierras Grandes" className="absolute inset-0 h-full w-full object-cover" loading="eager" fetchPriority="high" />
@@ -153,6 +154,6 @@ export default function PropuestaCasaCerradura() {
         <p className="mb-7 rounded-xl border border-[#D4AF37] bg-white p-4 text-sm font-semibold">Propuesta sujeta a aprobación comercial interna. Disponibilidad y condiciones pendientes de confirmación.</p><Contact>Quiero coordinar esta experiencia</Contact>
       </div></section>
       <section id="contacto" className={section+' scroll-mt-24 text-center'}><Label>Hasta pronto en la montaña</Label><h2 className={heading}>Los mejores recuerdos también se construyen en equipo.</h2><div className="mx-auto max-w-3xl space-y-5 text-lg leading-relaxed"><p>Queremos invitarlos a terminar el año de una manera diferente, con tiempo para disfrutar, reconocer el camino recorrido, fortalecer los vínculos y llevarse nuevos recuerdos compartidos.</p><p>Y también con la posibilidad de dejar una huella positiva en la montaña, contribuyendo a la regeneración del bosque nativo.</p><p>Desde Pueblo Mágico estaremos felices de recibir al equipo de La Casa de la Cerradura y acompañarlos en esta celebración.</p><p className="serif-title text-2xl text-[#005333]">¡Los esperamos en la montaña! </p><p className="font-semibold">Equipo Pueblo Mágico</p></div><div className="mt-9 flex flex-wrap justify-center gap-4"><Contact>Quiero coordinar esta experiencia</Contact><a className="inline-flex items-center rounded-full border border-[#005333] px-7 py-4 text-sm font-bold text-[#005333]" href="https://experienciamagico.com">Conocer Pueblo Mágico</a></div></section>
-    </main><Footer /><CookieBanner />
+    </main><Footer /><WhatsAppButton /><CookieBanner />
   </div>;
 }
