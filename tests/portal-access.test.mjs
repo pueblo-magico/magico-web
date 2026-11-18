@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('the public website exposes one website-owned account entry', () => {
+test('the Reservas cutover keeps the website account entry out of the public header', () => {
   const index = read('index.tsx');
   const routes = read('src/routes.ts');
   const header = read('components/Header.tsx');
@@ -18,9 +18,8 @@ test('the public website exposes one website-owned account entry', () => {
   assert.doesNotMatch(prerender, /\/ingresar/);
   assert.match(index, /path=\{ROUTES\.ACCOUNT\}/);
   assert.match(index, /<Cuenta\s*\/>/);
-  assert.match(header, /useWebsiteAccount/);
-  assert.match(header, /<AccountControl/);
-  assert.match(header, /<AccountControl compact/);
+  assert.doesNotMatch(header, /useWebsiteAccount/);
+  assert.doesNotMatch(header, /AccountControl/);
   assert.match(header, /max-width: 1023px/);
   assert.match(header, /lg:grid-cols-\[minmax\(170px,1fr\)_auto_minmax\(170px,1fr\)\]/);
   assert.match(accountControl, /WEBSITE_LOGIN_URL/);

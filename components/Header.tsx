@@ -17,8 +17,6 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { ROUTES } from '../src/routes';
-import { useWebsiteAccount } from '../src/account';
-import { AccountControl } from './AccountControl';
 import { PageSectionNav } from './PageSectionNav';
 
 const submenuIcons: Record<string, LucideIcon> = {
@@ -45,7 +43,6 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
   const [isMobile, setIsMobile] = useState(false);
   const [hasAutoSubNavigation, setHasAutoSubNavigation] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
-  const account = useWebsiteAccount();
   const location = useLocation();
 
   const isHomePage = location.pathname === ROUTES.HOME;
@@ -358,11 +355,6 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
                </a>
             </li>
             
-            {/* Mobile account entry */}
-            <li className="mt-6 w-full lg:hidden">
-              <AccountControl language={language} mobile onNavigate={() => setIsMobileMenuOpen(false)} state={account.state} />
-            </li>
-
             {/* Mobile Language Button */}
             <li className="lg:hidden mt-8 w-full flex justify-center pb-10">
               <button
@@ -377,7 +369,6 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
 
         {/* Desktop Language Button */}
         <div className="hidden items-center justify-self-end gap-3 pl-5 lg:flex">
-          <AccountControl compact language={language} state={account.state} tone={useSolidHeader ? 'solid' : 'overlay'} />
           <button
             onClick={toggleLanguage}
             className={`
