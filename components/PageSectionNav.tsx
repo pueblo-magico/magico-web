@@ -18,6 +18,7 @@ type PageSectionNavProps = {
   autoDiscover?: boolean;
   locale?: 'es' | 'en';
   minimumSections?: number;
+  syncHashOnScroll?: boolean;
   onAvailabilityChange?: (isAvailable: boolean) => void;
 };
 
@@ -75,6 +76,7 @@ export const PageSectionNav: React.FC<PageSectionNavProps> = ({
   autoDiscover = false,
   locale = 'es',
   minimumSections = 5,
+  syncHashOnScroll = true,
   onAvailabilityChange,
 }) => {
   const [discoveredNavigation, setDiscoveredNavigation] = useState<PageNavigation | null>(null);
@@ -184,8 +186,8 @@ export const PageSectionNav: React.FC<PageSectionNavProps> = ({
         pendingInitialHashRef.current = '';
       }
 
-      const header = document.querySelector('header');
-      const marker = (header?.getBoundingClientRect().bottom || 0) + 24;
+      const mainHeader = document.querySelector<HTMLElement>('[data-header-main-row]');
+      const marker = (mainHeader?.getBoundingClientRect().bottom || 0) + 32;
       let nextIndex = -1;
 
       resolvedNavigation.sections.forEach((item, index) => {
@@ -195,7 +197,7 @@ export const PageSectionNav: React.FC<PageSectionNavProps> = ({
 
       setActiveIndex(nextIndex);
       const nextHash = nextIndex >= 0 ? `#${resolvedNavigation.sections[nextIndex].id}` : '';
-      if (window.location.hash !== nextHash) {
+      if (syncHashOnScroll && window.location.hash !== nextHash) {
         const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
         window.history.replaceState(window.history.state, '', nextUrl);
       }
@@ -210,7 +212,7 @@ export const PageSectionNav: React.FC<PageSectionNavProps> = ({
       window.removeEventListener('resize', updateActiveSection);
       if (scrollEndTimeoutRef.current !== null) window.clearTimeout(scrollEndTimeoutRef.current);
     };
-  }, [resolvedNavigation]);
+  }, [resolvedNavigation, syncHashOnScroll]);
 
   useEffect(() => {
     if (!resolvedNavigation) return;
