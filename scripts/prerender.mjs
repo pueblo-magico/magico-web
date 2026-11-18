@@ -70,6 +70,14 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/politica-de-privacidad',
   },
   {
+    path: '/cuenta',
+    title: 'Tu cuenta | Pueblo Mágico',
+    description: 'Acceso a Mi cuenta y a las herramientas del equipo de Pueblo Mágico.',
+    image: 'https://experienciamagico.com/uploads/img_6948.webp',
+    canonical: 'https://experienciamagico.com/cuenta',
+    robots: 'noindex,follow',
+  },
+  {
     path: '/el-vuelo-del-condor',
     title: 'El Vuelo del Cóndor — Un viaje iniciático en Perú | Pueblo Mágico',
     description: '7 días para elevar tu conciencia, expandir tu visión y reconectar con tu propósito en el Valle Sagrado de los Incas, Perú. Del 22 al 29 de Julio.',
@@ -240,29 +248,6 @@ mkdirSync(join(DIST, 'app-shell'), { recursive: true });
 writeFileSync(join(DIST, 'app-shell', 'index.html'), template);
 console.log('  ✓ app-shell/index.html (destino de redirects SPA client-only)');
 
-// Shell propio para /admin/reservas: mismo bundle de React, pero con SU
-// PROPIO manifest (nombre, ícono y scope distintos del sitio público) para
-// que "instalar app" desde el dashboard cree un ícono separado de "Reset
-// Vital" — ver public/manifest-reservas.json. Al ser un archivo real en
-// dist/admin/reservas/index.html (mismo patrón que cualquier ruta
-// prerenderizada), Cloudflare Pages lo sirve directo, sin pasar por
-// _redirects.
-// OJO: `vite build` fingerprintea el href original ("/manifest.json") a algo
-// como "/assets/manifest-XXXX.json" — por eso el match es por atributo
-// rel="manifest", no por el href literal.
-const shellReservas = template
-  .replace(/<title>[^<]*<\/title>/, '<title>Reservas — Pueblo Mágico</title>')
-  .replace(/<link rel="manifest" href="[^"]*">/, '<link rel="manifest" href="/manifest-reservas.json">')
-  .replace(/<meta name="apple-mobile-web-app-title" content="[^"]*">/, '<meta name="apple-mobile-web-app-title" content="Reservas">')
-  // iOS "Agregar a inicio" usa este tag, no los íconos del manifest — mismo
-  // ícono con fondo dorado en vez de verde, para diferenciarlo de Reset Vital
-  // de un vistazo en la pantalla de inicio.
-  .replace(/<link rel="apple-touch-icon" href="[^"]*">/, '<link rel="apple-touch-icon" href="/uploads/pwa-192x192-reservas.png">')
-  .replace('</head>', '  <meta name="robots" content="noindex,nofollow" />\n</head>');
-mkdirSync(join(DIST, 'admin', 'reservas'), { recursive: true });
-writeFileSync(join(DIST, 'admin', 'reservas', 'index.html'), shellReservas);
-console.log('  ✓ admin/reservas/index.html (shell con manifest propio)');
-
 // ─── Per-route JSON-LD builder ───────────────────────────────────────────────
 function buildJsonLD(route) {
   if (route.path === '/brote-ronda-de-mujeres') {
@@ -320,6 +305,7 @@ for (const route of ROUTES) {
     `  <meta name="geo.placename" content="Los Gigantes, Córdoba, Argentina" />`,
     `  <meta name="geo.position" content="-31.5;-64.7" />`,
     `  <meta name="ICBM" content="-31.5, -64.7" />`,
+    ...(route.robots ? [`  <meta name="robots" content="${route.robots}" />`] : []),
   ].join('\n');
 
   const jsonLD = buildJsonLD(route);

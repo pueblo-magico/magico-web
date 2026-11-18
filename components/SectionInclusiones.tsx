@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { formatPrice, getEstadiaPrices } from '../src/data/retreats';
+import { RESERVAS_PUBLIC_URL } from '../src/data/config';
 import {
   House,
   WifiHigh,
@@ -24,13 +24,6 @@ const ICONS = [
 export const SectionInclusiones: React.FC = () => {
   const { t, language } = useLanguage();
   const i = t.inclusiones;
-  const prices = getEstadiaPrices(language);
-  const carpaDesde = prices.carpaDesde;
-  const refugioDesde = prices.ecoRefugioDesde;
-  const domoPrivadoDesde = prices.domoPrivado;
-  const hasCarpaPrice = typeof carpaDesde === 'number' && Number.isFinite(carpaDesde);
-  const hasRefugioPrice = typeof refugioDesde === 'number' && Number.isFinite(refugioDesde);
-  const hasDomoPrice = typeof domoPrivadoDesde === 'number' && Number.isFinite(domoPrivadoDesde);
 
   return (
     <>
@@ -60,47 +53,19 @@ export const SectionInclusiones: React.FC = () => {
             ))}
           </div>
 
-          {(hasCarpaPrice || hasRefugioPrice || hasDomoPrice) && (
-            <div className="flex flex-col sm:flex-row justify-center gap-4" data-reveal>
-              {hasCarpaPrice && (
-                <div className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
-                  <p className="text-white/70 font-bold tracking-widest uppercase text-xs mb-1">{i.price_solo_label}</p>
-                  <p className="text-white text-2xl font-serif">
-                    {formatPrice(carpaDesde, language)} <span className="text-base font-sans font-light">{i.price_unit}</span>
-                  </p>
-                  <p className="text-white/50 text-xs mt-1">{i.price_solo_sub}</p>
-                </div>
-              )}
-              {hasRefugioPrice && (
-                <div className="bg-white/10 border border-white/20 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
-                  <p className="text-white/70 font-bold tracking-widest uppercase text-xs mb-1">{i.price_refugio_label}</p>
-                  <p className="text-white text-2xl font-serif">
-                    {formatPrice(refugioDesde, language)} <span className="text-base font-sans font-light">{i.price_unit}</span>
-                  </p>
-                  <p className="text-white/50 text-xs mt-1">{i.price_refugio_sub}</p>
-                </div>
-              )}
-              {hasDomoPrice && (
-                <div className="bg-gold/20 border border-gold/40 rounded-xl px-6 py-4 text-center backdrop-blur-sm">
-                  <p className="text-gold font-bold tracking-widest uppercase text-xs mb-1">{i.price_pension_label}</p>
-                  <p className="text-white text-2xl font-serif">
-                    {formatPrice(domoPrivadoDesde, language)} <span className="text-base font-sans font-light">{i.price_pension_unit}</span>
-                  </p>
-                  <p className="text-white/50 text-xs mt-1">{i.price_pension_sub}</p>
-                </div>
-              )}
-            </div>
-          )}
-          {prices.pensionFinde && (
-            <div data-reveal>
-              <p className="text-white/60 text-xs text-center mt-4 max-w-2xl mx-auto leading-relaxed">
-                {i.price_finde_note
-                  .replace('{carpa}', formatPrice(prices.pensionFinde.carpa, language))
-                  .replace('{refugio}', formatPrice(prices.pensionFinde.ecoRefugio, language))
-                  .replace('{domo}', formatPrice(prices.pensionFinde.domoPrivadoDosNoches, language))}
-              </p>
-            </div>
-          )}
+          <div className="mx-auto max-w-xl rounded-2xl border border-white/20 bg-white/10 px-6 py-5 text-center backdrop-blur-sm" data-reveal>
+            <p className="font-serif text-xl text-white">
+              {language === 'es' ? 'Disponibilidad y precio final en tiempo real' : 'Live availability and final pricing'}
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-white/65">
+              {language === 'es'
+                ? 'Elegí fechas, alojamiento y comidas. Reservas verifica todo antes de crear tu reserva.'
+                : 'Choose dates, accommodation and meals. Reservas verifies everything before creating your booking.'}
+            </p>
+            <a href={RESERVAS_PUBLIC_URL} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-gold px-6 text-xs font-bold uppercase tracking-widest text-brand transition-colors hover:bg-white">
+              {language === 'es' ? 'Consultar y reservar' : 'Check and book'}
+            </a>
+          </div>
 
         </div>
       </section>

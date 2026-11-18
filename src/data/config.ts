@@ -2,6 +2,8 @@
  * Global configuration constants
  */
 
+import { normalizePortalUrl, resolvePortalUrl } from './portalUrl';
+
 export const WA_MAGICO = '5493516765820';
 export const WA_VOLUNTEERS = '5493512272919';
 export const WA_GONDOR = '5491157300099';
@@ -9,6 +11,45 @@ export const WA_VUELO_CONDOR = '5493518782085';
 export const WA_CICLO_VITAL_FEMENINO = '34621076042';
 
 export const SITE_URL = 'https://experienciamagico.com';
+
+const DEFAULT_RESERVAS_BASE_URL = 'https://reservas.experienciamagico.com';
+
+function reservasBaseUrl(): string {
+  const configuredUrl = import.meta.env.VITE_RESERVAS_BASE_URL?.trim();
+  if (!configuredUrl) return DEFAULT_RESERVAS_BASE_URL;
+
+  try {
+    const url = new URL(configuredUrl);
+    const isLocalDevelopment = ['localhost', '127.0.0.1'].includes(url.hostname);
+    if (url.username || url.password || (url.protocol !== 'https:' && !isLocalDevelopment)) {
+      return DEFAULT_RESERVAS_BASE_URL;
+    }
+    return url.origin;
+  } catch {
+    return DEFAULT_RESERVAS_BASE_URL;
+  }
+}
+
+export const RESERVAS_BASE_URL = reservasBaseUrl();
+export const RESERVAS_PUBLIC_URL = `${RESERVAS_BASE_URL}/reservar?paso=fechas`;
+export const RESERVAS_ADMIN_URL = `${RESERVAS_BASE_URL}/admin`;
+
+export const COMPANION_PORTAL_URL = resolvePortalUrl(
+  import.meta.env.VITE_COMPANION_PORTAL_URL,
+  'https://mi.experienciamagico.com',
+);
+export const STAFF_PORTAL_URL = resolvePortalUrl(
+  import.meta.env.VITE_STAFF_PORTAL_URL,
+  'https://admin.experienciamagico.com',
+);
+
+// Cloudflare Pages preview hosts are ephemeral and cannot each be registered as
+// an exact OIDC callback. Preview builds therefore delegate sign-in to the
+// stable website DEV origin. Stable DEV and production omit this variable and
+// keep using their same-origin auth endpoint.
+export const WEBSITE_LOGIN_URL = normalizePortalUrl(
+  import.meta.env.VITE_WEBSITE_LOGIN_URL,
+) ?? '/api/v1/auth/login';
 
 // Datos públicos de la campaña de reforestación. Se inyectan en build time y
 // pueden quedar vacíos: la landing deriva a WhatsApp hasta que estén configurados.

@@ -74,7 +74,8 @@ test('English content does not expose Argentine-peso price copy', async () => {
 
   assert.doesNotMatch(joined, /\bARS\b|Argentine pesos/i);
   assert.doesNotMatch(joined, /\$\s?\d/);
-  assert.match(content.hero.reservationPricing, /USD 15/);
+  assert.match(content.hero.reservationPricing, /Availability and final price verified/);
+  assert.doesNotMatch(content.hero.reservationPricing, /USD|From/);
   assert.match(content.reforestation.funding.phases[2].goal, /USD 10,000/);
 });
 

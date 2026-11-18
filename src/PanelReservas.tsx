@@ -1447,10 +1447,10 @@ const SeccionInteresados: React.FC = () => {
   );
 };
 
-const PanelReservas: React.FC = () => {
+const PanelReservas: React.FC<{ siteOnly?: boolean }> = ({ siteOnly = false }) => {
   const [auth, setAuth] = useState<{ email: string; rol: Rol } | null | 'cargando'>('cargando');
   const [sesionExpirada, setSesionExpirada] = useState(false);
-  const [vistaActiva, setVistaActiva] = useState<VistaActiva>('operativa');
+  const [vistaActiva, setVistaActiva] = useState<VistaActiva>(siteOnly ? 'formularios' : 'operativa');
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [reservasHistorial, setReservasHistorial] = useState<Reserva[] | null>(null);
   const [consultas, setConsultas] = useState<Consulta[] | null>(null);
@@ -1526,7 +1526,11 @@ const PanelReservas: React.FC = () => {
 
   useEffect(() => {
     if (auth === 'cargando' || !auth) return;
-    document.title = 'Dashboard — Pueblo Mágico';
+    document.title = siteOnly ? 'Administración del sitio — Pueblo Mágico' : 'Dashboard — Pueblo Mágico';
+    if (siteOnly) {
+      setLoading(false);
+      return;
+    }
     cargarOperativa();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth]);
@@ -1563,6 +1567,7 @@ const PanelReservas: React.FC = () => {
   };
 
   useEffect(() => {
+    if (siteOnly) return;
     if (vistaActiva === 'historial' && reservasHistorial === null) cargarHistorial();
     if (vistaActiva === 'consultas' && consultas === null) cargarConsultas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1648,7 +1653,11 @@ const PanelReservas: React.FC = () => {
   const esSuperAdmin = auth.rol === 'super_admin';
   const puedeEditar = auth.rol === 'super_admin' || auth.rol === 'editor';
 
-  const TABS: { key: VistaActiva; label: string }[] = [
+  const TABS: { key: VistaActiva; label: string }[] = siteOnly ? [
+    { key: 'interesados', label: 'Interesados' },
+    { key: 'formularios', label: 'Formularios' },
+    ...(esSuperAdmin ? [{ key: 'usuarios' as VistaActiva, label: 'Usuarios' }, { key: 'actividad' as VistaActiva, label: 'Actividad' }] : []),
+  ] : [
     { key: 'operativa', label: 'Operativa' },
     { key: 'metricas', label: 'Métricas' },
     { key: 'historial', label: 'Historial' },
@@ -1674,10 +1683,10 @@ const PanelReservas: React.FC = () => {
           <div className="flex items-center justify-between gap-2 mb-3 sm:mb-0">
             <div>
               <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-gray-400">Pueblo Mágico</p>
-              <h1 className="text-lg sm:text-xl font-bold text-brand">Dashboard de Reservas</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-brand">{siteOnly ? 'Administración del sitio' : 'Dashboard de Reservas'}</h1>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button
+              {!siteOnly && <button
                 onClick={descargarReporteServidor}
                 disabled={descargandoReporte}
                 aria-label="Descargar Reporte (CSV)"
@@ -1685,8 +1694,8 @@ const PanelReservas: React.FC = () => {
               >
                 <Download size={15} className={descargandoReporte ? 'animate-pulse' : ''} aria-hidden="true" />
                 <span className="hidden sm:inline">{descargandoReporte ? 'Descargando…' : 'Descargar Reporte (CSV)'}</span>
-              </button>
-              {puedeEditar && (
+              </button>}
+              {!siteOnly && puedeEditar && (
                 <button
                   onClick={() => setModalReserva({ modo: 'crear', reserva: null })}
                   aria-label="Nueva reserva"
@@ -1696,14 +1705,14 @@ const PanelReservas: React.FC = () => {
                   <span className="hidden sm:inline">Nueva reserva</span>
                 </button>
               )}
-              <button
+              {!siteOnly && <button
                 onClick={actualizar}
                 disabled={loading}
                 aria-label="Actualizar"
                 className={`inline-flex items-center gap-2 text-sm font-semibold border border-gray-300 rounded-lg px-3 py-2.5 hover:bg-gray-100 transition-colors disabled:opacity-60 ${FOCUS_RING}`}
               >
                 <RefreshCw size={15} className={loading ? 'animate-spin' : ''} aria-hidden="true" />
-              </button>
+              </button>}
               <button
                 onClick={cerrarSesion}
                 aria-label="Cerrar sesión"
@@ -1734,7 +1743,7 @@ const PanelReservas: React.FC = () => {
         </div>
       </header>
 
-      <InstalarBanner />
+      {!siteOnly && <InstalarBanner />}
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {error && (
@@ -1948,7 +1957,7 @@ const PanelReservas: React.FC = () => {
         {vistaActiva === 'actividad' && esSuperAdmin && <SeccionActividad />}
       </main>
 
-      {celdaMultiple && (
+      {!siteOnly && celdaMultiple && (
         <ModalSeleccionarReserva
           alojamiento={celdaMultiple.alojamiento}
           fecha={celdaMultiple.fecha}
@@ -1958,7 +1967,7 @@ const PanelReservas: React.FC = () => {
         />
       )}
 
-      {modalReserva && (
+      {!siteOnly && modalReserva && (
         <ModalReserva
           modo={modalReserva.modo}
           reserva={modalReserva.reserva}

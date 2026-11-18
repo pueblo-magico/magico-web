@@ -1,9 +1,11 @@
 # Redirect ruta vieja de Reset Vital (usuarios con PWA instalada antes del cambio)
 /reset-vital-5-d    /reset-vital    301
 
-# /reservas se eliminó (el sistema de reservas ya vive en Home y /estadia) —
-# redirect por si hay links viejos (ManyChat, WhatsApp compartido, etc.)
-/reservas    /estadia    301
+# Reservas es un producto standalone y la única autoridad de disponibilidad,
+# cotización, creación y pagos. Conservamos los enlaces históricos del sitio.
+/reservar    https://reservas.experienciamagico.com/reservar?paso=fechas    302
+/reservas    https://reservas.experienciamagico.com/reservar?paso=fechas    302
+/admin/reservas    https://reservas.experienciamagico.com/admin    302
 
 # Campañas de invierno 2026 (Winter Camp / Winter Redirection) terminadas — se
 # eliminaron las páginas; los links viejos van a la estadía actual.
@@ -40,8 +42,6 @@
 # extensión — eso rompe la reescritura 200 (invisible) y cambia la URL
 # del browser a la del destino. Una carpeta con index.html (mismo patrón
 # que cualquier ruta prerenderizada) no sufre esa normalización.
-# /admin/reservas NO necesita entrada acá: tiene su propio archivo real en
-# dist/admin/reservas/index.html (con manifest propio — ver prerender.mjs),
-# y un archivo real siempre tiene prioridad sobre _redirects en Cloudflare Pages.
 /reset-vital    /app-shell/   200
 /despertar    /app-shell/   200
+/admin/sitio    /app-shell/   200
