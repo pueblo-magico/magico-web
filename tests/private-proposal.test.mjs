@@ -48,6 +48,7 @@ test('legacy proposal URLs permanently redirect into the presupuesto tree', () =
     ['/aulas-verdes-729-salvador-mazza', '/presupuestos/aulas-verdes-729-salvador-mazza'],
     ['/propuesta/calma-magico', '/presupuestos/calma-magico'],
     ['/propuesta/nico-grupe', '/presupuestos/nico-grupe'],
+    ['/presupuestos/jorgelina-asis', '/presupuestos/jorgelina'],
   ]);
 
   for (const [from, to] of expectedRedirects) {

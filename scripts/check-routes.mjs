@@ -28,7 +28,7 @@ const ROUTE_PATHS = [
   '/presupuestos/calma-magico',
   '/presupuestos/cande',
   '/presupuestos/barbi-firmapaz',
-  '/presupuestos/jorgelina-asis',
+  '/presupuestos/jorgelina',
   '/presupuestos/jesus-cordoba',
   '/inti-raymi',
   '/pachamama-fest',

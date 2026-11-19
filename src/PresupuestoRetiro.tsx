@@ -65,9 +65,9 @@ export const RETREAT_PROPOSALS: Record<string, Proposal> = {
     month: 'Marzo 2027',
     group: '15 a 30 personas',
   },
-  'jorgelina-asis': {
-    slug: 'jorgelina-asis',
-    name: 'Jorgelina Asís',
+  jorgelina: {
+    slug: 'jorgelina',
+    name: 'Jorgelina',
     month: 'Febrero 2027',
     group: '15 a 30 personas',
     validThrough: '2026-12-18T23:59:59-03:00',

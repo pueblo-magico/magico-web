@@ -6,7 +6,7 @@ export const PRIVATE_PROPOSALS = [
   { path: '/presupuestos/nico-grupe', title: 'Propuesta · Nico Grupe × Pueblo Mágico' },
   { path: '/presupuestos/cande', title: 'Propuesta para Cande · Pueblo Mágico' },
   { path: '/presupuestos/barbi-firmapaz', title: 'Propuesta para Barbi Firmapaz · Pueblo Mágico' },
-  { path: '/presupuestos/jorgelina-asis', title: 'Propuesta para Jorgelina Asís · Pueblo Mágico' },
+  { path: '/presupuestos/jorgelina', title: 'Propuesta para Jorgelina · Pueblo Mágico' },
   { path: '/presupuestos/jesus-cordoba', title: 'Retiro de Alto Impacto · Propuesta para Jesús Córdoba · Pueblo Mágico' },
 ];
 

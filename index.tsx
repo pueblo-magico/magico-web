@@ -132,6 +132,7 @@ root.render(
               <Route path={ROUTES.ORGANIZA_TU_RETIRO} element={<OrganizaTuRetiro />} />
               <Route path={ROUTES.PRESUPUESTO_JESUS_CORDOBA} element={<PropuestaJesusCordoba />} />
               <Route path="/presupuestos/la-casa-de-la-cerradura" element={<PropuestaCasaCerradura />} />
+              <Route path="/presupuestos/jorgelina-asis" element={<Navigate to="/presupuestos/jorgelina" replace />} />
               <Route path={ROUTES.PRESUPUESTO_RETIRO} element={<PresupuestoRetiro />} />
               <Route path="/inti-raymi" element={<IntiRaymi />} />
               <Route path="/pachamama-fest" element={<PachamamaFest />} />

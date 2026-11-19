@@ -10,7 +10,8 @@ const source = readFileSync(new URL('../src/OrganizaTuRetiro.tsx', import.meta.u
 test('the supplied personalized retreat proposals are present', () => {
   assert.match(page, /cande:[\s\S]*name: 'Cande'[\s\S]*Febrero 2027[\s\S]*15 a 20 personas/);
   assert.match(page, /'barbi-firmapaz':[\s\S]*name: 'Barbi Firmapaz'[\s\S]*Marzo 2027[\s\S]*15 a 30 personas/);
-  assert.match(page, /'jorgelina-asis':[\s\S]*name: 'Jorgelina Asís'[\s\S]*Febrero 2027[\s\S]*15 a 30 personas/);
+  assert.match(page, /jorgelina:[\s\S]*name: 'Jorgelina'[\s\S]*Febrero 2027[\s\S]*15 a 30 personas/);
+  assert.doesNotMatch(page, /Jorgelina Asís/);
   assert.match(page, /2 noches \/ 3 días/);
   assert.match(page, /300000/);
 });
@@ -51,6 +52,7 @@ test('proposal validity starts tomorrow, lasts exactly 30 days and shows only th
 test('private proposal route is wired and the public retreat CTA requests a quote', () => {
   assert.match(routes, /PRESUPUESTO_RETIRO: '\/presupuestos\/:proposalId'/);
   assert.match(app, /ROUTES\.PRESUPUESTO_RETIRO/);
+  assert.match(app, /path="\/presupuestos\/jorgelina-asis" element=\{<Navigate to="\/presupuestos\/jorgelina" replace \/>\}/);
   assert.match(source, /Pedir un presupuesto/);
   assert.match(source, /Quiero pedir un presupuesto/);
 });
