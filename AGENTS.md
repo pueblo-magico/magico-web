@@ -20,3 +20,25 @@ This file remains self-contained for repo-only agents. [Masterplan v1.2](https:/
 
 For a shared architecture change, propose a new/superseding global ADR, check affected module contracts and AGENTS files, update Confluence/Jira impact comments, and retain evidence. ADR acceptance does not authorize deployment, production migrations or falsely marking Jira work Done.
 <!-- END: MAGICO-ARCHITECTURE-REGISTRY v1.1 -->
+
+## Branching and deployment — mandatory
+
+Canonical policy: [magico-architecture/ADR-0008](https://github.com/pueblo-magico/magico-architecture/blob/main/docs/adr/0008-protected-branch-promotion.md) and the [branching/deployment guide](https://github.com/pueblo-magico/magico-architecture/blob/main/docs/engineering/branching-and-deployment.md). The repository-specific mapping is `.magico/deployment-policy.json`.
+
+Repository mapping:
+
+- Development: `planned`; branch `dev`; workflow `none`.
+- Production: `active`; branch `main`; workflow `.github/workflows/deploy.yml`.
+- A pull-request deployment is a preview, never the shared DEV environment.
+
+Mandatory behavior:
+
+- Work on a feature or fix branch and use a pull request. Never develop directly on an environment-authoritative branch.
+- “Deploy to development” means merge the reviewed commit into the configured development branch and let the configured workflow deploy that merged commit.
+- “Deploy to production” means merge the reviewed release into `main` (or the explicitly declared transitional production branch), obtain explicit production approval, and let the configured workflow deploy that exact merged commit.
+- Never deploy a local checkout directly to shared DEV or PROD, dispatch a deployment from an arbitrary ref, bypass required checks, or expose production credentials to previews.
+- A merge does not authorize a remote migration, secret rotation, destructive operation or package publication unless that action is explicitly included and approved.
+- If an environment is `planned`, do not claim it is deployable. Prepare its branch, workflow, credentials and verification through a dedicated reviewed change.
+- Verify and report branch, commit SHA, workflow run, target environment, migration result and health evidence. Distinguish local, preview, DEV and production evidence.
+- Normal rollback is a revert PR merged into the environment-authoritative branch followed by its workflow. Do not rewrite protected history.
+
