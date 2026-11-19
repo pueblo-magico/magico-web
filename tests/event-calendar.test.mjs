@@ -127,9 +127,24 @@ test('the December and New Year calendar includes the six announced events', () 
 
       assert.ok(card, `${language}: missing ${expected[language]} on ${expected.startDate}`);
       assert.equal(card.endDate, expected.endDate);
-      assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
+      if (card.title === 'Temazcal') assert.equal(card.link, '/temazcal');
+      else assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
       assert.equal(card.showInExperienceCatalog, false);
       assert.equal(shouldShowMainCalendarEvent(card, '2026-11-18'), true);
+    }
+  }
+});
+
+test('every dated Temazcal event opens the dedicated Temazcal landing page', () => {
+  for (const language of ['es', 'en']) {
+    const cards = translations[language].events.cards.filter((event) => (
+      event.title === 'Temazcal' && event.startDate
+    ));
+
+    assert.equal(cards.length, 2);
+    for (const card of cards) {
+      assert.equal(card.link, '/temazcal');
+      assert.equal(card.image, '/uploads/temazcal.webp');
     }
   }
 });

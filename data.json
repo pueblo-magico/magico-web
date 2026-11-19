@@ -1099,9 +1099,9 @@
           "title": "Temazcal",
           "labels": ["CEREMONIA", "BIENESTAR"],
           "desc": "Ceremonia de temazcal en Pueblo Mágico. Consultanos por horarios, cupos y participación.",
-          "btn": "Consultar",
+          "btn": "Conocer el Temazcal",
           "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20consultar%20por%20el%20Temazcal%20del%2013%20de%20diciembre%20de%202026.",
+          "link": "/temazcal",
           "showInExperienceCatalog": false
         },
         {
@@ -1138,9 +1138,9 @@
           "title": "Temazcal",
           "labels": ["CEREMONIA", "BIENESTAR"],
           "desc": "Ceremonia de temazcal en Pueblo Mágico. Consultanos por horarios, cupos y participación.",
-          "btn": "Consultar",
+          "btn": "Conocer el Temazcal",
           "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20consultar%20por%20el%20Temazcal%20del%2027%20de%20diciembre%20de%202026.",
+          "link": "/temazcal",
           "showInExperienceCatalog": false
         },
         {
@@ -4038,9 +4038,9 @@
           "title": "Temazcal",
           "labels": ["CEREMONY", "WELLBEING"],
           "desc": "A temazcal ceremony at Pueblo Mágico. Ask us about times, capacity and participation.",
-          "btn": "Inquire",
+          "btn": "Discover Temazcal",
           "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hi!%20I%27d%20like%20information%20about%20the%20Temazcal%20on%20December%2013%2C%202026.",
+          "link": "/temazcal",
           "showInExperienceCatalog": false
         },
         {
@@ -4077,9 +4077,9 @@
           "title": "Temazcal",
           "labels": ["CEREMONY", "WELLBEING"],
           "desc": "A temazcal ceremony at Pueblo Mágico. Ask us about times, capacity and participation.",
-          "btn": "Inquire",
+          "btn": "Discover Temazcal",
           "image": "/uploads/temazcal.webp",
-          "link": "https://wa.me/5493516765820?text=Hi!%20I%27d%20like%20information%20about%20the%20Temazcal%20on%20December%2027%2C%202026.",
+          "link": "/temazcal",
           "showInExperienceCatalog": false
         },
         {
