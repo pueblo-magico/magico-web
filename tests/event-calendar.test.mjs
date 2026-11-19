@@ -111,7 +111,7 @@ test('the December peyote ceremony is dated and opens its WhatsApp contact', () 
 
 test('the December and New Year calendar includes the six announced events', () => {
   const expectedEvents = [
-    { es: 'Liderazgo con caballos', en: 'Leadership with horses', startDate: '2026-12-12', endDate: '2026-12-12' },
+    { es: 'Liderazgo con caballos', en: 'Leadership with horses', startDate: '2026-12-10', endDate: '2026-12-13' },
     { es: 'Temazcal', en: 'Temazcal', startDate: '2026-12-13', endDate: '2026-12-13' },
     { es: 'Solsticio Fest', en: 'Solstice Fest', startDate: '2026-12-18', endDate: '2026-12-21' },
     { es: 'NAVIDONONON JOJOJO', en: 'NAVIDONONON JOJOJO', startDate: '2026-12-24', endDate: '2026-12-28' },
@@ -160,8 +160,8 @@ test('the horse leadership event uses its dedicated image and WhatsApp contact',
 
     assert.ok(card);
     assert.equal(card.image, '/uploads/events/liderazgo-con-caballos.webp');
-    assert.equal(card.startDate, '2026-12-12');
-    assert.equal(card.endDate, '2026-12-12');
+    assert.equal(card.startDate, '2026-12-10');
+    assert.equal(card.endDate, '2026-12-13');
     assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
     assert.equal(card.labels.length, 2);
     assert.equal(card.showInExperienceCatalog, false);
