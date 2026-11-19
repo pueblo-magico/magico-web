@@ -37,6 +37,8 @@ test('Temazcal explains the ceremony, how it is held and what it sustains', () =
   assert.match(page, /href="\/#eventos"/);
   assert.match(page, /<Header alwaysSolid \/>/);
   assert.match(header, /alwaysSolid \|\| isScrolled \|\| isMobileMenuOpen/);
+  assert.match(header, /usesStackedHeaderLayout = Boolean\(subNavigation \|\| useAutoSubNavigation\)/);
+  assert.match(header, /usesStackedHeaderLayout \? 'flex-col'/);
   assert.ok(existsSync(new URL('../public/uploads/temazcal.webp', import.meta.url)));
   assert.ok(existsSync(new URL('../public/uploads/Ciclo Femenino/Temazcal.jpeg', import.meta.url)));
 });
