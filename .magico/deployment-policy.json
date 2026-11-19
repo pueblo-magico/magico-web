@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/pueblo-magico/magico-architecture/main/policies/deployment-policy.schema.json",
+  "version": 1,
+  "repositoryType": "application",
+  "canonicalPolicy": "https://github.com/pueblo-magico/magico-architecture/blob/main/docs/engineering/branching-and-deployment.md",
+  "development": {
+    "status": "planned",
+    "branch": "dev",
+    "workflow": null,
+    "approvalRequired": false
+  },
+  "production": {
+    "status": "active",
+    "branch": "main",
+    "workflow": ".github/workflows/deploy.yml",
+    "approvalRequired": true
+  },
+  "preview": {
+    "allowed": true,
+    "isolatedResourcesRequired": true
+  },
+  "legacyBranches": [],
+  "notes": "PR previews are active. A repository-owned shared DEV deployment from dev remains to be formalized."
+}
