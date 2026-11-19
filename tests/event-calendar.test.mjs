@@ -109,6 +109,75 @@ test('the December peyote ceremony is dated and opens its WhatsApp contact', () 
   }
 });
 
+test('the December and New Year calendar includes the six announced events', () => {
+  const expectedEvents = [
+    { es: 'Liderazgo con caballos', en: 'Leadership with horses', startDate: '2026-12-10', endDate: '2026-12-13' },
+    { es: 'Temazcal', en: 'Temazcal', startDate: '2026-12-13', endDate: '2026-12-13' },
+    { es: 'Solsticio Fest', en: 'Solstice Fest', startDate: '2026-12-18', endDate: '2026-12-21' },
+    { es: 'NAVIDONONON JOJOJO', en: 'NAVIDONONON JOJOJO', startDate: '2026-12-24', endDate: '2026-12-28' },
+    { es: 'Temazcal', en: 'Temazcal', startDate: '2026-12-27', endDate: '2026-12-27' },
+    { es: 'FIN DE AÑO CONSCIENTE', en: 'CONSCIOUS NEW YEAR', startDate: '2026-12-31', endDate: '2027-01-04' },
+  ];
+
+  for (const language of ['es', 'en']) {
+    for (const expected of expectedEvents) {
+      const card = translations[language].events.cards.find((event) => (
+        event.title === expected[language] && event.startDate === expected.startDate
+      ));
+
+      assert.ok(card, `${language}: missing ${expected[language]} on ${expected.startDate}`);
+      assert.equal(card.endDate, expected.endDate);
+      if (card.title === 'Temazcal') assert.equal(card.link, '/temazcal');
+      else assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
+      assert.equal(card.showInExperienceCatalog, false);
+      assert.equal(shouldShowMainCalendarEvent(card, '2026-11-18'), true);
+    }
+  }
+});
+
+test('every dated Temazcal event opens the dedicated Temazcal landing page', () => {
+  for (const language of ['es', 'en']) {
+    const cards = translations[language].events.cards.filter((event) => (
+      event.title === 'Temazcal' && event.startDate
+    ));
+
+    assert.equal(cards.length, 2);
+    for (const card of cards) {
+      assert.equal(card.link, '/temazcal');
+      assert.equal(card.image, '/uploads/temazcal.webp');
+    }
+  }
+});
+
+test('the horse leadership event uses its dedicated image and WhatsApp contact', () => {
+  const expectedTitles = {
+    es: 'Liderazgo con caballos',
+    en: 'Leadership with horses',
+  };
+
+  for (const language of ['es', 'en']) {
+    const card = translations[language].events.cards.find((event) => event.title === expectedTitles[language]);
+
+    assert.ok(card);
+    assert.equal(card.image, '/uploads/events/liderazgo-con-caballos.webp');
+    assert.equal(card.startDate, '2026-12-10');
+    assert.equal(card.endDate, '2026-12-13');
+    assert.match(card.link, /^https:\/\/wa\.me\/5493516765820\?text=/);
+    assert.equal(card.labels.length, 2);
+    assert.equal(card.showInExperienceCatalog, false);
+  }
+});
+
+test('the New Year gathering remains visible through January 4', () => {
+  const card = translations.es.events.cards.find((event) => (
+    event.title === 'FIN DE AÑO CONSCIENTE'
+  ));
+
+  assert.ok(card);
+  assert.equal(shouldShowMainCalendarEvent(card, '2027-01-04'), true);
+  assert.equal(shouldShowMainCalendarEvent(card, '2027-01-05'), false);
+});
+
 test('El Despertar del Colibrí uses its landing hero and complete social metadata', () => {
   for (const language of ['es', 'en']) {
     const card = translations[language].events.cards.find((event) => event.title === 'El Despertar del Colibrí');

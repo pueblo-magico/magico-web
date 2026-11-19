@@ -33,9 +33,10 @@ const submenuIcons: Record<string, LucideIcon> = {
 type HeaderProps = {
   subNavigation?: React.ReactNode;
   autoSubNavigation?: boolean;
+  alwaysSolid?: boolean;
 };
 
-export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation = true }) => {
+export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation = true, alwaysSolid = false }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
@@ -48,7 +49,8 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
   const isHomePage = location.pathname === ROUTES.HOME;
   const useAutoSubNavigation = autoSubNavigation && !isHomePage && !subNavigation && location.pathname !== ROUTES.ADMIN_RESERVAS;
   const hasSubNavigation = Boolean(subNavigation || (useAutoSubNavigation && hasAutoSubNavigation));
-  const useSolidHeader = isScrolled || isMobileMenuOpen;
+  const usesStackedHeaderLayout = Boolean(subNavigation || useAutoSubNavigation);
+  const useSolidHeader = alwaysSolid || isScrolled || isMobileMenuOpen;
   const showSubNavigation = Boolean(hasSubNavigation && isScrolled && !isMobileMenuOpen);
 
   const scrollSectionBelowHeader = (element: HTMLElement, behavior: ScrollBehavior = 'smooth') => {
@@ -206,7 +208,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
   const pillClasses = `
     fixed left-0 right-0 top-0 z-[1000] w-full max-w-none
     transition-[background-color,box-shadow,border-radius,top,width,max-width,padding] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]
-    flex min-w-0 ${hasSubNavigation ? 'flex-col' : 'items-center justify-between'}
+    flex min-w-0 ${usesStackedHeaderLayout ? 'flex-col' : 'items-center justify-between'}
     ${
       useSolidHeader
         ? `bg-white text-dark shadow-[0_8px_30px_rgba(0,0,0,0.08)] border-b border-brand/10 px-5 ${showSubNavigation ? 'pt-2 pb-0 lg:pt-2.5 lg:pb-0' : 'py-2 lg:py-2.5'}`

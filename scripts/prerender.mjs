@@ -153,6 +153,13 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/reforestacion',
   },
   {
+    path: '/temazcal',
+    title: 'Temazcal en Pueblo Mágico · Ceremonia, calor y comunidad',
+    description: 'Conocé cómo vivimos el Temazcal en Pueblo Mágico: una ceremonia guiada de calor, vapor, palabra, canto, silencio y presencia compartida.',
+    image: 'https://experienciamagico.com/uploads/temazcal.webp',
+    canonical: 'https://experienciamagico.com/temazcal',
+  },
+  {
     path: '/cordoba-fly-fishing',
     title: 'Córdoba Fly Fishing Adventure — Guided Trout Fishing in the Sierras | Pueblo Mágico',
     description: 'Guided fly fishing for wild Rainbow and Brook trout in the crystal-clear mountain streams of Las Sierras de Córdoba. Full-day outings or a 2-night stay in geodesic domes.',
