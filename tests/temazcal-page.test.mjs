@@ -22,6 +22,7 @@ test('Temazcal has a dedicated routable and prerendered landing page', () => {
 
 test('Temazcal explains the ceremony, how it is held and what it sustains', () => {
   const page = read('src/Temazcal.tsx');
+  const header = read('components/Header.tsx');
 
   for (const copy of [
     'La ceremonia',
@@ -34,6 +35,8 @@ test('Temazcal explains the ceremony, how it is held and what it sustains', () =
   ]) assert.ok(page.includes(copy), `missing Temazcal copy: ${copy}`);
 
   assert.match(page, /href="\/#eventos"/);
+  assert.match(page, /<Header alwaysSolid \/>/);
+  assert.match(header, /alwaysSolid \|\| isScrolled \|\| isMobileMenuOpen/);
   assert.ok(existsSync(new URL('../public/uploads/temazcal.webp', import.meta.url)));
   assert.ok(existsSync(new URL('../public/uploads/Ciclo Femenino/Temazcal.jpeg', import.meta.url)));
 });

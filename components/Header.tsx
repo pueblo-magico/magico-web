@@ -33,9 +33,10 @@ const submenuIcons: Record<string, LucideIcon> = {
 type HeaderProps = {
   subNavigation?: React.ReactNode;
   autoSubNavigation?: boolean;
+  alwaysSolid?: boolean;
 };
 
-export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation = true }) => {
+export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation = true, alwaysSolid = false }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
@@ -48,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
   const isHomePage = location.pathname === ROUTES.HOME;
   const useAutoSubNavigation = autoSubNavigation && !isHomePage && !subNavigation && location.pathname !== ROUTES.ADMIN_RESERVAS;
   const hasSubNavigation = Boolean(subNavigation || (useAutoSubNavigation && hasAutoSubNavigation));
-  const useSolidHeader = isScrolled || isMobileMenuOpen;
+  const useSolidHeader = alwaysSolid || isScrolled || isMobileMenuOpen;
   const showSubNavigation = Boolean(hasSubNavigation && isScrolled && !isMobileMenuOpen);
 
   const scrollSectionBelowHeader = (element: HTMLElement, behavior: ScrollBehavior = 'smooth') => {

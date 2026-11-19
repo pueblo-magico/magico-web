@@ -153,7 +153,7 @@ const Temazcal: React.FC = () => {
   }, [content]);
 
   return <div className="min-h-screen bg-[#F7F1E7] text-[#24362F]">
-    <Header />
+    <Header alwaysSolid />
     <main>
       <section className="relative flex min-h-[88vh] items-end overflow-hidden px-6 pb-16 pt-32 text-white md:min-h-[92vh] md:px-12 md:pb-24">
         <img src="/uploads/temazcal.webp" alt={language === 'es' ? 'Ceremonia de Temazcal en Pueblo Mágico' : 'Temazcal ceremony at Pueblo Mágico'} className="absolute inset-0 h-full w-full object-cover" />
