@@ -34,6 +34,8 @@ const ROUTE_PATHS = [
   '/pachamama-fest',
   '/festival-raiz-sonora',
   '/organizamos-tu-experiencia',
+  '/practicas',
+  '/temazcal',
   '/coliving',
   '/ciclo-vital-femenino',
   '/reset-vital',

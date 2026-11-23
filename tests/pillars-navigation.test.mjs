@@ -8,7 +8,8 @@ test('regeneration pillar links to the reforestation page', () => {
   const source = read('components/SectionPilares.tsx');
 
   assert.match(source, /pillar\.id === 1/);
-  assert.match(source, /href=\{ROUTES\.REFORESTACION\}/);
+  assert.match(source, /pillar\.id === 1[\s\S]*\? ROUTES\.REFORESTACION/);
+  assert.match(source, /href=\{pillarHref\}/);
 });
 
 test('first pillar is regeneration in both languages', () => {
