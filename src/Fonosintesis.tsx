@@ -11,7 +11,7 @@ const DESCRIPTION = 'Retiro y capacitación de sonidos restaurativos en Pueblo M
 const PAGE_URL = `${SITE_URL}${ROUTES.FONOSINTESIS}`;
 const HERO = '/uploads/events/fonosintesis/hero-didgeridoo.png';
 const OG_IMAGE = `${SITE_URL}${HERO}`;
-const WHATSAPP = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('Hola, quiero recibir información y consultar mi lugar para Fonosíntesis, retiro y capacitación de sonidos restaurativos, del 8 al 10 de enero de 2027 en Pueblo Mágico.')}`;
+const WHATSAPP = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('Hola, quiero pedir información y reservar mi lugar para Fonosíntesis, retiro y capacitación de sonidos restaurativos, del 8 al 10 de enero de 2027 en Pueblo Mágico.')}`;
 
 const PILLARS = [
   {
@@ -193,7 +193,7 @@ const Fonosintesis: React.FC = () => {
               </div>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#e6c15a] px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#1a1408] transition hover:bg-[#f0d27a]">
-                  Consultar mi lugar <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  Pedir información <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </a>
                 <a href="#programa" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/30 px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-white/10">
                   Ver el programa
@@ -286,10 +286,10 @@ const Fonosintesis: React.FC = () => {
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Dónde</p>
               <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-6xl">Pueblo Mágico, en las Sierras de Córdoba.</h2>
               <p className="mt-6 max-w-xl text-base leading-8 text-[#3d4a58]">
-                El retiro se realiza en el ecolodge de Los Gigantes. La inversión, el alojamiento y la forma de confirmar el lugar se conversan por WhatsApp.
+                El retiro se realiza en el ecolodge de Los Gigantes. Todavía no hay un valor publicado: escribinos y te contamos inversión, alojamiento y cómo confirmar el lugar.
               </p>
               <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#005333] px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#0e1a2b]">
-                Escribir por WhatsApp <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Pedir información y reservar <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
             <img
@@ -301,6 +301,19 @@ const Fonosintesis: React.FC = () => {
               decoding="async"
               className="aspect-[3/4] w-full rounded-[28px] object-cover"
             />
+          </div>
+        </section>
+
+        <section id="reservar" className="scroll-mt-24 bg-[#005333] px-5 py-16 text-white md:px-8 md:py-20">
+          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#e6c15a]">Reserva</p>
+              <h2 className="mt-3 font-serif text-4xl leading-tight md:text-5xl">Pedí información para reservar tu lugar.</h2>
+              <p className="mt-4 text-base leading-7 text-white/80">El mensaje ya queda escrito. Solo tenés que enviarlo por WhatsApp a Pueblo Mágico.</p>
+            </div>
+            <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[#e6c15a] px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#1a1408] transition hover:bg-[#f0d27a]">
+              Pedir información <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </a>
           </div>
         </section>
       </main>
