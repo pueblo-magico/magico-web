@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, Ear, Instagram, MapPin, Music2, Wind } from '
 import { CookieBanner } from '../components/CookieBanner';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
+import { HorizontalCardRail } from '../components/HorizontalCardRail';
 import { PageSectionNav, type PageNavigation } from '../components/PageSectionNav';
 import { SITE_URL, WA_MAGICO } from './data/config';
 import { ROUTES } from './routes';
@@ -286,14 +287,23 @@ const Fonosintesis: React.FC = () => {
           </div>
         </section>
 
-        <section id="programa" className="scroll-mt-28 bg-[#0e1a2b] px-5 py-20 text-white md:px-8 md:py-28">
+        <section id="programa" className="scroll-mt-28 bg-[#0e1a2b] px-6 py-20 text-white md:px-8 md:py-28">
           <div className="mx-auto max-w-6xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#e6c15a]">Programa</p>
             <h2 className="mt-4 max-w-3xl font-serif text-4xl leading-tight md:text-6xl">Tres días de sonido</h2>
             <p className="mt-5 max-w-2xl text-white/70">Los horarios del sábado a las 19 hs siguen a confirmar. El resto del programa es el que compartimos acá.</p>
-            <div className="mt-12 grid gap-8 lg:grid-cols-3">
+            <HorizontalCardRail
+              previousLabel="Día anterior"
+              nextLabel="Día siguiente"
+              ariaLabel="Programa de los tres días"
+              desktopGridClassName="md:grid-cols-3"
+              mobileItemClassName="w-[86vw] max-w-[420px]"
+              gapClassName="mt-8 gap-4 md:mt-12 md:gap-8"
+              inverseArrows
+              className="mt-4"
+            >
               {DAYS.map(day => (
-                <article key={day.id} className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+                <article key={day.id} className="h-full rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
                   <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#e6c15a]">{day.label}</p>
                   <h3 className="mt-2 font-serif text-2xl">{day.date}</h3>
                   <ol className="mt-6 space-y-5">
@@ -307,13 +317,13 @@ const Fonosintesis: React.FC = () => {
                   </ol>
                 </article>
               ))}
-            </div>
+            </HorizontalCardRail>
           </div>
         </section>
 
         <section id="sonido" className="scroll-mt-28 px-5 py-20 md:px-8 md:py-28" aria-label="Imágenes del trabajo sonoro">
           <div className="mx-auto max-w-6xl">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
               {GALLERY.map(photo => (
                 <img
                   key={photo.src}
@@ -323,7 +333,7 @@ const Fonosintesis: React.FC = () => {
                   height={photo.height}
                   loading="lazy"
                   decoding="async"
-                  className={`w-full rounded-[28px] object-cover ${photo.wide ? 'aspect-[3/2] md:col-span-3' : 'aspect-[3/4]'}`}
+                  className={`w-full rounded-[28px] object-cover ${photo.wide ? 'col-span-3 aspect-[3/2]' : 'col-span-1 aspect-square md:aspect-[3/4]'}`}
                 />
               ))}
             </div>
