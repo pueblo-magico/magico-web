@@ -3,6 +3,7 @@ import { ArrowRight, CalendarDays, Ear, MapPin, Music2, Wind } from 'lucide-reac
 import { CookieBanner } from '../components/CookieBanner';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
+import { PageSectionNav, type PageNavigation } from '../components/PageSectionNav';
 import { SITE_URL, WA_MAGICO } from './data/config';
 import { ROUTES } from './routes';
 
@@ -12,6 +13,19 @@ const PAGE_URL = `${SITE_URL}${ROUTES.FONOSINTESIS}`;
 const HERO = '/uploads/events/fonosintesis/hero-didgeridoo.png';
 const OG_IMAGE = `${SITE_URL}${HERO}`;
 const WHATSAPP = `https://wa.me/${WA_MAGICO}?text=${encodeURIComponent('Hola, quiero pedir información y reservar mi lugar para Fonosíntesis, retiro y capacitación de sonidos restaurativos, del 8 al 10 de enero de 2027 en Pueblo Mágico.')}`;
+
+const navigation: PageNavigation = {
+  ariaLabel: 'Secciones del retiro',
+  pageEyebrow: '8–10 ene 2027',
+  pageTitle: 'Fonosíntesis',
+  sections: [
+    { id: 'retiro', label: 'El retiro' },
+    { id: 'programa', label: 'Programa' },
+    { id: 'sonido', label: 'El sonido' },
+    { id: 'lugar', label: 'Lugar' },
+    { id: 'reservar', label: 'Reservar' },
+  ],
+};
 
 const PILLARS = [
   {
@@ -175,7 +189,7 @@ const Fonosintesis: React.FC = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f7f3ea] text-[#1c2430]">
-      <Header />
+      <Header subNavigation={<PageSectionNav navigation={navigation} />} />
 
       <main id="contenido">
         <section className="bg-[#0e1a2b] text-white">
@@ -211,7 +225,7 @@ const Fonosintesis: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-8 md:py-28">
+        <section id="retiro" className="scroll-mt-28 px-5 py-20 md:px-8 md:py-28">
           <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">El retiro</p>
@@ -236,7 +250,7 @@ const Fonosintesis: React.FC = () => {
           </div>
         </section>
 
-        <section id="programa" className="scroll-mt-24 bg-[#0e1a2b] px-5 py-20 text-white md:px-8 md:py-28">
+        <section id="programa" className="scroll-mt-28 bg-[#0e1a2b] px-5 py-20 text-white md:px-8 md:py-28">
           <div className="mx-auto max-w-6xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#e6c15a]">Programa</p>
             <h2 className="mt-4 max-w-3xl font-serif text-4xl leading-tight md:text-6xl">Tres días de sonido</h2>
@@ -261,7 +275,7 @@ const Fonosintesis: React.FC = () => {
           </div>
         </section>
 
-        <section className="px-5 py-20 md:px-8 md:py-28" aria-label="Imágenes del trabajo sonoro">
+        <section id="sonido" className="scroll-mt-28 px-5 py-20 md:px-8 md:py-28" aria-label="Imágenes del trabajo sonoro">
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-4 md:grid-cols-3">
               {GALLERY.map(photo => (
@@ -280,7 +294,7 @@ const Fonosintesis: React.FC = () => {
           </div>
         </section>
 
-        <section id="lugar" className="scroll-mt-24 bg-white px-5 py-20 md:px-8 md:py-28">
+        <section id="lugar" className="scroll-mt-28 bg-white px-5 py-20 md:px-8 md:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Dónde</p>
@@ -304,7 +318,7 @@ const Fonosintesis: React.FC = () => {
           </div>
         </section>
 
-        <section id="reservar" className="scroll-mt-24 bg-[#005333] px-5 py-16 text-white md:px-8 md:py-20">
+        <section id="reservar" className="scroll-mt-28 bg-[#005333] px-5 py-16 text-white md:px-8 md:py-20">
           <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-8 md:flex-row md:items-center">
             <div className="max-w-2xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#e6c15a]">Reserva</p>
