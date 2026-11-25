@@ -221,7 +221,7 @@ export const Header: React.FC<HeaderProps> = ({ subNavigation, autoSubNavigation
 
   return (
     <header className={pillClasses}>
-      <div data-header-main-row className="flex w-full items-center justify-between px-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-4">
+      <div data-header-main-row className="flex w-full shrink-0 items-center justify-between px-2 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-4">
         {/* Logo - Left */}
         <div className="flex-1 lg:flex lg:justify-self-start">
           <a href={ROUTES.HOME} className="relative z-[1200] inline-block" onClick={(e) => { 
