@@ -192,36 +192,36 @@ const Fonosintesis: React.FC = () => {
       <Header subNavigation={<PageSectionNav navigation={navigation} />} />
 
       <main id="contenido">
-        <section className="bg-[#0e1a2b] text-white">
-          <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 pb-12 pt-28 md:grid-cols-[1.05fr_0.95fr] md:px-8 md:pb-16 md:pt-36">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#e6c15a]">Retiro y capacitación</p>
-              <h1 className="mt-4 font-serif text-[clamp(3.4rem,8vw,6.5rem)] leading-[0.88] text-white">Fonosíntesis</h1>
-              <p className="mt-5 max-w-xl font-serif text-2xl leading-snug text-white/90 md:text-3xl">Sonidos restaurativos</p>
-              <p className="mt-5 max-w-xl text-base leading-7 text-white/80 md:text-lg">
-                Tres días para afinar la escucha, estudiar la energía del sonido y practicar la voz como medicina. En Pueblo Mágico, Sierras de Córdoba.
-              </p>
-              <div className="mt-7 flex flex-col gap-3 text-sm text-white/90 sm:flex-row sm:flex-wrap sm:gap-6">
-                <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#e6c15a]" aria-hidden="true" /> 8, 9 y 10 de enero de 2027</span>
-                <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#e6c15a]" aria-hidden="true" /> Pueblo Mágico · Sierras de Córdoba</span>
-              </div>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#e6c15a] px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#1a1408] transition hover:bg-[#f0d27a]">
-                  Pedir información <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </a>
-                <a href="#programa" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/30 px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-white/10">
-                  Ver el programa
-                </a>
-              </div>
+        <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#0e1a2b] text-white">
+          <img
+            src={HERO}
+            alt=""
+            width={1024}
+            height={1024}
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover object-[center_72%]"
+          />
+          <div className="absolute inset-0 bg-[#0e1a2b]/45" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0e1a2b]/50 via-[#0e1a2b]/25 to-[#0e1a2b]/70" />
+          <div className="relative z-10 mx-auto max-w-3xl px-5 py-32 text-center md:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#e6c15a]">Retiro y capacitación</p>
+            <h1 className="mt-4 font-serif text-[clamp(3.4rem,8vw,6.5rem)] leading-[0.88] text-white">Fonosíntesis</h1>
+            <p className="mt-5 font-serif text-2xl leading-snug text-white/90 md:text-3xl">Sonidos restaurativos</p>
+            <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-white/80 md:text-lg">
+              Tres días para afinar la escucha, estudiar la energía del sonido y practicar la voz como medicina. En Pueblo Mágico, Sierras de Córdoba.
+            </p>
+            <div className="mt-7 flex flex-col items-center justify-center gap-3 text-sm text-white/90 sm:flex-row sm:gap-6">
+              <span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[#e6c15a]" aria-hidden="true" /> 8, 9 y 10 de enero de 2027</span>
+              <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-[#e6c15a]" aria-hidden="true" /> Pueblo Mágico · Sierras de Córdoba</span>
             </div>
-            <img
-              src={HERO}
-              alt="Silueta de una persona tocando un didgeridoo sobre una roca al atardecer"
-              width={1024}
-              height={1024}
-              fetchPriority="high"
-              className="aspect-square w-full rounded-[28px] object-cover"
-            />
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#e6c15a] px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-[#1a1408] transition hover:bg-[#f0d27a]">
+                Pedir información <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+              <a href="#programa" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/30 px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-white/10">
+                Ver el programa
+              </a>
+            </div>
           </div>
         </section>
 
