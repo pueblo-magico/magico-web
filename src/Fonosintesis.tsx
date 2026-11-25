@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ArrowRight, CalendarDays, Ear, MapPin, Music2, Wind } from 'lucide-react';
+import { ArrowRight, CalendarDays, Ear, MapPin, Music2, Wind } from 'lucide-react';
 import { CookieBanner } from '../components/CookieBanner';
 import { Footer } from '../components/Footer';
+import { Header } from '../components/Header';
 import { SITE_URL, WA_MAGICO } from './data/config';
 import { ROUTES } from './routes';
 
@@ -174,24 +175,11 @@ const Fonosintesis: React.FC = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#f7f3ea] text-[#1c2430]">
-      <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-white focus:p-3 focus:text-black">
-        Saltar al contenido
-      </a>
-      <header className="relative z-20 border-b border-white/10 bg-[#0e1a2b]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 md:px-8">
-          <a href="/" className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.18em] text-white hover:text-[#e6c15a]">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> PUEBLO MÁGICO
-          </a>
-          <nav aria-label="Secciones del retiro" className="flex items-center gap-5 text-xs font-semibold text-white/75">
-            <a href="#programa" className="hover:text-white">Programa</a>
-            <a href="#lugar" className="hover:text-white">Lugar</a>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       <main id="contenido">
         <section className="bg-[#0e1a2b] text-white">
-          <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-12 md:grid-cols-[1.05fr_0.95fr] md:px-8 md:py-16">
+          <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 pb-12 pt-28 md:grid-cols-[1.05fr_0.95fr] md:px-8 md:pb-16 md:pt-36">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#e6c15a]">Retiro y capacitación</p>
               <h1 className="mt-4 font-serif text-[clamp(3.4rem,8vw,6.5rem)] leading-[0.88] text-white">Fonosíntesis</h1>
