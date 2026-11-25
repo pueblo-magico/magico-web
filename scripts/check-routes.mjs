@@ -39,6 +39,7 @@ const ROUTE_PATHS = [
   '/reset-vital',
   '/despertar',
   '/el-despertar-del-colibri',
+  '/fonosintesis',
   '/presupuestos/nico-grupe',
 ];
 

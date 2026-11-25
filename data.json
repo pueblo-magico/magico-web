@@ -1079,6 +1079,20 @@
           "showInExperienceCatalog": false
         },
         {
+          "date": "8–10 ENERO 2027",
+          "startDate": "2027-01-08",
+          "endDate": "2027-01-10",
+          "statusLabel": "PRÓXIMA FECHA",
+          "title": "Fonosíntesis",
+          "labels": ["SONIDO", "RETIRO"],
+          "desc": "Retiro y capacitación de sonidos restaurativos en Pueblo Mágico: escucha activa, energía sonora, los cuatro elementos y la medicina de la voz. 8, 9 y 10 de enero de 2027 en las Sierras de Córdoba.",
+          "btn": "Conocer el retiro",
+          "image": "/uploads/events/fonosintesis/hero-didgeridoo.png",
+          "imageFit": "cover",
+          "link": "/fonosintesis",
+          "showInExperienceCatalog": false
+        },
+        {
           "date": "PRÓXIMA FECHA",
           "title": "Achala Viva",
           "desc": "Una exploración guiada que incluye astroturismo, avistaje de aves y fotografía de naturaleza.",
@@ -3937,6 +3951,20 @@
           "btn": "Request information",
           "image": "/uploads/events/agus-nasuti-the-viaje.jpg",
           "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20Agus%20Nasuti%20%C2%B7%20The%20Viaje%2C%20December%205%E2%80%938%2C%202026.",
+          "showInExperienceCatalog": false
+        },
+        {
+          "date": "JANUARY 8–10, 2027",
+          "startDate": "2027-01-08",
+          "endDate": "2027-01-10",
+          "statusLabel": "UPCOMING",
+          "title": "Fonosíntesis",
+          "labels": ["SOUND", "RETREAT"],
+          "desc": "A restorative sound retreat and training at Pueblo Mágico: active listening, sound energy, the four elements and the medicine of the voice. January 8–10, 2027 in the Sierras of Córdoba. Landing page in Spanish.",
+          "btn": "Explore the retreat",
+          "image": "/uploads/events/fonosintesis/hero-didgeridoo.png",
+          "imageFit": "cover",
+          "link": "/fonosintesis",
           "showInExperienceCatalog": false
         },
         {
