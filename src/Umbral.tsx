@@ -170,7 +170,7 @@ const Umbral: React.FC = () => {
                 href={reserveHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex bg-[#D4AF37] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]"
+                className="inline-flex rounded-full bg-[#D4AF37] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]"
               >
                 {copy.hero.cta}
               </a>
@@ -203,7 +203,7 @@ const Umbral: React.FC = () => {
                 height={1280}
                 loading="lazy"
                 decoding="async"
-                className="h-auto w-full object-cover"
+                className="h-auto w-full rounded-[2rem] object-cover"
               />
               <figcaption className="mt-4 text-sm leading-6 text-[#6A5344]">{copy.intro.caption}</figcaption>
             </figure>
@@ -253,19 +253,21 @@ const Umbral: React.FC = () => {
         </section>
 
         <section id="lugar" className="scroll-mt-36 bg-[#14211B] text-[#F6F1E6]">
-          <figure className="relative">
-            <img
-              src={AERIAL}
-              alt={copy.place.aerialAlt}
-              width={1920}
-              height={1080}
-              loading="lazy"
-              decoding="async"
-              className="h-[70vh] min-h-[460px] w-full object-cover"
-            />
-            <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#101A15] to-transparent px-6 pb-8 pt-24 md:px-10">
-              <p className="mx-auto max-w-6xl text-sm tracking-wide text-[#F6F1E6]/80">{copy.place.aerialCaption}</p>
-            </figcaption>
+          <figure className="px-4 pt-4 md:px-8 md:pt-8">
+            <div className="relative overflow-hidden rounded-[2rem]">
+              <img
+                src={AERIAL}
+                alt={copy.place.aerialAlt}
+                width={1920}
+                height={1080}
+                loading="lazy"
+                decoding="async"
+                className="h-[70vh] min-h-[460px] w-full object-cover"
+              />
+              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#101A15] to-transparent px-6 pb-8 pt-24 md:px-10">
+                <p className="mx-auto max-w-6xl text-sm tracking-wide text-[#F6F1E6]/80">{copy.place.aerialCaption}</p>
+              </figcaption>
+            </div>
           </figure>
           <div className="mx-auto max-w-3xl px-6 py-20 md:px-10 md:py-28">
             <Reveal>
@@ -368,7 +370,7 @@ const Umbral: React.FC = () => {
                 href={reserveHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-10 inline-flex bg-[#D4AF37] px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]"
+                className="mt-10 inline-flex rounded-full bg-[#D4AF37] px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]"
               >
                 {copy.closing.cta}
               </a>
@@ -384,7 +386,7 @@ const Umbral: React.FC = () => {
             href={reserveHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center bg-[#D4AF37] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1C2822]"
+            className="flex items-center justify-center rounded-full bg-[#D4AF37] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1C2822]"
           >
             {copy.stickyCta}
           </a>
