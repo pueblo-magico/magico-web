@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { BackpackIcon, CalendarBlankIcon, CaretDownIcon, CurrencyDollarIcon, MapPinIcon, MusicNotesIcon, SpeakerSimpleSlashIcon, WhatsappLogoIcon } from '@phosphor-icons/react';
 import { ArrowRight, CalendarDays, Ear, Instagram, MapPin, Music2, Wind } from 'lucide-react';
 import { CookieBanner } from '../components/CookieBanner';
 import { Footer } from '../components/Footer';
@@ -118,7 +119,14 @@ const PLACE_PHOTOS = [
   { src: '/uploads/domos_2.jpg', alt: 'Domos geodésicos de Pueblo Mágico', wide: true },
 ] as const;
 
-const HOSTS = [
+const TEAM = [
+  {
+    name: 'Ezequiel López Benavidez',
+    role: 'Sonidos armónicos',
+    image: '/uploads/events/fonosintesis/ezequiel-lopez.jpg',
+    text: 'SonCura – Caminos del Sonido. Facilita la escucha, la energía sonora y la medicina de la voz.',
+    instagram: undefined,
+  },
   {
     name: 'Diego Epelman Hodara',
     role: 'Fundador de Pueblo Mágico',
@@ -136,13 +144,13 @@ const HOSTS = [
 ] as const;
 
 const FAQS = [
-  ['¿Dónde se realiza?', 'En Pueblo Mágico, un ecolodge en Los Gigantes, Sierras de Córdoba.'],
-  ['¿Cuáles son las fechas?', 'Del viernes 8 al domingo 10 de enero de 2027. El ingreso es el viernes entre las 15 y las 17 hs.'],
-  ['¿Hay un valor publicado?', 'Todavía no. Escribinos por WhatsApp y te contamos la inversión, el alojamiento y cómo confirmar el lugar.'],
-  ['¿Qué propone el retiro?', 'Escucha activa, energía sonora, los cuatro elementos y la medicina de la voz. El sábado a las 19 hs hay una actividad que sigue a confirmar.'],
-  ['¿Hay silencio?', 'El viernes a la noche hay ayuno de palabras, con cena en silencio y descanso. El sábado, en el desayuno de las 7, se rompe el silencio y se comparten las experiencias.'],
-  ['¿Cómo reservo?', 'Por WhatsApp a Pueblo Mágico. El mensaje ya queda escrito: al enviarlo te respondemos con los próximos pasos.'],
-  ['¿Qué tengo que llevar?', 'Cuando confirmes el lugar te enviamos horarios de llegada, recomendaciones y lo necesario para el retiro.'],
+  { Icon: MapPinIcon, question: '¿Dónde se realiza?', answer: 'En Pueblo Mágico, un ecolodge en Los Gigantes, Sierras de Córdoba.' },
+  { Icon: CalendarBlankIcon, question: '¿Cuáles son las fechas?', answer: 'Del viernes 8 al domingo 10 de enero de 2027. El ingreso es el viernes entre las 15 y las 17 hs.' },
+  { Icon: CurrencyDollarIcon, question: '¿Hay un valor publicado?', answer: 'Todavía no. Escribinos por WhatsApp y te contamos la inversión, el alojamiento y cómo confirmar el lugar.' },
+  { Icon: MusicNotesIcon, question: '¿Qué propone el retiro?', answer: 'Escucha activa, energía sonora, los cuatro elementos y la medicina de la voz. El sábado a las 19 hs hay una actividad que sigue a confirmar.' },
+  { Icon: SpeakerSimpleSlashIcon, question: '¿Hay silencio?', answer: 'El viernes a la noche hay ayuno de palabras, con cena en silencio y descanso. El sábado, en el desayuno de las 7, se rompe el silencio y se comparten las experiencias.' },
+  { Icon: WhatsappLogoIcon, question: '¿Cómo reservo?', answer: 'Por WhatsApp a Pueblo Mágico. El mensaje ya queda escrito: al enviarlo te respondemos con los próximos pasos.' },
+  { Icon: BackpackIcon, question: '¿Qué tengo que llevar?', answer: 'Cuando confirmes el lugar te enviamos horarios de llegada, recomendaciones y lo necesario para el retiro.' },
 ] as const;
 
 const GALLERY = [
@@ -164,6 +172,7 @@ const upsertMeta = (selector: string, attribute: 'name' | 'property', key: strin
 
 const Fonosintesis: React.FC = () => {
   const [showFloatingWhatsapp, setShowFloatingWhatsapp] = useState(false);
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -382,41 +391,57 @@ const Fonosintesis: React.FC = () => {
           <div className="mx-auto max-w-6xl">
             <div className="max-w-2xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Equipo</p>
-              <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-6xl">Quiénes reciben en Pueblo Mágico.</h2>
-              <p className="mt-5 text-base leading-8 text-[#3d4a58]">Diego y China viven en el ecolodge. Son quienes reciben al grupo y sostienen la estadía.</p>
+              <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-6xl">Quiénes acompañan el retiro.</h2>
+              <p className="mt-5 text-base leading-8 text-[#3d4a58]">Ezequiel facilita el trabajo sonoro. Diego y China viven en el ecolodge y sostienen la estadía.</p>
             </div>
-            <ul className="mt-12 grid gap-5 md:grid-cols-2">
-              {HOSTS.map(host => (
-                <li key={host.name} className="rounded-[28px] border border-[#0e1a2b]/10 bg-white p-6 md:p-8">
-                  <img src={host.image} alt={host.name} width={160} height={160} loading="lazy" decoding="async" className="h-24 w-24 rounded-full object-cover" />
-                  <h3 className="mt-5 font-serif text-2xl text-[#0e1a2b]">{host.name}</h3>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-[#8a6a1f]">{host.role}</p>
-                  <p className="mt-3 text-sm leading-7 text-[#4d5b68]">{host.text}</p>
-                  <a href={host.instagram} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#005333]">
-                    <Instagram className="h-4 w-4" aria-hidden="true" /> Instagram
-                  </a>
+            <ul className="mt-12 grid gap-5 md:grid-cols-3">
+              {TEAM.map(person => (
+                <li key={person.name} className="rounded-[28px] border border-[#0e1a2b]/10 bg-white p-6 md:p-8">
+                  <img src={person.image} alt={person.name} width={160} height={160} loading="lazy" decoding="async" className="h-24 w-24 rounded-full object-cover object-[center_20%]" />
+                  <h3 className="mt-5 font-serif text-2xl text-[#0e1a2b]">{person.name}</h3>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-[#8a6a1f]">{person.role}</p>
+                  <p className="mt-3 text-sm leading-7 text-[#4d5b68]">{person.text}</p>
+                  {person.instagram && (
+                    <a href={person.instagram} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#005333]">
+                      <Instagram className="h-4 w-4" aria-hidden="true" /> Instagram
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        <section id="preguntas" className="scroll-mt-28 bg-white px-5 py-20 md:px-8 md:py-28">
-          <div className="mx-auto max-w-3xl">
-            <div className="text-center">
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Preguntas frecuentes</p>
-              <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-5xl">Antes de reservar</h2>
-            </div>
-            <div className="mt-10 space-y-3">
-              {FAQS.map(([question, answer]) => (
-                <details key={question} className="group rounded-[20px] border border-[#0e1a2b]/10 bg-[#f7f3ea] px-6 py-5 open:bg-white open:shadow-sm">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-5 font-semibold text-[#0e1a2b]">
-                    <span>{question}</span>
-                    <span className="text-xl text-[#8a6a1f] transition group-open:rotate-45" aria-hidden="true">+</span>
-                  </summary>
-                  <p className="mt-4 border-t border-[#0e1a2b]/10 pt-4 text-sm leading-7 text-[#4d5b68]">{answer}</p>
-                </details>
-              ))}
+        <section id="preguntas" className="scroll-mt-28 bg-[#F9F8F4] px-5 py-20 md:px-8 md:py-28">
+          <div className="mx-auto max-w-4xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#005333]/80">Preguntas frecuentes</p>
+            <h2 className="mt-3 font-serif text-4xl leading-tight text-[#005333] md:text-5xl">Antes de reservar</h2>
+            <div className="mt-10 space-y-3 md:space-y-4">
+              {FAQS.map((faq, index) => {
+                const isActive = activeFaq === index;
+                const Icon = faq.Icon;
+                return (
+                  <div key={faq.question} className={`overflow-hidden rounded-2xl border bg-white transition-colors duration-300 ${isActive ? 'border-[#D4AF37] shadow-md' : 'border-gray-100 shadow-sm hover:border-gray-200'}`}>
+                    <button type="button" className="flex w-full items-center gap-4 px-6 py-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#005333]/40 md:px-8 md:py-6" onClick={() => setActiveFaq(isActive ? null : index)} aria-expanded={isActive}>
+                      <span className={`shrink-0 transition-colors duration-300 ${isActive ? 'text-[#005333]' : 'text-[#005333]/30'}`}>
+                        <Icon weight="light" className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <h3 className={`flex-1 font-serif text-base leading-snug transition-colors duration-300 md:text-lg ${isActive ? 'text-[#005333]' : 'text-gray-800'}`}>{faq.question}</h3>
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-[transform,background-color,color] duration-300 md:h-8 md:w-8 ${isActive ? 'rotate-180 bg-[#005333] text-[#D4AF37]' : 'bg-gray-100 text-[#005333]'}`} aria-hidden="true">
+                        <CaretDownIcon weight="bold" className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                      </span>
+                    </button>
+                    <div className="overflow-hidden transition-all duration-500 ease-in-out" style={{ display: 'grid', gridTemplateRows: isActive ? '1fr' : '0fr', opacity: isActive ? 1 : 0 }}>
+                      <div className="min-h-0 overflow-hidden">
+                        <div className="pb-6 pl-[3.75rem] pr-6 pt-1 md:pb-7 md:pl-[4.5rem] md:pr-8">
+                          <div className="mb-5 h-px w-full bg-gray-100" />
+                          <p className="text-sm leading-relaxed text-gray-600 md:text-base">{faq.answer}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
