@@ -139,6 +139,16 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/el-despertar-del-colibri',
   },
   {
+    path: '/fonosintesis',
+    title: 'Fonosíntesis — Retiro y capacitación de sonidos restaurativos · 8 al 10 de enero 2027 | Pueblo Mágico',
+    description: 'Retiro y capacitación de sonidos restaurativos en Pueblo Mágico, Sierras de Córdoba. Escucha activa, energía sonora, los cuatro elementos y la medicina de la voz. Del 8 al 10 de enero de 2027.',
+    image: 'https://experienciamagico.com/uploads/events/fonosintesis/hero-didgeridoo.png',
+    imageWidth: 1024,
+    imageHeight: 1024,
+    imageAlt: 'Fonosíntesis · didgeridoo al atardecer en las Sierras de Córdoba',
+    canonical: 'https://experienciamagico.com/fonosintesis',
+  },
+  {
     path: '/empresas',
     title: 'Empresas — Voluntariado Corporativo & RSE en las Sierras · Los Gigantes, Córdoba | Pueblo Mágico',
     description: 'Programas de restauración ambiental, voluntariado corporativo y team building en Los Gigantes, Córdoba. +25.000 árboles plantados, +200 hectáreas cuidadas, +25 años de trayectoria.',
@@ -277,6 +287,22 @@ function buildJsonLD(route) {
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: { '@type': 'Place', name: 'Los Gigantes, Córdoba', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
       organizer: { '@type': 'Organization', name: 'Cuenca Lunar' },
+      url: route.canonical,
+      image: route.image,
+    })}</script>`;
+  }
+  if (route.path === '/fonosintesis') {
+    return `<script id="fonosintesis-event-schema" type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: 'Fonosíntesis — Retiro y capacitación de sonidos restaurativos',
+      description: route.description,
+      startDate: '2027-01-08',
+      endDate: '2027-01-10',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type': 'Place', name: 'Pueblo Mágico', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
+      organizer: { '@type': 'Organization', name: 'Pueblo Mágico', url: 'https://experienciamagico.com' },
       url: route.canonical,
       image: route.image,
     })}</script>`;

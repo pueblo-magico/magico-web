@@ -133,6 +133,24 @@ test('El Despertar del Colibrí uses its landing hero and complete social metada
   assert.doesNotMatch(colibriSource, /Ocho puertas hacia una experiencia compartida/);
 });
 
+test('Fonosíntesis is an upcoming calendar event with its landing page', () => {
+  for (const language of ['es', 'en']) {
+    const card = translations[language].events.cards.find((event) => event.link === '/fonosintesis');
+
+    assert.ok(card);
+    assert.equal(card.title, 'Fonosíntesis');
+    assert.equal(card.startDate, '2027-01-08');
+    assert.equal(card.endDate, '2027-01-10');
+    assert.equal(card.image, '/uploads/events/fonosintesis/hero-didgeridoo.png');
+    assert.equal(card.labels.length, 2);
+    assert.equal(shouldShowMainCalendarEvent(card, '2026-11-25'), true);
+  }
+
+  assert.match(prerenderSource, /path: '\/fonosintesis'/);
+  assert.match(prerenderSource, /fonosintesis-event-schema/);
+  assert.match(prerenderSource, /canonical: 'https:\/\/experienciamagico\.com\/fonosintesis'/);
+});
+
 test('every visible upcoming event has a status and two thematic labels', () => {
   for (const language of ['es', 'en']) {
     const cards = translations[language].events.cards.filter((card) => (
