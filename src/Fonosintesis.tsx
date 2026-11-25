@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, CalendarDays, Ear, MapPin, Music2, Wind } from 'lucide-react';
+import { ArrowRight, CalendarDays, Ear, Instagram, MapPin, Music2, Wind } from 'lucide-react';
 import { CookieBanner } from '../components/CookieBanner';
 import { Footer } from '../components/Footer';
 import { Header } from '../components/Header';
@@ -23,6 +23,8 @@ const navigation: PageNavigation = {
     { id: 'programa', label: 'Programa' },
     { id: 'sonido', label: 'El sonido' },
     { id: 'lugar', label: 'Lugar' },
+    { id: 'equipo', label: 'Equipo' },
+    { id: 'preguntas', label: 'Preguntas' },
     { id: 'reservar', label: 'Reservar' },
   ],
 };
@@ -106,6 +108,40 @@ const DAYS = [
       { time: '13 hs', title: 'Ronda de cierre' },
     ],
   },
+] as const;
+
+const PLACE_PHOTOS = [
+  { src: '/uploads/events/colibri/pueblo-magico-aereo.jpg', alt: 'Vista aérea de Pueblo Mágico, en Los Gigantes', wide: true },
+  { src: '/uploads/events/colibri/salon-piedra.jpg', alt: 'Salón de piedra de Pueblo Mágico', wide: false },
+  { src: '/uploads/hero-estadia.webp', alt: 'El refugio de piedra de Pueblo Mágico al atardecer', wide: false },
+  { src: '/uploads/domos_2.jpg', alt: 'Domos geodésicos de Pueblo Mágico', wide: true },
+] as const;
+
+const HOSTS = [
+  {
+    name: 'Diego Epelman Hodara',
+    role: 'Fundador de Pueblo Mágico',
+    image: '/uploads/Diego_perfil.png',
+    text: 'Emprendedor y facilitador. Vive en el ecolodge y acompaña el día a día de quienes llegan al retiro.',
+    instagram: 'https://www.instagram.com/diegoepel/',
+  },
+  {
+    name: 'China Dericia',
+    role: 'Anfitriona del Pueblo',
+    image: '/uploads/china.jpeg',
+    text: 'Profesora de yoga y facilitadora de movimiento consciente. Recibe al grupo y sostiene la estadía en el lugar.',
+    instagram: 'https://www.instagram.com/bambu.alquimia.terapeutica/',
+  },
+] as const;
+
+const FAQS = [
+  ['¿Dónde se realiza?', 'En Pueblo Mágico, un ecolodge en Los Gigantes, Sierras de Córdoba.'],
+  ['¿Cuáles son las fechas?', 'Del viernes 8 al domingo 10 de enero de 2027. El ingreso es el viernes entre las 15 y las 17 hs.'],
+  ['¿Hay un valor publicado?', 'Todavía no. Escribinos por WhatsApp y te contamos la inversión, el alojamiento y cómo confirmar el lugar.'],
+  ['¿Qué propone el retiro?', 'Escucha activa, energía sonora, los cuatro elementos y la medicina de la voz. El sábado a las 19 hs hay una actividad que sigue a confirmar.'],
+  ['¿Hay silencio?', 'El viernes a la noche hay ayuno de palabras, con cena en silencio y descanso. El sábado, en el desayuno de las 7, se rompe el silencio y se comparten las experiencias.'],
+  ['¿Cómo reservo?', 'Por WhatsApp a Pueblo Mágico. El mensaje ya queda escrito: al enviarlo te respondemos con los próximos pasos.'],
+  ['¿Qué tengo que llevar?', 'Cuando confirmes el lugar te enviamos horarios de llegada, recomendaciones y lo necesario para el retiro.'],
 ] as const;
 
 const GALLERY = [
@@ -295,26 +331,83 @@ const Fonosintesis: React.FC = () => {
         </section>
 
         <section id="lugar" className="scroll-mt-28 bg-white px-5 py-20 md:px-8 md:py-28">
-          <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Dónde</p>
-              <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-6xl">Pueblo Mágico, en las Sierras de Córdoba.</h2>
-              <p className="mt-6 max-w-xl text-base leading-8 text-[#3d4a58]">
-                El retiro se realiza en el ecolodge de Los Gigantes. Todavía no hay un valor publicado: escribinos y te contamos inversión, alojamiento y cómo confirmar el lugar.
-              </p>
-              <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#005333] px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#0e1a2b]">
-                Pedir información y reservar <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </a>
+          <div className="mx-auto max-w-6xl">
+            <div className="grid items-end gap-10 lg:grid-cols-[0.85fr_1.15fr]">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Dónde</p>
+                <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-6xl">Pueblo Mágico, en las Sierras de Córdoba.</h2>
+                <p className="mt-6 max-w-xl text-base leading-8 text-[#3d4a58]">
+                  El retiro se realiza en el ecolodge de Los Gigantes: salón de piedra, refugio y domos entre la montaña. Todavía no hay un valor publicado: escribinos y te contamos inversión, alojamiento y cómo confirmar el lugar.
+                </p>
+                <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#005333] px-7 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-[#0e1a2b]">
+                  Pedir información y reservar <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
+              <img
+                src="/uploads/events/fonosintesis/handpan-roca.png"
+                alt="Handpan sobre una roca, con el valle de las sierras detrás"
+                width={597}
+                height={1024}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[4/5] w-full rounded-[28px] object-cover lg:max-h-[520px]"
+              />
             </div>
-            <img
-              src="/uploads/events/fonosintesis/handpan-roca.png"
-              alt="Handpan sobre una roca, con el valle de las sierras detrás"
-              width={597}
-              height={1024}
-              loading="lazy"
-              decoding="async"
-              className="aspect-[3/4] w-full rounded-[28px] object-cover"
-            />
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {PLACE_PHOTOS.map(photo => (
+                <img
+                  key={photo.src}
+                  src={photo.src}
+                  alt={photo.alt}
+                  loading="lazy"
+                  decoding="async"
+                  className={`w-full rounded-[28px] object-cover ${photo.wide ? 'aspect-[16/9] md:col-span-2' : 'aspect-[4/3]'}`}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="equipo" className="scroll-mt-28 bg-[#f7f3ea] px-5 py-20 md:px-8 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Equipo</p>
+              <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-6xl">Quiénes reciben en Pueblo Mágico.</h2>
+              <p className="mt-5 text-base leading-8 text-[#3d4a58]">Diego y China viven en el ecolodge. Son quienes reciben al grupo y sostienen la estadía.</p>
+            </div>
+            <ul className="mt-12 grid gap-5 md:grid-cols-2">
+              {HOSTS.map(host => (
+                <li key={host.name} className="rounded-[28px] border border-[#0e1a2b]/10 bg-white p-6 md:p-8">
+                  <img src={host.image} alt={host.name} width={160} height={160} loading="lazy" decoding="async" className="h-24 w-24 rounded-full object-cover" />
+                  <h3 className="mt-5 font-serif text-2xl text-[#0e1a2b]">{host.name}</h3>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-[#8a6a1f]">{host.role}</p>
+                  <p className="mt-3 text-sm leading-7 text-[#4d5b68]">{host.text}</p>
+                  <a href={host.instagram} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#005333]">
+                    <Instagram className="h-4 w-4" aria-hidden="true" /> Instagram
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section id="preguntas" className="scroll-mt-28 bg-white px-5 py-20 md:px-8 md:py-28">
+          <div className="mx-auto max-w-3xl">
+            <div className="text-center">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#8a6a1f]">Preguntas frecuentes</p>
+              <h2 className="mt-4 font-serif text-4xl leading-tight text-[#0e1a2b] md:text-5xl">Antes de reservar</h2>
+            </div>
+            <div className="mt-10 space-y-3">
+              {FAQS.map(([question, answer]) => (
+                <details key={question} className="group rounded-[20px] border border-[#0e1a2b]/10 bg-[#f7f3ea] px-6 py-5 open:bg-white open:shadow-sm">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-5 font-semibold text-[#0e1a2b]">
+                    <span>{question}</span>
+                    <span className="text-xl text-[#8a6a1f] transition group-open:rotate-45" aria-hidden="true">+</span>
+                  </summary>
+                  <p className="mt-4 border-t border-[#0e1a2b]/10 pt-4 text-sm leading-7 text-[#4d5b68]">{answer}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </section>
 
