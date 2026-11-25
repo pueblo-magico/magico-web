@@ -1,5 +1,234 @@
 {
   "es": {
+    "umbral": {
+      "skip": "Saltar al contenido",
+      "seo": {
+        "title": "UMBRAL · El Viaje de la Escucha — Retiro de sonidos armónicos | Pueblo Mágico",
+        "description": "Retiro formativo de sonidos armónicos del 8 al 11 de enero de 2027 en Pueblo Mágico, Sierras Grandes de Córdoba. Organiza SonCura – Caminos del Sonido. Facilita Ezequiel López Benavidez. Alojamiento y pensión completa. Cupos limitados."
+      },
+      "nav": {
+        "ariaLabel": "Secciones de UMBRAL",
+        "pageEyebrow": "Retiro",
+        "pageTitle": "UMBRAL",
+        "sections": [
+          {
+            "id": "escucha",
+            "label": "La escucha"
+          },
+          {
+            "id": "datos",
+            "label": "Datos"
+          },
+          {
+            "id": "viaje",
+            "label": "El viaje"
+          },
+          {
+            "id": "lugar",
+            "label": "El lugar"
+          },
+          {
+            "id": "facilita",
+            "label": "Facilita"
+          },
+          {
+            "id": "estadia",
+            "label": "La estadía"
+          },
+          {
+            "id": "preguntas",
+            "label": "Preguntas"
+          },
+          {
+            "id": "inscripcion",
+            "label": "Inscripción"
+          }
+        ]
+      },
+      "hero": {
+        "category": "Retiro formativo · Sonidos armónicos",
+        "title": "UMBRAL",
+        "subtitle": "El Viaje de la Escucha",
+        "lead": "Cuatro días para cruzar del ruido a la escucha. Una experiencia formativa e inmersiva en la montaña, donde el sonido abre el camino y el silencio lo sostiene.",
+        "cta": "Reservar mi lugar",
+        "ctaSecondary": "Conocer la experiencia",
+        "imageAlt": "Macizo de las Sierras Grandes al amanecer",
+        "meta": [
+          {
+            "label": "Fechas",
+            "value": "8 al 11 de enero de 2027"
+          },
+          {
+            "label": "Duración",
+            "value": "4 días y 3 noches"
+          },
+          {
+            "label": "Lugar",
+            "value": "Pueblo Mágico, Sierras Grandes de Córdoba"
+          }
+        ]
+      },
+      "intro": {
+        "kicker": "El umbral",
+        "title": "Un umbral no se cruza con prisa.",
+        "paragraphs": [
+          "UMBRAL — El Viaje de la Escucha es un retiro formativo de sonidos armónicos. Durante cuatro días y tres noches, la atención se afina: vibración, silencio, naturaleza y la presencia de un grupo pequeño.",
+          "Lo organiza SonCura – Caminos del Sonido. Lo facilita Ezequiel López Benavidez. Sucede en Pueblo Mágico, eco-centro de montaña en las Sierras Grandes de Córdoba, Argentina."
+        ],
+        "imageAlt": "Círculo de práctica en el salón de Pueblo Mágico, con cuencos en el centro",
+        "caption": "El salón de Pueblo Mágico, donde el grupo se sienta a escuchar."
+      },
+      "facts": {
+        "kicker": "Lo concreto",
+        "title": "Datos del encuentro",
+        "items": [
+          {
+            "label": "Fechas",
+            "value": "8 al 11 de enero de 2027"
+          },
+          {
+            "label": "Duración",
+            "value": "4 días y 3 noches"
+          },
+          {
+            "label": "Ingreso",
+            "value": "Viernes 8 de enero, 15:00 h"
+          },
+          {
+            "label": "Salida",
+            "value": "Lunes 11 de enero, 14:00 h"
+          },
+          {
+            "label": "Ubicación",
+            "value": "Pueblo Mágico, Sierras Grandes de Córdoba, Argentina"
+          },
+          {
+            "label": "Organiza",
+            "value": "SonCura – Caminos del Sonido"
+          },
+          {
+            "label": "Facilita",
+            "value": "Ezequiel López Benavidez"
+          },
+          {
+            "label": "Modalidad",
+            "value": "Experiencia formativa e inmersiva, con alojamiento y pensión completa"
+          },
+          {
+            "label": "Cupos",
+            "value": "Limitados"
+          }
+        ]
+      },
+      "journey": {
+        "kicker": "El arco",
+        "title": "Cuatro días, una escucha.",
+        "lead": "El arco es claro. Se llega, se escucha, se habita la montaña y se vuelve con esa escucha todavía abierta.",
+        "steps": [
+          {
+            "index": "01",
+            "title": "Llegar",
+            "text": "El viernes 8 de enero el ingreso es a las 15:00 h. El primer movimiento es entrar al territorio y dejar que el ritmo de afuera se apague."
+          },
+          {
+            "index": "02",
+            "title": "Formarse",
+            "text": "Ezequiel López Benavidez facilita el trabajo con sonidos armónicos. La formación ocurre en la práctica de escuchar: el instrumento, el cuerpo, el grupo y el paisaje."
+          },
+          {
+            "index": "03",
+            "title": "Habitar",
+            "text": "La estadía incluye alojamiento y pensión completa. Comer, descansar y caminar la sierra forman parte del viaje, no son un intervalo entre actividades."
+          },
+          {
+            "index": "04",
+            "title": "Volver",
+            "text": "El lunes 11 de enero la salida es a las 14:00 h. El cierre es integrar lo vivido para que la escucha no se quede en la montaña."
+          }
+        ]
+      },
+      "place": {
+        "kicker": "El territorio",
+        "title": "La sierra también escucha.",
+        "paragraphs": [
+          "Pueblo Mágico está en las Sierras Grandes de Córdoba, en el macizo de Los Gigantes. Es un eco-centro de montaña: piedra, domos, huerta y un horizonte amplio, lejos del ruido de la ciudad.",
+          "El entorno no es un fondo para el retiro. El viento, la distancia y la luz de enero son parte del trabajo de atención."
+        ],
+        "aerialAlt": "Vista aérea de Pueblo Mágico entre los pastizales de las Sierras Grandes",
+        "aerialCaption": "Pueblo Mágico, Sierras Grandes de Córdoba.",
+        "refugeAlt": "Refugio de piedra al atardecer en Pueblo Mágico",
+        "refugeCaption": "El refugio de piedra, al final del día."
+      },
+      "facilitator": {
+        "kicker": "Facilita",
+        "name": "Ezequiel López Benavidez",
+        "role": "Sonidos armónicos",
+        "org": "SonCura – Caminos del Sonido",
+        "paragraphs": [
+          "Ezequiel López Benavidez conduce UMBRAL. Acompaña el viaje de la escucha desde SonCura, en una experiencia formativa pensada para quien quiere profundizar la relación con el sonido y el silencio.",
+          "La organización del encuentro es de SonCura – Caminos del Sonido. Pueblo Mágico recibe al grupo y sostiene la hospitalidad del territorio."
+        ]
+      },
+      "includes": {
+        "kicker": "La modalidad",
+        "title": "Lo que sostiene la experiencia",
+        "lead": "Es una experiencia formativa e inmersiva. El valor de la inscripción y las formas de reserva se confirman por mensaje. Los cupos son limitados.",
+        "items": [
+          "Alojamiento durante las tres noches",
+          "Pensión completa",
+          "La experiencia formativa facilitada por Ezequiel López Benavidez",
+          "El entorno de Pueblo Mágico, en las Sierras Grandes de Córdoba"
+        ]
+      },
+      "audience": {
+        "kicker": "La convocatoria",
+        "title": "Este viaje es para quien",
+        "items": [
+          "Siente que la atención se le fragmenta y quiere volver a escuchar",
+          "Busca una formación en sonidos armónicos, no solo un fin de semana de descanso",
+          "Puede habitar el silencio y la convivencia de un grupo pequeño",
+          "Quiere cuatro días en la montaña, con el cuerpo alojado y la comida resuelta"
+        ]
+      },
+      "faq": {
+        "kicker": "Antes de escribir",
+        "title": "Preguntas",
+        "items": [
+          {
+            "q": "¿Cuándo es y cuánto dura?",
+            "a": "Del viernes 8 al lunes 11 de enero de 2027. Son 4 días y 3 noches. El ingreso es el viernes a las 15:00 h y la salida el lunes a las 14:00 h."
+          },
+          {
+            "q": "¿Dónde se realiza?",
+            "a": "En Pueblo Mágico, eco-centro de montaña en las Sierras Grandes de Córdoba, Argentina."
+          },
+          {
+            "q": "¿Quién lo organiza y quién facilita?",
+            "a": "Lo organiza SonCura – Caminos del Sonido. Lo facilita Ezequiel López Benavidez."
+          },
+          {
+            "q": "¿Qué incluye la estadía?",
+            "a": "Alojamiento y pensión completa, junto con la experiencia formativa del retiro."
+          },
+          {
+            "q": "¿Hace falta experiencia previa?",
+            "a": "Es un retiro formativo. Si dudás de tu punto de partida, escribinos y lo conversamos antes de reservar."
+          },
+          {
+            "q": "¿Cómo me inscribo y cuál es el valor?",
+            "a": "Los cupos son limitados. El valor y la reserva se confirman por WhatsApp."
+          }
+        ]
+      },
+      "closing": {
+        "kicker": "Cupos limitados",
+        "title": "El lugar se reserva en la conversación.",
+        "text": "Si este viaje te llama, escribinos. Te contamos cupos, valor y lo que necesitás para llegar.",
+        "cta": "Quiero mi lugar"
+      },
+      "stickyCta": "Reservar mi lugar",
+      "whatsapp": "Hola, quiero inscribirme a UMBRAL – El Viaje de la Escucha, del 8 al 11 de enero de 2027 en Pueblo Mágico."
+    },
     "aliados": {
       "title": "Organizaciones ambientales aliadas",
       "note": "Con Acción Ambiental ya cerramos un acuerdo de trabajo conjunto. Bosques de Agua y Acción Serrana aportan conocimiento técnico y experiencia territorial según cada intervención.",
@@ -1077,6 +1306,20 @@
           "image": "/uploads/events/agus-nasuti-the-viaje.jpg",
           "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20recibir%20informaci%C3%B3n%20y%20reservar%20mi%20lugar%20para%20la%20experiencia%20de%20Agus%20Nasuti%20%C2%B7%20The%20Viaje%2C%20del%205%20al%208%20de%20diciembre%20de%202026.",
           "showInExperienceCatalog": false
+        },
+        {
+          "date": "8–11 ENERO 2027",
+          "startDate": "2027-01-08",
+          "endDate": "2027-01-11",
+          "statusLabel": "CUPOS LIMITADOS",
+          "title": "UMBRAL · El Viaje de la Escucha",
+          "labels": ["RETIRO FORMATIVO", "SONIDOS ARMÓNICOS"],
+          "desc": "Cuatro días y tres noches para formarse en la escucha. Sonidos armónicos, silencio y montaña en Pueblo Mágico. Organiza SonCura. Facilita Ezequiel López Benavidez.",
+          "btn": "Conocer el retiro",
+          "image": "/uploads/reforestacion/montana-hero.webp",
+          "link": "/retiros/umbral-el-viaje-de-la-escucha",
+          "pdfLink": "",
+          "showInMainEvents": true
         },
         {
           "date": "PRÓXIMA FECHA",
@@ -2861,6 +3104,235 @@
     }
   },
   "en": {
+    "umbral": {
+      "skip": "Skip to content",
+      "seo": {
+        "title": "UMBRAL · The Journey of Listening — Harmonic sound retreat | Pueblo Mágico",
+        "description": "A formative retreat in harmonic sound, 8–11 January 2027 at Pueblo Mágico, in the Sierras Grandes of Córdoba. Organized by SonCura – Caminos del Sonido. Facilitated by Ezequiel López Benavidez. Lodging and full board. Limited places."
+      },
+      "nav": {
+        "ariaLabel": "UMBRAL sections",
+        "pageEyebrow": "Retreat",
+        "pageTitle": "UMBRAL",
+        "sections": [
+          {
+            "id": "escucha",
+            "label": "Listening"
+          },
+          {
+            "id": "datos",
+            "label": "Details"
+          },
+          {
+            "id": "viaje",
+            "label": "The journey"
+          },
+          {
+            "id": "lugar",
+            "label": "The land"
+          },
+          {
+            "id": "facilita",
+            "label": "Facilitator"
+          },
+          {
+            "id": "estadia",
+            "label": "The stay"
+          },
+          {
+            "id": "preguntas",
+            "label": "Questions"
+          },
+          {
+            "id": "inscripcion",
+            "label": "Reserve"
+          }
+        ]
+      },
+      "hero": {
+        "category": "Formative retreat · Harmonic sound",
+        "title": "UMBRAL",
+        "subtitle": "The Journey of Listening",
+        "lead": "Four days to cross from noise into listening. A formative, immersive experience in the mountains, where sound opens the path and silence holds it.",
+        "cta": "Reserve my place",
+        "ctaSecondary": "Read the experience",
+        "imageAlt": "The Sierras Grandes massif at dawn",
+        "meta": [
+          {
+            "label": "Dates",
+            "value": "8–11 January 2027"
+          },
+          {
+            "label": "Duration",
+            "value": "4 days and 3 nights"
+          },
+          {
+            "label": "Place",
+            "value": "Pueblo Mágico, Sierras Grandes of Córdoba"
+          }
+        ]
+      },
+      "intro": {
+        "kicker": "The threshold",
+        "title": "A threshold is not crossed in a hurry.",
+        "paragraphs": [
+          "UMBRAL — The Journey of Listening is a formative retreat in harmonic sound. For four days and three nights, attention is refined: vibration, silence, nature, and the presence of a small group.",
+          "It is organized by SonCura – Caminos del Sonido and facilitated by Ezequiel López Benavidez. It takes place at Pueblo Mágico, a mountain eco-center in the Sierras Grandes of Córdoba, Argentina."
+        ],
+        "imageAlt": "A practice circle in the hall at Pueblo Mágico, with singing bowls at the center",
+        "caption": "The hall at Pueblo Mágico, where the group sits down to listen."
+      },
+      "facts": {
+        "kicker": "The facts",
+        "title": "The gathering",
+        "items": [
+          {
+            "label": "Dates",
+            "value": "8–11 January 2027"
+          },
+          {
+            "label": "Duration",
+            "value": "4 days and 3 nights"
+          },
+          {
+            "label": "Arrival",
+            "value": "Friday 8 January, 3:00 p.m."
+          },
+          {
+            "label": "Departure",
+            "value": "Monday 11 January, 2:00 p.m."
+          },
+          {
+            "label": "Location",
+            "value": "Pueblo Mágico, Sierras Grandes of Córdoba, Argentina"
+          },
+          {
+            "label": "Organized by",
+            "value": "SonCura – Caminos del Sonido"
+          },
+          {
+            "label": "Facilitated by",
+            "value": "Ezequiel López Benavidez"
+          },
+          {
+            "label": "Format",
+            "value": "A formative, immersive experience with lodging and full board"
+          },
+          {
+            "label": "Places",
+            "value": "Limited"
+          }
+        ]
+      },
+      "journey": {
+        "kicker": "The arc",
+        "title": "Four days, one listening.",
+        "lead": "The arc is clear. You arrive, you listen, you inhabit the mountain, and you leave with that listening still open.",
+        "steps": [
+          {
+            "index": "01",
+            "title": "Arrive",
+            "text": "On Friday 8 January, arrival is at 3:00 p.m. The first movement is to enter the land and let the outside rhythm fall away."
+          },
+          {
+            "index": "02",
+            "title": "Study",
+            "text": "Ezequiel López Benavidez facilitates the work with harmonic sound. The training happens in the practice of listening: the instrument, the body, the group, and the landscape."
+          },
+          {
+            "index": "03",
+            "title": "Inhabit",
+            "text": "The stay includes lodging and full board. Eating, resting, and walking the sierra are part of the journey, not a pause between activities."
+          },
+          {
+            "index": "04",
+            "title": "Return",
+            "text": "On Monday 11 January, departure is at 2:00 p.m. The closing is to integrate what was lived, so the listening does not stay behind on the mountain."
+          }
+        ]
+      },
+      "place": {
+        "kicker": "The land",
+        "title": "The sierra listens too.",
+        "paragraphs": [
+          "Pueblo Mágico stands in the Sierras Grandes of Córdoba, in the Los Gigantes massif. It is a mountain eco-center: stone, domes, a garden, and a wide horizon, far from the noise of the city.",
+          "The land is not a backdrop. The wind, the distance, and the January light are part of the work of attention."
+        ],
+        "aerialAlt": "Aerial view of Pueblo Mágico among the grasslands of the Sierras Grandes",
+        "aerialCaption": "Pueblo Mágico, Sierras Grandes of Córdoba.",
+        "refugeAlt": "The stone refuge at dusk in Pueblo Mágico",
+        "refugeCaption": "The stone refuge, at the end of the day."
+      },
+      "facilitator": {
+        "kicker": "Facilitator",
+        "name": "Ezequiel López Benavidez",
+        "role": "Harmonic sound",
+        "org": "SonCura – Caminos del Sonido",
+        "paragraphs": [
+          "Ezequiel López Benavidez leads UMBRAL. He accompanies the journey of listening through SonCura, in a formative experience for anyone who wants to deepen their relationship with sound and silence.",
+          "SonCura – Caminos del Sonido organizes the gathering. Pueblo Mágico receives the group and holds the hospitality of the land."
+        ]
+      },
+      "includes": {
+        "kicker": "The format",
+        "title": "What holds the experience",
+        "lead": "It is a formative, immersive experience. The fee and the way to reserve are confirmed by message. Places are limited.",
+        "items": [
+          "Lodging for the three nights",
+          "Full board",
+          "The formative experience facilitated by Ezequiel López Benavidez",
+          "The setting of Pueblo Mágico, in the Sierras Grandes of Córdoba"
+        ]
+      },
+      "audience": {
+        "kicker": "The call",
+        "title": "This journey is for someone who",
+        "items": [
+          "Feels their attention breaking apart and wants to listen again",
+          "Is looking for training in harmonic sound, not only a weekend of rest",
+          "Can inhabit silence and the company of a small group",
+          "Wants four days in the mountains, with lodging and meals taken care of"
+        ]
+      },
+      "faq": {
+        "kicker": "Before you write",
+        "title": "Questions",
+        "items": [
+          {
+            "q": "When is it, and how long does it last?",
+            "a": "From Friday 8 to Monday 11 January 2027. It is 4 days and 3 nights. Arrival is Friday at 3:00 p.m. and departure is Monday at 2:00 p.m."
+          },
+          {
+            "q": "Where does it take place?",
+            "a": "At Pueblo Mágico, a mountain eco-center in the Sierras Grandes of Córdoba, Argentina."
+          },
+          {
+            "q": "Who organizes it, and who facilitates?",
+            "a": "SonCura – Caminos del Sonido organizes it. Ezequiel López Benavidez facilitates it."
+          },
+          {
+            "q": "What does the stay include?",
+            "a": "Lodging and full board, together with the formative experience of the retreat."
+          },
+          {
+            "q": "Do I need previous experience?",
+            "a": "It is a formative retreat. If you are unsure about your starting point, write to us and we will talk it through before you reserve."
+          },
+          {
+            "q": "How do I register, and what is the fee?",
+            "a": "Places are limited. The fee and the reservation are confirmed on WhatsApp."
+          }
+        ]
+      },
+      "closing": {
+        "kicker": "Limited places",
+        "title": "A place is reserved in conversation.",
+        "text": "If this journey calls you, write to us. We will share availability, the fee, and what you need in order to arrive.",
+        "cta": "I want my place"
+      },
+      "stickyCta": "Reserve my place",
+      "whatsapp": "Hello, I would like to reserve a place at UMBRAL – The Journey of Listening, 8–11 January 2027 at Pueblo Mágico."
+    },
     "aliados": {
       "title": "Allied environmental organizations",
       "note": "We've signed a partnership agreement with Acción Ambiental. Bosques de Agua and Acción Serrana bring technical knowledge and local expertise depending on each intervention.",
@@ -3938,6 +4410,20 @@
           "image": "/uploads/events/agus-nasuti-the-viaje.jpg",
           "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20Agus%20Nasuti%20%C2%B7%20The%20Viaje%2C%20December%205%E2%80%938%2C%202026.",
           "showInExperienceCatalog": false
+        },
+        {
+          "date": "JANUARY 8–11, 2027",
+          "startDate": "2027-01-08",
+          "endDate": "2027-01-11",
+          "statusLabel": "LIMITED PLACES",
+          "title": "UMBRAL · The Journey of Listening",
+          "labels": ["FORMATIVE RETREAT", "HARMONIC SOUND"],
+          "desc": "Four days and three nights to train in listening. Harmonic sound, silence and mountain at Pueblo Mágico. Organized by SonCura. Facilitated by Ezequiel López Benavidez.",
+          "btn": "View the retreat",
+          "image": "/uploads/reforestacion/montana-hero.webp",
+          "link": "/retiros/umbral-el-viaje-de-la-escucha",
+          "pdfLink": "",
+          "showInMainEvents": true
         },
         {
           "date": "NEXT DATE",

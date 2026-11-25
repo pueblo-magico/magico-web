@@ -119,6 +119,14 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/brote-ronda-de-mujeres',
   },
   {
+    path: '/retiros/umbral-el-viaje-de-la-escucha',
+    title: 'UMBRAL · El Viaje de la Escucha — Retiro de sonidos armónicos | Pueblo Mágico',
+    description: 'Retiro formativo de sonidos armónicos del 8 al 11 de enero de 2027 en Pueblo Mágico, Sierras Grandes de Córdoba. Organiza SonCura – Caminos del Sonido. Facilita Ezequiel López Benavidez. Alojamiento y pensión completa. Cupos limitados.',
+    image: 'https://experienciamagico.com/uploads/reforestacion/montana-hero.webp',
+    imageAlt: 'Macizo de las Sierras Grandes al amanecer, sede de UMBRAL en Pueblo Mágico',
+    canonical: 'https://experienciamagico.com/retiros/umbral-el-viaje-de-la-escucha',
+  },
+  {
     path: '/festival-raiz-sonora',
     title: 'Raíz Sonora · 31 de octubre | Pueblo Mágico',
     description: 'Cuatro artistas y ocho horas de música electrónica, house, trance y tambores, con Jam de AcroYoga, naturaleza y encuentro en Los Gigantes.',
@@ -277,6 +285,23 @@ function buildJsonLD(route) {
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: { '@type': 'Place', name: 'Los Gigantes, Córdoba', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
       organizer: { '@type': 'Organization', name: 'Cuenca Lunar' },
+      url: route.canonical,
+      image: route.image,
+    })}</script>`;
+  }
+  if (route.path === '/retiros/umbral-el-viaje-de-la-escucha') {
+    return `<script id="umbral-event-schema" type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: 'UMBRAL — El Viaje de la Escucha',
+      description: route.description,
+      startDate: '2027-01-08T15:00:00-03:00',
+      endDate: '2027-01-11T14:00:00-03:00',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type': 'Place', name: 'Pueblo Mágico', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
+      organizer: { '@type': 'Organization', name: 'SonCura – Caminos del Sonido' },
+      performer: { '@type': 'Person', name: 'Ezequiel López Benavidez' },
       url: route.canonical,
       image: route.image,
     })}</script>`;
