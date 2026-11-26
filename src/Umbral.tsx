@@ -7,10 +7,24 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { SITE_URL, WA_UMBRAL } from './data/config';
 import { ROUTES } from './routes';
 
-const HERO = '/uploads/reforestacion/montana-hero.webp';
-const HALL = '/uploads/yoga_salon.webp';
-const AERIAL = '/uploads/campoentero.webp';
-const OG_IMAGE = `${SITE_URL}/uploads/reforestacion/montana-hero.webp`;
+const HALL = { src: '/uploads/yoga_salon.webp', w: 1920, h: 1280 };
+const MOUNTAIN = { src: '/uploads/reforestacion/montana-hero.webp', w: 2048, h: 988 };
+const AERIAL = { src: '/uploads/campoentero.webp', w: 1920, h: 1080 };
+const RIVER = { src: '/uploads/sunset-rio-rio-real.webp', w: 1024, h: 1536 };
+const PRACTICE = { src: '/uploads/bienestar-balance.webp', w: 1920, h: 1280 };
+const FIRE = { src: '/uploads/fogon_nocturno.webp', w: 1920, h: 1288 };
+const ROOM = { src: '/uploads/habitaciones.webp', w: 1080, h: 720 };
+const FOOD = { src: '/uploads/comida.jpg', w: 1259, h: 535 };
+const REFUGE = { src: '/uploads/refu.webp', w: 549, h: 366 };
+
+const EXPLORE_PHOTOS = [RIVER, PRACTICE, MOUNTAIN, FIRE];
+const FEEL_PHOTOS = [HALL, FIRE, RIVER, ROOM];
+const PLACE_PHOTOS = [AERIAL, MOUNTAIN, RIVER, HALL, REFUGE, ROOM];
+const STAY_PHOTOS = [ROOM, FOOD, HALL, PRACTICE];
+const OG_IMAGE = `${SITE_URL}${HALL.src}`;
+
+const btn = 'inline-flex items-center justify-center rounded-full bg-[#D4AF37] px-7 py-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]';
+const btnGhost = 'inline-flex items-center justify-center rounded-full border border-current px-7 py-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em]';
 
 const upsertMeta = (selector: string, attribute: 'name' | 'property', key: string, content: string) => {
   let element = document.querySelector(selector) as HTMLMetaElement | null;
@@ -25,9 +39,24 @@ const upsertMeta = (selector: string, attribute: 'name' | 'property', key: strin
 const waLink = (message: string) => `https://wa.me/${WA_UMBRAL}?text=${encodeURIComponent(message)}`;
 
 const Reveal: React.FC<{ children: React.ReactNode; delay?: string }> = ({ children, delay }) => (
-  <div data-reveal {...(delay ? { 'data-delay': delay } : {})}>
-    {children}
-  </div>
+  <div data-reveal {...(delay ? { 'data-delay': delay } : {})}>{children}</div>
+);
+
+const Frame: React.FC<{
+  photo: { src: string; w: number; h: number };
+  alt: string;
+  className?: string;
+  priority?: boolean;
+}> = ({ photo, alt, className = '', priority = false }) => (
+  <img
+    src={photo.src}
+    alt={alt}
+    width={photo.w}
+    height={photo.h}
+    {...(priority ? { fetchPriority: 'high' as const } : { loading: 'lazy' as const })}
+    decoding="async"
+    className={`rounded-[2rem] object-cover ${className}`}
+  />
 );
 
 const Umbral: React.FC = () => {
@@ -72,27 +101,24 @@ const Umbral: React.FC = () => {
         startDate: '2027-01-08T15:00:00-03:00',
         endDate: '2027-01-11T14:00:00-03:00',
         eventStatus: 'https://schema.org/EventScheduled',
+        eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
         inLanguage: language,
         image: OG_IMAGE,
         url: pageUrl,
-        eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
         location: {
           '@type': 'Place',
           name: 'Pueblo Mágico',
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: 'Los Gigantes',
-            addressRegion: 'Córdoba',
-            addressCountry: 'AR',
-          },
+          address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' },
         },
-        organizer: {
-          '@type': 'Organization',
-          name: 'SonCura – Caminos del Sonido',
-        },
-        performer: {
-          '@type': 'Person',
-          name: 'Ezequiel López Benavidez',
+        organizer: { '@type': 'Organization', name: 'SonCura – Caminos del Sonido' },
+        performer: { '@type': 'Person', name: 'Ezequiel López Benavidez' },
+        offers: {
+          '@type': 'Offer',
+          price: '690000',
+          priceCurrency: 'ARS',
+          availability: 'https://schema.org/LimitedAvailability',
+          url: pageUrl,
+          validThrough: '2026-12-10',
         },
       });
       document.head.appendChild(createdScript);
@@ -108,11 +134,9 @@ const Umbral: React.FC = () => {
       { threshold: 0.12, rootMargin: '0px 0px -32px 0px' },
     );
     document.querySelectorAll('[data-reveal]').forEach(element => observer.observe(element));
-
     const onScroll = () => setShowSticky(window.scrollY > window.innerHeight * 0.85);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-
     return () => {
       document.title = previousTitle;
       createdScript?.remove();
@@ -121,260 +145,305 @@ const Umbral: React.FC = () => {
     };
   }, [copy.seo.description, copy.seo.title, language, pageUrl]);
 
-  const navigation = copy.nav as PageNavigation;
-
   return (
     <div className={`min-h-screen overflow-x-hidden bg-[#F3EEE4] text-[#1C2822] ${showSticky ? 'pb-20 md:pb-0' : ''}`}>
-      <a
-        href="#contenido-umbral"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[1200] focus:bg-white focus:px-4 focus:py-3 focus:text-[#1C2822]"
-      >
+      <a href="#contenido-umbral" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[1200] focus:bg-white focus:px-4 focus:py-3">
         {copy.skip}
       </a>
-      <Header subNavigation={<PageSectionNav navigation={navigation} />} />
+      <Header subNavigation={<PageSectionNav navigation={copy.nav as PageNavigation} />} />
       <main id="contenido-umbral">
         <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-[#14211B]">
-          <img
-            src={HERO}
-            alt={copy.hero.imageAlt}
-            width={2048}
-            height={988}
-            fetchPriority="high"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101A15] via-[#101A15]/45 to-[#101A15]/55" />
+          <img src={HALL.src} alt={copy.hero.imageAlt} width={HALL.w} height={HALL.h} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#101A15] via-[#101A15]/55 to-[#101A15]/50" />
           <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-16 pt-32 md:px-10 md:pb-24">
-            <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-[#F6F1E6]/75">
-              {copy.hero.category}
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#E7D7A8]">{copy.hero.partners}</p>
+            <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.28em] text-[#F6F1E6]/75">{copy.hero.category}</p>
+            <h1 className="serif-title mt-5 text-[clamp(4.4rem,14vw,9rem)] leading-[0.82] tracking-[0.06em] text-[#F6F1E6]">{copy.hero.title}</h1>
+            <p className="serif-title mt-4 text-[clamp(1.7rem,3.2vw,2.7rem)] italic leading-tight text-[#E7D7A8]">{copy.hero.subtitle}</p>
+            <p className="serif-title mt-6 max-w-xl text-2xl leading-snug text-[#F6F1E6] md:text-3xl">
+              {copy.hero.phrase.map((line: string) => <span key={line} className="block">{line}</span>)}
             </p>
-            <h1 className="serif-title mt-5 text-[clamp(4.6rem,15vw,9.2rem)] leading-[0.82] tracking-[0.06em] text-[#F6F1E6]">
-              {copy.hero.title}
-            </h1>
-            <p className="serif-title mt-4 max-w-xl text-[clamp(1.7rem,3.4vw,2.8rem)] italic leading-tight text-[#E7D7A8]">
-              {copy.hero.subtitle}
-            </p>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-[#F6F1E6]/85 md:text-lg">
-              {copy.hero.lead}
-            </p>
-            <dl className="mt-8 flex max-w-2xl flex-col gap-3 text-sm text-[#F6F1E6]/80 sm:flex-row sm:flex-wrap sm:gap-x-8 sm:gap-y-2">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-[#F6F1E6]/85 md:text-lg">{copy.hero.text}</p>
+            <dl className="mt-8 flex max-w-2xl flex-col gap-3 text-sm text-[#F6F1E6]/85 sm:flex-row sm:flex-wrap sm:gap-x-8">
               {copy.hero.meta.map((item: { label: string; value: string }) => (
                 <div key={item.label}>
-                  <dt className="text-[10px] uppercase tracking-[0.22em] text-[#E7D7A8]/80">{item.label}</dt>
+                  <dt className="text-[10px] uppercase tracking-[0.22em] text-[#E7D7A8]">{item.label}</dt>
                   <dd className="mt-1">{item.value}</dd>
                 </div>
               ))}
             </dl>
-            <div className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              <a
-                href={reserveHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex rounded-full bg-[#D4AF37] px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]"
-              >
-                {copy.hero.cta}
-              </a>
-              <a
-                href="#escucha"
-                className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#F6F1E6] underline decoration-[#E7D7A8]/70 underline-offset-8 hover:decoration-[#F6F1E6]"
-              >
-                {copy.hero.ctaSecondary}
-              </a>
+            <p className="mt-6 text-sm text-[#E7D7A8]">{copy.hero.early}</p>
+            <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.hero.cta}</a>
+              <a href="#experiencia" className={`${btnGhost} text-[#F6F1E6]`}>{copy.hero.ctaSecondary}</a>
             </div>
           </div>
         </section>
 
-        <section id="escucha" className="mx-auto grid max-w-6xl scroll-mt-36 items-center gap-12 px-6 py-24 md:grid-cols-2 md:gap-20 md:px-10 md:py-32">
-          <Reveal>
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.intro.kicker}</p>
-            <h2 className="serif-title mt-4 text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.intro.title}</h2>
-            {copy.intro.paragraphs.map((paragraph: string) => (
-              <p key={paragraph} className="mt-6 text-base leading-8 text-[#3C463F] md:text-lg">
-                {paragraph}
-              </p>
-            ))}
-          </Reveal>
-          <Reveal delay="2">
-            <figure>
-              <img
-                src={HALL}
-                alt={copy.intro.imageAlt}
-                width={1920}
-                height={1280}
-                loading="lazy"
-                decoding="async"
-                className="h-auto w-full rounded-[2rem] object-cover"
-              />
-              <figcaption className="mt-4 text-sm leading-6 text-[#6A5344]">{copy.intro.caption}</figcaption>
-            </figure>
-          </Reveal>
+        <section id="experiencia" className="scroll-mt-36">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-24 md:grid-cols-2 md:px-10 md:py-32">
+            <Reveal>
+              <h2 className="serif-title text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.sense.title}</h2>
+              {copy.sense.paragraphs.map((paragraph: string) => (
+                <p key={paragraph} className="mt-6 text-base leading-8 text-[#3C463F] md:text-lg">{paragraph}</p>
+              ))}
+            </Reveal>
+            <Reveal delay="2">
+              <figure>
+                <Frame photo={MOUNTAIN} alt={copy.sense.imageAlt} className="h-[68vh] min-h-[420px] w-full" />
+                <figcaption className="mt-4 text-sm leading-6 text-[#6A5344]">{copy.sense.caption}</figcaption>
+              </figure>
+            </Reveal>
+          </div>
+          <div className="bg-[#14211B] px-6 py-16 text-[#F6F1E6] md:py-24">
+            <p className="serif-title mx-auto max-w-4xl text-center text-3xl leading-snug md:text-5xl">{copy.sense.quote}</p>
+          </div>
         </section>
 
-        <section id="datos" className="scroll-mt-36 border-y border-[#1C2822]/10 bg-[#E9E1D2]">
-          <div className="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+        <section id="aprender" className="scroll-mt-36 px-4 py-20 md:px-8 md:py-28">
+          <div className="mx-auto max-w-3xl px-2 text-center">
             <Reveal>
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.facts.kicker}</p>
-              <h2 className="serif-title mt-4 max-w-xl text-4xl text-[#1C3328] md:text-5xl">{copy.facts.title}</h2>
+              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.explore.kicker}</p>
+              <h2 className="serif-title mt-4 text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.explore.title}</h2>
+              <p className="mt-5 text-lg leading-8 text-[#3C463F]">{copy.explore.subtitle}</p>
             </Reveal>
-            <dl className="mt-12 grid md:grid-cols-2">
-              {copy.facts.items.map((item: { label: string; value: string }, index: number) => (
-                <div key={item.label} className="border-t border-[#1C2822]/15 py-6 md:px-8 md:odd:pl-0 md:even:pr-0">
-                  <Reveal delay={index % 2 === 0 ? undefined : '1'}>
-                    <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{item.label}</dt>
-                    <dd className="serif-title mt-2 text-2xl leading-snug text-[#1C3328] md:text-[1.7rem]">{item.value}</dd>
-                  </Reveal>
+          </div>
+          <div className="mx-auto mt-16 max-w-6xl space-y-20">
+            {copy.explore.items.map((item: { index: string; title: string; text: string; practices: string[]; imageAlt: string; caption: string }, index: number) => (
+              <article key={item.title} className={`grid items-center gap-8 md:grid-cols-2 md:gap-14 ${index % 2 === 1 ? 'md:[&>figure]:order-2' : ''}`}>
+                <figure>
+                  <Frame photo={EXPLORE_PHOTOS[index]} alt={item.imageAlt} className="h-[52vh] min-h-[320px] w-full" />
+                  <figcaption className="mt-3 text-sm text-[#6A5344]">{item.caption}</figcaption>
+                </figure>
+                <div>
+                  <p className="serif-title text-3xl text-[#8A9A84]">{item.index}</p>
+                  <h3 className="serif-title mt-2 text-3xl text-[#1C3328] md:text-4xl">{item.title}</h3>
+                  <p className="mt-4 leading-8 text-[#3C463F]">{item.text}</p>
+                  <ul className="mt-6 space-y-2 border-t border-[#1C2822]/15 pt-4">
+                    {item.practices.map((practice: string) => (
+                      <li key={practice} className="leading-7 text-[#1C2822]">{practice}</li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
-            </dl>
+              </article>
+            ))}
           </div>
         </section>
 
-        <section id="viaje" className="mx-auto max-w-6xl scroll-mt-36 px-6 py-24 md:px-10 md:py-32">
-          <Reveal>
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.journey.kicker}</p>
-            <h2 className="serif-title mt-4 max-w-2xl text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.journey.title}</h2>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#3C463F]">{copy.journey.lead}</p>
-          </Reveal>
-          <ol className="mt-16">
-            {copy.journey.steps.map((step: { index: string; title: string; text: string }, index: number) => (
-              <li key={step.title} className="border-t border-[#1C2822]/15 py-10">
-                <Reveal delay={String(Math.min(index + 1, 4))}>
-                  <div className="grid gap-3 md:grid-cols-[7rem_1fr] md:gap-10">
-                    <p className="serif-title text-3xl text-[#8A9A84]">{step.index}</p>
-                    <div>
-                      <h3 className="serif-title text-3xl text-[#1C3328]">{step.title}</h3>
-                      <p className="mt-4 max-w-2xl text-base leading-8 text-[#3C463F]">{step.text}</p>
-                    </div>
-                  </div>
-                </Reveal>
-              </li>
-            ))}
-          </ol>
+        <section className="bg-[#14211B] px-6 py-24 text-[#F6F1E6] md:py-32">
+          <div className="mx-auto max-w-3xl">
+            <Reveal>
+              <h2 className="serif-title text-4xl leading-tight md:text-5xl">{copy.takeaways.title}</h2>
+              <p className="mt-6 text-lg leading-8 text-[#F6F1E6]/85">{copy.takeaways.text}</p>
+            </Reveal>
+            <ul className="mt-10">
+              {copy.takeaways.items.map((item: string) => (
+                <li key={item} className="border-t border-white/15 py-4 text-lg leading-7">{item}</li>
+              ))}
+            </ul>
+            <p className="mt-8 text-sm leading-7 text-[#E7D7A8]">{copy.takeaways.note}</p>
+            <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={`${btn} mt-10`}>{copy.takeaways.cta}</a>
+          </div>
         </section>
 
-        <section id="lugar" className="scroll-mt-36 bg-[#14211B] text-[#F6F1E6]">
-          <figure className="px-4 pt-4 md:px-8 md:pt-8">
-            <div className="relative overflow-hidden rounded-[2rem]">
-              <img
-                src={AERIAL}
-                alt={copy.place.aerialAlt}
-                width={1920}
-                height={1080}
-                loading="lazy"
-                decoding="async"
-                className="h-[70vh] min-h-[460px] w-full object-cover"
-              />
-              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#101A15] to-transparent px-6 pb-8 pt-24 md:px-10">
-                <p className="mx-auto max-w-6xl text-sm tracking-wide text-[#F6F1E6]/80">{copy.place.aerialCaption}</p>
-              </figcaption>
+        <section id="programa" className="scroll-mt-36 mx-auto max-w-6xl px-6 py-24 md:px-10 md:py-32">
+          <Reveal>
+            <h2 className="serif-title max-w-3xl text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.program.title}</h2>
+            <p className="mt-6 max-w-3xl text-lg leading-8 text-[#3C463F]">{copy.program.intro}</p>
+          </Reveal>
+          <div className="mt-14 space-y-4">
+            {copy.program.days.map((day: { label: string; date: string; title: string; text: string; slots: { when: string; what: string }[] }, index: number) => (
+              <details key={day.date} open={index === 0} className="group overflow-hidden rounded-[2rem] bg-[#E9E1D2]">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-6 px-6 py-6 md:px-8 [&::-webkit-details-marker]:hidden">
+                  <span>
+                    <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{day.label} · {day.date}</span>
+                    <span className="serif-title mt-2 block text-3xl text-[#1C3328]">{day.title}</span>
+                  </span>
+                  <span aria-hidden="true" className="text-2xl text-[#6A5344] group-open:rotate-45">+</span>
+                </summary>
+                <div className="grid gap-8 px-6 pb-8 md:grid-cols-[0.8fr_1.2fr] md:px-8">
+                  <p className="leading-8 text-[#3C463F]">{day.text}</p>
+                  <ul>
+                    {day.slots.map((slot: { when: string; what: string }) => (
+                      <li key={`${slot.when}-${slot.what}`} className="grid gap-1 border-t border-[#1C2822]/15 py-3 sm:grid-cols-[8rem_1fr] sm:gap-4">
+                        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-[#6A5344]">{slot.when}</span>
+                        <span className="leading-7">{slot.what}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </details>
+            ))}
+          </div>
+          <p className="mt-8 text-sm leading-7 text-[#6A5344]">{copy.program.note}</p>
+        </section>
+
+        <section className="bg-[#101A15] px-4 py-16 text-[#F6F1E6] md:px-8 md:py-24">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="serif-title max-w-3xl px-2 text-4xl leading-tight md:text-5xl">{copy.feel.title}</h2>
+            <p className="mt-5 max-w-2xl px-2 leading-8 text-[#F6F1E6]/80">{copy.feel.text}</p>
+            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 px-2 text-sm uppercase tracking-[0.14em] text-[#E7D7A8]">
+              {copy.feel.moments.map((moment: string) => <li key={moment}>{moment}</li>)}
+            </ul>
+            <div className="mt-10 grid gap-4 md:grid-cols-2">
+              {FEEL_PHOTOS.map((photo, index) => (
+                <figure key={copy.feel.captions[index]}>
+                  <Frame photo={photo} alt={copy.feel.captions[index]} className="h-72 w-full md:h-96" />
+                  <figcaption className="mt-3 px-1 text-sm text-[#F6F1E6]/70">{copy.feel.captions[index]}</figcaption>
+                </figure>
+              ))}
             </div>
-          </figure>
-          <div className="mx-auto max-w-3xl px-6 py-20 md:px-10 md:py-28">
-            <Reveal>
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#E7D7A8]">{copy.place.kicker}</p>
-              <h2 className="serif-title mt-4 text-4xl leading-tight md:text-5xl">{copy.place.title}</h2>
+          </div>
+        </section>
+
+        <section id="facilitador" className="scroll-mt-36 mx-auto max-w-6xl px-6 py-24 md:px-10 md:py-32">
+          <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.facilitator.kicker}</p>
+          <h2 className="serif-title mt-4 max-w-xl text-4xl text-[#1C3328] md:text-5xl">{copy.facilitator.title}</h2>
+          <div className="mt-12 grid gap-10 border-t border-[#1C2822]/15 pt-10 md:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <p className="serif-title text-5xl leading-[1.02] text-[#1C3328] md:text-6xl">{copy.facilitator.name}</p>
+              <p className="mt-6 text-lg leading-8 text-[#3C463F]">{copy.facilitator.bio}</p>
+            </div>
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{copy.facilitator.projectLabel}</p>
+              <p className="serif-title mt-3 text-3xl text-[#1C3328]">{copy.facilitator.project}</p>
+              {copy.facilitator.paragraphs.map((paragraph: string) => (
+                <p key={paragraph} className="mt-5 leading-8 text-[#3C463F]">{paragraph}</p>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="lugar" className="scroll-mt-36 bg-[#E9E1D2] px-4 py-20 md:px-8 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <div className="max-w-3xl px-2">
+              <h2 className="serif-title text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.place.title}</h2>
               {copy.place.paragraphs.map((paragraph: string) => (
-                <p key={paragraph} className="mt-6 text-base leading-8 text-[#F6F1E6]/80 md:text-lg">
-                  {paragraph}
-                </p>
+                <p key={paragraph} className="mt-6 text-lg leading-8 text-[#3C463F]">{paragraph}</p>
               ))}
-            </Reveal>
+            </div>
+            <div className="mt-12 grid gap-4 md:grid-cols-2">
+              {PLACE_PHOTOS.map((photo, index) => (
+                <figure key={copy.place.captions[index]} className={index === 0 ? 'md:col-span-2' : ''}>
+                  <Frame photo={photo} alt={copy.place.captions[index]} className={index === 0 ? 'h-[62vh] min-h-[380px] w-full' : 'h-80 w-full'} />
+                  <figcaption className="mt-3 px-1 text-sm text-[#6A5344]">{copy.place.captions[index]}</figcaption>
+                </figure>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section id="facilita" className="mx-auto grid max-w-6xl scroll-mt-36 gap-10 px-6 py-24 md:grid-cols-[0.8fr_1.2fr] md:px-10 md:py-32">
-          <Reveal>
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.facilitator.kicker}</p>
-            <h2 className="serif-title mt-4 text-4xl leading-[1.05] text-[#1C3328] md:text-6xl">{copy.facilitator.name}</h2>
-            <p className="mt-6 text-sm uppercase tracking-[0.18em] text-[#1C3328]">{copy.facilitator.role}</p>
-            <p className="mt-2 text-sm text-[#6A5344]">{copy.facilitator.org}</p>
-          </Reveal>
-          <Reveal delay="2">
-            {copy.facilitator.paragraphs.map((paragraph: string) => (
-              <p key={paragraph} className="mt-6 text-lg leading-8 text-[#3C463F] first:mt-0">
-                {paragraph}
-              </p>
+        <section id="estadia" className="mx-auto max-w-6xl px-6 py-24 md:px-10 md:py-32">
+          <h2 className="serif-title max-w-3xl text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.stay.title}</h2>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#3C463F]">{copy.stay.subtitle}</p>
+          <div className="mt-16 space-y-20">
+            {copy.stay.blocks.map((block: { kicker: string; title: string; text: string; items: string[]; imageAlt: string; caption: string }, index: number) => (
+              <article key={block.title} className="grid items-center gap-8 md:grid-cols-2 md:gap-14">
+                <figure className={index % 2 === 1 ? 'md:order-2' : ''}>
+                  <Frame photo={STAY_PHOTOS[index]} alt={block.imageAlt} className="h-80 w-full md:h-[420px]" />
+                  <figcaption className="mt-3 text-sm text-[#6A5344]">{block.caption}</figcaption>
+                </figure>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{block.kicker}</p>
+                  <h3 className="serif-title mt-3 text-3xl text-[#1C3328]">{block.title}</h3>
+                  <p className="mt-4 leading-8 text-[#3C463F]">{block.text}</p>
+                  <ul className="mt-5">
+                    {block.items.map((item: string) => (
+                      <li key={item} className="border-t border-[#1C2822]/15 py-3 leading-7">{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
             ))}
-          </Reveal>
-        </section>
-
-        <section id="estadia" className="scroll-mt-36 border-t border-[#1C2822]/10">
-          <div className="mx-auto grid max-w-6xl gap-16 px-6 py-24 md:grid-cols-2 md:px-10 md:py-32">
-            <div>
-              <Reveal>
-                <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.includes.kicker}</p>
-                <h2 className="serif-title mt-4 text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.includes.title}</h2>
-                <p className="mt-6 leading-8 text-[#3C463F]">{copy.includes.lead}</p>
-              </Reveal>
-              <ul className="mt-8">
-                {copy.includes.items.map((item: string) => (
-                  <li key={item} className="border-t border-[#1C2822]/15 py-4 text-base leading-7 text-[#1C2822]">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <Reveal delay="2">
-                <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.audience.kicker}</p>
-                <h2 className="serif-title mt-4 text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.audience.title}</h2>
-              </Reveal>
-              <ul className="mt-8">
-                {copy.audience.items.map((item: string) => (
-                  <li key={item} className="border-t border-[#1C2822]/15 py-4 text-base leading-7 text-[#1C2822]">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
+          <p className="mt-12 max-w-3xl border-t border-[#1C2822]/15 pt-6 text-sm leading-7 text-[#6A5344]">{copy.stay.loan}</p>
         </section>
 
-        <section id="preguntas" className="scroll-mt-36 bg-[#E9E1D2]">
-          <div className="mx-auto max-w-3xl px-6 py-24 md:px-10 md:py-32">
-            <Reveal>
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#6A5344]">{copy.faq.kicker}</p>
-              <h2 className="serif-title mt-4 text-4xl text-[#1C3328] md:text-5xl">{copy.faq.title}</h2>
-            </Reveal>
-            <div className="mt-10 border-b border-[#1C2822]/15">
-              {copy.faq.items.map((item: { q: string; a: string }) => (
-                <details key={item.q} className="group border-t border-[#1C2822]/15">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-6 text-left text-lg text-[#1C3328] [&::-webkit-details-marker]:hidden">
-                    <span className="serif-title">{item.q}</span>
-                    <span aria-hidden="true" className="mt-1 text-2xl leading-none text-[#6A5344] transition-transform group-open:rotate-45">+</span>
-                  </summary>
-                  <p className="max-w-2xl pb-6 leading-8 text-[#3C463F]">{item.a}</p>
-                </details>
+        <section className="bg-[#E9E1D2] px-6 py-20 md:py-28">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="serif-title text-4xl leading-tight text-[#1C3328] md:text-5xl">{copy.audience.title}</h2>
+            <ul className="mt-8">
+              {copy.audience.items.map((item: string) => (
+                <li key={item} className="border-t border-[#1C2822]/15 py-4 text-lg leading-7">{item}</li>
               ))}
+            </ul>
+          </div>
+        </section>
+
+        <section id="inversion" className="scroll-mt-36 bg-[#14211B] px-6 py-24 text-[#F6F1E6] md:py-32">
+          <div className="mx-auto grid max-w-6xl gap-14 md:grid-cols-[1.15fr_0.85fr]">
+            <div>
+              <h2 className="serif-title text-4xl md:text-6xl">{copy.investment.title}</h2>
+              <p className="mt-4 max-w-xl text-lg leading-8 text-[#F6F1E6]/80">{copy.investment.subtitle}</p>
+              <p className="mt-12 text-[11px] font-medium uppercase tracking-[0.24em] text-[#E7D7A8]">{copy.investment.earlyLabel}</p>
+              <p className="serif-title mt-3 text-6xl text-[#F6F1E6] md:text-7xl">{copy.investment.earlyPrice}</p>
+              <p className="mt-3 text-lg text-[#F6F1E6]/70">
+                <span className="line-through">{copy.investment.regularPrice}</span>
+                <span className="ml-3 text-[#E7D7A8]">{copy.investment.save}</span>
+              </p>
+              <p className="mt-4 max-w-md text-sm leading-7 text-[#F6F1E6]/75">{copy.investment.promo}</p>
+              <div className="mt-10 border-t border-white/15 pt-8">
+                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[#E7D7A8]">{copy.investment.regularLabel}</p>
+                <p className="serif-title mt-3 text-4xl">{copy.investment.regularAmount}</p>
+                <p className="mt-3 text-sm leading-7 text-[#F6F1E6]/75">{copy.investment.regularNote}</p>
+              </div>
+            </div>
+            <div>
+              <h3 className="serif-title text-3xl">{copy.investment.includesTitle}</h3>
+              <ul className="mt-6">
+                {copy.investment.includes.map((item: string) => (
+                  <li key={item} className="border-t border-white/15 py-3 leading-7">{item}</li>
+                ))}
+              </ul>
+              <div className="mt-10 border-t border-white/15 pt-8">
+                <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[#E7D7A8]">{copy.investment.depositTitle}</p>
+                <p className="serif-title mt-3 text-5xl">{copy.investment.depositPrice}</p>
+                <ul className="mt-5 space-y-2 text-sm leading-7 text-[#F6F1E6]/85">
+                  {copy.investment.depositLines.map((line: string) => <li key={line}>{line}</li>)}
+                </ul>
+              </div>
+              <div className="mt-8 flex flex-col items-start gap-3">
+                <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.investment.cta}</a>
+                <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#F6F1E6]`}>{copy.investment.ctaSecondary}</a>
+              </div>
+              <p className="mt-6 text-xs leading-6 text-[#F6F1E6]/60">{copy.investment.disclaimer}</p>
             </div>
           </div>
         </section>
 
-        <section id="inscripcion" className="relative scroll-mt-36 overflow-hidden bg-[#14211B] text-[#F6F1E6]">
-          <img
-            src={HERO}
-            alt=""
-            width={2048}
-            height={988}
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover opacity-30"
-          />
-          <div className="absolute inset-0 bg-[#101A15]/70" />
+        <section id="preguntas" className="scroll-mt-36 mx-auto max-w-3xl px-6 py-24 md:py-32">
+          <h2 className="serif-title text-4xl text-[#1C3328] md:text-5xl">{copy.faq.title}</h2>
+          <div className="mt-8 border-b border-[#1C2822]/15">
+            {copy.faq.items.map((item: { q: string; a: string; links?: { label: string; href: string }[] }) => (
+              <details key={item.q} className="group border-t border-[#1C2822]/15">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-left [&::-webkit-details-marker]:hidden">
+                  <span className="serif-title text-xl text-[#1C3328]">{item.q}</span>
+                  <span aria-hidden="true" className="text-2xl text-[#6A5344] group-open:rotate-45">+</span>
+                </summary>
+                <p className="max-w-2xl pb-3 leading-8 text-[#3C463F]">{item.a}</p>
+                {item.links?.map(link => (
+                  <a key={link.href} href={link.href} target={link.href.startsWith('http') ? '_blank' : undefined} rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined} className="mb-5 mr-5 inline-flex text-sm underline decoration-[#8A9A84] underline-offset-4">
+                    {link.label}
+                  </a>
+                ))}
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section className="relative overflow-hidden bg-[#101A15] text-[#F6F1E6]">
+          <img src={MOUNTAIN.src} alt="" width={MOUNTAIN.w} height={MOUNTAIN.h} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+          <div className="absolute inset-0 bg-[#101A15]/65" />
           <div className="relative mx-auto max-w-3xl px-6 py-28 text-center md:py-36">
-            <Reveal>
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#E7D7A8]">{copy.closing.kicker}</p>
-              <h2 className="serif-title mt-5 text-4xl leading-tight md:text-6xl">{copy.closing.title}</h2>
-              <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-[#F6F1E6]/85">{copy.closing.text}</p>
-              <a
-                href={reserveHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-10 inline-flex rounded-full bg-[#D4AF37] px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]"
-              >
-                {copy.closing.cta}
-              </a>
-            </Reveal>
+            <h2 className="serif-title text-4xl leading-tight md:text-6xl">{copy.closing.title}</h2>
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-[#F6F1E6]/85">{copy.closing.text}</p>
+            <ul className="mt-8 space-y-1 text-sm uppercase tracking-[0.16em] text-[#E7D7A8]">
+              {copy.closing.lines.map((line: string) => <li key={line}>{line}</li>)}
+            </ul>
+            <div className="mt-10 flex flex-col items-center gap-4">
+              <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.closing.cta}</a>
+              <a href={reserveHref} target="_blank" rel="noopener noreferrer" className="text-sm underline decoration-[#E7D7A8] underline-offset-4">{copy.closing.secondary}</a>
+            </div>
           </div>
         </section>
       </main>
@@ -382,14 +451,7 @@ const Umbral: React.FC = () => {
       <CookieBanner />
       {showSticky && (
         <div className="fixed inset-x-0 bottom-0 z-[80] border-t border-white/10 bg-[#14211B]/95 px-4 py-3 backdrop-blur-sm md:hidden">
-          <a
-            href={reserveHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center rounded-full bg-[#D4AF37] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1C2822]"
-          >
-            {copy.stickyCta}
-          </a>
+          <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={`${btn} w-full`}>{copy.stickyCta}</a>
         </div>
       )}
     </div>

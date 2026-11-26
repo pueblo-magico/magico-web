@@ -120,10 +120,10 @@ export const ROUTES = [
   },
   {
     path: '/retiros/umbral-el-viaje-de-la-escucha',
-    title: 'UMBRAL · El Viaje de la Escucha — Retiro de sonidos armónicos | Pueblo Mágico',
-    description: 'Retiro formativo de sonidos armónicos del 8 al 11 de enero de 2027 en Pueblo Mágico, Sierras Grandes de Córdoba. Organiza SonCura – Caminos del Sonido. Facilita Ezequiel López Benavidez. Alojamiento y pensión completa. Cupos limitados.',
-    image: 'https://experienciamagico.com/uploads/reforestacion/montana-hero.webp',
-    imageAlt: 'Macizo de las Sierras Grandes al amanecer, sede de UMBRAL en Pueblo Mágico',
+    title: 'UMBRAL – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico',
+    description: 'Viví UMBRAL, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos.',
+    image: 'https://experienciamagico.com/uploads/yoga_salon.webp',
+    imageAlt: 'Círculo de práctica con cuencos en el salón de Pueblo Mágico',
     canonical: 'https://experienciamagico.com/retiros/umbral-el-viaje-de-la-escucha',
   },
   {

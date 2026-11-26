@@ -3,8 +3,8 @@
     "umbral": {
       "skip": "Saltar al contenido",
       "seo": {
-        "title": "UMBRAL · El Viaje de la Escucha — Retiro de sonidos armónicos | Pueblo Mágico",
-        "description": "Retiro formativo de sonidos armónicos del 8 al 11 de enero de 2027 en Pueblo Mágico, Sierras Grandes de Córdoba. Organiza SonCura – Caminos del Sonido. Facilita Ezequiel López Benavidez. Alojamiento y pensión completa. Cupos limitados."
+        "title": "UMBRAL – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico",
+        "description": "Viví UMBRAL, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos."
       },
       "nav": {
         "ariaLabel": "Secciones de UMBRAL",
@@ -12,47 +12,47 @@
         "pageTitle": "UMBRAL",
         "sections": [
           {
-            "id": "escucha",
-            "label": "La escucha"
+            "id": "experiencia",
+            "label": "La experiencia"
           },
           {
-            "id": "datos",
-            "label": "Datos"
+            "id": "aprender",
+            "label": "Qué vas a aprender"
           },
           {
-            "id": "viaje",
-            "label": "El viaje"
+            "id": "programa",
+            "label": "Programa"
+          },
+          {
+            "id": "facilitador",
+            "label": "Facilitador"
           },
           {
             "id": "lugar",
-            "label": "El lugar"
+            "label": "Pueblo Mágico"
           },
           {
-            "id": "facilita",
-            "label": "Facilita"
-          },
-          {
-            "id": "estadia",
-            "label": "La estadía"
+            "id": "inversion",
+            "label": "Inversión"
           },
           {
             "id": "preguntas",
             "label": "Preguntas"
-          },
-          {
-            "id": "inscripcion",
-            "label": "Inscripción"
           }
         ]
       },
+      "whatsapp": "Hola, quiero recibir información para reservar mi lugar en UMBRAL – El Viaje de la Escucha, del 8 al 11 de enero de 2027.",
+      "stickyCta": "Reservar mi lugar",
       "hero": {
+        "partners": "SonCura × Pueblo Mágico",
         "category": "Retiro formativo · Sonidos armónicos",
         "title": "UMBRAL",
         "subtitle": "El Viaje de la Escucha",
-        "lead": "Cuatro días para cruzar del ruido a la escucha. Una experiencia formativa e inmersiva en la montaña, donde el sonido abre el camino y el silencio lo sostiene.",
-        "cta": "Reservar mi lugar",
-        "ctaSecondary": "Conocer la experiencia",
-        "imageAlt": "Macizo de las Sierras Grandes al amanecer",
+        "phrase": [
+          "Del sonido a la escucha.",
+          "De la vibración a la presencia."
+        ],
+        "text": "Cuatro días de inmersión en el universo de los sonidos armónicos. Una experiencia para explorar tu voz, la respiración, el ritmo y la vibración, aprender nuevas herramientas y reconectar con la escucha profunda en plena naturaleza.",
         "meta": [
           {
             "label": "Fechas",
@@ -60,174 +60,418 @@
           },
           {
             "label": "Duración",
-            "value": "4 días y 3 noches"
+            "value": "4 días · 3 noches"
           },
           {
             "label": "Lugar",
-            "value": "Pueblo Mágico, Sierras Grandes de Córdoba"
+            "value": "Pueblo Mágico · Sierras de Córdoba"
           }
-        ]
-      },
-      "intro": {
-        "kicker": "El umbral",
-        "title": "Un umbral no se cruza con prisa.",
-        "paragraphs": [
-          "UMBRAL — El Viaje de la Escucha es un retiro formativo de sonidos armónicos. Durante cuatro días y tres noches, la atención se afina: vibración, silencio, naturaleza y la presencia de un grupo pequeño.",
-          "Lo organiza SonCura – Caminos del Sonido. Lo facilita Ezequiel López Benavidez. Sucede en Pueblo Mágico, eco-centro de montaña en las Sierras Grandes de Córdoba, Argentina."
         ],
-        "imageAlt": "Círculo de práctica en el salón de Pueblo Mágico, con cuencos en el centro",
-        "caption": "El salón de Pueblo Mágico, donde el grupo se sienta a escuchar."
+        "early": "Inscripción anticipada desde $690.000",
+        "cta": "Reservar mi lugar",
+        "ctaSecondary": "Explorar la experiencia",
+        "imageAlt": "Círculo de práctica con cuencos en el salón de Pueblo Mágico, abierto a la sierra"
       },
-      "facts": {
-        "kicker": "Lo concreto",
-        "title": "Datos del encuentro",
+      "sense": {
+        "title": "¿Y si aprender a escuchar cambiara tu manera de sentir el mundo?",
+        "paragraphs": [
+          "Vivimos oyendo mucho y escuchando poco.",
+          "UMBRAL nace de una invitación simple y profunda: recuperar la escucha como una forma de presencia, exploración y autoconocimiento.",
+          "Durante cuatro días nos sumergiremos en el universo de los sonidos armónicos para descubrir nuevas formas de relacionarnos con la voz, el cuerpo, la respiración, los instrumentos y el silencio.",
+          "No se trata solamente de recibir una experiencia sonora.",
+          "Se trata de aprender a crearla, comprenderla y sostenerla.",
+          "De reconocer nuestra propia huella sonora y descubrir cómo el sonido puede convertirse en una herramienta de expresión, encuentro y acompañamiento."
+        ],
+        "quote": "No venís solamente a escuchar sonidos. Venís a descubrir cómo habitan en vos.",
+        "imageAlt": "Macizo de las Sierras Grandes al amanecer",
+        "caption": "Sierras Grandes de Córdoba, el paisaje de UMBRAL."
+      },
+      "explore": {
+        "kicker": "La formación",
+        "title": "Un universo de sonidos por descubrir",
+        "subtitle": "Una formación vivencial que integra conocimiento, práctica, escucha y exploración colectiva.",
         "items": [
           {
-            "label": "Fechas",
-            "value": "8 al 11 de enero de 2027"
-          },
-          {
-            "label": "Duración",
-            "value": "4 días y 3 noches"
-          },
-          {
-            "label": "Ingreso",
-            "value": "Viernes 8 de enero, 15:00 h"
-          },
-          {
-            "label": "Salida",
-            "value": "Lunes 11 de enero, 14:00 h"
-          },
-          {
-            "label": "Ubicación",
-            "value": "Pueblo Mágico, Sierras Grandes de Córdoba, Argentina"
-          },
-          {
-            "label": "Organiza",
-            "value": "SonCura – Caminos del Sonido"
-          },
-          {
-            "label": "Facilita",
-            "value": "Ezequiel López Benavidez"
-          },
-          {
-            "label": "Modalidad",
-            "value": "Experiencia formativa e inmersiva, con alojamiento y pensión completa"
-          },
-          {
-            "label": "Cupos",
-            "value": "Limitados"
-          }
-        ]
-      },
-      "journey": {
-        "kicker": "El arco",
-        "title": "Cuatro días, una escucha.",
-        "lead": "El arco es claro. Se llega, se escucha, se habita la montaña y se vuelve con esa escucha todavía abierta.",
-        "steps": [
-          {
             "index": "01",
-            "title": "Llegar",
-            "text": "El viernes 8 de enero el ingreso es a las 15:00 h. El primer movimiento es entrar al territorio y dejar que el ritmo de afuera se apague."
+            "title": "La escucha y la resonancia",
+            "text": "Exploraremos las cualidades del sonido, la vibración, la escucha consciente y la percepción del entorno sonoro.",
+            "practices": [
+              "Escucha profunda.",
+              "Cualidades del sonido y resonancia.",
+              "Reconocimiento de la huella sonora personal.",
+              "Escucha de la naturaleza.",
+              "Exploración del silencio."
+            ],
+            "imageAlt": "Río de montaña en las sierras",
+            "caption": "El río, uno de los paisajes sonoros del territorio."
           },
           {
             "index": "02",
-            "title": "Formarse",
-            "text": "Ezequiel López Benavidez facilita el trabajo con sonidos armónicos. La formación ocurre en la práctica de escuchar: el instrumento, el cuerpo, el grupo y el paisaje."
+            "title": "La voz y los armónicos",
+            "text": "La voz como instrumento de expresión, resonancia y exploración interior.",
+            "practices": [
+              "Canto de armónicos.",
+              "Meditación cantada.",
+              "Exploración vocal.",
+              "Prácticas de canto de tradición mongola incluidas en la propuesta formativa.",
+              "Círculos de armónicos."
+            ],
+            "imageAlt": "Práctica grupal en el salón de piedra de Pueblo Mágico",
+            "caption": "Práctica en el salón de piedra."
           },
           {
             "index": "03",
-            "title": "Habitar",
-            "text": "La estadía incluye alojamiento y pensión completa. Comer, descansar y caminar la sierra forman parte del viaje, no son un intervalo entre actividades."
+            "title": "El didgeridoo y la respiración",
+            "text": "Una aproximación práctica al didgeridoo y a las posibilidades expresivas de la respiración. Los didgeridoos se facilitan en préstamo durante las prácticas. No se entregan como regalo.",
+            "practices": [
+              "Introducción al instrumento.",
+              "Producción de sonidos básicos.",
+              "Sonidos guturales.",
+              "Respiración diafragmática.",
+              "Introducción a la respiración circular.",
+              "Exploración individual y colectiva."
+            ],
+            "imageAlt": "Horizonte de las Sierras Grandes",
+            "caption": "La sierra, donde la respiración encuentra silencio."
           },
           {
             "index": "04",
-            "title": "Volver",
-            "text": "El lunes 11 de enero la salida es a las 14:00 h. El cierre es integrar lo vivido para que la escucha no se quede en la montaña."
+            "title": "El ritmo y la creación colectiva",
+            "text": "El sonido como lenguaje compartido.",
+            "practices": [
+              "Pulso y ritmo.",
+              "Velocidad y subdivisiones.",
+              "Ruedas de ritmo.",
+              "Ensambles sonoros.",
+              "Paisajes sonoros.",
+              "Orquesta de armónicos.",
+              "Integración de herramientas para guiar una experiencia sonora."
+            ],
+            "imageAlt": "Fogón nocturno en Pueblo Mágico",
+            "caption": "El fogón, donde el encuentro sigue después de la práctica."
           }
         ]
       },
-      "place": {
-        "kicker": "El territorio",
-        "title": "La sierra también escucha.",
-        "paragraphs": [
-          "Pueblo Mágico está en las Sierras Grandes de Córdoba, en el macizo de Los Gigantes. Es un eco-centro de montaña: piedra, domos, huerta y un horizonte amplio, lejos del ruido de la ciudad.",
-          "El entorno no es un fondo para el retiro. El viento, la distancia y la luz de enero son parte del trabajo de atención."
+      "takeaways": {
+        "title": "Más que una experiencia: herramientas para seguir explorando",
+        "text": "UMBRAL propone un aprendizaje que nace de la práctica. A lo largo del retiro tendrás la oportunidad de reconocer tu propia huella sonora, ampliar tus recursos expresivos y experimentar diferentes formas de crear y compartir sonidos.",
+        "items": [
+          "Mayor conciencia de tu escucha y percepción sonora.",
+          "Primeras herramientas de canto de armónicos.",
+          "Experiencia práctica con didgeridoo.",
+          "Recursos de respiración, voz y ritmo.",
+          "Exploración de paisajes sonoros y ensambles colectivos.",
+          "Herramientas iniciales para diseñar y sostener una inmersión sonora.",
+          "Una experiencia personal de conexión con el sonido y la naturaleza."
         ],
-        "aerialAlt": "Vista aérea de Pueblo Mágico entre los pastizales de las Sierras Grandes",
-        "aerialCaption": "Pueblo Mágico, Sierras Grandes de Córdoba.",
-        "refugeAlt": "Refugio de piedra al atardecer en Pueblo Mágico",
-        "refugeCaption": "El refugio de piedra, al final del día."
+        "note": "Esta formación no es una certificación profesional ni habilita para ejercer como terapeuta.",
+        "cta": "Reservar mi lugar"
+      },
+      "program": {
+        "title": "Cuatro días. Un viaje hacia la escucha.",
+        "intro": "Cada jornada propone una nueva dimensión de exploración. Desde la escucha consciente hasta la integración de una experiencia sonora propia.",
+        "note": "Los horarios son orientativos y pueden adaptarse al desarrollo del encuentro.",
+        "days": [
+          {
+            "label": "Día 1",
+            "date": "Viernes 8 de enero",
+            "title": "Cruzar el umbral",
+            "text": "Llegar, bajar el ritmo y recuperar la escucha interna.",
+            "slots": [
+              {
+                "when": "15:00",
+                "what": "Llegada y bienvenida."
+              },
+              {
+                "when": "17:00",
+                "what": "El camino de la escucha."
+              },
+              {
+                "when": "18:00",
+                "what": "Prácticas de escucha consciente."
+              },
+              {
+                "when": "19:00",
+                "what": "Baño de gongs."
+              },
+              {
+                "when": "21:00",
+                "what": "Cena y encuentro."
+              }
+            ]
+          },
+          {
+            "label": "Día 2",
+            "date": "Sábado 9 de enero",
+            "title": "El sonido y la resonancia",
+            "text": "Explorar la voz, los armónicos y nuestra propia huella sonora.",
+            "slots": [
+              {
+                "when": "Mañana",
+                "what": "Fundamentos del sonido, resonancia y prácticas."
+              },
+              {
+                "when": "Tarde",
+                "what": "Canto de armónicos, exploración vocal y meditación cantada."
+              },
+              {
+                "when": "Noche",
+                "what": "Concierto contemplativo y experiencia sonora."
+              }
+            ]
+          },
+          {
+            "label": "Día 3",
+            "date": "Domingo 10 de enero",
+            "title": "Enraizar con tierra y ritmo",
+            "text": "Explorar la respiración, el didgeridoo y el pulso compartido.",
+            "slots": [
+              {
+                "when": "Mañana",
+                "what": "Didgeridoo y respiración."
+              },
+              {
+                "when": "Tarde",
+                "what": "Ritmo, ensambles y prácticas colectivas."
+              },
+              {
+                "when": "Noche",
+                "what": "Rueda de ritmo y círculo de fuego."
+              }
+            ]
+          },
+          {
+            "label": "Día 4",
+            "date": "Lunes 11 de enero",
+            "title": "Integrar y compartir",
+            "text": "Transformar la exploración en una experiencia propia.",
+            "slots": [
+              {
+                "when": "Mañana",
+                "what": "Integración de herramientas y prácticas de facilitación sonora."
+              },
+              {
+                "when": "12:30 a 14:00",
+                "what": "Cierre grupal y despedida."
+              }
+            ]
+          }
+        ]
+      },
+      "feel": {
+        "title": "El sonido no se explica solamente. Se experimenta.",
+        "text": "Baños de gongs, conciertos, círculos y el fuego forman parte de la misma experiencia. No son actividades aparte.",
+        "moments": [
+          "Baños de gongs",
+          "Conciertos contemplativos",
+          "Meditación cantada",
+          "Círculos de armónicos",
+          "Ruedas de ritmo",
+          "Prácticas grupales",
+          "Escucha en la naturaleza",
+          "Encuentros alrededor del fuego"
+        ],
+        "captions": [
+          "Práctica sonora en el salón, con cuencos en el centro del círculo.",
+          "Fogón de Pueblo Mágico al caer la noche.",
+          "El río entre las sierras.",
+          "Habitación compartida del eco-lodge."
+        ]
       },
       "facilitator": {
-        "kicker": "Facilita",
+        "kicker": "El facilitador",
+        "title": "Quien acompaña este viaje",
         "name": "Ezequiel López Benavidez",
-        "role": "Sonidos armónicos",
-        "org": "SonCura – Caminos del Sonido",
+        "bio": "Músico, terapeuta sonoro, instructor de yoga y aprendiz de la vida.",
+        "projectLabel": "Proyecto",
+        "project": "SonCura – Caminos del Sonido",
         "paragraphs": [
-          "Ezequiel López Benavidez conduce UMBRAL. Acompaña el viaje de la escucha desde SonCura, en una experiencia formativa pensada para quien quiere profundizar la relación con el sonido y el silencio.",
-          "La organización del encuentro es de SonCura – Caminos del Sonido. Pueblo Mágico recibe al grupo y sostiene la hospitalidad del territorio."
+          "Desde SonCura, Ezequiel nos invita a explorar el sonido como un camino de escucha, presencia y autoconocimiento.",
+          "En UMBRAL acompaña una experiencia formativa donde la práctica, la sensibilidad y la exploración colectiva se encuentran."
         ]
       },
-      "includes": {
-        "kicker": "La modalidad",
-        "title": "Lo que sostiene la experiencia",
-        "lead": "Es una experiencia formativa e inmersiva. El valor de la inscripción y las formas de reserva se confirman por mensaje. Los cupos son limitados.",
-        "items": [
-          "Alojamiento durante las tres noches",
-          "Pensión completa",
-          "La experiencia formativa facilitada por Ezequiel López Benavidez",
-          "El entorno de Pueblo Mágico, en las Sierras Grandes de Córdoba"
+      "place": {
+        "title": "Hay experiencias que necesitan otro ritmo.",
+        "paragraphs": [
+          "En el corazón de las Sierras Grandes de Córdoba, Pueblo Mágico nos invita a habitar la naturaleza de una manera diferente.",
+          "Rodeado de montañas, río, arroyos y paisajes abiertos, nuestro eco-centro ofrece un espacio para descansar, encontrarnos y reconectar con lo esencial.",
+          "Durante UMBRAL, la montaña será parte del aprendizaje.",
+          "El sonido del agua, el viento entre los pastizales, las aves y el silencio del paisaje acompañarán las prácticas de escucha."
+        ],
+        "captions": [
+          "Vista aérea de Pueblo Mágico en las Sierras Grandes.",
+          "El macizo al amanecer.",
+          "El río.",
+          "El salón de prácticas.",
+          "El refugio de piedra.",
+          "Habitación compartida del eco-lodge."
         ]
+      },
+      "stay": {
+        "title": "Nosotros nos ocupamos de todo. Vos venís a vivir la experiencia.",
+        "subtitle": "Cuatro días y tres noches con alojamiento, alimentación y todas las actividades incluidas.",
+        "blocks": [
+          {
+            "kicker": "Alojamiento",
+            "title": "Tres noches en el eco-lodge",
+            "text": "Tres noches en habitaciones compartidas del eco-lodge de montaña de Pueblo Mágico.",
+            "items": [
+              "Cama en habitación compartida.",
+              "Ropa blanca.",
+              "Toalla.",
+              "Toallón.",
+              "Uso de los espacios comunes habilitados."
+            ],
+            "imageAlt": "Habitación compartida con camas, techo de caña y hogar de piedra",
+            "caption": "Habitación compartida del eco-lodge."
+          },
+          {
+            "kicker": "Gastronomía",
+            "title": "Pensión completa",
+            "text": "Pensión completa durante toda la experiencia. Cocina casera, abundante y consciente, preparada para acompañar las jornadas de formación y encuentro.",
+            "items": [
+              "Todas las comidas de la estadía."
+            ],
+            "imageAlt": "Cocina de Pueblo Mágico, con verduras y fuego",
+            "caption": "La cocina de Pueblo Mágico."
+          },
+          {
+            "kicker": "Formación",
+            "title": "La totalidad del retiro",
+            "text": "Incluye la totalidad de las actividades y prácticas del retiro, los encuentros grupales, experiencias sonoras y material bibliográfico de apoyo.",
+            "items": [
+              "Actividades y prácticas del programa.",
+              "Encuentros grupales.",
+              "Experiencias sonoras.",
+              "Material bibliográfico de apoyo."
+            ],
+            "imageAlt": "Círculo de práctica en el salón con ventanales a la sierra",
+            "caption": "El salón donde se reúne el grupo."
+          },
+          {
+            "kicker": "Instrumentos",
+            "title": "En préstamo, durante las prácticas",
+            "text": "Se facilitarán instrumentos para las prácticas, incluido el didgeridoo, sin necesidad de adquirir uno.",
+            "items": [
+              "Didgeridoo en préstamo para practicar.",
+              "No forma parte de los obsequios del retiro."
+            ],
+            "imageAlt": "Práctica grupal en el salón de piedra",
+            "caption": "Las prácticas suceden en los espacios del eco-lodge."
+          }
+        ],
+        "loan": "Aclaración: el didgeridoo se presta para practicar y no forma parte de los obsequios del retiro."
       },
       "audience": {
-        "kicker": "La convocatoria",
-        "title": "Este viaje es para quien",
+        "title": "Para quienes sienten que el sonido tiene algo más para enseñarles",
         "items": [
-          "Siente que la atención se le fragmenta y quiere volver a escuchar",
-          "Busca una formación en sonidos armónicos, no solo un fin de semana de descanso",
-          "Puede habitar el silencio y la convivencia de un grupo pequeño",
-          "Quiere cuatro días en la montaña, con el cuerpo alojado y la comida resuelta"
+          "Personas interesadas en la escucha y el autoconocimiento.",
+          "Músicos y exploradores del sonido.",
+          "Terapeutas y facilitadores de bienestar.",
+          "Instructores de yoga y meditación.",
+          "Personas que desean incorporar herramientas sonoras a sus prácticas.",
+          "Quienes sienten curiosidad por la voz, los armónicos, el didgeridoo y la vibración."
         ]
       },
+      "investment": {
+        "title": "Tu lugar en UMBRAL",
+        "subtitle": "Una experiencia integral de formación, naturaleza y exploración sonora.",
+        "earlyLabel": "Inscripción anticipada — Early Bird",
+        "earlyPrice": "$690.000 ARS",
+        "regularPrice": "$800.000 ARS",
+        "save": "Ahorrás $110.000.",
+        "promo": "Promoción hasta el 10 de diciembre de 2026 o para los primeros 8 inscriptos, lo que ocurra primero.",
+        "regularLabel": "Precio regular",
+        "regularAmount": "$800.000 ARS",
+        "regularNote": "Disponible al finalizar la etapa de inscripción anticipada.",
+        "includesTitle": "Qué incluye tu inversión",
+        "includes": [
+          "4 días y 3 noches.",
+          "Alojamiento en habitaciones compartidas del eco-lodge.",
+          "Ropa blanca, toalla y toallón.",
+          "Todas las comidas.",
+          "Formación completa.",
+          "Todas las actividades y experiencias del programa.",
+          "Instrumentos en préstamo para las prácticas.",
+          "Material bibliográfico de apoyo."
+        ],
+        "depositTitle": "Reservá con una seña",
+        "depositPrice": "$190.000 ARS",
+        "depositLines": [
+          "Para la modalidad Early Bird: seña inicial de $190.000.",
+          "Saldo pendiente: $500.000.",
+          "Posibilidad de completar el saldo mediante pagos parciales antes del inicio del retiro."
+        ],
+        "cta": "Reservar mi lugar por $190.000",
+        "ctaSecondary": "Consultar por WhatsApp",
+        "disclaimer": "Este botón abre WhatsApp para coordinar la reserva. No cobra la seña de forma automática. La política de cancelación, las fechas exactas de pago y el mecanismo de reserva serán confirmados por la organización antes de quedar como condiciones definitivas."
+      },
       "faq": {
-        "kicker": "Antes de escribir",
         "title": "Preguntas",
         "items": [
           {
-            "q": "¿Cuándo es y cuánto dura?",
-            "a": "Del viernes 8 al lunes 11 de enero de 2027. Son 4 días y 3 noches. El ingreso es el viernes a las 15:00 h y la salida el lunes a las 14:00 h."
+            "q": "¿Cuándo se realiza UMBRAL?",
+            "a": "Del viernes 8 al lunes 11 de enero de 2027, durante cuatro días y tres noches."
           },
           {
-            "q": "¿Dónde se realiza?",
-            "a": "En Pueblo Mágico, eco-centro de montaña en las Sierras Grandes de Córdoba, Argentina."
+            "q": "¿Dónde voy a dormir?",
+            "a": "En habitaciones compartidas del eco-lodge de montaña de Pueblo Mágico. Incluye ropa blanca, toalla y toallón."
           },
           {
-            "q": "¿Quién lo organiza y quién facilita?",
-            "a": "Lo organiza SonCura – Caminos del Sonido. Lo facilita Ezequiel López Benavidez."
+            "q": "¿Están incluidas todas las comidas?",
+            "a": "Sí. La experiencia incluye pensión completa durante la estadía."
           },
           {
-            "q": "¿Qué incluye la estadía?",
-            "a": "Alojamiento y pensión completa, junto con la experiencia formativa del retiro."
+            "q": "¿Necesito llevar instrumentos?",
+            "a": "Habrá instrumentos disponibles en préstamo durante las prácticas, incluido el didgeridoo."
           },
           {
-            "q": "¿Hace falta experiencia previa?",
-            "a": "Es un retiro formativo. Si dudás de tu punto de partida, escribinos y lo conversamos antes de reservar."
+            "q": "¿El didgeridoo está incluido como regalo?",
+            "a": "No. Se facilita para las prácticas de formación."
           },
           {
-            "q": "¿Cómo me inscribo y cuál es el valor?",
-            "a": "Los cupos son limitados. El valor y la reserva se confirman por WhatsApp."
+            "q": "¿Qué incluye la inscripción?",
+            "a": "Alojamiento, alimentación, formación completa, actividades, prácticas y materiales bibliográficos de apoyo."
+          },
+          {
+            "q": "¿Cuánto cuesta?",
+            "a": "El precio anticipado es de $690.000 y el regular es de $800.000."
+          },
+          {
+            "q": "¿Puedo reservar con una seña?",
+            "a": "Se propone una reserva de $190.000 y completar el saldo antes del inicio del retiro. Las condiciones definitivas serán confirmadas por la organización."
+          },
+          {
+            "q": "¿Necesito conocimientos previos?",
+            "a": "Consultá con el equipo organizador para confirmar si la experiencia se adapta a tu nivel."
+          },
+          {
+            "q": "¿Cómo llego a Pueblo Mágico?",
+            "a": "Pueblo Mágico está en las Sierras Grandes de Córdoba, en el macizo de Los Gigantes. La ubicación oficial y las indicaciones de acceso están en estos enlaces.",
+            "links": [
+              {
+                "label": "Ver la ubicación en el mapa",
+                "href": "https://maps.app.goo.gl/4c1nrpBbQf5hYrsE9"
+              },
+              {
+                "label": "Indicaciones para llegar",
+                "href": "/#como-llegar"
+              }
+            ]
           }
         ]
       },
       "closing": {
-        "kicker": "Cupos limitados",
-        "title": "El lugar se reserva en la conversación.",
-        "text": "Si este viaje te llama, escribinos. Te contamos cupos, valor y lo que necesitás para llegar.",
-        "cta": "Quiero mi lugar"
-      },
-      "stickyCta": "Reservar mi lugar",
-      "whatsapp": "Hola, quiero inscribirme a UMBRAL – El Viaje de la Escucha, del 8 al 11 de enero de 2027 en Pueblo Mágico."
+        "title": "Hay sonidos que se escuchan. Y otros que nos acompañan mucho después.",
+        "text": "Cuatro días para descubrir nuevas formas de escuchar, resonar y compartir. Una experiencia de formación y encuentro en plena naturaleza.",
+        "lines": [
+          "UMBRAL – El Viaje de la Escucha",
+          "8 al 11 de enero de 2027",
+          "Pueblo Mágico · Sierras de Córdoba"
+        ],
+        "cta": "Quiero vivir UMBRAL",
+        "secondary": "Resolver una consulta por WhatsApp"
+      }
     },
     "aliados": {
       "title": "Organizaciones ambientales aliadas",
@@ -1314,7 +1558,7 @@
           "statusLabel": "CUPOS LIMITADOS",
           "title": "UMBRAL · El Viaje de la Escucha",
           "labels": ["RETIRO FORMATIVO", "SONIDOS ARMÓNICOS"],
-          "desc": "Cuatro días y tres noches para formarse en la escucha. Sonidos armónicos, silencio y montaña en Pueblo Mágico. Organiza SonCura. Facilita Ezequiel López Benavidez.",
+          "desc": "Retiro formativo de sonidos armónicos, del 8 al 11 de enero de 2027. Alojamiento y pensión completa. Inscripción anticipada $690.000. Organiza SonCura. Facilita Ezequiel López Benavidez.",
           "btn": "Conocer el retiro",
           "image": "/uploads/reforestacion/montana-hero.webp",
           "link": "/retiros/umbral-el-viaje-de-la-escucha",
@@ -3107,8 +3351,8 @@
     "umbral": {
       "skip": "Skip to content",
       "seo": {
-        "title": "UMBRAL · The Journey of Listening — Harmonic sound retreat | Pueblo Mágico",
-        "description": "A formative retreat in harmonic sound, 8–11 January 2027 at Pueblo Mágico, in the Sierras Grandes of Córdoba. Organized by SonCura – Caminos del Sonido. Facilitated by Ezequiel López Benavidez. Lodging and full board. Limited places."
+        "title": "UMBRAL – Formative Harmonic Sound Retreat | Pueblo Mágico",
+        "description": "UMBRAL is an immersive training in harmonic sound, voice, didgeridoo and conscious listening. 8–11 January 2027 in the Sierras of Córdoba. Lodging and full board included."
       },
       "nav": {
         "ariaLabel": "UMBRAL sections",
@@ -3116,47 +3360,47 @@
         "pageTitle": "UMBRAL",
         "sections": [
           {
-            "id": "escucha",
-            "label": "Listening"
+            "id": "experiencia",
+            "label": "The experience"
           },
           {
-            "id": "datos",
-            "label": "Details"
+            "id": "aprender",
+            "label": "What you will learn"
           },
           {
-            "id": "viaje",
-            "label": "The journey"
+            "id": "programa",
+            "label": "Program"
           },
           {
-            "id": "lugar",
-            "label": "The land"
-          },
-          {
-            "id": "facilita",
+            "id": "facilitador",
             "label": "Facilitator"
           },
           {
-            "id": "estadia",
-            "label": "The stay"
+            "id": "lugar",
+            "label": "Pueblo Mágico"
+          },
+          {
+            "id": "inversion",
+            "label": "Investment"
           },
           {
             "id": "preguntas",
             "label": "Questions"
-          },
-          {
-            "id": "inscripcion",
-            "label": "Reserve"
           }
         ]
       },
+      "whatsapp": "Hello, I would like information to reserve my place at UMBRAL – The Journey of Listening, 8–11 January 2027.",
+      "stickyCta": "Reserve my place",
       "hero": {
+        "partners": "SonCura × Pueblo Mágico",
         "category": "Formative retreat · Harmonic sound",
         "title": "UMBRAL",
         "subtitle": "The Journey of Listening",
-        "lead": "Four days to cross from noise into listening. A formative, immersive experience in the mountains, where sound opens the path and silence holds it.",
-        "cta": "Reserve my place",
-        "ctaSecondary": "Read the experience",
-        "imageAlt": "The Sierras Grandes massif at dawn",
+        "phrase": [
+          "From sound to listening.",
+          "From vibration to presence."
+        ],
+        "text": "Four days immersed in the world of harmonic sound. An experience to explore your voice, breath, rhythm and vibration, learn new tools, and reconnect with deep listening in nature.",
         "meta": [
           {
             "label": "Dates",
@@ -3164,174 +3408,418 @@
           },
           {
             "label": "Duration",
-            "value": "4 days and 3 nights"
+            "value": "4 days · 3 nights"
           },
           {
             "label": "Place",
-            "value": "Pueblo Mágico, Sierras Grandes of Córdoba"
+            "value": "Pueblo Mágico · Sierras of Córdoba"
           }
-        ]
-      },
-      "intro": {
-        "kicker": "The threshold",
-        "title": "A threshold is not crossed in a hurry.",
-        "paragraphs": [
-          "UMBRAL — The Journey of Listening is a formative retreat in harmonic sound. For four days and three nights, attention is refined: vibration, silence, nature, and the presence of a small group.",
-          "It is organized by SonCura – Caminos del Sonido and facilitated by Ezequiel López Benavidez. It takes place at Pueblo Mágico, a mountain eco-center in the Sierras Grandes of Córdoba, Argentina."
         ],
-        "imageAlt": "A practice circle in the hall at Pueblo Mágico, with singing bowls at the center",
-        "caption": "The hall at Pueblo Mágico, where the group sits down to listen."
+        "early": "Early registration from $690,000",
+        "cta": "Reserve my place",
+        "ctaSecondary": "Explore the experience",
+        "imageAlt": "A practice circle with singing bowls in the hall at Pueblo Mágico, open to the sierra"
       },
-      "facts": {
-        "kicker": "The facts",
-        "title": "The gathering",
+      "sense": {
+        "title": "What if learning to listen changed the way you feel the world?",
+        "paragraphs": [
+          "We hear a lot and listen very little.",
+          "UMBRAL begins with a simple, deep invitation: to recover listening as a form of presence, exploration and self-knowledge.",
+          "For four days we enter the world of harmonic sound to find new ways of relating to the voice, the body, the breath, the instruments and silence.",
+          "It is not only about receiving a sound experience.",
+          "It is about learning to create it, understand it and sustain it.",
+          "About recognizing your own sonic imprint and discovering how sound can become a tool for expression, encounter and accompaniment."
+        ],
+        "quote": "You do not come only to hear sounds. You come to discover how they live in you.",
+        "imageAlt": "The Sierras Grandes massif at dawn",
+        "caption": "The Sierras Grandes of Córdoba, the landscape of UMBRAL."
+      },
+      "explore": {
+        "kicker": "The training",
+        "title": "A universe of sound to discover",
+        "subtitle": "An experiential training that brings together knowledge, practice, listening and collective exploration.",
         "items": [
           {
-            "label": "Dates",
-            "value": "8–11 January 2027"
-          },
-          {
-            "label": "Duration",
-            "value": "4 days and 3 nights"
-          },
-          {
-            "label": "Arrival",
-            "value": "Friday 8 January, 3:00 p.m."
-          },
-          {
-            "label": "Departure",
-            "value": "Monday 11 January, 2:00 p.m."
-          },
-          {
-            "label": "Location",
-            "value": "Pueblo Mágico, Sierras Grandes of Córdoba, Argentina"
-          },
-          {
-            "label": "Organized by",
-            "value": "SonCura – Caminos del Sonido"
-          },
-          {
-            "label": "Facilitated by",
-            "value": "Ezequiel López Benavidez"
-          },
-          {
-            "label": "Format",
-            "value": "A formative, immersive experience with lodging and full board"
-          },
-          {
-            "label": "Places",
-            "value": "Limited"
-          }
-        ]
-      },
-      "journey": {
-        "kicker": "The arc",
-        "title": "Four days, one listening.",
-        "lead": "The arc is clear. You arrive, you listen, you inhabit the mountain, and you leave with that listening still open.",
-        "steps": [
-          {
             "index": "01",
-            "title": "Arrive",
-            "text": "On Friday 8 January, arrival is at 3:00 p.m. The first movement is to enter the land and let the outside rhythm fall away."
+            "title": "Listening and resonance",
+            "text": "We explore the qualities of sound, vibration, conscious listening and the perception of the sonic environment.",
+            "practices": [
+              "Deep listening.",
+              "Qualities of sound and resonance.",
+              "Recognizing your personal sonic imprint.",
+              "Listening to nature.",
+              "Exploring silence."
+            ],
+            "imageAlt": "A mountain river in the sierras",
+            "caption": "The river, one of the sonic landscapes of the land."
           },
           {
             "index": "02",
-            "title": "Study",
-            "text": "Ezequiel López Benavidez facilitates the work with harmonic sound. The training happens in the practice of listening: the instrument, the body, the group, and the landscape."
+            "title": "The voice and harmonics",
+            "text": "The voice as an instrument of expression, resonance and inner exploration.",
+            "practices": [
+              "Harmonic singing.",
+              "Sung meditation.",
+              "Vocal exploration.",
+              "Practices of Mongolian-tradition singing included in the formative proposal.",
+              "Harmonic circles."
+            ],
+            "imageAlt": "A group practice in the stone hall at Pueblo Mágico",
+            "caption": "Practice in the stone hall."
           },
           {
             "index": "03",
-            "title": "Inhabit",
-            "text": "The stay includes lodging and full board. Eating, resting, and walking the sierra are part of the journey, not a pause between activities."
+            "title": "The didgeridoo and the breath",
+            "text": "A practical approach to the didgeridoo and the expressive possibilities of the breath. Didgeridoos are loaned during the practices. They are not given as a gift.",
+            "practices": [
+              "Introduction to the instrument.",
+              "Producing basic sounds.",
+              "Guttural sounds.",
+              "Diaphragmatic breathing.",
+              "Introduction to circular breathing.",
+              "Individual and collective exploration."
+            ],
+            "imageAlt": "The horizon of the Sierras Grandes",
+            "caption": "The sierra, where the breath meets silence."
           },
           {
             "index": "04",
-            "title": "Return",
-            "text": "On Monday 11 January, departure is at 2:00 p.m. The closing is to integrate what was lived, so the listening does not stay behind on the mountain."
+            "title": "Rhythm and collective creation",
+            "text": "Sound as a shared language.",
+            "practices": [
+              "Pulse and rhythm.",
+              "Tempo and subdivisions.",
+              "Rhythm circles.",
+              "Sound ensembles.",
+              "Soundscapes.",
+              "Harmonic orchestra.",
+              "Tools for guiding a sound experience."
+            ],
+            "imageAlt": "The night fire at Pueblo Mágico",
+            "caption": "The fire, where the gathering continues after practice."
           }
         ]
       },
-      "place": {
-        "kicker": "The land",
-        "title": "The sierra listens too.",
-        "paragraphs": [
-          "Pueblo Mágico stands in the Sierras Grandes of Córdoba, in the Los Gigantes massif. It is a mountain eco-center: stone, domes, a garden, and a wide horizon, far from the noise of the city.",
-          "The land is not a backdrop. The wind, the distance, and the January light are part of the work of attention."
+      "takeaways": {
+        "title": "More than an experience: tools to keep exploring",
+        "text": "UMBRAL offers learning that is born from practice. Through the retreat you can recognize your own sonic imprint, widen your expressive resources and try different ways of creating and sharing sound.",
+        "items": [
+          "A clearer awareness of your listening and sonic perception.",
+          "First tools for harmonic singing.",
+          "Practical experience with the didgeridoo.",
+          "Resources of breath, voice and rhythm.",
+          "Exploration of soundscapes and collective ensembles.",
+          "Initial tools to design and hold a sound immersion.",
+          "A personal experience of connection with sound and nature."
         ],
-        "aerialAlt": "Aerial view of Pueblo Mágico among the grasslands of the Sierras Grandes",
-        "aerialCaption": "Pueblo Mágico, Sierras Grandes of Córdoba.",
-        "refugeAlt": "The stone refuge at dusk in Pueblo Mágico",
-        "refugeCaption": "The stone refuge, at the end of the day."
+        "note": "This training is not a professional certification and does not license anyone to practice as a therapist.",
+        "cta": "Reserve my place"
+      },
+      "program": {
+        "title": "Four days. A journey toward listening.",
+        "intro": "Each day opens another dimension of exploration, from conscious listening to the integration of a sound experience of your own.",
+        "note": "The times are indicative and may adapt as the gathering unfolds.",
+        "days": [
+          {
+            "label": "Day 1",
+            "date": "Friday 8 January",
+            "title": "Cross the threshold",
+            "text": "Arrive, slow down and recover inner listening.",
+            "slots": [
+              {
+                "when": "3:00 p.m.",
+                "what": "Arrival and welcome."
+              },
+              {
+                "when": "5:00 p.m.",
+                "what": "The path of listening."
+              },
+              {
+                "when": "6:00 p.m.",
+                "what": "Conscious listening practices."
+              },
+              {
+                "when": "7:00 p.m.",
+                "what": "Gong bath."
+              },
+              {
+                "when": "9:00 p.m.",
+                "what": "Dinner and gathering."
+              }
+            ]
+          },
+          {
+            "label": "Day 2",
+            "date": "Saturday 9 January",
+            "title": "Sound and resonance",
+            "text": "Explore the voice, harmonics and our own sonic imprint.",
+            "slots": [
+              {
+                "when": "Morning",
+                "what": "Foundations of sound, resonance and practices."
+              },
+              {
+                "when": "Afternoon",
+                "what": "Harmonic singing, vocal exploration and sung meditation."
+              },
+              {
+                "when": "Night",
+                "what": "Contemplative concert and sound experience."
+              }
+            ]
+          },
+          {
+            "label": "Day 3",
+            "date": "Sunday 10 January",
+            "title": "Root with earth and rhythm",
+            "text": "Explore the breath, the didgeridoo and the shared pulse.",
+            "slots": [
+              {
+                "when": "Morning",
+                "what": "Didgeridoo and breath."
+              },
+              {
+                "when": "Afternoon",
+                "what": "Rhythm, ensembles and collective practices."
+              },
+              {
+                "when": "Night",
+                "what": "Rhythm circle and fire circle."
+              }
+            ]
+          },
+          {
+            "label": "Day 4",
+            "date": "Monday 11 January",
+            "title": "Integrate and share",
+            "text": "Turn the exploration into an experience of your own.",
+            "slots": [
+              {
+                "when": "Morning",
+                "what": "Integration of tools and sound-facilitation practices."
+              },
+              {
+                "when": "12:30 to 2:00 p.m.",
+                "what": "Group closing and farewell."
+              }
+            ]
+          }
+        ]
+      },
+      "feel": {
+        "title": "Sound is not only explained. It is experienced.",
+        "text": "Gong baths, concerts, circles and the fire are part of the same experience. They are not add-on activities.",
+        "moments": [
+          "Gong baths",
+          "Contemplative concerts",
+          "Sung meditation",
+          "Harmonic circles",
+          "Rhythm circles",
+          "Group practices",
+          "Listening in nature",
+          "Gatherings around the fire"
+        ],
+        "captions": [
+          "Sound practice in the hall, with bowls at the center of the circle.",
+          "The fire at Pueblo Mágico after dark.",
+          "The river in the sierras.",
+          "A shared room in the eco-lodge."
+        ]
       },
       "facilitator": {
         "kicker": "Facilitator",
+        "title": "Who accompanies this journey",
         "name": "Ezequiel López Benavidez",
-        "role": "Harmonic sound",
-        "org": "SonCura – Caminos del Sonido",
+        "bio": "Musician, sound therapist, yoga instructor and apprentice of life.",
+        "projectLabel": "Project",
+        "project": "SonCura – Caminos del Sonido",
         "paragraphs": [
-          "Ezequiel López Benavidez leads UMBRAL. He accompanies the journey of listening through SonCura, in a formative experience for anyone who wants to deepen their relationship with sound and silence.",
-          "SonCura – Caminos del Sonido organizes the gathering. Pueblo Mágico receives the group and holds the hospitality of the land."
+          "Through SonCura, Ezequiel invites us to explore sound as a path of listening, presence and self-knowledge.",
+          "At UMBRAL he accompanies a formative experience where practice, sensitivity and collective exploration meet."
         ]
       },
-      "includes": {
-        "kicker": "The format",
-        "title": "What holds the experience",
-        "lead": "It is a formative, immersive experience. The fee and the way to reserve are confirmed by message. Places are limited.",
-        "items": [
-          "Lodging for the three nights",
-          "Full board",
-          "The formative experience facilitated by Ezequiel López Benavidez",
-          "The setting of Pueblo Mágico, in the Sierras Grandes of Córdoba"
+      "place": {
+        "title": "Some experiences need another rhythm.",
+        "paragraphs": [
+          "In the heart of the Sierras Grandes of Córdoba, Pueblo Mágico invites us to inhabit nature differently.",
+          "Surrounded by mountains, river, streams and open landscape, the eco-center offers a place to rest, meet and reconnect with what is essential.",
+          "During UMBRAL, the mountain is part of the learning.",
+          "The sound of water, the wind in the grasses, the birds and the silence of the landscape accompany the listening practices."
+        ],
+        "captions": [
+          "Aerial view of Pueblo Mágico in the Sierras Grandes.",
+          "The massif at dawn.",
+          "The river.",
+          "The practice hall.",
+          "The stone refuge.",
+          "A shared room in the eco-lodge."
         ]
+      },
+      "stay": {
+        "title": "We take care of the rest. You come to live the experience.",
+        "subtitle": "Four days and three nights with lodging, meals and every activity included.",
+        "blocks": [
+          {
+            "kicker": "Lodging",
+            "title": "Three nights in the eco-lodge",
+            "text": "Three nights in shared rooms at Pueblo Mágico’s mountain eco-lodge.",
+            "items": [
+              "A bed in a shared room.",
+              "Bed linen.",
+              "Hand towel.",
+              "Bath towel.",
+              "Use of the common spaces that are open."
+            ],
+            "imageAlt": "A shared room with beds, a cane ceiling and a stone hearth",
+            "caption": "A shared room in the eco-lodge."
+          },
+          {
+            "kicker": "Food",
+            "title": "Full board",
+            "text": "Full board for the whole experience. Home cooking, abundant and attentive, prepared to accompany the days of training and gathering.",
+            "items": [
+              "Every meal of the stay."
+            ],
+            "imageAlt": "The kitchen at Pueblo Mágico, with vegetables and fire",
+            "caption": "The kitchen at Pueblo Mágico."
+          },
+          {
+            "kicker": "Training",
+            "title": "The whole retreat",
+            "text": "It includes every activity and practice of the retreat, the group gatherings, the sound experiences and supporting reading material.",
+            "items": [
+              "The activities and practices of the program.",
+              "Group gatherings.",
+              "Sound experiences.",
+              "Supporting reading material."
+            ],
+            "imageAlt": "A practice circle in the hall, with windows toward the sierra",
+            "caption": "The hall where the group meets."
+          },
+          {
+            "kicker": "Instruments",
+            "title": "On loan, during the practices",
+            "text": "Instruments are provided for the practices, including the didgeridoo, so you do not need to buy one.",
+            "items": [
+              "A didgeridoo on loan for practice.",
+              "It is not one of the gifts of the retreat."
+            ],
+            "imageAlt": "A group practice in the stone hall",
+            "caption": "The practices take place in the spaces of the eco-lodge."
+          }
+        ],
+        "loan": "Note: the didgeridoo is loaned for practice and is not one of the gifts of the retreat."
       },
       "audience": {
-        "kicker": "The call",
-        "title": "This journey is for someone who",
+        "title": "For people who feel that sound still has something to teach them",
         "items": [
-          "Feels their attention breaking apart and wants to listen again",
-          "Is looking for training in harmonic sound, not only a weekend of rest",
-          "Can inhabit silence and the company of a small group",
-          "Wants four days in the mountains, with lodging and meals taken care of"
+          "People interested in listening and self-knowledge.",
+          "Musicians and explorers of sound.",
+          "Therapists and wellbeing facilitators.",
+          "Yoga and meditation instructors.",
+          "People who want to bring sound tools into their practices.",
+          "Anyone curious about the voice, harmonics, the didgeridoo and vibration."
         ]
       },
+      "investment": {
+        "title": "Your place at UMBRAL",
+        "subtitle": "An integral experience of training, nature and sound exploration.",
+        "earlyLabel": "Early registration — Early Bird",
+        "earlyPrice": "$690,000 ARS",
+        "regularPrice": "$800,000 ARS",
+        "save": "You save $110,000.",
+        "promo": "Available until 10 December 2026, or for the first 8 people to register, whichever comes first.",
+        "regularLabel": "Regular price",
+        "regularAmount": "$800,000 ARS",
+        "regularNote": "Available once the early-registration stage ends.",
+        "includesTitle": "What your investment includes",
+        "includes": [
+          "4 days and 3 nights.",
+          "Lodging in shared rooms at the eco-lodge.",
+          "Bed linen, hand towel and bath towel.",
+          "All meals.",
+          "The complete training.",
+          "Every activity and experience in the program.",
+          "Instruments on loan for the practices.",
+          "Supporting reading material."
+        ],
+        "depositTitle": "Reserve with a deposit",
+        "depositPrice": "$190,000 ARS",
+        "depositLines": [
+          "For the Early Bird rate: an initial deposit of $190,000.",
+          "Remaining balance: $500,000.",
+          "The balance can be completed in partial payments before the retreat begins."
+        ],
+        "cta": "Reserve my place with $190,000",
+        "ctaSecondary": "Ask on WhatsApp",
+        "disclaimer": "This button opens WhatsApp to arrange the reservation. It does not charge the deposit automatically. The cancellation policy, the exact payment dates and the reservation process will be confirmed by the organizers before they become final conditions."
+      },
       "faq": {
-        "kicker": "Before you write",
         "title": "Questions",
         "items": [
           {
-            "q": "When is it, and how long does it last?",
-            "a": "From Friday 8 to Monday 11 January 2027. It is 4 days and 3 nights. Arrival is Friday at 3:00 p.m. and departure is Monday at 2:00 p.m."
+            "q": "When does UMBRAL take place?",
+            "a": "From Friday 8 to Monday 11 January 2027, for four days and three nights."
           },
           {
-            "q": "Where does it take place?",
-            "a": "At Pueblo Mágico, a mountain eco-center in the Sierras Grandes of Córdoba, Argentina."
+            "q": "Where will I sleep?",
+            "a": "In shared rooms at Pueblo Mágico’s mountain eco-lodge. Bed linen, a hand towel and a bath towel are included."
           },
           {
-            "q": "Who organizes it, and who facilitates?",
-            "a": "SonCura – Caminos del Sonido organizes it. Ezequiel López Benavidez facilitates it."
+            "q": "Are all meals included?",
+            "a": "Yes. The experience includes full board for the stay."
           },
           {
-            "q": "What does the stay include?",
-            "a": "Lodging and full board, together with the formative experience of the retreat."
+            "q": "Do I need to bring instruments?",
+            "a": "Instruments will be available on loan during the practices, including the didgeridoo."
+          },
+          {
+            "q": "Is the didgeridoo included as a gift?",
+            "a": "No. It is provided for the training practices."
+          },
+          {
+            "q": "What does registration include?",
+            "a": "Lodging, meals, the complete training, activities, practices and supporting reading material."
+          },
+          {
+            "q": "How much does it cost?",
+            "a": "The early price is $690,000 and the regular price is $800,000."
+          },
+          {
+            "q": "Can I reserve with a deposit?",
+            "a": "A deposit of $190,000 is proposed, with the balance completed before the retreat begins. The final conditions will be confirmed by the organizers."
           },
           {
             "q": "Do I need previous experience?",
-            "a": "It is a formative retreat. If you are unsure about your starting point, write to us and we will talk it through before you reserve."
+            "a": "Ask the organizing team to confirm whether the experience fits your level."
           },
           {
-            "q": "How do I register, and what is the fee?",
-            "a": "Places are limited. The fee and the reservation are confirmed on WhatsApp."
+            "q": "How do I get to Pueblo Mágico?",
+            "a": "Pueblo Mágico is in the Sierras Grandes of Córdoba, in the Los Gigantes massif. The official location and the directions are in these links.",
+            "links": [
+              {
+                "label": "See the location on the map",
+                "href": "https://maps.app.goo.gl/4c1nrpBbQf5hYrsE9"
+              },
+              {
+                "label": "Directions",
+                "href": "/#como-llegar"
+              }
+            ]
           }
         ]
       },
       "closing": {
-        "kicker": "Limited places",
-        "title": "A place is reserved in conversation.",
-        "text": "If this journey calls you, write to us. We will share availability, the fee, and what you need in order to arrive.",
-        "cta": "I want my place"
-      },
-      "stickyCta": "Reserve my place",
-      "whatsapp": "Hello, I would like to reserve a place at UMBRAL – The Journey of Listening, 8–11 January 2027 at Pueblo Mágico."
+        "title": "There are sounds we hear. And others that stay with us long after.",
+        "text": "Four days to discover new ways of listening, resonating and sharing. A training and a gathering in nature.",
+        "lines": [
+          "UMBRAL – The Journey of Listening",
+          "8–11 January 2027",
+          "Pueblo Mágico · Sierras of Córdoba"
+        ],
+        "cta": "I want to live UMBRAL",
+        "secondary": "Ask a question on WhatsApp"
+      }
     },
     "aliados": {
       "title": "Allied environmental organizations",
@@ -4418,7 +4906,7 @@
           "statusLabel": "LIMITED PLACES",
           "title": "UMBRAL · The Journey of Listening",
           "labels": ["FORMATIVE RETREAT", "HARMONIC SOUND"],
-          "desc": "Four days and three nights to train in listening. Harmonic sound, silence and mountain at Pueblo Mágico. Organized by SonCura. Facilitated by Ezequiel López Benavidez.",
+          "desc": "A formative harmonic-sound retreat, 8–11 January 2027. Lodging and full board. Early registration $690,000. Organized by SonCura. Facilitated by Ezequiel López Benavidez.",
           "btn": "View the retreat",
           "image": "/uploads/reforestacion/montana-hero.webp",
           "link": "/retiros/umbral-el-viaje-de-la-escucha",
