@@ -111,7 +111,7 @@ const Umbral: React.FC = () => {
           address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' },
         },
         organizer: { '@type': 'Organization', name: 'SonCura – Caminos del Sonido' },
-        performer: { '@type': 'Person', name: 'Ezequiel López Benavidez' },
+        performer: { '@type': 'Person', name: 'Exequiel Lopez Benavidez' },
         offers: {
           '@type': 'Offer',
           price: '690000',
