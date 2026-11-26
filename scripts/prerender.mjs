@@ -301,7 +301,7 @@ function buildJsonLD(route) {
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: { '@type': 'Place', name: 'Pueblo Mágico', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
       organizer: { '@type': 'Organization', name: 'SonCura – Caminos del Sonido' },
-      performer: { '@type': 'Person', name: 'Ezequiel López Benavidez' },
+      performer: { '@type': 'Person', name: 'Exequiel Lopez Benavidez' },
       url: route.canonical,
       image: route.image,
     })}</script>`;
