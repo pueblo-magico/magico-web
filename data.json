@@ -304,7 +304,7 @@
           "El río.",
           "El salón de prácticas.",
           "El refugio de piedra.",
-          "Habitación compartida del eco-lodge."
+          "Vista aérea de los domos del predio."
         ]
       },
       "stay": {
@@ -322,8 +322,8 @@
               "Toallón.",
               "Uso de los espacios comunes habilitados."
             ],
-            "imageAlt": "Habitación compartida con camas, techo de caña y hogar de piedra",
-            "caption": "Habitación compartida del eco-lodge."
+            "imageAlt": "Domos en el entorno natural del eco-lodge",
+            "caption": "El entorno del eco-lodge de montaña."
           },
           {
             "kicker": "Gastronomía",
@@ -332,8 +332,8 @@
             "items": [
               "Todas las comidas de la estadía."
             ],
-            "imageAlt": "Cocina de Pueblo Mágico, con verduras y fuego",
-            "caption": "La cocina de Pueblo Mágico."
+            "imageAlt": "Imagen de referencia de gastronomía consciente",
+            "caption": "Gastronomía consciente · imagen ilustrativa."
           },
           {
             "kicker": "Formación",
@@ -3652,7 +3652,7 @@
           "The river.",
           "The practice hall.",
           "The stone refuge.",
-          "A shared room in the eco-lodge."
+          "Aerial view of the domes on the grounds."
         ]
       },
       "stay": {
@@ -3670,8 +3670,8 @@
               "Bath towel.",
               "Use of the common spaces that are open."
             ],
-            "imageAlt": "A shared room with beds, a cane ceiling and a stone hearth",
-            "caption": "A shared room in the eco-lodge."
+            "imageAlt": "Domes in the natural setting of the eco-lodge",
+            "caption": "The mountain eco-lodge setting."
           },
           {
             "kicker": "Food",
@@ -3680,8 +3680,8 @@
             "items": [
               "Every meal of the stay."
             ],
-            "imageAlt": "The kitchen at Pueblo Mágico, with vegetables and fire",
-            "caption": "The kitchen at Pueblo Mágico."
+            "imageAlt": "Illustrative image of mindful cuisine",
+            "caption": "Mindful cuisine · illustrative image."
           },
           {
             "kicker": "Training",
