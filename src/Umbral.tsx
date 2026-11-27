@@ -24,7 +24,8 @@ const SOUND_BATH = { src: '/exe4.jpeg', w: 857, h: 1280 };
 const SOUND_GROUP = { src: '/exe5.jpeg', w: 1280, h: 853 };
 const DIDGERIDOO = { src: '/exe6.jpeg', w: 853, h: 1280 };
 const EXPLORE_PHOTOS = [SOUND_BATH, SOUND_CIRCLE, DIDGERIDOO, SOUND_GROUP];
-const FEEL_PHOTOS = [HALL, FIRE, RIVER, MOUNTAIN];
+const EXTRA_SOUND_PHOTOS = [1, 2, 3, 4, 5, 6].map(n => ({ src: `/exefoto${n}.jpeg`, w: 1200, h: 900 }));
+const FEEL_PHOTOS = EXTRA_SOUND_PHOTOS;
 const PLACE_PHOTOS = [AERIAL, MOUNTAIN, RIVER, HALL, REFUGE, DOME_VIEW];
 const STAY_PHOTOS = [DOMES, FOOD, HALL, { src: '/uploads/bienestar-balance.webp', w: 1920, h: 1280 }];
 const OG_IMAGE = `${SITE_URL}${SOUND_HERO.src}`;
@@ -291,8 +292,8 @@ const Umbral: React.FC = () => {
             </ul>
             <div className="mt-10 grid gap-4 md:grid-cols-2">
               {FEEL_PHOTOS.map((photo, index) => (
-                <figure key={copy.feel.captions[index]}>
-                  <Frame photo={photo} alt={copy.feel.captions[index]} className="h-72 w-full md:h-96" />
+                <figure key={photo.src}>
+                  <Frame photo={photo} alt={copy.facilitator.project} className="h-72 w-full md:h-96" />
                 </figure>
               ))}
             </div>
@@ -310,7 +311,12 @@ const Umbral: React.FC = () => {
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{copy.facilitator.projectLabel}</p>
+              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" loading="lazy" decoding="async" className="mt-4 h-auto max-h-40 w-40 rounded-lg object-contain" />
               <p className="serif-title mt-3 text-3xl text-[#1C3328]">{copy.facilitator.project}</p>
+              <div className="mt-5 flex flex-col gap-3 text-sm font-medium text-[#1C3328]">
+                <a href="https://www.instagram.com/soncura_caminosdelsonido/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 break-all">Instagram · @Soncura_caminosdelsonido</a>
+                <a href="https://www.instagram.com/exequiel.lopezzz/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Instagram · @Exequiel.lopezzz</a>
+              </div>
               {copy.facilitator.paragraphs.map((paragraph: string) => (
                 <p key={paragraph} className="mt-5 leading-8 text-[#3C463F]">{paragraph}</p>
               ))}
