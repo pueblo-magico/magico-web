@@ -9,7 +9,7 @@ test('UMBRAL copy and calendar card exist in both languages', () => {
   const content = JSON.parse(read('data.json'));
   for (const language of ['es', 'en']) {
     const page = content[language].umbral;
-    assert.equal(page.hero.title, 'UMBRAL');
+    assert.equal(page.hero.title, 'HUELLA SONORA');
     assert.ok(page.hero.subtitle.length > 8);
     assert.equal(page.program.days.length, 4);
     assert.equal(page.explore.items.length, 4);
@@ -18,13 +18,13 @@ test('UMBRAL copy and calendar card exist in both languages', () => {
     assert.match(page.investment.regularAmount, /800/);
     assert.match(page.investment.depositPrice, /190/);
     assert.match(page.stay.loan, /didgeridoo|préstamo|loan/i);
-    assert.match(page.whatsapp, /UMBRAL/);
+    assert.match(page.whatsapp, /HUELLA SONORA/);
     const events = content[language].events.cards.filter(card => card.link === '/retiros/umbral-el-viaje-de-la-escucha');
     assert.equal(events.length, 1);
     assert.equal(events[0].startDate, '2027-01-08');
     assert.equal(events[0].endDate, '2027-01-11');
     assert.equal(events[0].showInMainEvents, true);
-    assert.match(events[0].title, /UMBRAL/);
+    assert.match(events[0].title, /HUELLA SONORA/);
   }
 });
 
