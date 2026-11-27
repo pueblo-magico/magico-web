@@ -311,7 +311,7 @@ const Umbral: React.FC = () => {
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{copy.facilitator.projectLabel}</p>
-              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" loading="lazy" decoding="async" className="mt-4 h-auto max-h-32 w-36 object-contain mix-blend-multiply" />
+              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" loading="lazy" decoding="async" className="mx-auto mt-4 h-auto w-[85%] max-w-[300px] object-contain mix-blend-multiply md:mx-0 md:max-h-32 md:w-36" />
               <p className="serif-title mt-3 text-3xl text-[#1C3328]">{copy.facilitator.project}</p>
 
               {copy.facilitator.paragraphs.map((paragraph: string) => (
