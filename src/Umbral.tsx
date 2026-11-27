@@ -11,17 +11,22 @@ const HALL = { src: '/uploads/yoga_salon.webp', w: 1920, h: 1280 };
 const MOUNTAIN = { src: '/uploads/reforestacion/montana-hero.webp', w: 2048, h: 988 };
 const AERIAL = { src: '/uploads/campoentero.webp', w: 1920, h: 1080 };
 const RIVER = { src: '/uploads/sunset-rio-rio-real.webp', w: 1024, h: 1536 };
-const PRACTICE = { src: '/uploads/bienestar-balance.webp', w: 1920, h: 1280 };
 const FIRE = { src: '/uploads/fogon_nocturno.webp', w: 1920, h: 1288 };
 const ROOM = { src: '/uploads/habitaciones.webp', w: 1080, h: 720 };
 const FOOD = { src: '/uploads/comida.jpg', w: 1259, h: 535 };
 const REFUGE = { src: '/uploads/refu.webp', w: 549, h: 366 };
 
-const EXPLORE_PHOTOS = [RIVER, PRACTICE, MOUNTAIN, FIRE];
-const FEEL_PHOTOS = [HALL, FIRE, RIVER, ROOM];
+const SOUND_HERO = { src: '/exe.jpeg', w: 1248, h: 1248 };
+const HANDPAN = { src: '/exe2.jpeg', w: 757, h: 1298 };
+const SOUND_CIRCLE = { src: '/exe3.jpeg', w: 853, h: 1280 };
+const SOUND_BATH = { src: '/exe4.jpeg', w: 857, h: 1280 };
+const SOUND_GROUP = { src: '/exe5.jpeg', w: 1280, h: 853 };
+const DIDGERIDOO = { src: '/exe6.jpeg', w: 853, h: 1280 };
+const EXPLORE_PHOTOS = [SOUND_BATH, SOUND_CIRCLE, DIDGERIDOO, SOUND_GROUP];
+const FEEL_PHOTOS = [SOUND_GROUP, SOUND_BATH, SOUND_CIRCLE, FIRE];
 const PLACE_PHOTOS = [AERIAL, MOUNTAIN, RIVER, HALL, REFUGE, ROOM];
-const STAY_PHOTOS = [ROOM, FOOD, HALL, PRACTICE];
-const OG_IMAGE = `${SITE_URL}${HALL.src}`;
+const STAY_PHOTOS = [ROOM, FOOD, HALL, DIDGERIDOO];
+const OG_IMAGE = `${SITE_URL}${SOUND_HERO.src}`;
 
 const btn = 'inline-flex items-center justify-center rounded-full bg-[#D4AF37] px-7 py-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]';
 const btnGhost = 'inline-flex items-center justify-center rounded-full border border-current px-7 py-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em]';
@@ -153,8 +158,8 @@ const Umbral: React.FC = () => {
       <Header subNavigation={<PageSectionNav navigation={copy.nav as PageNavigation} />} />
       <main id="contenido-umbral">
         <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-[#14211B]">
-          <img src={HALL.src} alt={copy.hero.imageAlt} width={HALL.w} height={HALL.h} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101A15] via-[#101A15]/55 to-[#101A15]/50" />
+          <img src={SOUND_HERO.src} alt={copy.hero.imageAlt} width={SOUND_HERO.w} height={SOUND_HERO.h} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[center_72%]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#101A15] via-[#101A15]/35 to-[#101A15]/20" />
           <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-16 pt-32 md:px-10 md:pb-24">
             <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#E7D7A8]">{copy.hero.partners}</p>
             <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.28em] text-[#F6F1E6]/75">{copy.hero.category}</p>
@@ -190,7 +195,7 @@ const Umbral: React.FC = () => {
             </Reveal>
             <Reveal delay="2">
               <figure>
-                <Frame photo={MOUNTAIN} alt={copy.sense.imageAlt} className="h-[68vh] min-h-[420px] w-full" />
+                <Frame photo={SOUND_CIRCLE} alt={copy.sense.imageAlt} className="h-[68vh] min-h-[420px] w-full" />
                 <figcaption className="mt-4 text-sm leading-6 text-[#6A5344]">{copy.sense.caption}</figcaption>
               </figure>
             </Reveal>
@@ -301,6 +306,7 @@ const Umbral: React.FC = () => {
           <h2 className="serif-title mt-4 max-w-xl text-4xl text-[#1C3328] md:text-5xl">{copy.facilitator.title}</h2>
           <div className="mt-12 grid gap-10 border-t border-[#1C2822]/15 pt-10 md:grid-cols-[1.1fr_0.9fr]">
             <div>
+              <Frame photo={HANDPAN} alt={copy.facilitator.name} className="mb-8 h-[480px] w-full object-[center_75%] md:h-[560px]" />
               <p className="serif-title text-5xl leading-[1.02] text-[#1C3328] md:text-6xl">{copy.facilitator.name}</p>
               <p className="mt-6 text-lg leading-8 text-[#3C463F]">{copy.facilitator.bio}</p>
             </div>
@@ -432,7 +438,7 @@ const Umbral: React.FC = () => {
         </section>
 
         <section className="relative overflow-hidden bg-[#101A15] text-[#F6F1E6]">
-          <img src={MOUNTAIN.src} alt="" width={MOUNTAIN.w} height={MOUNTAIN.h} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+          <img src={SOUND_HERO.src} alt="" width={SOUND_HERO.w} height={SOUND_HERO.h} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-[#101A15]/65" />
           <div className="relative mx-auto max-w-3xl px-6 py-28 text-center md:py-36">
             <h2 className="serif-title text-4xl leading-tight md:text-6xl">{copy.closing.title}</h2>
