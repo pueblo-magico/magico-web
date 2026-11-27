@@ -122,8 +122,8 @@ export const ROUTES = [
     path: '/retiros/umbral-el-viaje-de-la-escucha',
     title: 'UMBRAL – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico',
     description: 'Viví UMBRAL, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos.',
-    image: 'https://experienciamagico.com/uploads/yoga_salon.webp',
-    imageAlt: 'Círculo de práctica con cuencos en el salón de Pueblo Mágico',
+    image: 'https://experienciamagico.com/exe.jpeg',
+    imageAlt: 'Didgeridoo sobre una roca al atardecer',
     canonical: 'https://experienciamagico.com/retiros/umbral-el-viaje-de-la-escucha',
   },
   {
