@@ -71,6 +71,8 @@ const Umbral: React.FC = () => {
   const copy = t.umbral;
   const pageUrl = `${SITE_URL}${ROUTES.UMBRAL}`;
   const reserveHref = waLink(copy.whatsapp);
+  const consultHref = waLink(language === 'es' ? '¡Hola! Me interesa Huella Sonora y quisiera hacer una consulta antes de reservar. ¿Podemos conversar?' : 'Hi! I am interested in Huella Sonora and have a question before booking. Could we chat?');
+  const consultLabel = language === 'es' ? 'Quiero hacer una consulta' : 'I have a question';
   const [showSticky, setShowSticky] = useState(false);
 
   useEffect(() => {
@@ -186,7 +188,8 @@ const Umbral: React.FC = () => {
             <p className="mt-6 text-sm text-[#E7D7A8]">{copy.hero.early}</p>
             <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.hero.cta}</a>
-              <a href="#experiencia" className={`${btnGhost} text-[#F6F1E6]`}>{copy.hero.ctaSecondary}</a>
+              <a href={consultHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#F6F1E6]`}>{consultLabel}</a>
+              <a href="#experiencia" className="self-center text-sm text-[#F6F1E6]/85 underline underline-offset-4">{copy.hero.ctaSecondary}</a>
             </div>
           </div>
         </section>
@@ -251,7 +254,7 @@ const Umbral: React.FC = () => {
               ))}
             </ul>
             <p className="mt-8 text-sm leading-7 text-[#E7D7A8]">{copy.takeaways.note}</p>
-            <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={`${btn} mt-10`}>{copy.takeaways.cta}</a>
+            <div className="mt-10 flex flex-wrap gap-3"><a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.takeaways.cta}</a><a href={consultHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#F6F1E6]`}>{consultLabel}</a></div>
           </div>
         </section>
 
@@ -426,7 +429,7 @@ const Umbral: React.FC = () => {
               </div>
               <div className="mt-8 flex flex-col items-start gap-3">
                 <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.investment.cta}</a>
-                <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#F6F1E6]`}>{copy.investment.ctaSecondary}</a>
+                <a href={consultHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#F6F1E6]`}>{copy.investment.ctaSecondary}</a>
               </div>
               <p className="mt-6 text-base leading-7 text-[#E7D7A8]">{copy.investment.flexibility}</p>
               <p className="mt-6 text-xs leading-6 text-[#F6F1E6]/60">{copy.investment.disclaimer}</p>
@@ -452,6 +455,10 @@ const Umbral: React.FC = () => {
               </details>
             ))}
           </div>
+          <div className="mt-8 text-center">
+            <p className="mb-4 text-[#3C463F]">{language === 'es' ? '¿Te quedó alguna duda? Estamos para acompañarte.' : 'Still have a question? We are here to help.'}</p>
+            <a href={consultHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#1C3328]`}>{consultLabel}</a>
+          </div>
         </section>
 
         <section className="relative overflow-hidden bg-[#101A15] text-[#F6F1E6]">
@@ -465,6 +472,7 @@ const Umbral: React.FC = () => {
             </ul>
             <div className="mt-10 flex flex-col items-center gap-4">
               <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.closing.cta}</a>
+              <a href={consultHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#F6F1E6]`}>{consultLabel}</a>
               <a href={reserveHref} target="_blank" rel="noopener noreferrer" className="text-sm underline decoration-[#E7D7A8] underline-offset-4">{copy.closing.secondary}</a>
             </div>
           </div>
