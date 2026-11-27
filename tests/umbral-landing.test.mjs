@@ -19,7 +19,7 @@ test('UMBRAL copy and calendar card exist in both languages', () => {
     assert.match(page.investment.depositPrice, /190/);
     assert.match(page.stay.loan, /didgeridoo|préstamo|loan/i);
     assert.match(page.whatsapp, /HUELLA SONORA/);
-    const events = content[language].events.cards.filter(card => card.link === '/retiros/umbral-el-viaje-de-la-escucha');
+    const events = content[language].events.cards.filter(card => card.link === '/retiros/huella-sonora');
     assert.equal(events.length, 1);
     assert.equal(events[0].startDate, '2027-01-08');
     assert.equal(events[0].endDate, '2027-01-11');
@@ -31,10 +31,10 @@ test('UMBRAL copy and calendar card exist in both languages', () => {
 test('UMBRAL is routed, prerendered, and listed in the sitemap', () => {
   assert.match(read('index.tsx'), /const Umbral = lazy\(\(\) => import\('\.\/src\/Umbral'\)\)/);
   assert.match(read('index.tsx'), /ROUTES\.UMBRAL.*<Umbral/);
-  assert.match(read('src/routes.ts'), /UMBRAL: '\/retiros\/umbral-el-viaje-de-la-escucha'/);
-  assert.match(read('scripts/prerender.mjs'), /path: '\/retiros\/umbral-el-viaje-de-la-escucha'/);
+  assert.match(read('src/routes.ts'), /UMBRAL: '\/retiros\/huella-sonora'/);
+  assert.match(read('scripts/prerender.mjs'), /path: '\/retiros\/huella-sonora'/);
   assert.match(read('scripts/prerender.mjs'), /umbral-event-schema/);
-  assert.match(read('public/sitemap.xml'), /\/retiros\/umbral-el-viaje-de-la-escucha<\/loc>/);
+  assert.match(read('public/sitemap.xml'), /\/retiros\/huella-sonora<\/loc>/);
 });
 
 test('UMBRAL reuses site chrome and optimized photography', () => {

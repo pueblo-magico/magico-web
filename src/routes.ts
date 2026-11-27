@@ -37,5 +37,5 @@ export const ROUTES = {
   ADMIN_RESERVAS: '/admin/reservas',
   RAIZ_SONORA: '/festival-raiz-sonora',
   BROTE: '/brote-ronda-de-mujeres',
-  UMBRAL: '/retiros/umbral-el-viaje-de-la-escucha',
+  UMBRAL: '/retiros/huella-sonora',
 };

@@ -119,12 +119,12 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/brote-ronda-de-mujeres',
   },
   {
-    path: '/retiros/umbral-el-viaje-de-la-escucha',
+    path: '/retiros/huella-sonora',
     title: 'HUELLA SONORA – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico',
     description: 'Viví HUELLA SONORA, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos.',
     image: 'https://experienciamagico.com/exe.jpeg',
     imageAlt: 'Didgeridoo sobre una roca al atardecer',
-    canonical: 'https://experienciamagico.com/retiros/umbral-el-viaje-de-la-escucha',
+    canonical: 'https://experienciamagico.com/retiros/huella-sonora',
   },
   {
     path: '/festival-raiz-sonora',
@@ -289,7 +289,7 @@ function buildJsonLD(route) {
       image: route.image,
     })}</script>`;
   }
-  if (route.path === '/retiros/umbral-el-viaje-de-la-escucha') {
+  if (route.path === '/retiros/huella-sonora') {
     return `<script id="umbral-event-schema" type="application/ld+json">${JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Event',
