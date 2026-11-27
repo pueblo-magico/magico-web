@@ -18,7 +18,7 @@ const FOOD = { src: '/uploads/propuestas/jesus-cordoba-gastronomia-v2.webp', w: 
 const REFUGE = { src: '/uploads/refu.webp', w: 549, h: 366 };
 
 const SOUND_HERO = { src: '/exe.jpeg', w: 1248, h: 1248 };
-const HANDPAN = { src: '/exe2.jpeg', w: 757, h: 1298 };
+const FACILITATOR_PHOTO = { src: '/exefoto10.jpeg', w: 900, h: 1200 };
 const SOUND_CIRCLE = { src: '/exe3.jpeg', w: 853, h: 1280 };
 const SOUND_BATH = { src: '/exe4.jpeg', w: 857, h: 1280 };
 const SOUND_GROUP = { src: '/exe5.jpeg', w: 1280, h: 853 };
@@ -163,7 +163,11 @@ const Umbral: React.FC = () => {
           <img src={SOUND_HERO.src} alt={copy.hero.imageAlt} width={SOUND_HERO.w} height={SOUND_HERO.h} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[center_72%]" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#101A15] via-[#101A15]/35 to-[#101A15]/20" />
           <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-16 pt-32 md:px-10 md:pb-24">
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#E7D7A8]">{copy.hero.partners}</p>
+            <div className="mb-5 flex flex-wrap items-center gap-4 sm:gap-6">
+              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" decoding="async" className="h-auto max-h-20 w-36 object-contain grayscale invert mix-blend-screen sm:w-44" />
+              <span aria-hidden="true" className="text-lg text-[#E7D7A8]/70">×</span>
+              <span className="serif-title text-xl tracking-wide text-[#F6F1E6] sm:text-2xl">Pueblo Mágico</span>
+            </div>
             <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.28em] text-[#F6F1E6]/75">{copy.hero.category}</p>
             <h1 className="serif-title mt-5 text-[clamp(3.2rem,9vw,7rem)] leading-[0.82] tracking-[0.06em] text-[#F6F1E6]">{copy.hero.title}</h1>
             <p className="serif-title mt-4 text-[clamp(1.7rem,3.2vw,2.7rem)] italic leading-tight text-[#E7D7A8]">{copy.hero.subtitle}</p>
@@ -305,7 +309,7 @@ const Umbral: React.FC = () => {
           <h2 className="serif-title mt-4 max-w-xl text-4xl text-[#1C3328] md:text-5xl">{copy.facilitator.title}</h2>
           <div className="mt-12 grid gap-10 border-t border-[#1C2822]/15 pt-10 md:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <Frame photo={HANDPAN} alt={copy.facilitator.name} className="mb-8 h-[480px] w-full object-[center_75%] md:h-[560px]" />
+              <Frame photo={FACILITATOR_PHOTO} alt={copy.facilitator.name} className="mb-8 h-[480px] w-full object-center md:h-[560px]" />
               <p className="serif-title text-5xl leading-[1.02] text-[#1C3328] md:text-6xl">{copy.facilitator.name}</p>
               <p className="mt-6 text-lg leading-8 text-[#3C463F]">{copy.facilitator.bio}</p>
             </div>
