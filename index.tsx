@@ -38,6 +38,7 @@ const Empresas = lazy(() => import('./src/Empresas'));
 const CordobaFlyFishing = lazy(() => import('./src/CordobaFlyFishing'));
 const Voluntariado = lazy(() => import('./src/Voluntariado'));
 const Reforestacion = lazy(() => import('./src/Reforestacion'));
+const MujerDiamante = lazy(() => import('./src/MujerDiamante'));
 const Despertar = lazy(() => import('./src/Despertar'));
 const DespertarDelColibri = lazy(() => import('./src/DespertarDelColibri'));
 const PropuestaNicoGrupe = lazy(() => import('./src/PropuestaNicoGrupe'));
@@ -140,6 +141,7 @@ root.render(
               <Route path="/alma-de-lobo" element={<AlmaDeLobo />} />
               <Route path="/sunset-y-rio" element={<SunsetRio />} />
               <Route path={ROUTES.RAIZ_SONORA} element={<FestivalOctubre />} />
+              <Route path={ROUTES.MUJER_DIAMANTE} element={<MujerDiamante />} />
               <Route path={ROUTES.BROTE} element={<Brote />} />
               <Route path={ROUTES.UMBRAL} element={<Umbral />} />
               <Route path="/festival-RAÍZ-SONORA" element={<Navigate to={ROUTES.RAIZ_SONORA} replace />} />

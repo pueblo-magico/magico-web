@@ -36,6 +36,7 @@ export const ROUTES = {
   REFORESTACION: '/reforestacion',
   ADMIN_RESERVAS: '/admin/reservas',
   RAIZ_SONORA: '/festival-raiz-sonora',
+  MUJER_DIAMANTE: '/retiros/mujer-diamante',
   BROTE: '/brote-ronda-de-mujeres',
   UMBRAL: '/retiros/huella-sonora',
 };
