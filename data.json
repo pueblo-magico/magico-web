@@ -3,13 +3,13 @@
     "umbral": {
       "skip": "Saltar al contenido",
       "seo": {
-        "title": "UMBRAL – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico",
-        "description": "Viví UMBRAL, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos."
+        "title": "HUELLA SONORA – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico",
+        "description": "Viví HUELLA SONORA, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos."
       },
       "nav": {
-        "ariaLabel": "Secciones de UMBRAL",
+        "ariaLabel": "Secciones de HUELLA SONORA",
         "pageEyebrow": "Retiro",
-        "pageTitle": "UMBRAL",
+        "pageTitle": "HUELLA SONORA",
         "sections": [
           {
             "id": "experiencia",
@@ -41,12 +41,12 @@
           }
         ]
       },
-      "whatsapp": "Hola, quiero recibir información para reservar mi lugar en UMBRAL – El Viaje de la Escucha, del 8 al 11 de enero de 2027.",
+      "whatsapp": "Hola, quiero recibir información para reservar mi lugar en HUELLA SONORA – El Viaje de la Escucha, del 8 al 11 de enero de 2027.",
       "stickyCta": "Reservar mi lugar",
       "hero": {
         "partners": "SonCura × Pueblo Mágico",
         "category": "Retiro formativo · Sonidos armónicos",
-        "title": "UMBRAL",
+        "title": "HUELLA SONORA",
         "subtitle": "El Viaje de la Escucha",
         "phrase": [
           "Del sonido a la escucha.",
@@ -76,7 +76,7 @@
         "title": "¿Y si aprender a escuchar cambiara tu manera de sentir el mundo?",
         "paragraphs": [
           "Vivimos oyendo mucho y escuchando poco.",
-          "UMBRAL nace de una invitación simple y profunda: recuperar la escucha como una forma de presencia, exploración y autoconocimiento.",
+          "HUELLA SONORA nace de una invitación simple y profunda: recuperar la escucha como una forma de presencia, exploración y autoconocimiento.",
           "Durante cuatro días nos sumergiremos en el universo de los sonidos armónicos para descubrir nuevas formas de relacionarnos con la voz, el cuerpo, la respiración, los instrumentos y el silencio.",
           "No se trata solamente de recibir una experiencia sonora.",
           "Se trata de aprender a crearla, comprenderla y sostenerla.",
@@ -107,7 +107,7 @@
           },
           {
             "index": "02",
-            "title": "La voz y los armónicos",
+            "title": "La voz y reproducción de armónicos",
             "text": "La voz como instrumento de expresión, resonancia y exploración interior.",
             "practices": [
               "Canto de armónicos.",
@@ -122,7 +122,7 @@
           {
             "index": "03",
             "title": "El didgeridoo y la respiración",
-            "text": "Una aproximación práctica al didgeridoo y a las posibilidades expresivas de la respiración. Los didgeridoos se facilitan en préstamo durante las prácticas. No se entregan como regalo.",
+            "text": "Una introducción al uso del didgeridoo y a la respiración circular. Los didgeridoos se facilitan durante las prácticas y cada participante se lleva uno de regalo.",
             "practices": [
               "Introducción al instrumento.",
               "Producción de sonidos básicos.",
@@ -154,11 +154,11 @@
       },
       "takeaways": {
         "title": "Más que una experiencia: herramientas para seguir explorando",
-        "text": "UMBRAL propone un aprendizaje que nace de la práctica. A lo largo del retiro tendrás la oportunidad de reconocer tu propia huella sonora, ampliar tus recursos expresivos y experimentar diferentes formas de crear y compartir sonidos.",
+        "text": "HUELLA SONORA propone un aprendizaje que nace de la práctica. A lo largo del retiro tendrás la oportunidad de reconocer tu propia huella sonora, ampliar tus recursos expresivos y experimentar diferentes formas de crear y compartir sonidos.",
         "items": [
           "Mayor conciencia de tu escucha y percepción sonora.",
           "Primeras herramientas de canto de armónicos.",
-          "Experiencia práctica con didgeridoo.",
+          "Experiencia práctica con didgeridoo y un instrumento propio de regalo.",
           "Recursos de respiración, voz y ritmo.",
           "Exploración de paisajes sonoros y ensambles colectivos.",
           "Herramientas iniciales para diseñar y sostener una inmersión sonora.",
@@ -212,7 +212,7 @@
               },
               {
                 "when": "Tarde",
-                "what": "Canto de armónicos, exploración vocal y meditación cantada."
+                "what": "La voz y reproducción de armónicos, exploración vocal y meditación cantada."
               },
               {
                 "when": "Noche",
@@ -228,7 +228,7 @@
             "slots": [
               {
                 "when": "Mañana",
-                "what": "Didgeridoo y respiración."
+                "what": "Introducción al didgeridoo y a la respiración circular."
               },
               {
                 "when": "Tarde",
@@ -282,12 +282,12 @@
         "kicker": "El facilitador",
         "title": "Quien acompaña este viaje",
         "name": "Exequiel Lopez Benavidez",
-        "bio": "Músico, terapeuta sonoro, instructor de yoga y aprendiz de la vida.",
+        "bio": "Músico, director y formador en terapias de sonido desde hace más de 10 años, terapeuta sonoro, instructor de yoga y aprendiz de la vida.",
         "projectLabel": "Proyecto",
         "project": "SonCura – Caminos del Sonido",
         "paragraphs": [
           "Desde SonCura, Exequiel nos invita a explorar el sonido como un camino de escucha, presencia y autoconocimiento.",
-          "En UMBRAL acompaña una experiencia formativa donde la práctica, la sensibilidad y la exploración colectiva se encuentran."
+          "En HUELLA SONORA acompaña una experiencia formativa donde la práctica, la sensibilidad y la exploración colectiva se encuentran."
         ]
       },
       "place": {
@@ -295,7 +295,7 @@
         "paragraphs": [
           "En el corazón de las Sierras Grandes de Córdoba, Pueblo Mágico nos invita a habitar la naturaleza de una manera diferente.",
           "Rodeado de montañas, río, arroyos y paisajes abiertos, nuestro eco-centro ofrece un espacio para descansar, encontrarnos y reconectar con lo esencial.",
-          "Durante UMBRAL, la montaña será parte del aprendizaje.",
+          "Durante HUELLA SONORA, la montaña será parte del aprendizaje.",
           "El sonido del agua, el viento entre los pastizales, las aves y el silencio del paisaje acompañarán las prácticas de escucha."
         ],
         "captions": [
@@ -304,7 +304,7 @@
           "El río.",
           "El salón de prácticas.",
           "El refugio de piedra.",
-          "Vista aérea de los domos del predio."
+          "Los domos en el entorno natural del predio."
         ]
       },
       "stay": {
@@ -350,17 +350,17 @@
           },
           {
             "kicker": "Instrumentos",
-            "title": "En préstamo, durante las prácticas",
-            "text": "Se facilitarán instrumentos para las prácticas, incluido el didgeridoo, sin necesidad de adquirir uno.",
+            "title": "Tu didgeridoo de regalo",
+            "text": "Una introducción al uso del didgeridoo y a la respiración circular. Los didgeridoos se facilitan durante las prácticas y cada participante se lleva uno de regalo.",
             "items": [
-              "Didgeridoo en préstamo para practicar.",
-              "No forma parte de los obsequios del retiro."
+              "Instrumentos disponibles durante las prácticas.",
+              "Un didgeridoo de regalo para cada participante."
             ],
             "imageAlt": "Práctica con didgeridoo durante un encuentro sonoro.",
             "caption": "Práctica con didgeridoo durante un encuentro sonoro."
           }
         ],
-        "loan": "Aclaración: el didgeridoo se presta para practicar y no forma parte de los obsequios del retiro."
+        "loan": "Cada participante se lleva un didgeridoo para continuar explorando después del retiro."
       },
       "audience": {
         "title": "Para quienes sienten que el sonido tiene algo más para enseñarles",
@@ -374,14 +374,14 @@
         ]
       },
       "investment": {
-        "title": "Tu lugar en UMBRAL",
+        "title": "Tu lugar en HUELLA SONORA",
         "subtitle": "Una experiencia integral de formación, naturaleza y exploración sonora.",
-        "earlyLabel": "Inscripción anticipada — Early Bird",
+        "earlyLabel": "Early Bird · transferencia o efectivo",
         "earlyPrice": "$690.000 ARS",
         "regularPrice": "$800.000 ARS",
         "save": "Ahorrás $110.000.",
         "promo": "Promoción hasta el 10 de diciembre de 2026 o para los primeros 8 inscriptos, lo que ocurra primero.",
-        "regularLabel": "Precio regular",
+        "regularLabel": "Precio regular · transferencia o efectivo",
         "regularAmount": "$800.000 ARS",
         "regularNote": "Disponible al finalizar la etapa de inscripción anticipada.",
         "includesTitle": "Qué incluye tu inversión",
@@ -392,25 +392,29 @@
           "Todas las comidas.",
           "Formación completa.",
           "Todas las actividades y experiencias del programa.",
-          "Instrumentos en préstamo para las prácticas.",
+          "Un didgeridoo de regalo e instrumentos para las prácticas.",
           "Material bibliográfico de apoyo."
         ],
         "depositTitle": "Reservá con una seña",
         "depositPrice": "$190.000 ARS",
         "depositLines": [
-          "Para la modalidad Early Bird: seña inicial de $190.000.",
+          "Para Early Bird por transferencia o efectivo: seña inicial de $190.000.",
           "Saldo pendiente: $500.000.",
           "Posibilidad de completar el saldo mediante pagos parciales antes del inicio del retiro."
         ],
         "cta": "Reservar mi lugar por $190.000",
         "ctaSecondary": "Consultar por WhatsApp",
-        "disclaimer": "Este botón abre WhatsApp para coordinar la reserva. No cobra la seña de forma automática. La política de cancelación, las fechas exactas de pago y el mecanismo de reserva serán confirmados por la organización antes de quedar como condiciones definitivas."
+        "disclaimer": "Este botón abre WhatsApp para coordinar la reserva. No cobra la seña de forma automática. La política de cancelación, las fechas exactas de pago y el mecanismo de reserva serán confirmados por la organización antes de quedar como condiciones definitivas.",
+        "cardLabel": "Tarjeta de crédito · 3 cuotas sin interés",
+        "cardEarly": "Early Bird: 3 cuotas de $276.000 · Total $828.000",
+        "cardRegular": "Regular: 3 cuotas de $320.000 · Total $960.000",
+        "flexibility": "Si esta propuesta realmente te resuena, estamos abiertos a conversar otras formas de pago para que puedas sumarte. ¡Consultanos!"
       },
       "faq": {
         "title": "Preguntas",
         "items": [
           {
-            "q": "¿Cuándo se realiza UMBRAL?",
+            "q": "¿Cuándo se realiza HUELLA SONORA?",
             "a": "Del viernes 8 al lunes 11 de enero de 2027, durante cuatro días y tres noches."
           },
           {
@@ -423,19 +427,19 @@
           },
           {
             "q": "¿Necesito llevar instrumentos?",
-            "a": "Habrá instrumentos disponibles en préstamo durante las prácticas, incluido el didgeridoo."
+            "a": "No. Los instrumentos se facilitan durante las prácticas."
           },
           {
             "q": "¿El didgeridoo está incluido como regalo?",
-            "a": "No. Se facilita para las prácticas de formación."
+            "a": "Sí. Cada participante se lleva un didgeridoo de regalo."
           },
           {
             "q": "¿Qué incluye la inscripción?",
-            "a": "Alojamiento, alimentación, formación completa, actividades, prácticas y materiales bibliográficos de apoyo."
+            "a": "Alojamiento, alimentación, formación completa, actividades, prácticas y materiales bibliográficos de apoyo. Incluye un didgeridoo de regalo."
           },
           {
             "q": "¿Cuánto cuesta?",
-            "a": "El precio anticipado es de $690.000 y el regular es de $800.000."
+            "a": "Por transferencia o efectivo: $690.000 anticipado y $800.000 regular. Con tarjeta: 3 cuotas sin interés de $276.000 o $320.000, respectivamente."
           },
           {
             "q": "¿Puedo reservar con una seña?",
@@ -465,11 +469,11 @@
         "title": "Hay sonidos que se escuchan. Y otros que nos acompañan mucho después.",
         "text": "Cuatro días para descubrir nuevas formas de escuchar, resonar y compartir. Una experiencia de formación y encuentro en plena naturaleza.",
         "lines": [
-          "UMBRAL – El Viaje de la Escucha",
+          "HUELLA SONORA – El Viaje de la Escucha",
           "8 al 11 de enero de 2027",
           "Pueblo Mágico · Sierras de Córdoba"
         ],
-        "cta": "Quiero vivir UMBRAL",
+        "cta": "Quiero vivir HUELLA SONORA",
         "secondary": "Resolver una consulta por WhatsApp"
       }
     },
@@ -1556,7 +1560,7 @@
           "startDate": "2027-01-08",
           "endDate": "2027-01-11",
           "statusLabel": "CUPOS LIMITADOS",
-          "title": "UMBRAL · El Viaje de la Escucha",
+          "title": "HUELLA SONORA · El Viaje de la Escucha",
           "labels": ["RETIRO FORMATIVO", "SONIDOS ARMÓNICOS"],
           "desc": "Retiro formativo de sonidos armónicos, del 8 al 11 de enero de 2027. Alojamiento y pensión completa. Inscripción anticipada $690.000. Organiza SonCura. Facilita Exequiel Lopez Benavidez.",
           "btn": "Conocer el retiro",
@@ -3351,13 +3355,13 @@
     "umbral": {
       "skip": "Skip to content",
       "seo": {
-        "title": "UMBRAL – Formative Harmonic Sound Retreat | Pueblo Mágico",
-        "description": "UMBRAL is an immersive training in harmonic sound, voice, didgeridoo and conscious listening. 8–11 January 2027 in the Sierras of Córdoba. Lodging and full board included."
+        "title": "HUELLA SONORA – Formative Harmonic Sound Retreat | Pueblo Mágico",
+        "description": "HUELLA SONORA is an immersive training in harmonic sound, voice, didgeridoo and conscious listening. 8–11 January 2027 in the Sierras of Córdoba. Lodging and full board included."
       },
       "nav": {
-        "ariaLabel": "UMBRAL sections",
+        "ariaLabel": "HUELLA SONORA sections",
         "pageEyebrow": "Retreat",
-        "pageTitle": "UMBRAL",
+        "pageTitle": "HUELLA SONORA",
         "sections": [
           {
             "id": "experiencia",
@@ -3389,12 +3393,12 @@
           }
         ]
       },
-      "whatsapp": "Hello, I would like information to reserve my place at UMBRAL – The Journey of Listening, 8–11 January 2027.",
+      "whatsapp": "Hello, I would like information to reserve my place at HUELLA SONORA – The Journey of Listening, 8–11 January 2027.",
       "stickyCta": "Reserve my place",
       "hero": {
         "partners": "SonCura × Pueblo Mágico",
         "category": "Formative retreat · Harmonic sound",
-        "title": "UMBRAL",
+        "title": "HUELLA SONORA",
         "subtitle": "The Journey of Listening",
         "phrase": [
           "From sound to listening.",
@@ -3424,7 +3428,7 @@
         "title": "What if learning to listen changed the way you feel the world?",
         "paragraphs": [
           "We hear a lot and listen very little.",
-          "UMBRAL begins with a simple, deep invitation: to recover listening as a form of presence, exploration and self-knowledge.",
+          "HUELLA SONORA begins with a simple, deep invitation: to recover listening as a form of presence, exploration and self-knowledge.",
           "For four days we enter the world of harmonic sound to find new ways of relating to the voice, the body, the breath, the instruments and silence.",
           "It is not only about receiving a sound experience.",
           "It is about learning to create it, understand it and sustain it.",
@@ -3455,7 +3459,7 @@
           },
           {
             "index": "02",
-            "title": "The voice and harmonics",
+            "title": "The voice and harmonic reproduction",
             "text": "The voice as an instrument of expression, resonance and inner exploration.",
             "practices": [
               "Harmonic singing.",
@@ -3470,7 +3474,7 @@
           {
             "index": "03",
             "title": "The didgeridoo and the breath",
-            "text": "A practical approach to the didgeridoo and the expressive possibilities of the breath. Didgeridoos are loaned during the practices. They are not given as a gift.",
+            "text": "An introduction to playing the didgeridoo and circular breathing. Didgeridoos are provided during practice and each participant takes one home as a gift.",
             "practices": [
               "Introduction to the instrument.",
               "Producing basic sounds.",
@@ -3502,11 +3506,11 @@
       },
       "takeaways": {
         "title": "More than an experience: tools to keep exploring",
-        "text": "UMBRAL offers learning that is born from practice. Through the retreat you can recognize your own sonic imprint, widen your expressive resources and try different ways of creating and sharing sound.",
+        "text": "HUELLA SONORA offers learning that is born from practice. Through the retreat you can recognize your own sonic imprint, widen your expressive resources and try different ways of creating and sharing sound.",
         "items": [
           "A clearer awareness of your listening and sonic perception.",
           "First tools for harmonic singing.",
-          "Practical experience with the didgeridoo.",
+          "Practical didgeridoo experience and your own instrument as a gift.",
           "Resources of breath, voice and rhythm.",
           "Exploration of soundscapes and collective ensembles.",
           "Initial tools to design and hold a sound immersion.",
@@ -3560,7 +3564,7 @@
               },
               {
                 "when": "Afternoon",
-                "what": "Harmonic singing, vocal exploration and sung meditation."
+                "what": "Voice and harmonic reproduction, vocal exploration and sung meditation."
               },
               {
                 "when": "Night",
@@ -3576,7 +3580,7 @@
             "slots": [
               {
                 "when": "Morning",
-                "what": "Didgeridoo and breath."
+                "what": "Introduction to didgeridoo and circular breathing."
               },
               {
                 "when": "Afternoon",
@@ -3630,12 +3634,12 @@
         "kicker": "Facilitator",
         "title": "Who accompanies this journey",
         "name": "Exequiel Lopez Benavidez",
-        "bio": "Musician, sound therapist, yoga instructor and apprentice of life.",
+        "bio": "Musician, director and trainer in sound therapies for over 10 years, sound therapist, yoga instructor and apprentice of life.",
         "projectLabel": "Project",
         "project": "SonCura – Caminos del Sonido",
         "paragraphs": [
           "Through SonCura, Exequiel invites us to explore sound as a path of listening, presence and self-knowledge.",
-          "At UMBRAL he accompanies a formative experience where practice, sensitivity and collective exploration meet."
+          "At HUELLA SONORA he accompanies a formative experience where practice, sensitivity and collective exploration meet."
         ]
       },
       "place": {
@@ -3643,7 +3647,7 @@
         "paragraphs": [
           "In the heart of the Sierras Grandes of Córdoba, Pueblo Mágico invites us to inhabit nature differently.",
           "Surrounded by mountains, river, streams and open landscape, the eco-center offers a place to rest, meet and reconnect with what is essential.",
-          "During UMBRAL, the mountain is part of the learning.",
+          "During HUELLA SONORA, the mountain is part of the learning.",
           "The sound of water, the wind in the grasses, the birds and the silence of the landscape accompany the listening practices."
         ],
         "captions": [
@@ -3652,7 +3656,7 @@
           "The river.",
           "The practice hall.",
           "The stone refuge.",
-          "Aerial view of the domes on the grounds."
+          "The domes in their natural setting."
         ]
       },
       "stay": {
@@ -3698,17 +3702,17 @@
           },
           {
             "kicker": "Instruments",
-            "title": "On loan, during the practices",
-            "text": "Instruments are provided for the practices, including the didgeridoo, so you do not need to buy one.",
+            "title": "Your didgeridoo as a gift",
+            "text": "An introduction to playing the didgeridoo and circular breathing. Didgeridoos are provided during practice and each participant takes one home as a gift.",
             "items": [
-              "A didgeridoo on loan for practice.",
-              "It is not one of the gifts of the retreat."
+              "Instruments available during practice.",
+              "One didgeridoo as a gift for each participant."
             ],
             "imageAlt": "Didgeridoo practice during a sound gathering.",
             "caption": "Didgeridoo practice during a sound gathering."
           }
         ],
-        "loan": "Note: the didgeridoo is loaned for practice and is not one of the gifts of the retreat."
+        "loan": "Each participant takes home a didgeridoo to continue exploring after the retreat."
       },
       "audience": {
         "title": "For people who feel that sound still has something to teach them",
@@ -3722,14 +3726,14 @@
         ]
       },
       "investment": {
-        "title": "Your place at UMBRAL",
+        "title": "Your place at HUELLA SONORA",
         "subtitle": "An integral experience of training, nature and sound exploration.",
-        "earlyLabel": "Early registration — Early Bird",
+        "earlyLabel": "Early Bird · bank transfer or cash",
         "earlyPrice": "$690,000 ARS",
         "regularPrice": "$800,000 ARS",
         "save": "You save $110,000.",
         "promo": "Available until 10 December 2026, or for the first 8 people to register, whichever comes first.",
-        "regularLabel": "Regular price",
+        "regularLabel": "Regular price · bank transfer or cash",
         "regularAmount": "$800,000 ARS",
         "regularNote": "Available once the early-registration stage ends.",
         "includesTitle": "What your investment includes",
@@ -3740,25 +3744,29 @@
           "All meals.",
           "The complete training.",
           "Every activity and experience in the program.",
-          "Instruments on loan for the practices.",
+          "A didgeridoo as a gift and instruments for practice.",
           "Supporting reading material."
         ],
         "depositTitle": "Reserve with a deposit",
         "depositPrice": "$190,000 ARS",
         "depositLines": [
-          "For the Early Bird rate: an initial deposit of $190,000.",
+          "For Early Bird by bank transfer or cash: initial deposit of $190,000.",
           "Remaining balance: $500,000.",
           "The balance can be completed in partial payments before the retreat begins."
         ],
         "cta": "Reserve my place with $190,000",
         "ctaSecondary": "Ask on WhatsApp",
-        "disclaimer": "This button opens WhatsApp to arrange the reservation. It does not charge the deposit automatically. The cancellation policy, the exact payment dates and the reservation process will be confirmed by the organizers before they become final conditions."
+        "disclaimer": "This button opens WhatsApp to arrange the reservation. It does not charge the deposit automatically. The cancellation policy, the exact payment dates and the reservation process will be confirmed by the organizers before they become final conditions.",
+        "cardLabel": "Credit card · 3 interest-free installments",
+        "cardEarly": "Early Bird: 3 installments of $276,000 · Total $828,000",
+        "cardRegular": "Regular: 3 installments of $320,000 · Total $960,000",
+        "flexibility": "If this experience truly resonates with you, we are open to discussing other payment options so you can join us. Get in touch!"
       },
       "faq": {
         "title": "Questions",
         "items": [
           {
-            "q": "When does UMBRAL take place?",
+            "q": "When does HUELLA SONORA take place?",
             "a": "From Friday 8 to Monday 11 January 2027, for four days and three nights."
           },
           {
@@ -3771,19 +3779,19 @@
           },
           {
             "q": "Do I need to bring instruments?",
-            "a": "Instruments will be available on loan during the practices, including the didgeridoo."
+            "a": "No. Instruments are provided during practice."
           },
           {
             "q": "Is the didgeridoo included as a gift?",
-            "a": "No. It is provided for the training practices."
+            "a": "Yes. Each participant takes home a didgeridoo as a gift."
           },
           {
             "q": "What does registration include?",
-            "a": "Lodging, meals, the complete training, activities, practices and supporting reading material."
+            "a": "Lodging, meals, the complete training, activities, practices and supporting reading material. A didgeridoo is included as a gift."
           },
           {
             "q": "How much does it cost?",
-            "a": "The early price is $690,000 and the regular price is $800,000."
+            "a": "By bank transfer or cash: ARS 690,000 early or 800,000 regular. By card: 3 interest-free installments of ARS 276,000 or 320,000 respectively."
           },
           {
             "q": "Can I reserve with a deposit?",
@@ -3813,11 +3821,11 @@
         "title": "There are sounds we hear. And others that stay with us long after.",
         "text": "Four days to discover new ways of listening, resonating and sharing. A training and a gathering in nature.",
         "lines": [
-          "UMBRAL – The Journey of Listening",
+          "HUELLA SONORA – The Journey of Listening",
           "8–11 January 2027",
           "Pueblo Mágico · Sierras of Córdoba"
         ],
-        "cta": "I want to live UMBRAL",
+        "cta": "I want to live HUELLA SONORA",
         "secondary": "Ask a question on WhatsApp"
       }
     },
@@ -4904,7 +4912,7 @@
           "startDate": "2027-01-08",
           "endDate": "2027-01-11",
           "statusLabel": "LIMITED PLACES",
-          "title": "UMBRAL · The Journey of Listening",
+          "title": "HUELLA SONORA · The Journey of Listening",
           "labels": ["FORMATIVE RETREAT", "HARMONIC SOUND"],
           "desc": "A formative harmonic-sound retreat, 8–11 January 2027. Lodging and full board. Early registration $690,000. Organized by SonCura. Facilitated by Exequiel Lopez Benavidez.",
           "btn": "View the retreat",
