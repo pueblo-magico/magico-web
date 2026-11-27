@@ -311,15 +311,20 @@ const Umbral: React.FC = () => {
             </div>
             <div>
               <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{copy.facilitator.projectLabel}</p>
-              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" loading="lazy" decoding="async" className="mt-4 h-auto max-h-40 w-40 rounded-lg object-contain" />
+              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" loading="lazy" decoding="async" className="mt-4 h-auto max-h-32 w-36 object-contain mix-blend-multiply" />
               <p className="serif-title mt-3 text-3xl text-[#1C3328]">{copy.facilitator.project}</p>
-              <div className="mt-5 flex flex-col gap-3 text-sm font-medium text-[#1C3328]">
-                <a href="https://www.instagram.com/soncura_caminosdelsonido/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 break-all">Instagram · @Soncura_caminosdelsonido</a>
-                <a href="https://www.instagram.com/exequiel.lopezzz/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Instagram · @Exequiel.lopezzz</a>
-              </div>
+
               {copy.facilitator.paragraphs.map((paragraph: string) => (
                 <p key={paragraph} className="mt-5 leading-8 text-[#3C463F]">{paragraph}</p>
               ))}
+              <div className="mt-8 flex flex-wrap gap-3 border-t border-[#1C2822]/15 pt-6">
+                {['Soncura_caminosdelsonido', 'Exequiel.lopezzz'].map(handle => (
+                  <a key={handle} href={`https://www.instagram.com/${handle}/`} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#1C3328]/25 px-4 py-2.5 text-xs font-medium text-[#1C3328] transition-colors hover:bg-[#1C3328] hover:text-white">
+                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="shrink-0"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+                    <span className="break-all">@{handle}</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </section>
