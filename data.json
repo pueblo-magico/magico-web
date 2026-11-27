@@ -70,7 +70,7 @@
         "early": "Inscripción anticipada desde $690.000",
         "cta": "Reservar mi lugar",
         "ctaSecondary": "Explorar la experiencia",
-        "imageAlt": "Círculo de práctica con cuencos en el salón de Pueblo Mágico, abierto a la sierra"
+        "imageAlt": "Didgeridoo sobre una roca al atardecer"
       },
       "sense": {
         "title": "¿Y si aprender a escuchar cambiara tu manera de sentir el mundo?",
@@ -83,8 +83,8 @@
           "De reconocer nuestra propia huella sonora y descubrir cómo el sonido puede convertirse en una herramienta de expresión, encuentro y acompañamiento."
         ],
         "quote": "No venís solamente a escuchar sonidos. Venís a descubrir cómo habitan en vos.",
-        "imageAlt": "Macizo de las Sierras Grandes al amanecer",
-        "caption": "Sierras Grandes de Córdoba, el paisaje de UMBRAL."
+        "imageAlt": "Círculo de práctica sonora al aire libre",
+        "caption": "Un encuentro de escucha compartida en la naturaleza."
       },
       "explore": {
         "kicker": "La formación",
@@ -102,8 +102,8 @@
               "Escucha de la naturaleza.",
               "Exploración del silencio."
             ],
-            "imageAlt": "Río de montaña en las sierras",
-            "caption": "El río, uno de los paisajes sonoros del territorio."
+            "imageAlt": "Baño sonoro con didgeridoo",
+            "caption": "Escucha y resonancia en una práctica sonora."
           },
           {
             "index": "02",
@@ -116,8 +116,8 @@
               "Prácticas de canto de tradición mongola incluidas en la propuesta formativa.",
               "Círculos de armónicos."
             ],
-            "imageAlt": "Práctica grupal en el salón de piedra de Pueblo Mágico",
-            "caption": "Práctica en el salón de piedra."
+            "imageAlt": "Círculo de práctica al aire libre",
+            "caption": "Exploración sonora en comunidad."
           },
           {
             "index": "03",
@@ -131,8 +131,8 @@
               "Introducción a la respiración circular.",
               "Exploración individual y colectiva."
             ],
-            "imageAlt": "Horizonte de las Sierras Grandes",
-            "caption": "La sierra, donde la respiración encuentra silencio."
+            "imageAlt": "Práctica con didgeridoo",
+            "caption": "El didgeridoo como instrumento de exploración."
           },
           {
             "index": "04",
@@ -147,8 +147,8 @@
               "Orquesta de armónicos.",
               "Integración de herramientas para guiar una experiencia sonora."
             ],
-            "imageAlt": "Fogón nocturno en Pueblo Mágico",
-            "caption": "El fogón, donde el encuentro sigue después de la práctica."
+            "imageAlt": "Encuentro grupal con instrumentos",
+            "caption": "Instrumentos y creación colectiva."
           }
         ]
       },
@@ -272,10 +272,10 @@
           "Encuentros alrededor del fuego"
         ],
         "captions": [
-          "Práctica sonora en el salón, con cuencos en el centro del círculo.",
-          "Fogón de Pueblo Mágico al caer la noche.",
-          "El río entre las sierras.",
-          "Habitación compartida del eco-lodge."
+          "Encuentro grupal al aire libre.",
+          "Baño sonoro con didgeridoo.",
+          "Círculo de práctica en la naturaleza.",
+          "Fogón de Pueblo Mágico al caer la noche."
         ]
       },
       "facilitator": {
@@ -356,8 +356,8 @@
               "Didgeridoo en préstamo para practicar.",
               "No forma parte de los obsequios del retiro."
             ],
-            "imageAlt": "Práctica grupal en el salón de piedra",
-            "caption": "Las prácticas suceden en los espacios del eco-lodge."
+            "imageAlt": "Práctica con didgeridoo durante un encuentro sonoro.",
+            "caption": "Práctica con didgeridoo durante un encuentro sonoro."
           }
         ],
         "loan": "Aclaración: el didgeridoo se presta para practicar y no forma parte de los obsequios del retiro."
@@ -3418,7 +3418,7 @@
         "early": "Early registration from $690,000",
         "cta": "Reserve my place",
         "ctaSecondary": "Explore the experience",
-        "imageAlt": "A practice circle with singing bowls in the hall at Pueblo Mágico, open to the sierra"
+        "imageAlt": "Didgeridoo on a rock at sunset"
       },
       "sense": {
         "title": "What if learning to listen changed the way you feel the world?",
@@ -3431,8 +3431,8 @@
           "About recognizing your own sonic imprint and discovering how sound can become a tool for expression, encounter and accompaniment."
         ],
         "quote": "You do not come only to hear sounds. You come to discover how they live in you.",
-        "imageAlt": "The Sierras Grandes massif at dawn",
-        "caption": "The Sierras Grandes of Córdoba, the landscape of UMBRAL."
+        "imageAlt": "Outdoor sound practice circle",
+        "caption": "A shared listening experience in nature."
       },
       "explore": {
         "kicker": "The training",
@@ -3450,8 +3450,8 @@
               "Listening to nature.",
               "Exploring silence."
             ],
-            "imageAlt": "A mountain river in the sierras",
-            "caption": "The river, one of the sonic landscapes of the land."
+            "imageAlt": "Didgeridoo sound bath",
+            "caption": "Listening and resonance in sound practice."
           },
           {
             "index": "02",
@@ -3464,8 +3464,8 @@
               "Practices of Mongolian-tradition singing included in the formative proposal.",
               "Harmonic circles."
             ],
-            "imageAlt": "A group practice in the stone hall at Pueblo Mágico",
-            "caption": "Practice in the stone hall."
+            "imageAlt": "Outdoor practice circle",
+            "caption": "Exploring sound together."
           },
           {
             "index": "03",
@@ -3479,8 +3479,8 @@
               "Introduction to circular breathing.",
               "Individual and collective exploration."
             ],
-            "imageAlt": "The horizon of the Sierras Grandes",
-            "caption": "The sierra, where the breath meets silence."
+            "imageAlt": "Didgeridoo practice",
+            "caption": "The didgeridoo as an instrument of exploration."
           },
           {
             "index": "04",
@@ -3495,8 +3495,8 @@
               "Harmonic orchestra.",
               "Tools for guiding a sound experience."
             ],
-            "imageAlt": "The night fire at Pueblo Mágico",
-            "caption": "The fire, where the gathering continues after practice."
+            "imageAlt": "Group gathering with instruments",
+            "caption": "Instruments and collective creation."
           }
         ]
       },
@@ -3620,10 +3620,10 @@
           "Gatherings around the fire"
         ],
         "captions": [
-          "Sound practice in the hall, with bowls at the center of the circle.",
-          "The fire at Pueblo Mágico after dark.",
-          "The river in the sierras.",
-          "A shared room in the eco-lodge."
+          "Outdoor group gathering.",
+          "Didgeridoo sound bath.",
+          "Practice circle in nature.",
+          "The fire at Pueblo Mágico after dark."
         ]
       },
       "facilitator": {
@@ -3704,8 +3704,8 @@
               "A didgeridoo on loan for practice.",
               "It is not one of the gifts of the retreat."
             ],
-            "imageAlt": "A group practice in the stone hall",
-            "caption": "The practices take place in the spaces of the eco-lodge."
+            "imageAlt": "Didgeridoo practice during a sound gathering.",
+            "caption": "Didgeridoo practice during a sound gathering."
           }
         ],
         "loan": "Note: the didgeridoo is loaned for practice and is not one of the gifts of the retreat."
