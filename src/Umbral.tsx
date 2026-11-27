@@ -12,8 +12,9 @@ const MOUNTAIN = { src: '/uploads/reforestacion/montana-hero.webp', w: 2048, h: 
 const AERIAL = { src: '/uploads/campoentero.webp', w: 1920, h: 1080 };
 const RIVER = { src: '/uploads/sunset-rio-rio-real.webp', w: 1024, h: 1536 };
 const FIRE = { src: '/uploads/fogon_nocturno.webp', w: 1920, h: 1288 };
-const ROOM = { src: '/uploads/habitaciones.webp', w: 1080, h: 720 };
-const FOOD = { src: '/uploads/comida.jpg', w: 1259, h: 535 };
+const DOMES = { src: '/uploads/domos.webp', w: 1200, h: 800 };
+const DOME_VIEW = { src: '/uploads/flyfishing-domos-aereo.jpg', w: 1200, h: 800 };
+const FOOD = { src: '/uploads/propuestas/jesus-cordoba-gastronomia-v2.webp', w: 1200, h: 800 };
 const REFUGE = { src: '/uploads/refu.webp', w: 549, h: 366 };
 
 const SOUND_HERO = { src: '/exe.jpeg', w: 1248, h: 1248 };
@@ -24,8 +25,8 @@ const SOUND_GROUP = { src: '/exe5.jpeg', w: 1280, h: 853 };
 const DIDGERIDOO = { src: '/exe6.jpeg', w: 853, h: 1280 };
 const EXPLORE_PHOTOS = [SOUND_BATH, SOUND_CIRCLE, DIDGERIDOO, SOUND_GROUP];
 const FEEL_PHOTOS = [SOUND_GROUP, SOUND_BATH, SOUND_CIRCLE, FIRE];
-const PLACE_PHOTOS = [AERIAL, MOUNTAIN, RIVER, HALL, REFUGE, ROOM];
-const STAY_PHOTOS = [ROOM, FOOD, HALL, DIDGERIDOO];
+const PLACE_PHOTOS = [AERIAL, MOUNTAIN, RIVER, HALL, REFUGE, DOME_VIEW];
+const STAY_PHOTOS = [DOMES, FOOD, HALL, DIDGERIDOO];
 const OG_IMAGE = `${SITE_URL}${SOUND_HERO.src}`;
 
 const btn = 'inline-flex items-center justify-center rounded-full bg-[#D4AF37] px-7 py-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]';
