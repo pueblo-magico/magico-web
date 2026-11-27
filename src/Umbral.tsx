@@ -120,7 +120,7 @@ const Umbral: React.FC = () => {
         performer: { '@type': 'Person', name: 'Exequiel Lopez Benavidez' },
         offers: {
           '@type': 'Offer',
-          price: '690000',
+          price: '710000',
           priceCurrency: 'ARS',
           availability: 'https://schema.org/LimitedAvailability',
           url: pageUrl,
@@ -197,7 +197,6 @@ const Umbral: React.FC = () => {
             <Reveal delay="2">
               <figure>
                 <Frame photo={MOUNTAIN} alt={copy.sense.imageAlt} className="h-[68vh] min-h-[420px] w-full" />
-                <figcaption className="mt-4 text-sm leading-6 text-[#6A5344]">{copy.sense.caption}</figcaption>
               </figure>
             </Reveal>
           </div>
@@ -219,7 +218,6 @@ const Umbral: React.FC = () => {
               <article key={item.title} className={`grid items-center gap-8 md:grid-cols-2 md:gap-14 ${index % 2 === 1 ? 'md:[&>figure]:order-2' : ''}`}>
                 <figure>
                   <Frame photo={EXPLORE_PHOTOS[index]} alt={item.imageAlt} className="h-[52vh] min-h-[320px] w-full" />
-                  <figcaption className="mt-3 text-sm text-[#6A5344]">{item.caption}</figcaption>
                 </figure>
                 <div>
                   <p className="serif-title text-3xl text-[#8A9A84]">{item.index}</p>
@@ -295,7 +293,6 @@ const Umbral: React.FC = () => {
               {FEEL_PHOTOS.map((photo, index) => (
                 <figure key={copy.feel.captions[index]}>
                   <Frame photo={photo} alt={copy.feel.captions[index]} className="h-72 w-full md:h-96" />
-                  <figcaption className="mt-3 px-1 text-sm text-[#F6F1E6]/70">{copy.feel.captions[index]}</figcaption>
                 </figure>
               ))}
             </div>
@@ -333,7 +330,6 @@ const Umbral: React.FC = () => {
               {PLACE_PHOTOS.map((photo, index) => (
                 <figure key={copy.place.captions[index]} className={index === 0 ? 'md:col-span-2' : ''}>
                   <Frame photo={photo} alt={copy.place.captions[index]} className={index === 0 ? 'h-[62vh] min-h-[380px] w-full' : 'h-80 w-full'} />
-                  <figcaption className="mt-3 px-1 text-sm text-[#6A5344]">{copy.place.captions[index]}</figcaption>
                 </figure>
               ))}
             </div>
@@ -348,7 +344,6 @@ const Umbral: React.FC = () => {
               <article key={block.title} className="grid items-center gap-8 md:grid-cols-2 md:gap-14">
                 <figure className={index % 2 === 1 ? 'md:order-2' : ''}>
                   <Frame photo={STAY_PHOTOS[index]} alt={block.imageAlt} className="h-80 w-full md:h-[420px]" />
-                  <figcaption className="mt-3 text-sm text-[#6A5344]">{block.caption}</figcaption>
                 </figure>
                 <div>
                   <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#6A5344]">{block.kicker}</p>
