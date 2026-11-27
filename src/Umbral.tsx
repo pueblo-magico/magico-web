@@ -13,7 +13,7 @@ const AERIAL = { src: '/uploads/campoentero.webp', w: 1920, h: 1080 };
 const RIVER = { src: '/uploads/sunset-rio-rio-real.webp', w: 1024, h: 1536 };
 const FIRE = { src: '/uploads/fogon_nocturno.webp', w: 1920, h: 1288 };
 const DOMES = { src: '/uploads/domos.webp', w: 1200, h: 800 };
-const DOME_VIEW = { src: '/uploads/flyfishing-domos-aereo.jpg', w: 1200, h: 800 };
+const DOME_VIEW = { src: '/uploads/domos_2.jpg', w: 1200, h: 800 };
 const FOOD = { src: '/uploads/propuestas/jesus-cordoba-gastronomia-v2.webp', w: 1200, h: 800 };
 const REFUGE = { src: '/uploads/refu.webp', w: 549, h: 366 };
 
@@ -24,9 +24,9 @@ const SOUND_BATH = { src: '/exe4.jpeg', w: 857, h: 1280 };
 const SOUND_GROUP = { src: '/exe5.jpeg', w: 1280, h: 853 };
 const DIDGERIDOO = { src: '/exe6.jpeg', w: 853, h: 1280 };
 const EXPLORE_PHOTOS = [SOUND_BATH, SOUND_CIRCLE, DIDGERIDOO, SOUND_GROUP];
-const FEEL_PHOTOS = [SOUND_GROUP, SOUND_BATH, SOUND_CIRCLE, FIRE];
+const FEEL_PHOTOS = [HALL, FIRE, RIVER, MOUNTAIN];
 const PLACE_PHOTOS = [AERIAL, MOUNTAIN, RIVER, HALL, REFUGE, DOME_VIEW];
-const STAY_PHOTOS = [DOMES, FOOD, HALL, DIDGERIDOO];
+const STAY_PHOTOS = [DOMES, FOOD, HALL, { src: '/uploads/bienestar-balance.webp', w: 1920, h: 1280 }];
 const OG_IMAGE = `${SITE_URL}${SOUND_HERO.src}`;
 
 const btn = 'inline-flex items-center justify-center rounded-full bg-[#D4AF37] px-7 py-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1C2822] transition-colors hover:bg-[#E7D7A8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#F6F1E6]';
@@ -102,7 +102,7 @@ const Umbral: React.FC = () => {
       createdScript.textContent = JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'Event',
-        name: 'UMBRAL — El Viaje de la Escucha',
+        name: 'HUELLA SONORA — El Viaje de la Escucha',
         description: copy.seo.description,
         startDate: '2027-01-08T15:00:00-03:00',
         endDate: '2027-01-11T14:00:00-03:00',
@@ -164,7 +164,7 @@ const Umbral: React.FC = () => {
           <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-16 pt-32 md:px-10 md:pb-24">
             <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#E7D7A8]">{copy.hero.partners}</p>
             <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.28em] text-[#F6F1E6]/75">{copy.hero.category}</p>
-            <h1 className="serif-title mt-5 text-[clamp(4.4rem,14vw,9rem)] leading-[0.82] tracking-[0.06em] text-[#F6F1E6]">{copy.hero.title}</h1>
+            <h1 className="serif-title mt-5 text-[clamp(3.2rem,9vw,7rem)] leading-[0.82] tracking-[0.06em] text-[#F6F1E6]">{copy.hero.title}</h1>
             <p className="serif-title mt-4 text-[clamp(1.7rem,3.2vw,2.7rem)] italic leading-tight text-[#E7D7A8]">{copy.hero.subtitle}</p>
             <p className="serif-title mt-6 max-w-xl text-2xl leading-snug text-[#F6F1E6] md:text-3xl">
               {copy.hero.phrase.map((line: string) => <span key={line} className="block">{line}</span>)}
@@ -196,7 +196,7 @@ const Umbral: React.FC = () => {
             </Reveal>
             <Reveal delay="2">
               <figure>
-                <Frame photo={SOUND_CIRCLE} alt={copy.sense.imageAlt} className="h-[68vh] min-h-[420px] w-full" />
+                <Frame photo={MOUNTAIN} alt={copy.sense.imageAlt} className="h-[68vh] min-h-[420px] w-full" />
                 <figcaption className="mt-4 text-sm leading-6 text-[#6A5344]">{copy.sense.caption}</figcaption>
               </figure>
             </Reveal>
@@ -389,6 +389,11 @@ const Umbral: React.FC = () => {
                 <span className="ml-3 text-[#E7D7A8]">{copy.investment.save}</span>
               </p>
               <p className="mt-4 max-w-md text-sm leading-7 text-[#F6F1E6]/75">{copy.investment.promo}</p>
+              <div className="mt-8 rounded-2xl border border-[#E7D7A8]/40 p-5">
+                <p className="text-sm font-semibold text-[#E7D7A8]">{copy.investment.cardLabel}</p>
+                <p className="mt-3 text-lg">{copy.investment.cardEarly}</p>
+                <p className="mt-2 text-lg">{copy.investment.cardRegular}</p>
+              </div>
               <div className="mt-10 border-t border-white/15 pt-8">
                 <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[#E7D7A8]">{copy.investment.regularLabel}</p>
                 <p className="serif-title mt-3 text-4xl">{copy.investment.regularAmount}</p>
@@ -413,6 +418,7 @@ const Umbral: React.FC = () => {
                 <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={btn}>{copy.investment.cta}</a>
                 <a href={reserveHref} target="_blank" rel="noopener noreferrer" className={`${btnGhost} text-[#F6F1E6]`}>{copy.investment.ctaSecondary}</a>
               </div>
+              <p className="mt-6 text-base leading-7 text-[#E7D7A8]">{copy.investment.flexibility}</p>
               <p className="mt-6 text-xs leading-6 text-[#F6F1E6]/60">{copy.investment.disclaimer}</p>
             </div>
           </div>
@@ -439,7 +445,7 @@ const Umbral: React.FC = () => {
         </section>
 
         <section className="relative overflow-hidden bg-[#101A15] text-[#F6F1E6]">
-          <img src={SOUND_HERO.src} alt="" width={SOUND_HERO.w} height={SOUND_HERO.h} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+          <img src={MOUNTAIN.src} alt="" width={MOUNTAIN.w} height={MOUNTAIN.h} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-[#101A15]/65" />
           <div className="relative mx-auto max-w-3xl px-6 py-28 text-center md:py-36">
             <h2 className="serif-title text-4xl leading-tight md:text-6xl">{copy.closing.title}</h2>
