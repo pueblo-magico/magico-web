@@ -119,6 +119,14 @@ export const ROUTES = [
     canonical: 'https://experienciamagico.com/brote-ronda-de-mujeres',
   },
   {
+    path: '/retiros/umbral-el-viaje-de-la-escucha',
+    title: 'HUELLA SONORA – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico',
+    description: 'Viví HUELLA SONORA, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos.',
+    image: 'https://experienciamagico.com/exe.jpeg',
+    imageAlt: 'Didgeridoo sobre una roca al atardecer',
+    canonical: 'https://experienciamagico.com/retiros/umbral-el-viaje-de-la-escucha',
+  },
+  {
     path: '/festival-raiz-sonora',
     title: 'Raíz Sonora · 31 de octubre | Pueblo Mágico',
     description: 'Cuatro artistas y ocho horas de música electrónica, house, trance y tambores, con Jam de AcroYoga, naturaleza y encuentro en Los Gigantes.',
@@ -277,6 +285,23 @@ function buildJsonLD(route) {
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: { '@type': 'Place', name: 'Los Gigantes, Córdoba', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
       organizer: { '@type': 'Organization', name: 'Cuenca Lunar' },
+      url: route.canonical,
+      image: route.image,
+    })}</script>`;
+  }
+  if (route.path === '/retiros/umbral-el-viaje-de-la-escucha') {
+    return `<script id="umbral-event-schema" type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: 'HUELLA SONORA — El Viaje de la Escucha',
+      description: route.description,
+      startDate: '2027-01-08T15:00:00-03:00',
+      endDate: '2027-01-11T14:00:00-03:00',
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type': 'Place', name: 'Pueblo Mágico', address: { '@type': 'PostalAddress', addressLocality: 'Los Gigantes', addressRegion: 'Córdoba', addressCountry: 'AR' } },
+      organizer: { '@type': 'Organization', name: 'SonCura – Caminos del Sonido' },
+      performer: { '@type': 'Person', name: 'Exequiel Lopez Benavidez' },
       url: route.canonical,
       image: route.image,
     })}</script>`;

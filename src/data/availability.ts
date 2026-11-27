@@ -22,8 +22,17 @@ export const BLOCKED_DATES_REFUGIO: string[] = [];
 // equipo confirme caso por caso si hay lugar (puede que solo se use un domo
 // del evento, o ninguno, y quede libre igual).
 // ⚠️ Manual por ahora — mantené esta lista al día con la agenda de eventos.
-export const RETIRO_DATES_DOMO: string[] = [];
-export const RETIRO_DATES_REFUGIO: string[] = [];
+export const RETIRO_DATES_DOMO: string[] = [
+  // UMBRAL · 8 al 11 de enero de 2027 (noches del viernes, sábado y domingo)
+  '2027-01-08',
+  '2027-01-09',
+  '2027-01-10',
+];
+export const RETIRO_DATES_REFUGIO: string[] = [
+  '2027-01-08',
+  '2027-01-09',
+  '2027-01-10',
+];
 
 // Los domos recién se pueden reservar desde esta fecha (antes no están
 // habilitados) — en el calendario los días anteriores salen como "sin lugar"

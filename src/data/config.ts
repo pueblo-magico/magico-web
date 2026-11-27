@@ -7,6 +7,8 @@ export const WA_VOLUNTEERS = '5493512272919';
 export const WA_GONDOR = '5491157300099';
 export const WA_VUELO_CONDOR = '5493518782085';
 export const WA_CICLO_VITAL_FEMENINO = '34621076042';
+// Línea del sitio hasta que SonCura comparta un WhatsApp propio para UMBRAL.
+export const WA_UMBRAL = WA_MAGICO;
 
 export const SITE_URL = 'https://experienciamagico.com';
 

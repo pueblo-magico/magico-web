@@ -1,5 +1,482 @@
 {
   "es": {
+    "umbral": {
+      "skip": "Saltar al contenido",
+      "seo": {
+        "title": "HUELLA SONORA – Retiro Formativo de Sonidos Armónicos | Pueblo Mágico",
+        "description": "Viví HUELLA SONORA, una formación inmersiva en sonidos armónicos, voz, didgeridoo y escucha consciente. Del 8 al 11 de enero de 2027 en las Sierras de Córdoba. Alojamiento y pensión completa incluidos."
+      },
+      "nav": {
+        "ariaLabel": "Secciones de HUELLA SONORA",
+        "pageEyebrow": "Retiro",
+        "pageTitle": "HUELLA SONORA",
+        "sections": [
+          {
+            "id": "experiencia",
+            "label": "La experiencia"
+          },
+          {
+            "id": "aprender",
+            "label": "Qué vas a aprender"
+          },
+          {
+            "id": "programa",
+            "label": "Programa"
+          },
+          {
+            "id": "facilitador",
+            "label": "Facilitador"
+          },
+          {
+            "id": "lugar",
+            "label": "Pueblo Mágico"
+          },
+          {
+            "id": "inversion",
+            "label": "Inversión"
+          },
+          {
+            "id": "preguntas",
+            "label": "Preguntas"
+          }
+        ]
+      },
+      "whatsapp": "Hola, quiero recibir información para reservar mi lugar en HUELLA SONORA – El Viaje de la Escucha, del 8 al 11 de enero de 2027.",
+      "stickyCta": "Reservar mi lugar",
+      "hero": {
+        "partners": "SonCura × Pueblo Mágico",
+        "category": "Retiro formativo · Sonidos armónicos",
+        "title": "HUELLA SONORA",
+        "subtitle": "El Viaje de la Escucha",
+        "phrase": [
+          "Del sonido a la escucha.",
+          "De la vibración a la presencia."
+        ],
+        "text": "Cuatro días de inmersión en el universo de los sonidos armónicos. Una experiencia para explorar tu voz, la respiración, el ritmo y la vibración, aprender nuevas herramientas y reconectar con la escucha profunda en plena naturaleza.",
+        "meta": [
+          {
+            "label": "Fechas",
+            "value": "8 al 11 de enero de 2027"
+          },
+          {
+            "label": "Duración",
+            "value": "4 días · 3 noches"
+          },
+          {
+            "label": "Lugar",
+            "value": "Pueblo Mágico · Sierras de Córdoba"
+          }
+        ],
+        "early": "Inscripción anticipada desde $710.000",
+        "cta": "Reservar mi lugar",
+        "ctaSecondary": "Explorar la experiencia",
+        "imageAlt": "Didgeridoo sobre una roca al atardecer"
+      },
+      "sense": {
+        "title": "¿Y si aprender a escuchar cambiara tu manera de sentir el mundo?",
+        "paragraphs": [
+          "Vivimos oyendo mucho y escuchando poco.",
+          "HUELLA SONORA nace de una invitación simple y profunda: recuperar la escucha como una forma de presencia, exploración y autoconocimiento.",
+          "Durante cuatro días nos sumergiremos en el universo de los sonidos armónicos para descubrir nuevas formas de relacionarnos con la voz, el cuerpo, la respiración, los instrumentos y el silencio.",
+          "No se trata solamente de recibir una experiencia sonora.",
+          "Se trata de aprender a crearla, comprenderla y sostenerla.",
+          "De reconocer nuestra propia huella sonora y descubrir cómo el sonido puede convertirse en una herramienta de expresión, encuentro y acompañamiento."
+        ],
+        "quote": "No venís solamente a escuchar sonidos. Venís a descubrir cómo habitan en vos.",
+        "imageAlt": "Paisaje de montaña en las Sierras Grandes",
+        "caption": "La naturaleza como espacio de escucha."
+      },
+      "explore": {
+        "kicker": "La formación",
+        "title": "Un universo de sonidos por descubrir",
+        "subtitle": "Una formación vivencial que integra conocimiento, práctica, escucha y exploración colectiva.",
+        "items": [
+          {
+            "index": "01",
+            "title": "La escucha y la resonancia",
+            "text": "Exploraremos las cualidades del sonido, la vibración, la escucha consciente y la percepción del entorno sonoro.",
+            "practices": [
+              "Escucha profunda.",
+              "Cualidades del sonido y resonancia.",
+              "Reconocimiento de la huella sonora personal.",
+              "Escucha de la naturaleza.",
+              "Exploración del silencio."
+            ],
+            "imageAlt": "Baño sonoro con didgeridoo",
+            "caption": "Escucha y resonancia en una práctica sonora."
+          },
+          {
+            "index": "02",
+            "title": "La voz y reproducción de armónicos",
+            "text": "La voz como instrumento de expresión, resonancia y exploración interior.",
+            "practices": [
+              "Canto de armónicos.",
+              "Meditación cantada.",
+              "Exploración vocal.",
+              "Prácticas de canto de tradición mongola incluidas en la propuesta formativa.",
+              "Círculos de armónicos."
+            ],
+            "imageAlt": "Círculo de práctica al aire libre",
+            "caption": "Exploración sonora en comunidad."
+          },
+          {
+            "index": "03",
+            "title": "El didgeridoo y la respiración",
+            "text": "Una introducción al uso del didgeridoo y a la respiración circular. Los didgeridoos se facilitan durante las prácticas y cada participante se lleva uno de regalo.",
+            "practices": [
+              "Introducción al instrumento.",
+              "Producción de sonidos básicos.",
+              "Sonidos guturales.",
+              "Respiración diafragmática.",
+              "Introducción a la respiración circular.",
+              "Exploración individual y colectiva."
+            ],
+            "imageAlt": "Práctica con didgeridoo",
+            "caption": "El didgeridoo como instrumento de exploración."
+          },
+          {
+            "index": "04",
+            "title": "El ritmo y la creación colectiva",
+            "text": "El sonido como lenguaje compartido.",
+            "practices": [
+              "Pulso y ritmo.",
+              "Velocidad y subdivisiones.",
+              "Ruedas de ritmo.",
+              "Ensambles sonoros.",
+              "Paisajes sonoros.",
+              "Orquesta de armónicos.",
+              "Integración de herramientas para guiar una experiencia sonora."
+            ],
+            "imageAlt": "Encuentro grupal con instrumentos",
+            "caption": "Instrumentos y creación colectiva."
+          }
+        ]
+      },
+      "takeaways": {
+        "title": "Más que una experiencia: herramientas para seguir explorando",
+        "text": "HUELLA SONORA propone un aprendizaje que nace de la práctica. A lo largo del retiro tendrás la oportunidad de reconocer tu propia huella sonora, ampliar tus recursos expresivos y experimentar diferentes formas de crear y compartir sonidos.",
+        "items": [
+          "Mayor conciencia de tu escucha y percepción sonora.",
+          "Primeras herramientas de canto de armónicos.",
+          "Experiencia práctica con didgeridoo y un instrumento propio de regalo.",
+          "Recursos de respiración, voz y ritmo.",
+          "Exploración de paisajes sonoros y ensambles colectivos.",
+          "Herramientas iniciales para diseñar y sostener una inmersión sonora.",
+          "Una experiencia personal de conexión con el sonido y la naturaleza."
+        ],
+        "note": "Esta formación no es una certificación profesional ni habilita para ejercer como terapeuta.",
+        "cta": "Reservar mi lugar"
+      },
+      "program": {
+        "title": "Cuatro días. Un viaje hacia la escucha.",
+        "intro": "Cada jornada propone una nueva dimensión de exploración. Desde la escucha consciente hasta la integración de una experiencia sonora propia.",
+        "note": "Los horarios son orientativos y pueden adaptarse al desarrollo del encuentro.",
+        "days": [
+          {
+            "label": "Día 1",
+            "date": "Viernes 8 de enero",
+            "title": "Cruzar el umbral",
+            "text": "Llegar, bajar el ritmo y recuperar la escucha interna.",
+            "slots": [
+              {
+                "when": "15:00",
+                "what": "Llegada y bienvenida."
+              },
+              {
+                "when": "17:00",
+                "what": "El camino de la escucha."
+              },
+              {
+                "when": "18:00",
+                "what": "Prácticas de escucha consciente."
+              },
+              {
+                "when": "19:00",
+                "what": "Baño de gongs."
+              },
+              {
+                "when": "21:00",
+                "what": "Cena y encuentro."
+              }
+            ]
+          },
+          {
+            "label": "Día 2",
+            "date": "Sábado 9 de enero",
+            "title": "El sonido y la resonancia",
+            "text": "Explorar la voz, los armónicos y nuestra propia huella sonora.",
+            "slots": [
+              {
+                "when": "Mañana",
+                "what": "Fundamentos del sonido, resonancia y prácticas."
+              },
+              {
+                "when": "Tarde",
+                "what": "La voz y reproducción de armónicos, exploración vocal y meditación cantada."
+              },
+              {
+                "when": "Noche",
+                "what": "Concierto contemplativo y experiencia sonora."
+              }
+            ]
+          },
+          {
+            "label": "Día 3",
+            "date": "Domingo 10 de enero",
+            "title": "Enraizar con tierra y ritmo",
+            "text": "Explorar la respiración, el didgeridoo y el pulso compartido.",
+            "slots": [
+              {
+                "when": "Mañana",
+                "what": "Introducción al didgeridoo y a la respiración circular."
+              },
+              {
+                "when": "Tarde",
+                "what": "Ritmo, ensambles y prácticas colectivas."
+              },
+              {
+                "when": "Noche",
+                "what": "Rueda de ritmo y círculo de fuego."
+              }
+            ]
+          },
+          {
+            "label": "Día 4",
+            "date": "Lunes 11 de enero",
+            "title": "Integrar y compartir",
+            "text": "Transformar la exploración en una experiencia propia.",
+            "slots": [
+              {
+                "when": "Mañana",
+                "what": "Integración de herramientas y prácticas de facilitación sonora."
+              },
+              {
+                "when": "12:30 a 14:00",
+                "what": "Cierre grupal y despedida."
+              }
+            ]
+          }
+        ]
+      },
+      "feel": {
+        "title": "El sonido no se explica solamente. Se experimenta.",
+        "text": "Baños de gongs, conciertos, círculos y el fuego forman parte de la misma experiencia. No son actividades aparte.",
+        "moments": [
+          "Baños de gongs",
+          "Conciertos contemplativos",
+          "Meditación cantada",
+          "Círculos de armónicos",
+          "Ruedas de ritmo",
+          "Prácticas grupales",
+          "Escucha en la naturaleza",
+          "Encuentros alrededor del fuego"
+        ],
+        "captions": [
+          "El salón de prácticas de Pueblo Mágico.",
+          "Fogón de Pueblo Mágico al caer la noche.",
+          "El río entre las sierras.",
+          "El paisaje de montaña."
+        ]
+      },
+      "facilitator": {
+        "kicker": "El facilitador",
+        "title": "Quien acompaña este viaje",
+        "name": "Exequiel Lopez Benavidez",
+        "bio": "Músico, director y formador en terapias de sonido desde hace más de 10 años, terapeuta sonoro, instructor de yoga y aprendiz de la vida.",
+        "projectLabel": "Proyecto",
+        "project": "SonCura – Caminos del Sonido",
+        "paragraphs": [
+          "Desde SonCura, Exequiel nos invita a explorar el sonido como un camino de escucha, presencia y autoconocimiento.",
+          "En HUELLA SONORA acompaña una experiencia formativa donde la práctica, la sensibilidad y la exploración colectiva se encuentran."
+        ]
+      },
+      "place": {
+        "title": "Hay experiencias que necesitan otro ritmo.",
+        "paragraphs": [
+          "En el corazón de las Sierras Grandes de Córdoba, Pueblo Mágico nos invita a habitar la naturaleza de una manera diferente.",
+          "Rodeado de montañas, río, arroyos y paisajes abiertos, nuestro eco-centro ofrece un espacio para descansar, encontrarnos y reconectar con lo esencial.",
+          "Durante HUELLA SONORA, la montaña será parte del aprendizaje.",
+          "El sonido del agua, el viento entre los pastizales, las aves y el silencio del paisaje acompañarán las prácticas de escucha."
+        ],
+        "captions": [
+          "Vista aérea de Pueblo Mágico en las Sierras Grandes.",
+          "El macizo al amanecer.",
+          "El río.",
+          "El salón de prácticas.",
+          "El refugio de piedra.",
+          "Los domos en el entorno natural del predio."
+        ]
+      },
+      "stay": {
+        "title": "Nosotros nos ocupamos de todo. Vos venís a vivir la experiencia.",
+        "subtitle": "Cuatro días y tres noches con alojamiento, alimentación y todas las actividades incluidas.",
+        "blocks": [
+          {
+            "kicker": "Alojamiento",
+            "title": "Tres noches en el eco-lodge",
+            "text": "Tres noches en habitaciones compartidas del eco-lodge de montaña de Pueblo Mágico.",
+            "items": [
+              "Cama en habitación compartida.",
+              "Ropa blanca.",
+              "Toalla.",
+              "Toallón.",
+              "Uso de los espacios comunes habilitados."
+            ],
+            "imageAlt": "Domos en el entorno natural del eco-lodge",
+            "caption": "El entorno del eco-lodge de montaña."
+          },
+          {
+            "kicker": "Gastronomía",
+            "title": "Pensión completa",
+            "text": "Pensión completa durante toda la experiencia. Cocina casera, abundante y consciente, preparada para acompañar las jornadas de formación y encuentro.",
+            "items": [
+              "Todas las comidas de la estadía."
+            ],
+            "imageAlt": "Imagen de referencia de gastronomía consciente",
+            "caption": "Gastronomía consciente · imagen ilustrativa."
+          },
+          {
+            "kicker": "Formación",
+            "title": "La totalidad del retiro",
+            "text": "Incluye la totalidad de las actividades y prácticas del retiro, los encuentros grupales, experiencias sonoras y material bibliográfico de apoyo.",
+            "items": [
+              "Actividades y prácticas del programa.",
+              "Encuentros grupales.",
+              "Experiencias sonoras.",
+              "Material bibliográfico de apoyo."
+            ],
+            "imageAlt": "Círculo de práctica en el salón con ventanales a la sierra",
+            "caption": "El salón donde se reúne el grupo."
+          },
+          {
+            "kicker": "Instrumentos",
+            "title": "Tu didgeridoo de regalo",
+            "text": "Una introducción al uso del didgeridoo y a la respiración circular. Los didgeridoos se facilitan durante las prácticas y cada participante se lleva uno de regalo.",
+            "items": [
+              "Instrumentos disponibles durante las prácticas.",
+              "Un didgeridoo de regalo para cada participante."
+            ],
+            "imageAlt": "Imagen de referencia de una práctica de bienestar",
+            "caption": "Prácticas de conexión y escucha · imagen ilustrativa."
+          }
+        ],
+        "loan": "Cada participante se lleva un didgeridoo para continuar explorando después del retiro."
+      },
+      "audience": {
+        "title": "Para quienes sienten que el sonido tiene algo más para enseñarles",
+        "items": [
+          "Personas interesadas en la escucha y el autoconocimiento.",
+          "Músicos y exploradores del sonido.",
+          "Terapeutas y facilitadores de bienestar.",
+          "Instructores de yoga y meditación.",
+          "Personas que desean incorporar herramientas sonoras a sus prácticas.",
+          "Quienes sienten curiosidad por la voz, los armónicos, el didgeridoo y la vibración."
+        ]
+      },
+      "investment": {
+        "title": "Tu lugar en HUELLA SONORA",
+        "subtitle": "Una experiencia integral de formación, naturaleza y exploración sonora.",
+        "earlyLabel": "Early Bird · transferencia o efectivo",
+        "earlyPrice": "$710.000 ARS",
+        "regularPrice": "$820.000 ARS",
+        "save": "Ahorrás $110.000.",
+        "promo": "Promoción hasta el 10 de diciembre de 2026 o para los primeros 8 inscriptos, lo que ocurra primero.",
+        "regularLabel": "Precio regular · transferencia o efectivo",
+        "regularAmount": "$820.000 ARS",
+        "regularNote": "Disponible al finalizar la etapa de inscripción anticipada.",
+        "includesTitle": "Qué incluye tu inversión",
+        "includes": [
+          "4 días y 3 noches.",
+          "Alojamiento en habitaciones compartidas del eco-lodge.",
+          "Ropa blanca, toalla y toallón.",
+          "Todas las comidas.",
+          "Formación completa.",
+          "Todas las actividades y experiencias del programa.",
+          "Un didgeridoo de regalo e instrumentos para las prácticas.",
+          "Material bibliográfico de apoyo."
+        ],
+        "depositTitle": "Reservá con una seña",
+        "depositPrice": "$190.000 ARS",
+        "depositLines": [
+          "Para Early Bird por transferencia o efectivo: seña inicial de $190.000.",
+          "Saldo pendiente: $520.000.",
+          "Posibilidad de completar el saldo mediante pagos parciales antes del inicio del retiro."
+        ],
+        "cta": "Reservar mi lugar por $190.000",
+        "ctaSecondary": "Consultar por WhatsApp",
+        "disclaimer": "Este botón abre WhatsApp para coordinar la reserva. No cobra la seña de forma automática. La política de cancelación, las fechas exactas de pago y el mecanismo de reserva serán confirmados por la organización antes de quedar como condiciones definitivas.",
+        "cardLabel": "Tarjeta de crédito · 3 cuotas sin interés",
+        "cardEarly": "Early Bird: 3 cuotas de $282.666,67 · Total $848.000",
+        "cardRegular": "Regular: 3 cuotas de $326.666,67 · Total $980.000",
+        "flexibility": "Si esta propuesta realmente te resuena, estamos abiertos a conversar otras formas de pago para que puedas sumarte. ¡Consultanos!"
+      },
+      "faq": {
+        "title": "Preguntas",
+        "items": [
+          {
+            "q": "¿Cuándo se realiza HUELLA SONORA?",
+            "a": "Del viernes 8 al lunes 11 de enero de 2027, durante cuatro días y tres noches."
+          },
+          {
+            "q": "¿Dónde voy a dormir?",
+            "a": "En habitaciones compartidas del eco-lodge de montaña de Pueblo Mágico. Incluye ropa blanca, toalla y toallón."
+          },
+          {
+            "q": "¿Están incluidas todas las comidas?",
+            "a": "Sí. La experiencia incluye pensión completa durante la estadía."
+          },
+          {
+            "q": "¿Necesito llevar instrumentos?",
+            "a": "No. Los instrumentos se facilitan durante las prácticas."
+          },
+          {
+            "q": "¿El didgeridoo está incluido como regalo?",
+            "a": "Sí. Cada participante se lleva un didgeridoo de regalo."
+          },
+          {
+            "q": "¿Qué incluye la inscripción?",
+            "a": "Alojamiento, alimentación, formación completa, actividades, prácticas y materiales bibliográficos de apoyo. Incluye un didgeridoo de regalo."
+          },
+          {
+            "q": "¿Cuánto cuesta?",
+            "a": "Por transferencia o efectivo: $710.000 anticipado y $820.000 regular. Con tarjeta: 3 cuotas sin interés de $282.666,67 o $326.666,67, respectivamente."
+          },
+          {
+            "q": "¿Puedo reservar con una seña?",
+            "a": "Se propone una reserva de $190.000 y completar el saldo antes del inicio del retiro. Las condiciones definitivas serán confirmadas por la organización."
+          },
+          {
+            "q": "¿Necesito conocimientos previos?",
+            "a": "Consultá con el equipo organizador para confirmar si la experiencia se adapta a tu nivel."
+          },
+          {
+            "q": "¿Cómo llego a Pueblo Mágico?",
+            "a": "Pueblo Mágico está en las Sierras Grandes de Córdoba, en el macizo de Los Gigantes. La ubicación oficial y las indicaciones de acceso están en estos enlaces.",
+            "links": [
+              {
+                "label": "Ver la ubicación en el mapa",
+                "href": "https://maps.app.goo.gl/4c1nrpBbQf5hYrsE9"
+              },
+              {
+                "label": "Indicaciones para llegar",
+                "href": "/#como-llegar"
+              }
+            ]
+          }
+        ]
+      },
+      "closing": {
+        "title": "Hay sonidos que se escuchan. Y otros que nos acompañan mucho después.",
+        "text": "Cuatro días para descubrir nuevas formas de escuchar, resonar y compartir. Una experiencia de formación y encuentro en plena naturaleza.",
+        "lines": [
+          "HUELLA SONORA – El Viaje de la Escucha",
+          "8 al 11 de enero de 2027",
+          "Pueblo Mágico · Sierras de Córdoba"
+        ],
+        "cta": "Quiero vivir HUELLA SONORA",
+        "secondary": "Resolver una consulta por WhatsApp"
+      }
+    },
     "aliados": {
       "title": "Organizaciones ambientales aliadas",
       "note": "Con Acción Ambiental ya cerramos un acuerdo de trabajo conjunto. Bosques de Agua y Acción Serrana aportan conocimiento técnico y experiencia territorial según cada intervención.",
@@ -1077,6 +1554,20 @@
           "image": "/uploads/events/agus-nasuti-the-viaje.jpg",
           "link": "https://wa.me/5493516765820?text=Hola!%20Quiero%20recibir%20informaci%C3%B3n%20y%20reservar%20mi%20lugar%20para%20la%20experiencia%20de%20Agus%20Nasuti%20%C2%B7%20The%20Viaje%2C%20del%205%20al%208%20de%20diciembre%20de%202026.",
           "showInExperienceCatalog": false
+        },
+        {
+          "date": "8–11 ENERO 2027",
+          "startDate": "2027-01-08",
+          "endDate": "2027-01-11",
+          "statusLabel": "CUPOS LIMITADOS",
+          "title": "HUELLA SONORA · El Viaje de la Escucha",
+          "labels": ["RETIRO FORMATIVO", "SONIDOS ARMÓNICOS"],
+          "desc": "Retiro formativo de sonidos armónicos, del 8 al 11 de enero de 2027. Alojamiento y pensión completa. Inscripción anticipada $690.000. Organiza SonCura. Facilita Exequiel Lopez Benavidez.",
+          "btn": "Conocer el retiro",
+          "image": "/uploads/reforestacion/montana-hero.webp",
+          "link": "/retiros/umbral-el-viaje-de-la-escucha",
+          "pdfLink": "",
+          "showInMainEvents": true
         },
         {
           "date": "PRÓXIMA FECHA",
@@ -2861,6 +3352,483 @@
     }
   },
   "en": {
+    "umbral": {
+      "skip": "Skip to content",
+      "seo": {
+        "title": "HUELLA SONORA – Formative Harmonic Sound Retreat | Pueblo Mágico",
+        "description": "HUELLA SONORA is an immersive training in harmonic sound, voice, didgeridoo and conscious listening. 8–11 January 2027 in the Sierras of Córdoba. Lodging and full board included."
+      },
+      "nav": {
+        "ariaLabel": "HUELLA SONORA sections",
+        "pageEyebrow": "Retreat",
+        "pageTitle": "HUELLA SONORA",
+        "sections": [
+          {
+            "id": "experiencia",
+            "label": "The experience"
+          },
+          {
+            "id": "aprender",
+            "label": "What you will learn"
+          },
+          {
+            "id": "programa",
+            "label": "Program"
+          },
+          {
+            "id": "facilitador",
+            "label": "Facilitator"
+          },
+          {
+            "id": "lugar",
+            "label": "Pueblo Mágico"
+          },
+          {
+            "id": "inversion",
+            "label": "Investment"
+          },
+          {
+            "id": "preguntas",
+            "label": "Questions"
+          }
+        ]
+      },
+      "whatsapp": "Hello, I would like information to reserve my place at HUELLA SONORA – The Journey of Listening, 8–11 January 2027.",
+      "stickyCta": "Reserve my place",
+      "hero": {
+        "partners": "SonCura × Pueblo Mágico",
+        "category": "Formative retreat · Harmonic sound",
+        "title": "HUELLA SONORA",
+        "subtitle": "The Journey of Listening",
+        "phrase": [
+          "From sound to listening.",
+          "From vibration to presence."
+        ],
+        "text": "Four days immersed in the world of harmonic sound. An experience to explore your voice, breath, rhythm and vibration, learn new tools, and reconnect with deep listening in nature.",
+        "meta": [
+          {
+            "label": "Dates",
+            "value": "8–11 January 2027"
+          },
+          {
+            "label": "Duration",
+            "value": "4 days · 3 nights"
+          },
+          {
+            "label": "Place",
+            "value": "Pueblo Mágico · Sierras of Córdoba"
+          }
+        ],
+        "early": "Early registration from $710,000",
+        "cta": "Reserve my place",
+        "ctaSecondary": "Explore the experience",
+        "imageAlt": "Didgeridoo on a rock at sunset"
+      },
+      "sense": {
+        "title": "What if learning to listen changed the way you feel the world?",
+        "paragraphs": [
+          "We hear a lot and listen very little.",
+          "HUELLA SONORA begins with a simple, deep invitation: to recover listening as a form of presence, exploration and self-knowledge.",
+          "For four days we enter the world of harmonic sound to find new ways of relating to the voice, the body, the breath, the instruments and silence.",
+          "It is not only about receiving a sound experience.",
+          "It is about learning to create it, understand it and sustain it.",
+          "About recognizing your own sonic imprint and discovering how sound can become a tool for expression, encounter and accompaniment."
+        ],
+        "quote": "You do not come only to hear sounds. You come to discover how they live in you.",
+        "imageAlt": "Mountain landscape in the Sierras Grandes",
+        "caption": "Nature as a space for listening."
+      },
+      "explore": {
+        "kicker": "The training",
+        "title": "A universe of sound to discover",
+        "subtitle": "An experiential training that brings together knowledge, practice, listening and collective exploration.",
+        "items": [
+          {
+            "index": "01",
+            "title": "Listening and resonance",
+            "text": "We explore the qualities of sound, vibration, conscious listening and the perception of the sonic environment.",
+            "practices": [
+              "Deep listening.",
+              "Qualities of sound and resonance.",
+              "Recognizing your personal sonic imprint.",
+              "Listening to nature.",
+              "Exploring silence."
+            ],
+            "imageAlt": "Didgeridoo sound bath",
+            "caption": "Listening and resonance in sound practice."
+          },
+          {
+            "index": "02",
+            "title": "The voice and harmonic reproduction",
+            "text": "The voice as an instrument of expression, resonance and inner exploration.",
+            "practices": [
+              "Harmonic singing.",
+              "Sung meditation.",
+              "Vocal exploration.",
+              "Practices of Mongolian-tradition singing included in the formative proposal.",
+              "Harmonic circles."
+            ],
+            "imageAlt": "Outdoor practice circle",
+            "caption": "Exploring sound together."
+          },
+          {
+            "index": "03",
+            "title": "The didgeridoo and the breath",
+            "text": "An introduction to playing the didgeridoo and circular breathing. Didgeridoos are provided during practice and each participant takes one home as a gift.",
+            "practices": [
+              "Introduction to the instrument.",
+              "Producing basic sounds.",
+              "Guttural sounds.",
+              "Diaphragmatic breathing.",
+              "Introduction to circular breathing.",
+              "Individual and collective exploration."
+            ],
+            "imageAlt": "Didgeridoo practice",
+            "caption": "The didgeridoo as an instrument of exploration."
+          },
+          {
+            "index": "04",
+            "title": "Rhythm and collective creation",
+            "text": "Sound as a shared language.",
+            "practices": [
+              "Pulse and rhythm.",
+              "Tempo and subdivisions.",
+              "Rhythm circles.",
+              "Sound ensembles.",
+              "Soundscapes.",
+              "Harmonic orchestra.",
+              "Tools for guiding a sound experience."
+            ],
+            "imageAlt": "Group gathering with instruments",
+            "caption": "Instruments and collective creation."
+          }
+        ]
+      },
+      "takeaways": {
+        "title": "More than an experience: tools to keep exploring",
+        "text": "HUELLA SONORA offers learning that is born from practice. Through the retreat you can recognize your own sonic imprint, widen your expressive resources and try different ways of creating and sharing sound.",
+        "items": [
+          "A clearer awareness of your listening and sonic perception.",
+          "First tools for harmonic singing.",
+          "Practical didgeridoo experience and your own instrument as a gift.",
+          "Resources of breath, voice and rhythm.",
+          "Exploration of soundscapes and collective ensembles.",
+          "Initial tools to design and hold a sound immersion.",
+          "A personal experience of connection with sound and nature."
+        ],
+        "note": "This training is not a professional certification and does not license anyone to practice as a therapist.",
+        "cta": "Reserve my place"
+      },
+      "program": {
+        "title": "Four days. A journey toward listening.",
+        "intro": "Each day opens another dimension of exploration, from conscious listening to the integration of a sound experience of your own.",
+        "note": "The times are indicative and may adapt as the gathering unfolds.",
+        "days": [
+          {
+            "label": "Day 1",
+            "date": "Friday 8 January",
+            "title": "Cross the threshold",
+            "text": "Arrive, slow down and recover inner listening.",
+            "slots": [
+              {
+                "when": "3:00 p.m.",
+                "what": "Arrival and welcome."
+              },
+              {
+                "when": "5:00 p.m.",
+                "what": "The path of listening."
+              },
+              {
+                "when": "6:00 p.m.",
+                "what": "Conscious listening practices."
+              },
+              {
+                "when": "7:00 p.m.",
+                "what": "Gong bath."
+              },
+              {
+                "when": "9:00 p.m.",
+                "what": "Dinner and gathering."
+              }
+            ]
+          },
+          {
+            "label": "Day 2",
+            "date": "Saturday 9 January",
+            "title": "Sound and resonance",
+            "text": "Explore the voice, harmonics and our own sonic imprint.",
+            "slots": [
+              {
+                "when": "Morning",
+                "what": "Foundations of sound, resonance and practices."
+              },
+              {
+                "when": "Afternoon",
+                "what": "Voice and harmonic reproduction, vocal exploration and sung meditation."
+              },
+              {
+                "when": "Night",
+                "what": "Contemplative concert and sound experience."
+              }
+            ]
+          },
+          {
+            "label": "Day 3",
+            "date": "Sunday 10 January",
+            "title": "Root with earth and rhythm",
+            "text": "Explore the breath, the didgeridoo and the shared pulse.",
+            "slots": [
+              {
+                "when": "Morning",
+                "what": "Introduction to didgeridoo and circular breathing."
+              },
+              {
+                "when": "Afternoon",
+                "what": "Rhythm, ensembles and collective practices."
+              },
+              {
+                "when": "Night",
+                "what": "Rhythm circle and fire circle."
+              }
+            ]
+          },
+          {
+            "label": "Day 4",
+            "date": "Monday 11 January",
+            "title": "Integrate and share",
+            "text": "Turn the exploration into an experience of your own.",
+            "slots": [
+              {
+                "when": "Morning",
+                "what": "Integration of tools and sound-facilitation practices."
+              },
+              {
+                "when": "12:30 to 2:00 p.m.",
+                "what": "Group closing and farewell."
+              }
+            ]
+          }
+        ]
+      },
+      "feel": {
+        "title": "Sound is not only explained. It is experienced.",
+        "text": "Gong baths, concerts, circles and the fire are part of the same experience. They are not add-on activities.",
+        "moments": [
+          "Gong baths",
+          "Contemplative concerts",
+          "Sung meditation",
+          "Harmonic circles",
+          "Rhythm circles",
+          "Group practices",
+          "Listening in nature",
+          "Gatherings around the fire"
+        ],
+        "captions": [
+          "The practice hall at Pueblo Mágico.",
+          "The fire at Pueblo Mágico after dark.",
+          "The river in the sierras.",
+          "The mountain landscape."
+        ]
+      },
+      "facilitator": {
+        "kicker": "Facilitator",
+        "title": "Who accompanies this journey",
+        "name": "Exequiel Lopez Benavidez",
+        "bio": "Musician, director and trainer in sound therapies for over 10 years, sound therapist, yoga instructor and apprentice of life.",
+        "projectLabel": "Project",
+        "project": "SonCura – Caminos del Sonido",
+        "paragraphs": [
+          "Through SonCura, Exequiel invites us to explore sound as a path of listening, presence and self-knowledge.",
+          "At HUELLA SONORA he accompanies a formative experience where practice, sensitivity and collective exploration meet."
+        ]
+      },
+      "place": {
+        "title": "Some experiences need another rhythm.",
+        "paragraphs": [
+          "In the heart of the Sierras Grandes of Córdoba, Pueblo Mágico invites us to inhabit nature differently.",
+          "Surrounded by mountains, river, streams and open landscape, the eco-center offers a place to rest, meet and reconnect with what is essential.",
+          "During HUELLA SONORA, the mountain is part of the learning.",
+          "The sound of water, the wind in the grasses, the birds and the silence of the landscape accompany the listening practices."
+        ],
+        "captions": [
+          "Aerial view of Pueblo Mágico in the Sierras Grandes.",
+          "The massif at dawn.",
+          "The river.",
+          "The practice hall.",
+          "The stone refuge.",
+          "The domes in their natural setting."
+        ]
+      },
+      "stay": {
+        "title": "We take care of the rest. You come to live the experience.",
+        "subtitle": "Four days and three nights with lodging, meals and every activity included.",
+        "blocks": [
+          {
+            "kicker": "Lodging",
+            "title": "Three nights in the eco-lodge",
+            "text": "Three nights in shared rooms at Pueblo Mágico’s mountain eco-lodge.",
+            "items": [
+              "A bed in a shared room.",
+              "Bed linen.",
+              "Hand towel.",
+              "Bath towel.",
+              "Use of the common spaces that are open."
+            ],
+            "imageAlt": "Domes in the natural setting of the eco-lodge",
+            "caption": "The mountain eco-lodge setting."
+          },
+          {
+            "kicker": "Food",
+            "title": "Full board",
+            "text": "Full board for the whole experience. Home cooking, abundant and attentive, prepared to accompany the days of training and gathering.",
+            "items": [
+              "Every meal of the stay."
+            ],
+            "imageAlt": "Illustrative image of mindful cuisine",
+            "caption": "Mindful cuisine · illustrative image."
+          },
+          {
+            "kicker": "Training",
+            "title": "The whole retreat",
+            "text": "It includes every activity and practice of the retreat, the group gatherings, the sound experiences and supporting reading material.",
+            "items": [
+              "The activities and practices of the program.",
+              "Group gatherings.",
+              "Sound experiences.",
+              "Supporting reading material."
+            ],
+            "imageAlt": "A practice circle in the hall, with windows toward the sierra",
+            "caption": "The hall where the group meets."
+          },
+          {
+            "kicker": "Instruments",
+            "title": "Your didgeridoo as a gift",
+            "text": "An introduction to playing the didgeridoo and circular breathing. Didgeridoos are provided during practice and each participant takes one home as a gift.",
+            "items": [
+              "Instruments available during practice.",
+              "One didgeridoo as a gift for each participant."
+            ],
+            "imageAlt": "Illustrative image of a wellness practice",
+            "caption": "Connection and listening practices · illustrative image."
+          }
+        ],
+        "loan": "Each participant takes home a didgeridoo to continue exploring after the retreat."
+      },
+      "audience": {
+        "title": "For people who feel that sound still has something to teach them",
+        "items": [
+          "People interested in listening and self-knowledge.",
+          "Musicians and explorers of sound.",
+          "Therapists and wellbeing facilitators.",
+          "Yoga and meditation instructors.",
+          "People who want to bring sound tools into their practices.",
+          "Anyone curious about the voice, harmonics, the didgeridoo and vibration."
+        ]
+      },
+      "investment": {
+        "title": "Your place at HUELLA SONORA",
+        "subtitle": "An integral experience of training, nature and sound exploration.",
+        "earlyLabel": "Early Bird · bank transfer or cash",
+        "earlyPrice": "$710,000 ARS",
+        "regularPrice": "$820,000 ARS",
+        "save": "You save $110,000.",
+        "promo": "Available until 10 December 2026, or for the first 8 people to register, whichever comes first.",
+        "regularLabel": "Regular price · bank transfer or cash",
+        "regularAmount": "$820,000 ARS",
+        "regularNote": "Available once the early-registration stage ends.",
+        "includesTitle": "What your investment includes",
+        "includes": [
+          "4 days and 3 nights.",
+          "Lodging in shared rooms at the eco-lodge.",
+          "Bed linen, hand towel and bath towel.",
+          "All meals.",
+          "The complete training.",
+          "Every activity and experience in the program.",
+          "A didgeridoo as a gift and instruments for practice.",
+          "Supporting reading material."
+        ],
+        "depositTitle": "Reserve with a deposit",
+        "depositPrice": "$190,000 ARS",
+        "depositLines": [
+          "For Early Bird by bank transfer or cash: initial deposit of $190,000.",
+          "Remaining balance: $520,000.",
+          "The balance can be completed in partial payments before the retreat begins."
+        ],
+        "cta": "Reserve my place with $190,000",
+        "ctaSecondary": "Ask on WhatsApp",
+        "disclaimer": "This button opens WhatsApp to arrange the reservation. It does not charge the deposit automatically. The cancellation policy, the exact payment dates and the reservation process will be confirmed by the organizers before they become final conditions.",
+        "cardLabel": "Credit card · 3 interest-free installments",
+        "cardEarly": "Early Bird: 3 installments of $282,666.67 · Total $848,000",
+        "cardRegular": "Regular: 3 installments of $326,666.67 · Total $980,000",
+        "flexibility": "If this experience truly resonates with you, we are open to discussing other payment options so you can join us. Get in touch!"
+      },
+      "faq": {
+        "title": "Questions",
+        "items": [
+          {
+            "q": "When does HUELLA SONORA take place?",
+            "a": "From Friday 8 to Monday 11 January 2027, for four days and three nights."
+          },
+          {
+            "q": "Where will I sleep?",
+            "a": "In shared rooms at Pueblo Mágico’s mountain eco-lodge. Bed linen, a hand towel and a bath towel are included."
+          },
+          {
+            "q": "Are all meals included?",
+            "a": "Yes. The experience includes full board for the stay."
+          },
+          {
+            "q": "Do I need to bring instruments?",
+            "a": "No. Instruments are provided during practice."
+          },
+          {
+            "q": "Is the didgeridoo included as a gift?",
+            "a": "Yes. Each participant takes home a didgeridoo as a gift."
+          },
+          {
+            "q": "What does registration include?",
+            "a": "Lodging, meals, the complete training, activities, practices and supporting reading material. A didgeridoo is included as a gift."
+          },
+          {
+            "q": "How much does it cost?",
+            "a": "By bank transfer or cash: ARS 710,000 early or 820,000 regular. By card: 3 interest-free installments of ARS 282,666.67 or 326,666.67 respectively."
+          },
+          {
+            "q": "Can I reserve with a deposit?",
+            "a": "A deposit of $190,000 is proposed, with the balance completed before the retreat begins. The final conditions will be confirmed by the organizers."
+          },
+          {
+            "q": "Do I need previous experience?",
+            "a": "Ask the organizing team to confirm whether the experience fits your level."
+          },
+          {
+            "q": "How do I get to Pueblo Mágico?",
+            "a": "Pueblo Mágico is in the Sierras Grandes of Córdoba, in the Los Gigantes massif. The official location and the directions are in these links.",
+            "links": [
+              {
+                "label": "See the location on the map",
+                "href": "https://maps.app.goo.gl/4c1nrpBbQf5hYrsE9"
+              },
+              {
+                "label": "Directions",
+                "href": "/#como-llegar"
+              }
+            ]
+          }
+        ]
+      },
+      "closing": {
+        "title": "There are sounds we hear. And others that stay with us long after.",
+        "text": "Four days to discover new ways of listening, resonating and sharing. A training and a gathering in nature.",
+        "lines": [
+          "HUELLA SONORA – The Journey of Listening",
+          "8–11 January 2027",
+          "Pueblo Mágico · Sierras of Córdoba"
+        ],
+        "cta": "I want to live HUELLA SONORA",
+        "secondary": "Ask a question on WhatsApp"
+      }
+    },
     "aliados": {
       "title": "Allied environmental organizations",
       "note": "We've signed a partnership agreement with Acción Ambiental. Bosques de Agua and Acción Serrana bring technical knowledge and local expertise depending on each intervention.",
@@ -3938,6 +4906,20 @@
           "image": "/uploads/events/agus-nasuti-the-viaje.jpg",
           "link": "https://wa.me/5493516765820?text=Hi!%20I'd%20like%20information%20and%20to%20reserve%20my%20place%20for%20Agus%20Nasuti%20%C2%B7%20The%20Viaje%2C%20December%205%E2%80%938%2C%202026.",
           "showInExperienceCatalog": false
+        },
+        {
+          "date": "JANUARY 8–11, 2027",
+          "startDate": "2027-01-08",
+          "endDate": "2027-01-11",
+          "statusLabel": "LIMITED PLACES",
+          "title": "HUELLA SONORA · The Journey of Listening",
+          "labels": ["FORMATIVE RETREAT", "HARMONIC SOUND"],
+          "desc": "A formative harmonic-sound retreat, 8–11 January 2027. Lodging and full board. Early registration $690,000. Organized by SonCura. Facilitated by Exequiel Lopez Benavidez.",
+          "btn": "View the retreat",
+          "image": "/uploads/reforestacion/montana-hero.webp",
+          "link": "/retiros/umbral-el-viaje-de-la-escucha",
+          "pdfLink": "",
+          "showInMainEvents": true
         },
         {
           "date": "NEXT DATE",
