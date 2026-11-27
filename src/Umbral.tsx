@@ -164,7 +164,7 @@ const Umbral: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#101A15] via-[#101A15]/35 to-[#101A15]/20" />
           <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-16 pt-32 md:px-10 md:pb-24">
             <div className="mb-5 flex flex-wrap items-center gap-4 sm:gap-6">
-              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" decoding="async" className="h-auto max-h-20 w-36 object-contain grayscale invert mix-blend-screen sm:w-44" />
+              <img src="/exelogo.jpeg" alt="SonCura – Caminos del Sonido" decoding="async" className="h-auto max-h-20 w-36 object-contain sm:w-44" style={{ filter: "grayscale(1) invert(1) contrast(3) brightness(1.2)", mixBlendMode: "screen" }} />
               <span aria-hidden="true" className="text-lg text-[#E7D7A8]/70">×</span>
               <span className="serif-title text-xl tracking-wide text-[#F6F1E6] sm:text-2xl">Pueblo Mágico</span>
             </div>
