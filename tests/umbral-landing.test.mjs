@@ -14,8 +14,8 @@ test('UMBRAL copy and calendar card exist in both languages', () => {
     assert.equal(page.program.days.length, 4);
     assert.equal(page.explore.items.length, 4);
     assert.equal(page.faq.items.length, 10);
-    assert.match(page.investment.earlyPrice, /690/);
-    assert.match(page.investment.regularAmount, /800/);
+    assert.match(page.investment.earlyPrice, /710/);
+    assert.match(page.investment.regularAmount, /820/);
     assert.match(page.investment.depositPrice, /190/);
     assert.match(page.stay.loan, /didgeridoo|préstamo|loan/i);
     assert.match(page.whatsapp, /HUELLA SONORA/);
